@@ -23,9 +23,9 @@ const IndexPage = () => (
               <p className="card-text">
                 Read through an example game and how calls are made and why.
               </p>
-              <a href="#" className="btn btn-primary">
+              <Link to="rules" className="btn btn-primary">
                 Rules
-              </a>
+              </Link>
             </div>
           </div>
         </div>
@@ -36,9 +36,9 @@ const IndexPage = () => (
               <p className="card-text">
                 A list of the games you can call in Refusal Dice.
               </p>
-              <a href="#" className="btn btn-primary">
+              <Link to="games" className="btn btn-primary">
                 Games
-              </a>
+              </Link>
             </div>
           </div>
         </div>
@@ -49,9 +49,9 @@ const IndexPage = () => (
               <p className="card-text">
                 If you're confused about what's being said, read the glossary of common phrases and terms.
               </p>
-              <a href="#" className="btn btn-primary">
+              <Link to="glossary" className="btn btn-primary">
                 Glossary
-              </a>
+              </Link>
             </div>
           </div>
         </div>
