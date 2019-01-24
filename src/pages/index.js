@@ -16,8 +16,8 @@ const IndexPage = () => (
     </section>
     <section className="container">
       <div className="row">
-        <div className="col-4">
-          <div className="card">
+        <div className="col-lg-4">
+          <div className="card mb-4">
             <div className="card-body">
               <h5 className="card-title">How do I play?</h5>
               <p className="card-text">
@@ -29,8 +29,8 @@ const IndexPage = () => (
             </div>
           </div>
         </div>
-        <div className="col-4">
-          <div className="card">
+        <div className="col-lg-4">
+          <div className="card mb-4">
             <div className="card-body">
               <h5 className="card-title">What do I call?</h5>
               <p className="card-text">
@@ -42,8 +42,8 @@ const IndexPage = () => (
             </div>
           </div>
         </div>
-        <div className="col-4">
-          <div className="card">
+        <div className="col-lg-4">
+          <div className="card mb-4">
             <div className="card-body">
               <h5 className="card-title">What'd they say?</h5>
               <p className="card-text">
