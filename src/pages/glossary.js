@@ -22,21 +22,32 @@ export default () => (
           A list of commonly used colloquialisms in the game
         </p>
       </div>
-      <h2>
+      <h2 id="bark">
         Bark <small class="text-muted">you ain't got 💩</small>
       </h2>
       <p>
         If you don't have a good hand on your First Call, you can choose to
         "Bark" and give the hammer to the player to your left.
       </p>
-      <h2>
-        Frankie <small class="text-muted">if I didn't have bad luck, I'd have no luck at all</small>
+      <h2 id="parity">
+        Parity <small class="text-muted">2 ✏️'s'</small>
+      </h2>
+      <p>
+        When every player has 2 pencils. Some groups will put their pencils back
+        in the jar at this point, some will require the remaining players to put
+        $5 in again.
+      </p>
+      <h2 id="frankie">
+        Frankie{' '}
+        <small class="text-muted">
+          if I didn't have bad luck, I'd have no luck at all
+        </small>
       </h2>
       <p>
         Another name for <Link to="/games">10-3</Link> due to a member at SLO CC
         (Frank Richardson) who commonly struggles to roll it.
       </p>
-      <h2>
+      <h2 id="hammer">
         Hammer <small class="text-muted">the play caller</small>
       </h2>
       <p>

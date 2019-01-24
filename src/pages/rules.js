@@ -19,7 +19,7 @@ export default () => (
         out. The last player left without 3 pencils wins.
       </p>
       <div className="row">
-        <div className="col-6">
+        <div className="col-sm-6">
           <div className="alert alert-secondary">
             <h5>Variation</h5>
             <p>
@@ -28,11 +28,11 @@ export default () => (
             </p>
           </div>
         </div>
-        <div className="col-6">
+        <div className="col-sm-6">
           <div className="alert alert-success">
             <h5>Example</h5>
             <p>
-              <em>Player A</em> has 1 pencil and the call, <em>Player B</em> has
+              2 players remain: <em>Player A</em> and <em>Player B</em>. <em>Player A</em> has 1 pencil and the call, <em>Player B</em> has
               2 pencils. <em>Player A</em> may offer to split the pot 50/50 with{' '}
               <em>Player B</em>.
             </p>
@@ -47,18 +47,18 @@ export default () => (
       </p>
       <h3>Requirements</h3>
       <ul>
-        <li>Each player must have 5 dice.</li>
-        <li>A jar of pencils (or some way to record them)</li>
-        <li>Have 2 or more players.</li>
+        <li>Have 2 or more players: <span role="img" aria-label="players">👨👨</span>+</li>
+        <li>Each player must have 5 dice: <span role="img" aria-label="dice">🎲🎲🎲🎲🎲</span> * (# of <span role="img" aria-label="player">👨</span>s)</li>
+        <li>A jar of pencils (or some way to record them): <span role="img" aria-label="pencils">✏️✏️</span> * (# of <span role="img" aria-label="player">👨</span>s)</li>
       </ul>
       <p>
         <strong>Note:</strong> You don't <em>need</em> pencils, you could use
-        sugar packets or any "token".
+        sugar packets or any "token" but for the sake of this guide, I'll refer to them as pencils.
       </p>
       <p>&nbsp;</p>
       <h3>Ante</h3>
       <ul>
-        <li>$5 per player</li>
+        <li><span role="img" aria-label="dollar bills">💵</span> $5 per player</li>
       </ul>
       <p>
         Playing for money is not a requirement, but it can make the game more
@@ -70,6 +70,24 @@ export default () => (
         the game. Once everyone is in (they've paid their $5 to the pot) then
         players can roll to see who goes first.
       </p>
+      <div className="row">
+        <div className="col-sm-6">
+          <div className="alert alert-secondary">
+            <h5>Variation</h5>
+            <p>
+              Some groups of players will have everyone add an additional $5 when <Link to="glossary#parity">parity</Link> is reached. <Link to="glossary#parity">Parity</Link> is when ever player has 2 pencils.
+            </p>
+          </div>
+        </div>
+        <div className="col-sm-6">
+          <div className="alert alert-success">
+            <h5>Example</h5>
+            <p>
+              3 players remain: <em>Player A</em>, <em>Player B</em>, and <em>Player C</em>. Each player has 2 ✏️s so <em>Player A</em> calls out, "Parity!" and all the players put their ✏️s back in the jar.
+            </p>
+          </div>
+        </div>
+      </div>
       <p>&nbsp;</p>
       <h3>
         Who goes first? <small className="text-muted">(aka the "piddle")</small>
@@ -156,8 +174,8 @@ export default () => (
         first <Link to="games">game</Link> they wish to play.
       </p>
       <div className="row">
-        <div className="col-4">
-          <div className="card">
+        <div className="col-sm-6 col-lg-4 col-xl-3">
+          <div className="card mb-4">
             <h4 className="card-header" id="first-call">First Call</h4>
             <div className="card-body">
               <small className="card-subtitle text-muted">Aka "the hammer"</small>
@@ -186,8 +204,8 @@ export default () => (
             </ul>
           </div>
         </div>
-        <div class="col-4">
-          <div className="card">
+        <div class="col-sm-6 col-lg-4 col-xl-3">
+          <div className="card mb-4">
             <h4 className="card-header" id="first-refusal">
               First Refusal
             </h4>
@@ -210,8 +228,8 @@ export default () => (
             </ul>
           </div>
         </div>
-        <div class="col-4">
-          <div className="card">
+        <div class="col-sm-6 col-lg-4 col-xl-3">
+          <div className="card mb-4">
             <h4 className="card-header" id="second-refusal">
               Second Refusal
             </h4>
@@ -233,9 +251,7 @@ export default () => (
             </ul>
           </div>
         </div>
-      </div>
-      <div className="row mt-5">
-        <div class="col-4">
+        <div class="col-sm-6 col-lg-4 col-xl-3">
           <div className="card">
             <h4 className="card-header" id="second-call">
               Second Call
