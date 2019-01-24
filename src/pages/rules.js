@@ -16,7 +16,7 @@ export default () => (
         Each game that is called will have 1 loser. In the event of a tie, those
         players who tied will play the same game again until a single loser is
         established. That loser takes a pencil. When you have 3 pencils you are
-        out. The player left.
+        out. The last player left without 3 pencils wins.
       </p>
       <div className="row">
         <div className="col-6">
