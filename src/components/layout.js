@@ -6,8 +6,6 @@ import Header from './header'
 import Footer from './footer'
 
 import 'bootstrap/dist/css/bootstrap.min.css'
-import 'jquery/dist/jquery.min.js'
-import 'bootstrap/dist/js/bootstrap.bundle.min.js'
 
 const Layout = ({ children }) => (
   <StaticQuery
