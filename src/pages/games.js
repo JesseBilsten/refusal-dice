@@ -1,15 +1,13 @@
 import React from 'react'
 import { Link } from 'gatsby'
 import Layout from '../components/layout'
-import Game from '../components/game'
-import Die from '../components/die'
 
 export default () => (
   <Layout>
     <section className="container mt-5">
       <div className="my-5 text-center">
         <h1>
-          Games <small className="text-muted">⚀⚁⚂⚃⚄⚅</small>
+          Games
         </h1>
         <p className="lead">A list of the games you can call in Refusal Dice</p>
       </div>

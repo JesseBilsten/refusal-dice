@@ -16,6 +16,12 @@ module.exports = {
         icon: 'src/images/game-die.png', // This path is relative to the root of the site.
       },
     },
+    {
+    resolve: `gatsby-plugin-sass`,
+    options: {
+      precision: 8,
+    },
+  },
     'gatsby-plugin-offline',
   ],
 }
