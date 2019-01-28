@@ -31,10 +31,24 @@ export default () => (
         <div className="col-sm-6">
           <div className="alert alert-success">
             <h5>Example</h5>
+            <p>2 players remain:</p>
+            <ol>
+              <li>
+                👨<em>Player A</em>
+              </li>
+              <li>
+                👩<em>Player B</em>
+              </li>
+            </ol>
+            <p>The score:</p>
+            <ul>
+              <li>👨 has ✏️✏️ and the 🔨</li>
+              <li>👩 has ✏️</li>
+            </ul>
             <p>
-              2 players remain: <em>Player A</em> and <em>Player B</em>. <em>Player A</em> has 1 pencil and the call, <em>Player B</em> has
-              2 pencils. <em>Player A</em> may offer to split the pot 50/50 with{' '}
-              <em>Player B</em>.
+              👨 may offer to split the pot 50/50 with 👩 as it's likely he'll
+              win the hand and there will be parity and 👩 will get the call to
+              win.
             </p>
           </div>
         </div>
@@ -47,18 +61,48 @@ export default () => (
       </p>
       <h3>Requirements</h3>
       <ul>
-        <li>Have 2 or more players: <span role="img" aria-label="players">👨👨</span>+</li>
-        <li>Each player must have 5 dice: <span role="img" aria-label="dice">🎲🎲🎲🎲🎲</span> * (# of <span role="img" aria-label="player">👨</span>s)</li>
-        <li>A jar of pencils (or some way to record them): <span role="img" aria-label="pencils">✏️✏️</span> * (# of <span role="img" aria-label="player">👨</span>s)</li>
+        <li>
+          Have 2 or more players:{' '}
+          <span role="img" aria-label="players">
+            👨👨
+          </span>
+          +
+        </li>
+        <li>
+          Each player must have 5 dice:{' '}
+          <span role="img" aria-label="dice">
+            🎲🎲🎲🎲🎲
+          </span>{' '}
+          per{' '}
+          <span role="img" aria-label="player">
+            👨
+          </span>
+        </li>
+        <li>
+          A jar of pencils (or some way to record them):{' '}
+          <span role="img" aria-label="pencils">
+            ✏️✏️
+          </span>{' '}
+          per{' '}
+          <span role="img" aria-label="player">
+            👨
+          </span>
+        </li>
       </ul>
       <p>
         <strong>Note:</strong> You don't <em>need</em> pencils, you could use
-        sugar packets or any "token" but for the sake of this guide, I'll refer to them as pencils.
+        sugar packets or any "token" but for the sake of this guide, I'll refer
+        to them as pencils.
       </p>
       <p>&nbsp;</p>
       <h3>Ante</h3>
       <ul>
-        <li><span role="img" aria-label="dollar bills">💵</span> $5 per player</li>
+        <li>
+          <span role="img" aria-label="dollar bills">
+            💵
+          </span>{' '}
+          $5 per player
+        </li>
       </ul>
       <p>
         Playing for money is not a requirement, but it can make the game more
@@ -75,7 +119,10 @@ export default () => (
           <div className="alert alert-secondary">
             <h5>Variation</h5>
             <p>
-              Some groups of players will have everyone add an additional $5 when <Link to="glossary#parity">parity</Link> is reached. <Link to="glossary#parity">Parity</Link> is when ever player has 2 pencils.
+              Some groups of players will have everyone add an additional $5
+              when <Link to="glossary#parity">parity</Link> is reached.{' '}
+              <Link to="glossary#parity">Parity</Link> is when ever player has 2
+              pencils.
             </p>
           </div>
         </div>
@@ -83,7 +130,10 @@ export default () => (
           <div className="alert alert-success">
             <h5>Example</h5>
             <p>
-              3 players remain: <em>Player A</em>, <em>Player B</em>, and <em>Player C</em>. Each player has 2 ✏️s so <em>Player A</em> calls out, "Parity!" and all the players put their ✏️s back in the jar.
+              3 players remain: <em>Player A</em>, <em>Player B</em>, and{' '}
+              <em>Player C</em>. Each player has 2 ✏️s so <em>Player A</em>{' '}
+              calls out, "Parity!" and all the players put their ✏️s back in the
+              jar.
             </p>
           </div>
         </div>
@@ -176,9 +226,13 @@ export default () => (
       <div className="row">
         <div className="col-sm-6 col-lg-4 col-xl-3">
           <div className="card mb-4">
-            <h4 className="card-header" id="first-call">First Call</h4>
+            <h4 className="card-header" id="first-call">
+              First Call
+            </h4>
             <div className="card-body">
-              <small className="card-subtitle text-muted">Aka "the hammer"</small>
+              <small className="card-subtitle text-muted">
+                Aka "the hammer"
+              </small>
               <p className="card-text">
                 Whomever has the{' '}
                 <a
@@ -196,10 +250,12 @@ export default () => (
             </div>
             <ul className="list-group list-group-flush">
               <li className="list-group-item">
-                <Link to="/games">Call a game</Link> → <Link to="/rules#first-refusal">First Refusal</Link>
+                <Link to="/games">Call a game</Link> →{' '}
+                <Link to="/rules#first-refusal">First Refusal</Link>
               </li>
               <li className="list-group-item">
-                <Link to="/glossary#bark">Bark</Link> → Game ends and Hammer passes to the left
+                <Link to="/glossary#bark">Bark</Link> → Game ends and Hammer
+                passes to the left
               </li>
             </ul>
           </div>
@@ -210,7 +266,9 @@ export default () => (
               First Refusal
             </h4>
             <div className="card-body">
-              <small className="card-subtitle text-muted">First player to the callers left</small>
+              <small className="card-subtitle text-muted">
+                First player to the callers left
+              </small>
               <p className="card-text">
                 The player to the caller's immediate left looks at her dice and
                 determines if she can play the game or not. If she can, she
@@ -220,10 +278,12 @@ export default () => (
             </div>
             <ul className="list-group list-group-flush">
               <li className="list-group-item">
-                <Link to="/rules#second-refusal">Refuse</Link> → <Link to="/rules#second-refusal">Second Refusal</Link>
+                <Link to="/rules#second-refusal">Refuse</Link> →{' '}
+                <Link to="/rules#second-refusal">Second Refusal</Link>
               </li>
               <li className="list-group-item">
-                <Link to="/rules#play-game">Accept</Link> → <Link to="/rules#play-game">Play game</Link>
+                <Link to="/rules#play-game">Accept</Link> →{' '}
+                <Link to="/rules#play-game">Play game</Link>
               </li>
             </ul>
           </div>
@@ -234,7 +294,9 @@ export default () => (
               Second Refusal
             </h4>
             <div className="card-body">
-              <small className="card-subtitle text-muted">Second player to the callers left</small>
+              <small className="card-subtitle text-muted">
+                Second player to the callers left
+              </small>
               <p className="card-text">
                 The second player to the hammer's left can "Accept" or "Refuse"
                 the call. If she accepts, then everyone plays. If she refuses
@@ -243,10 +305,12 @@ export default () => (
             </div>
             <ul className="list-group list-group-flush">
               <li className="list-group-item">
-                <Link to="/glossary#refuse">Refuse</Link> → <Link to="/rules#second-call">Second Call</Link>
+                <Link to="/glossary#refuse">Refuse</Link> →{' '}
+                <Link to="/rules#second-call">Second Call</Link>
               </li>
               <li className="list-group-item">
-                <Link to="/glossary#accept">Accept</Link> → <Link to="/rules#play-game">Play game</Link>
+                <Link to="/glossary#accept">Accept</Link> →{' '}
+                <Link to="/rules#play-game">Play game</Link>
               </li>
             </ul>
           </div>
@@ -259,8 +323,8 @@ export default () => (
             <div className="card-body">
               <small className="card-subtitle text-muted">No refusal!</small>
               <p className="card-text">
-                If the first call was refused, all players must play the callers second
-                game.
+                If the first call was refused, all players must play the callers
+                second game.
               </p>
             </div>
             <ul className="list-group list-group-flush">
