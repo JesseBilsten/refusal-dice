@@ -1,4 +1,5 @@
 import React from 'react'
+import './style.scss'
 
 const Footer = () => (
   <footer className="footer" style={{padding: '2rem 0'}}>

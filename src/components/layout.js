@@ -3,9 +3,10 @@ import PropTypes from 'prop-types'
 import Helmet from 'react-helmet'
 import { StaticQuery, graphql } from 'gatsby'
 import Header from './header'
-import Footer from './footer'
+import Footer from './Footer/'
 
 import 'bootstrap/dist/css/bootstrap.min.css'
+import './layout.scss'
 
 const Layout = ({ children }) => (
   <StaticQuery
@@ -36,14 +37,16 @@ const Layout = ({ children }) => (
         >
           <html lang="en" />
         </Helmet>
-        <a id="skippy" className="sr-only sr-only-focusable" href="#content">
-          <div className="container">
-            <span className="skiplink-text">Skip to main content</span>
-          </div>
-        </a>
-        <Header siteTitle={data.site.siteMetadata.title} />
-        <main role="main">{children}</main>
-        <Footer />
+        <div className="site">
+          <a id="skippy" className="sr-only sr-only-focusable" href="#content">
+            <div className="container">
+              <span className="skiplink-text">Skip to main content</span>
+            </div>
+          </a>
+          <Header siteTitle={data.site.siteMetadata.title} />
+          <main role="main">{children}</main>
+          <Footer />
+        </div>
       </>
     )}
   />
