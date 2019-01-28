@@ -1,6 +1,8 @@
 import React from 'react'
 import { Link } from 'gatsby'
 import Layout from '../components/layout'
+import Die from '../components/Die'
+import Game from '../components/Game'
 
 export default () => (
   <Layout>
@@ -18,6 +20,17 @@ export default () => (
       <p>
         2 dice add up to 10 and the remaining 3 dice are either high or low.
       </p>
+      <div className="d-flex justify-content-end">
+        <Game type="10-2" className="mr-1">
+          <Die number="5"></Die>
+          <Die number="5"></Die>
+        </Game>
+        <Game type="high">
+          <Die number="6"></Die>
+          <Die number="6"></Die>
+          <Die number="6"></Die>
+        </Game>
+      </div>
       <h2 id="10-3">
         10-3 <small className="text-muted">high or low</small>
       </h2>

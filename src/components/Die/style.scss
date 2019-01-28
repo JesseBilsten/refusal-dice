@@ -1,0 +1,40 @@
+$ivory: rgba(254, 233, 165, 1);
+$blue: rgba(58, 177, 205, 1);
+$red: rgba(227, 70, 39, 1);
+$black: rgba(10, 10, 10, 1);
+$die-size: 2rem;
+
+.die {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  margin: $die-size/6;
+  width: $die-size;
+  height: $die-size;
+  border-radius: $die-size/8;
+  border: 1px solid $black;
+  box-shadow: $die-size/10 transparentize($black, 0.5);
+
+  &[data-content='1'] {
+    color: $black;
+  }
+  &[data-content='2'] {
+    color: $red;
+  }
+  &[data-content='3'] {
+    color: $blue;
+  }
+  &[data-content='4'] {
+    color: $blue;
+  }
+  &[data-content='5'] {
+    color: $red;
+  }
+  &[data-content='6'] {
+    color: $black;
+  }
+}
+
+.pip {
+}
