@@ -23,19 +23,11 @@ export default () => (
         </p>
       </div>
       <h2 id="bark">
-        Bark <small class="text-muted">you ain't got 💩</small>
+        Bark <small class="text-muted">you ain't got <span role="img" aria-label="poop">💩</span></small>
       </h2>
       <p>
         If you don't have a good hand on your First Call, you can choose to
         "Bark" and give the hammer to the player to your left.
-      </p>
-      <h2 id="parity">
-        Parity <small class="text-muted">2 ✏️'s'</small>
-      </h2>
-      <p>
-        When every player has 2 pencils. Some groups will put their pencils back
-        in the jar at this point, some will require the remaining players to put
-        $5 in again.
       </p>
       <h2 id="frankie">
         Frankie{' '}
@@ -48,12 +40,20 @@ export default () => (
         (Frank Richardson) who commonly struggles to roll it.
       </p>
       <h2 id="hammer">
-        Hammer <small class="text-muted">the play caller</small>
+        Hammer <small class="text-muted">the play caller <span role="img" aria-label="hammer">🔨</span></small>
       </h2>
       <p>
         The <em>hammer</em> is when a player has the call. You can pass the{' '}
         <em>hammer</em> if you bark on a call or get the <em>hammer</em> if
         someone goes out in front of you.
+      </p>
+      <h2 id="parity">
+        Parity <small class="text-muted">2 <span role="img" aria-label="pencil">✏️</span>'s</small>
+      </h2>
+      <p>
+        When every player has 2 pencils. Some groups will put their pencils back
+        in the jar at this point, some will require the remaining players to put
+        $5 in again.
       </p>
     </section>
   </Layout>

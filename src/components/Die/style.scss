@@ -1,8 +1,7 @@
-$ivory: rgba(254, 233, 165, 1);
-$blue: rgba(58, 177, 205, 1);
-$red: rgba(227, 70, 39, 1);
-$black: rgba(10, 10, 10, 1);
+@import 'src/scss/colors.scss';
+
 $die-size: 2rem;
+$pip-size: $die-size*0.19;
 
 .die {
   display: flex;
@@ -16,25 +15,72 @@ $die-size: 2rem;
   border: 1px solid $black;
   box-shadow: $die-size/10 transparentize($black, 0.5);
 
-  &[data-content='1'] {
-    color: $black;
+	&.pips {
+    position: relative;
   }
-  &[data-content='2'] {
-    color: $red;
+  &.pips::before {
+    position: relative;
+    display: block;
+    content: "";
+    border-radius: 100%;
+    border-width: 0px;
+    height: $pip-size;
+    width: $pip-size;
   }
-  &[data-content='3'] {
-    color: $blue;
+  &.pips[data-content="1"]::before {
+		background-color: $black;
   }
-  &[data-content='4'] {
-    color: $blue;
+  &.pips[data-content="2"]::before {
+    background-color: $red;
+    box-shadow: $die-size*0.45 $die-size*0.45 0 $red;
+    top: -22%;
+    left: -22%;
   }
-  &[data-content='5'] {
-    color: $red;
+  &.pips[data-content="3"]::before {
+    background-color: $blue;
+    box-shadow:
+      $die-size*0.22 $die-size*0.22 0 $blue,
+      (-$die-size)*0.22 (-$die-size)*0.22 0 $blue;
   }
-  &[data-content='6'] {
-    color: $black;
+  &.pips[data-content="4"]::before {
+    background-color: $blue;
+    box-shadow:
+      $die-size*0.44 $die-size*0.44 0 $blue,
+      $die-size*0.44 0 0 $blue,
+      0 $die-size*0.44 0 $blue;
+    top: -22%;
+    left: -22%;
   }
-}
+  &.pips[data-content="5"]::before {
+    background-color: $red;
+    box-shadow:
+      $die-size*0.22 $die-size*0.22 0 $red,
+      (-$die-size)*0.22 $die-size*0.22 0 $red,
+      (-$die-size)*0.22 (-$die-size)*0.22 0 $red,
+      $die-size*0.22 (-$die-size)*0.22 0 $red;
+  }
+  &.pips[data-content="6"]::before {
+    background-color: $black;
+    box-shadow:
+      $die-size*0.44 $die-size*0.44 0 $black,
+      $die-size*0.44 0 0 $black,
+      $die-size*0.44 $die-size*0.22 0 $black,
+      0 $die-size*0.22 0 $black,
+      0 $die-size*0.44 0 $black;
+    top: -$die-size*0.22;
+    left: -$die-size*0.22;
+  }
 
-.pip {
+  // If we're endering the numbers - color-style: Michigan Red-Eye
+  &[data-content="1"] { color: $black; }
+  &[data-content="2"] { color: $red; }
+  &[data-content="3"] { color: $blue; }
+  &[data-content="4"] { color: $blue; }
+  &[data-content="5"] { color: $red; }
+  &[data-content="6"] { color: $black; }
+
+  //face-style: Ivory
+  & {
+    background-color: $ivory;
+  }
 }

@@ -42,7 +42,7 @@ export default () => (
             </ol>
             <p>The score:</p>
             <ul>
-              <li>👨 has ✏️✏️ and the 🔨</li>
+              <li>👨 has ✏️✏️ and the <Link to="/glossary#hammer"><span role="img" aria-label="hammer">🔨</span></Link></li>
               <li>👩 has ✏️</li>
             </ul>
             <p>
@@ -155,50 +155,58 @@ export default () => (
         <p>
           <em>There are 4 players: A, B, C, and D.</em>
         </p>
-        <strong>Roll 1</strong>
-        <ul>
-          <li>
-            <em>Player A</em> rolls a 5
-          </li>
-          <li>
-            <em>Player B</em> rolls a 2
-          </li>
-          <li>
-            <em>Player C</em> rolls a 3
-          </li>
-          <li>
-            <em>Player D</em> rolls a 5
-          </li>
-        </ul>
-        <p>
-          <em>Player A</em> and <em>Player B</em> are tied and roll again.
-        </p>
-        <strong>Roll 2</strong>
-        <ul>
-          <li>
-            <em>Player A</em> rolls a 4
-          </li>
-          <li>
-            <em>Player B</em> rolls a 4
-          </li>
-        </ul>
-        <p>
-          <em>Player A</em> and <em>Player B</em> are tied again and roll a 3rd
-          time.
-        </p>
-        <strong>Roll 3</strong>
-        <ul>
-          <li>
-            <em>Player A</em> rolls a 6
-          </li>
-          <li>
-            <em>Player B</em> rolls a 2
-          </li>
-        </ul>
-        <p>
-          <em>Player A</em> wins the piddle and will be coming out (rolling
-          first).
-        </p>
+				<div className="row">
+					<div className="col-md-4">
+						<strong>Roll 1</strong>
+						<ul>
+							<li>
+								<em>Player A</em> rolls a 5
+							</li>
+							<li>
+								<em>Player B</em> rolls a 2
+							</li>
+							<li>
+								<em>Player C</em> rolls a 3
+							</li>
+							<li>
+								<em>Player D</em> rolls a 5
+							</li>
+						</ul>
+						<p>
+							<em>Player A</em> and <em>Player B</em> are tied and roll again.
+						</p>
+					</div>
+					<div className="col-md-4">
+						<strong>Roll 2</strong>
+						<ul>
+							<li>
+								<em>Player A</em> rolls a 4
+							</li>
+							<li>
+								<em>Player B</em> rolls a 4
+							</li>
+						</ul>
+						<p>
+							<em>Player A</em> and <em>Player B</em> are tied again and roll a 3rd
+							time.
+						</p>
+					</div>
+					<div className="col-md-4">
+						<strong>Roll 3</strong>
+						<ul>
+							<li>
+								<em>Player A</em> rolls a 6
+							</li>
+							<li>
+								<em>Player B</em> rolls a 2
+							</li>
+						</ul>
+						<p>
+							<em>Player A</em> wins the piddle and will be coming out (rolling
+							first).
+						</p>
+					</div>
+				</div>
       </div>
       <p>&nbsp;</p>
       <hr />
@@ -231,19 +239,11 @@ export default () => (
             </h4>
             <div className="card-body">
               <small className="card-subtitle text-muted">
-                Aka "the hammer"
+                Aka "the hammer" <Link to="/glossary#hammer"><span role="img" aria-label="hammer">🔨</span></Link>
               </small>
               <p className="card-text">
-                Whomever has the{' '}
-                <a
-                  href="#"
-                  data-toggle="tooltip"
-                  data-placement="top"
-                  title="The player who has the call is said to have the hammer"
-                >
-                  hammer
-                </a>{' '}
-                looks at their hand and calls out a game they wish to play first
+                Whomever has the
+                <Link to="/glossary#hammer"><span role="img" aria-label="hammer">🔨</span></Link> looks at their hand and calls out a game they wish to play first
                 knowing that the player directly to their left has the right of{' '}
                 <em>first refusal</em>.
               </p>
@@ -356,11 +356,17 @@ export default () => (
         the next game.
       </p>
       <div class="alert alert-secondary" role="alert">
-        <h5 className="alert-heading">3 pencils</h5>
+        <h5 className="alert-heading">3 <span role="img" aria-label="pencil">✏️</span>'s</h5>
         <p>
           If a player has 2 pencils already and receives their 3rd, they go out
           and the call passes to the next player to their left who doesn't have
           3 pencils.
+        </p>
+      </div>
+      <div class="alert alert-secondary" role="alert">
+        <h5 className="alert-heading">2 players</h5>
+        <p>
+          If only 2 players remain, the call is passed regardless of who lost.
         </p>
       </div>
       <h3>Repeat</h3>

@@ -7,12 +7,7 @@ class Die extends Component {
     const dieSize = 2
 
     return (
-      <div
-        style={{
-          background: 'white'
-        }}
-        className="die pip" data-content={props.number}>
-        {props.number}
+      <div className="die pips" data-content={props.number}>
       </div>
     )
   }
