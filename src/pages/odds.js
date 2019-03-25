@@ -174,20 +174,7 @@ const OddsPage = ({ data }) => {
             <tr>
               <td align="right">2 pair</td>
               <td>{rollPercentage(games['pairs'], 1)}%</td>
-              <td>
-                <div className="progress">
-                  <div
-                    className="progress-bar bg-success"
-                    role="progressbar"
-                    style={{ width: rollPercentage(games['pairs'], 2) + '%' }}
-                    aria-valuenow={rollPercentage(games['pairs'], 2)}
-                    aria-valuemin="0"
-                    aria-valuemax="100"
-                  >
-                    {rollPercentage(games['pairs'], 2)}%
-                  </div>
-                </div>
-              </td>
+              <td>{rollPercentage(games['pairs'], 2)}%</td>
               <td>{rollPercentage(games['pairs'], 3)}%</td>
             </tr>
             <tr>
