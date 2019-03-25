@@ -126,39 +126,39 @@ const OddsPage = ({ data }) => {
             </tr>
             <tr>
               <td align="right">1 six</td>
-              <td>{rollPercentage(games['pairs'], 1)}%</td>
-              <td>{rollPercentage(games['pairs'], 2)}%</td>
-              <td>{rollPercentage(games['pairs'], 3)}%</td>
+              <td>{rollPercentage(games[''], 1)}%</td>
+              <td>{rollPercentage(games[''], 2)}%</td>
+              <td>{rollPercentage(games[''], 3)}%</td>
             </tr>
             <tr>
               <td align="right">2 sixes</td>
-              <td>{rollPercentage(games['pairs'], 1)}%</td>
-              <td>{rollPercentage(games['pairs'], 2)}%</td>
-              <td>{rollPercentage(games['pairs'], 3)}%</td>
+              <td>{rollPercentage(games[''], 1)}%</td>
+              <td>{rollPercentage(games[''], 2)}%</td>
+              <td>{rollPercentage(games[''], 3)}%</td>
             </tr>
             <tr>
               <td align="right">3 sixes</td>
-              <td>{rollPercentage(games['pairs'], 1)}%</td>
-              <td>{rollPercentage(games['pairs'], 2)}%</td>
-              <td>{rollPercentage(games['pairs'], 3)}%</td>
+              <td>{rollPercentage(games[''], 1)}%</td>
+              <td>{rollPercentage(games[''], 2)}%</td>
+              <td>{rollPercentage(games[''], 3)}%</td>
             </tr>
             <tr>
               <td align="right">4 sixes</td>
-              <td>{rollPercentage(games['pairs'], 1)}%</td>
-              <td>{rollPercentage(games['pairs'], 2)}%</td>
-              <td>{rollPercentage(games['pairs'], 3)}%</td>
+              <td>{rollPercentage(games[''], 1)}%</td>
+              <td>{rollPercentage(games[''], 2)}%</td>
+              <td>{rollPercentage(games[''], 3)}%</td>
             </tr>
             <tr>
               <td align="right">5 sixes</td>
-              <td>{rollPercentage(games['pairs'], 1)}%</td>
-              <td>{rollPercentage(games['pairs'], 2)}%</td>
-              <td>{rollPercentage(games['pairs'], 3)}%</td>
+              <td>{rollPercentage(games[''], 1)}%</td>
+              <td>{rollPercentage(games[''], 2)}%</td>
+              <td>{rollPercentage(games[''], 3)}%</td>
             </tr>
             <tr>
               <td align="right">6 sixes</td>
-              <td>{rollPercentage(games['pairs'], 1)}%</td>
-              <td>{rollPercentage(games['pairs'], 2)}%</td>
-              <td>{rollPercentage(games['pairs'], 3)}%</td>
+              <td>{rollPercentage(games[''], 1)}%</td>
+              <td>{rollPercentage(games[''], 2)}%</td>
+              <td>{rollPercentage(games[''], 3)}%</td>
             </tr>
             <tr>
               <td colspan="4">
@@ -167,39 +167,39 @@ const OddsPage = ({ data }) => {
             </tr>
             <tr>
               <td align="right">1 pair</td>
-              <td>{rollPercentage(games['pairs'], 1)}%</td>
-              <td>{rollPercentage(games['pairs'], 2)}%</td>
-              <td>{rollPercentage(games['pairs'], 3)}%</td>
+              <td>{rollPercentage(games[''], 1)}%</td>
+              <td>{rollPercentage(games[''], 2)}%</td>
+              <td>{rollPercentage(games[''], 3)}%</td>
             </tr>
             <tr>
               <td align="right">2 pair</td>
-              <td>{rollPercentage(games['pairs'], 1)}%</td>
-              <td>{rollPercentage(games['pairs'], 2)}%</td>
-              <td>{rollPercentage(games['pairs'], 3)}%</td>
+              <td>{rollPercentage(games[''], 1)}%</td>
+              <td>{rollPercentage(games[''], 2)}%</td>
+              <td>{rollPercentage(games[''], 3)}%</td>
             </tr>
             <tr>
               <td align="right">3 of a kind</td>
-              <td>{rollPercentage(games['pairs'], 1)}%</td>
-              <td>{rollPercentage(games['pairs'], 2)}%</td>
-              <td>{rollPercentage(games['pairs'], 3)}%</td>
+              <td>{rollPercentage(games[''], 1)}%</td>
+              <td>{rollPercentage(games[''], 2)}%</td>
+              <td>{rollPercentage(games[''], 3)}%</td>
             </tr>
             <tr>
               <td align="right">full house</td>
-              <td>{rollPercentage(games['pairs'], 1)}%</td>
-              <td>{rollPercentage(games['pairs'], 2)}%</td>
-              <td>{rollPercentage(games['pairs'], 3)}%</td>
+              <td>{rollPercentage(games[''], 1)}%</td>
+              <td>{rollPercentage(games[''], 2)}%</td>
+              <td>{rollPercentage(games[''], 3)}%</td>
             </tr>
             <tr>
               <td align="right">4 of a kind</td>
-              <td>{rollPercentage(games['pairs'], 1)}%</td>
-              <td>{rollPercentage(games['pairs'], 2)}%</td>
-              <td>{rollPercentage(games['pairs'], 3)}%</td>
+              <td>{rollPercentage(games[''], 1)}%</td>
+              <td>{rollPercentage(games[''], 2)}%</td>
+              <td>{rollPercentage(games[''], 3)}%</td>
             </tr>
             <tr>
               <td align="right">5 of a kind</td>
-              <td>{rollPercentage(games['pairs'], 1)}%</td>
-              <td>{rollPercentage(games['pairs'], 2)}%</td>
-              <td>{rollPercentage(games['pairs'], 3)}%</td>
+              <td>{rollPercentage(games[''], 1)}%</td>
+              <td>{rollPercentage(games[''], 2)}%</td>
+              <td>{rollPercentage(games[''], 3)}%</td>
             </tr>
             <tr>
               <td colspan="4">
@@ -208,27 +208,27 @@ const OddsPage = ({ data }) => {
             </tr>
             <tr>
               <td align="right">at least a 3</td>
-              <td>{rollPercentage(games['pairs'], 1)}%</td>
-              <td>{rollPercentage(games['pairs'], 2)}%</td>
-              <td>{rollPercentage(games['pairs'], 3)}%</td>
+              <td>{rollPercentage(games[''], 1)}%</td>
+              <td>{rollPercentage(games[''], 2)}%</td>
+              <td>{rollPercentage(games[''], 3)}%</td>
             </tr>
             <tr>
               <td align="right">a 3 or 1 with 4 dice</td>
-              <td>{rollPercentage(games['pairs'], 1)}%</td>
-              <td>{rollPercentage(games['pairs'], 2)}%</td>
-              <td>{rollPercentage(games['pairs'], 3)}%</td>
+              <td>{rollPercentage(games[''], 1)}%</td>
+              <td>{rollPercentage(games[''], 2)}%</td>
+              <td>{rollPercentage(games[''], 3)}%</td>
             </tr>
             <tr>
               <td align="right">a 3 or 1 with 3 dice</td>
-              <td>{rollPercentage(games['pairs'], 1)}%</td>
-              <td>{rollPercentage(games['pairs'], 2)}%</td>
-              <td>{rollPercentage(games['pairs'], 3)}%</td>
+              <td>{rollPercentage(games[''], 1)}%</td>
+              <td>{rollPercentage(games[''], 2)}%</td>
+              <td>{rollPercentage(games[''], 3)}%</td>
             </tr>
             <tr>
               <td align="right">a 3, 1, or 2 with 2 dice</td>
-              <td>{rollPercentage(games['pairs'], 1)}%</td>
-              <td>{rollPercentage(games['pairs'], 2)}%</td>
-              <td>{rollPercentage(games['pairs'], 3)}%</td>
+              <td>{rollPercentage(games[''], 1)}%</td>
+              <td>{rollPercentage(games[''], 2)}%</td>
+              <td>{rollPercentage(games[''], 3)}%</td>
             </tr>
           </tbody>
         </table>
