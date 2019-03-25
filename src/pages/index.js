@@ -47,7 +47,8 @@ const IndexPage = () => (
             <div className="card-body">
               <h5 className="card-title">What'd they say?</h5>
               <p className="card-text">
-                If you're confused about what's being said, read the glossary of common phrases and terms.
+                If you're confused about what's being said, read the glossary of
+                common phrases and terms.
               </p>
               <Link to="glossary" className="btn btn-primary">
                 Glossary
