@@ -13,9 +13,9 @@ const RollsPage = ({ data }) => {
   var diceRolls = []
   var successfulRolls = 0
 
-  if (localStorage.getItem('diceRolls')) {
-    diceRolls = JSON.parse(localStorage.getItem('diceRolls'))
-  }
+  // if (window.localStorage.getItem('diceRolls')) {
+    // diceRolls = JSON.parse(window.localStorage.getItem('diceRolls'))
+  // }
 
   // Check if matrix is empty
   if (!diceRolls.length) {
@@ -66,21 +66,21 @@ const RollsPage = ({ data }) => {
               className="collapse show"
               aria-labelledby="headingOne"
               data-parent="#accordionExample"
-              style=
-              {{
+              style={{
                 display: 'flex',
                 flexWrap: 'wrap',
                 fontFamily: 'monospace',
               }}
-              >
+            >
               <div className="card-body">
                 {diceRolls.map((roll, index) => {
                   let badgeType = 'light'
                   if (
                     // roll.indexOf(4) >= 0
-										(roll.indexOf(6) >= 0 || roll.indexOf(1) >= 0)
-										// ||
-										// (roll.lastIndexOf(5) > roll.indexOf(5))
+                    roll.indexOf(6) >= 0 ||
+                    roll.indexOf(1) >= 0
+                    // ||
+                    // (roll.lastIndexOf(5) > roll.indexOf(5))
                   ) {
                     badgeType = 'success'
                     successfulRolls++
