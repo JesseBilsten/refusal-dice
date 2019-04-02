@@ -349,6 +349,9 @@ export default () => (
           participate and players that aren't tied for the low hand do not have
           to play the next hand.
         </p>
+        <h5 className="alert-heading">Exception: <small>2 players left <span role="img" aria-label="player">👨</span><span role="img" aria-label="player">👨</span>
+</small></h5>
+        <p>If there are only two players left, rather than play the same game again, the call is passed. </p>
       </div>
       <h3>Phase 4: Award a pencil</h3>
       <p>
