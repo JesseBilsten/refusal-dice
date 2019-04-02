@@ -278,25 +278,27 @@ export default () => (
         </div>
         <div className="col-md-6">
           <div className="d-flex justify-content-end">
-            <Game type="monterey" className="mr-1">
-              <Die number="2" />
-              <Die number="3" />
-              <Die number="4" />
+            <Game type="razzle: (3) 6's" className="mr-1">
+              <Die number="1" />
+              <Die number="6" />
+              <Die number="6" />
             </Game>
-            <Game type="low">
+          </div>
+          <div className="d-flex justify-content-end">
+            <Game type="razzle: (4) 5's" className="mr-1">
+              <Die number="1" />
+              <Die number="5" />
               <Die number="1" />
               <Die number="1" />
             </Game>
           </div>
           <div className="d-flex justify-content-end">
-            <Game type="pairs" className="mr-1">
-              <Die number="3" />
-              <Die number="4" />
-              <Die number="5" />
-            </Game>
-            <Game type="high">
-              <Die number="6" />
-              <Die number="6" />
+            <Game type="razzle: (5) 6's" className="mr-1">
+              <Die number="1" />
+              <Die number="1" />
+              <Die number="1" />
+              <Die number="1" />
+              <Die number="1" />
             </Game>
           </div>
         </div>
