@@ -7,7 +7,7 @@ const round = (value, decimals) =>
   Number(Math.round(value + 'e' + decimals) + 'e-' + decimals)
 
 const getColor = (value) =>
-  "hsl(" + (Math.round(value)/100) * 120 + ", 100%, 50%)"
+  "hsl(" + (Math.round(value)/100) * 120 + ", 100%, 80%)"
 
 let games = []
 games['10-2'] = 49.07
@@ -264,8 +264,10 @@ const OddsPage = ({ data }) => {
               </td>
             </tr>
             <tr>
-              <th>Hand</th>
-              <th>Roll</th>
+              <th colspan="2" rowspan="2" style={{ verticalAlign: "top" }}>1st Roll</th>
+              <th colspan="7">2nd Roll</th>
+            </tr>
+            <tr>
               <th>1 high</th>
               <th>1 pair</th>
               <th>2 pairs</th>
