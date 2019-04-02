@@ -33,11 +33,11 @@ games['razzle__3__3d6'] = 3.70
 games['razzle__1__2d6'] = 100 - (Math.pow(4, 2) / Math.pow(6, 2)) * 100
 games['razzle__2__2d6'] = 11.11
 games['razzle__1__1d6'] = 100 - (Math.pow(4, 1) / Math.pow(6, 1)) * 100
-games['boss-1high__5d6'] = 100
-games['boss-nomatch__4d6'] = 33.33 // What are the odds of NOT rolling a matching number
+games['boss-6high__5d6'] = 40.19
+games['boss-nomatch__4d6'] = 48.23 // What are the odds of NOT rolling a matching number
 games['boss-1pair__5d6'] = 46.3
 games['boss-1pair__4d6'] = 48.23
-games['boss-1match__4d6'] = 66.67 // at least 1 die matches a held die
+games['boss-1match__4d6'] = 51.77 // at least 1 die matches a held die
 games['boss-2pair__5d6'] = 23.15
 games['boss-3kind__5d6'] = 15.43
 games['boss-3kind__4d6'] = 48.23
@@ -279,8 +279,8 @@ const OddsPage = ({ data }) => {
           </thead>
           <tbody>
             <tr>
-              <th align="right">1 high</th>
-              <TableData game="boss-1high__5d6" roll="1" />
+              <th align="right">a 6 high</th>
+              <TableData game="boss-6high__5d6" roll="1" />
               <TableData game="boss-nomatch__4d6" roll="1" />
               <TableData game="boss-1match__4d6" roll="1" />
               <TableData game="boss-2match__4d6" roll="1" />
