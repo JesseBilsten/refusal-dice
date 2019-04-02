@@ -258,7 +258,7 @@ export default () => (
             </Game>
           </div>
           <div className="d-flex justify-content-end">
-            <Game type="monterey" className="mr-1">
+            <Game type="pairs" className="mr-1">
               <Die number="6" />
               <Die number="6" />
               <Die number="6" />
@@ -294,7 +294,6 @@ export default () => (
           </div>
           <div className="d-flex justify-content-end">
             <Game type="razzle: (5) 6's" className="mr-1">
-              <Die number="1" />
               <Die number="1" />
               <Die number="1" />
               <Die number="1" />
