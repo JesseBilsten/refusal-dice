@@ -35,7 +35,9 @@ games['razzle__2__2d6'] = 11.11
 games['razzle__1__1d6'] = 100 - (Math.pow(4, 1) / Math.pow(6, 1)) * 100
 games['boss-6high__5d6'] = 40.19
 games['boss-nomatch__4d6'] = 48.23 // What are the odds of NOT rolling a matching number
-games['boss-1pair__5d6'] = 46.3
+games['boss-1pair__5d6'] = 46.3  // 3600/7776 
+games['boss-1pair-orbetter__5d6'] = 7056/7776*100 // odds of getting a pair or better
+games['boss-6s-orbetter__5d6'] = 4056/7776*100 // odds of getting two 6's or better
 games['boss-1pair__4d6'] = 48.23
 games['boss-1match__4d6'] = 51.77 // at least 1 die matches a held die
 games['boss-2pair__5d6'] = 23.15
@@ -68,10 +70,10 @@ games['tres-away__1-3__1d6'] = 100 - (Math.pow(3, 1) / Math.pow(6, 1)) * 100
 const rollPercentage = (percentage, rolls) =>
   round((1 - Math.pow(100 - percentage, rolls) / Math.pow(100, rolls)) * 100, 2)
 
-const TableData = ({ game, roll }) => {
+const TableData = ({ game, roll, rowspan }) => {
   const percentage = rollPercentage(games[game], roll)
   return (
-    <td style={{ backgroundColor: getColor(percentage) }}>{percentage}%</td>
+    <td style={{ backgroundColor: getColor(percentage) }} rowspan={rowspan}>{percentage}%</td>
   )
 }
 
@@ -163,7 +165,7 @@ const OddsPage = ({ data }) => {
               </td>
             </tr>
             <tr>
-              <th>&nbsp;</th>
+              <td style={{ backgroundColor: '#999' }}>&nbsp;</td>
               <th colspan="3">5 dice</th>
               <th colspan="3">4 dice</th>
               <th colspan="3">3 dice</th>
@@ -171,7 +173,7 @@ const OddsPage = ({ data }) => {
               <th colspan="3">1 dice</th>
             </tr>
             <tr>
-              <th>Sixes</th>
+              <th># of Sixes</th>
               <th>1 roll</th>
               <th>2</th>
               <th>3</th>
@@ -222,7 +224,7 @@ const OddsPage = ({ data }) => {
               <TableData game="razzle__2__2d6" roll="1" />
               <TableData game="razzle__2__2d6" roll="2" />
               <TableData game="razzle__2__2d6" roll="3" />
-              <td colspan="3"></td>
+              <td colspan="3" style={{backgroundColor: '#999' }}></td>
             </tr>
             <tr>
               <td align="right">3</td>
@@ -235,7 +237,7 @@ const OddsPage = ({ data }) => {
               <TableData game="razzle__3__3d6" roll="1" />
               <TableData game="razzle__3__3d6" roll="2" />
               <TableData game="razzle__3__3d6" roll="3" />
-              <td colspan="6"></td>
+              <td colspan="6" style={{backgroundColor: '#999' }}></td>
             </tr>
             <tr>
               <td align="right">4</td>
@@ -245,31 +247,30 @@ const OddsPage = ({ data }) => {
               <TableData game="razzle__4__4d6" roll="1" />
               <TableData game="razzle__4__4d6" roll="2" />
               <TableData game="razzle__4__4d6" roll="3" />
-              <td colspan="9"></td>
+              <td colspan="9" style={{backgroundColor: '#999' }}></td>
             </tr>
             <tr>
               <td align="right">5</td>
               <TableData game="razzle__5__5d6" roll="1" />
               <TableData game="razzle__5__5d6" roll="2" />
               <TableData game="razzle__5__5d6" roll="3" />
-              <td colspan="12"></td>
+              <td colspan="12" style={{backgroundColor: '#999' }}></td>
             </tr>
           </tbody>
         </table>
         <table className="table table-bordered odds">
           <thead>
             <tr>
-              <td colspan="9">
+              <td colspan="10">
                 <Link to="/games#boss">Boss</Link>
               </td>
             </tr>
             <tr>
-              <th colspan="2" rowspan="2" style={{ verticalAlign: "top" }}>1st Roll</th>
+              <th colspan="3" rowspan="2" style={{ verticalAlign: "top" }}>1st Roll</th>
               <th colspan="7">2nd Roll</th>
             </tr>
             <tr>
-              <th>1 high</th>
-              <th>1 pair</th>
+              <th colspan="2">5 dice</th>
               <th>2 pairs</th>
               <th>3 of a kind</th>
               <th>full house</th>
@@ -281,6 +282,7 @@ const OddsPage = ({ data }) => {
             <tr>
               <th align="right">a 6 high</th>
               <TableData game="boss-6high__5d6" roll="1" />
+              <td colspan="1" style={{ backgroundColor: '#999' }}>N/A</td>
               <TableData game="boss-nomatch__4d6" roll="1" />
               <TableData game="boss-1match__4d6" roll="1" />
               <TableData game="boss-2match__4d6" roll="1" />
@@ -292,6 +294,7 @@ const OddsPage = ({ data }) => {
             <tr>
               <th align="right">1 pair</th>
               <TableData game="boss-1pair__5d6" roll="1" />
+              <TableData game="boss-1pair-orbetter__5d6" roll="1" rowspan="6" />
               <td colspan="2" style={{ backgroundColor: '#999' }}>N/A</td>
               <TableData game="boss-1pair__3d6" roll="1" />
               <TableData game="boss-1match__3d6" roll="1" />
@@ -340,12 +343,12 @@ const OddsPage = ({ data }) => {
               </td>
             </tr>
             <tr>
-              <th>Dice/Result</th>
-              <th>5</th>
-              <th>4</th>
-              <th>3</th>
-              <th>2</th>
-              <th>1</th>
+              <th>Result</th>
+              <th>5 dice</th>
+              <th>4 dice</th>
+              <th>3 dice</th>
+              <th>2 dice</th>
+              <th>1 die</th>
             </tr>
           </thead>
           <tbody>
