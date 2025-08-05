@@ -10,6 +10,18 @@ export default () => (
         <p class="lead">How to play the game</p>
       </div>
       <hr />
+      <h2>Equipment</h2>
+      <p className="text-muted">What you need to play</p>
+      <h3>5 dice</h3>
+      <p>
+        We prefer Michigan Red Eye's but any die will do. The red eye's make it a little faster to see what game you can play.
+      </p>
+      <a class="btn btn-primary" role="button" href="https://amzn.to/47ZTYoX">Buy Michigan Red Eye Dice on Amazon</a>
+      <h3>Dice cup</h3>
+      <p>
+        You could use a dice tower, or a cup. Our group uses a nice Alex Cramer leather cup with ridges inside to help the dice tumble properly.
+      </p>
+      <a class="btn btn-primary" role="button" href="https://amzn.to/3w0X0w6">Buy Alex Cramer dice cups on Amazon</a>
       <h2>Object of the game</h2>
       <p className="text-muted">Be the last man standing</p>
       <p>
