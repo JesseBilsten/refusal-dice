@@ -13,20 +13,20 @@ module.exports = {
         background_color: '#663399',
         theme_color: '#663399',
         display: 'minimal-ui',
-        icon: 'src/images/game-die.png', // This path is relative to the root of the site.
-			},
+        icon: 'src/images/game-die.png',
+      },
+    },
+    {
       resolve: `gatsby-source-filesystem`,
       options: {
         name: `src`,
         path: `${__dirname}/src/`,
-				},
-		},
-		{
-		resolve: `gatsby-plugin-sass`,
-    options: {
-      precision: 8,
-			},
-		},
+      },
+    },
+    {
+      resolve: `gatsby-plugin-sass`,
+      options: {},
+    },
     'gatsby-plugin-offline',
   ],
 }
