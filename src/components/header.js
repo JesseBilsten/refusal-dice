@@ -2,15 +2,13 @@ import React from 'react'
 import { Link } from 'gatsby'
 
 const Header = ({ siteTitle }) => (
-  <nav
-    className="navbar navbar-expand navbar-dark flex-column flex-md-row bg-dark"
-    role="navigation"
-  >
-    <Link to="/" className="navbar-brand mr-0 mr-md-2">
-      {siteTitle}
-    </Link>
-    <div className="navbar nav-scroll">
-      <ul className="navbar-nav mr-auto">
+  <nav className="navbar navbar-expand-md navbar-dark flex-column flex-md-row bg-dark" role="navigation">
+    <div className="container-fluid">
+      <Link to="/" className="navbar-brand me-0 me-md-2">
+        {siteTitle}
+      </Link>
+      <div className="navbar-nav nav-scroll">
+        <ul className="navbar-nav me-auto">
         <li className="nav-item">
           <Link to="/rules" className="nav-link">
             Rules
@@ -32,6 +30,7 @@ const Header = ({ siteTitle }) => (
           </Link>
         </li>
       </ul>
+      </div>
     </div>
   </nav>
 )
