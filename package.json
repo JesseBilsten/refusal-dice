@@ -37,6 +37,7 @@
     "qs": ">=6.14.1",
     "tmp": ">=0.2.4",
     "@parcel/reporter-dev-server": "*"
+    ,"sass-loader": "^12.6.0"
   },
   "repository": {
     "type": "git",

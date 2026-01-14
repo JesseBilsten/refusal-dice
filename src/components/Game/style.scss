@@ -1,4 +1,4 @@
-@import 'src/scss/colors.scss';
+@use "../../scss/colors" as *;
 
 .game {
   display: flex;
