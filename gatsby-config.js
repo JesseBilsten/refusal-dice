@@ -3,7 +3,7 @@ module.exports = {
     title: 'Refusal Dice',
   },
   plugins: [
-    'gatsby-plugin-react-helmet',
+    
     {
       resolve: `gatsby-plugin-manifest`,
       options: {
@@ -31,6 +31,6 @@ module.exports = {
         },
       },
     },
-    'gatsby-plugin-offline',
+    
   ],
 }
