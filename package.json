@@ -4,21 +4,20 @@
   "version": "1.0.0",
   "author": "Kyle Mathews <mathews.kyle@gmail.com>",
   "dependencies": {
-    "bootstrap": "^4.2.1",
-    "bootstrap-table": "^1.13.4",
-    "gatsby": "^2.0.118",
-    "gatsby-cli": "^2.5.14",
-    "gatsby-plugin-manifest": "^2.0.17",
-    "gatsby-plugin-offline": "^2.0.23",
-    "gatsby-plugin-react-helmet": "^3.0.6",
-    "gatsby-plugin-sass": "^2.0.10",
-    "gatsby-source-filesystem": "^2.0.20",
-    "jquery": "^3.3.1",
-    "node-sass": "^4.11.0",
-    "react": "^16.8.1",
-    "react-bootstrap": "^0.32.4",
-    "react-dom": "^16.8.1",
-    "react-helmet": "^5.2.0"
+    "bootstrap": "^5.3.8",
+    "bootstrap-table": "^1.26.0",
+    "gatsby": "^5.15.0",
+    "gatsby-plugin-manifest": "^5.15.0",
+    "gatsby-plugin-offline": "^6.15.0",
+    "gatsby-plugin-react-helmet": "^6.15.0",
+    "gatsby-plugin-sass": "^6.15.0",
+    "gatsby-source-filesystem": "^5.15.0",
+    "jquery": "^3.7.1",
+    "react": "^18.2.0",
+    "react-bootstrap": "^2.10.10",
+    "react-dom": "^18.2.0",
+    "react-helmet": "^6.1.0",
+    "sass": "^1.72.1"
   },
   "keywords": [
     "gatsby"
@@ -31,7 +30,8 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "devDependencies": {
-    "prettier": "^1.16.4"
+    "prettier": "^3.6.2",
+    "gatsby-cli": "^5.15.0"
   },
   "repository": {
     "type": "git",
