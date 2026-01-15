@@ -38,13 +38,11 @@ const Layout = ({ children }) => (
           <html lang="en" />
         </Helmet>
         <div className="site">
-          <a id="skippy" className="sr-only sr-only-focusable" href="#content">
-            <div className="container">
-              <span className="skiplink-text">Skip to main content</span>
-            </div>
+          <a id="skippy" className="visually-hidden visually-hidden-focusable" href="#content">
+            Skip to main content
           </a>
           <Header siteTitle={data.site.siteMetadata.title} />
-          <main role="main">{children}</main>
+          <main id="content" role="main">{children}</main>
           <Footer />
         </div>
       </>

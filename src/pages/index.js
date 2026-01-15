@@ -4,9 +4,9 @@ import Layout from '../components/layout'
 
 const IndexPage = () => (
   <Layout>
-    <section className="jumbotron">
-      <div className="container">
-        <h1 className="jumbotron-heading">Refusal Dice</h1>
+    <section className="py-5 bg-light rounded-3">
+      <div className="container py-4">
+        <h1 className="display-5 fw-bold">Refusal Dice</h1>
         <p className="lead text-muted">
           The game plays much like poker in that it is played with groups of
           people typically 2-8 (anymore than 8 and partners are encouraged -

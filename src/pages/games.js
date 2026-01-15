@@ -24,7 +24,7 @@ export default () => (
         </div>
         <div className="col-md-6">
           <div className="d-flex justify-content-end">
-            <Game type="10-2" className="mr-1">
+            <Game type="10-2" className="me-1">
               <Die number="4" />
               <Die number="6" />
             </Game>
@@ -35,7 +35,7 @@ export default () => (
             </Game>
           </div>
           <div className="d-flex justify-content-end">
-            <Game type="10-2" className="mr-1">
+            <Game type="10-2" className="me-1">
               <Die number="5" />
               <Die number="5" />
             </Game>
@@ -60,7 +60,7 @@ export default () => (
         </div>
         <div className="col-md-6">
           <div className="d-flex justify-content-end">
-            <Game type="10-3" className="mr-1">
+            <Game type="10-3" className="me-1">
               <Die number="1" />
               <Die number="3" />
               <Die number="6" />
@@ -71,7 +71,7 @@ export default () => (
             </Game>
           </div>
           <div className="d-flex justify-content-end">
-            <Game type="10-3" className="mr-1">
+            <Game type="10-3" className="me-1">
               <Die number="2" />
               <Die number="3" />
               <Die number="5" />
@@ -96,7 +96,7 @@ export default () => (
         </div>
         <div className="col-md-6">
           <div className="d-flex justify-content-end">
-            <Game type="10-4" className="mr-1">
+            <Game type="10-4" className="me-1">
               <Die number="1" />
               <Die number="2" />
               <Die number="6" />
@@ -107,7 +107,7 @@ export default () => (
             </Game>
           </div>
           <div className="d-flex justify-content-end">
-            <Game type="10-4" className="mr-1">
+            <Game type="10-4" className="me-1">
               <Die number="1" />
               <Die number="2" />
               <Die number="3" />
@@ -133,7 +133,7 @@ export default () => (
         </div>
         <div className="col-md-6">
           <div className="d-flex justify-content-end">
-            <Game type="ship, captain, crew" className="mr-1">
+            <Game type="ship, captain, crew" className="me-1">
               <Die number="4" />
               <Die number="5" />
               <Die number="6" />
@@ -144,7 +144,7 @@ export default () => (
             </Game>
           </div>
           <div className="d-flex justify-content-end">
-            <Game type="ship, captain, crew" className="mr-1">
+            <Game type="ship, captain, crew" className="me-1">
               <Die number="1" />
               <Die number="2" />
               <Die number="3" />
@@ -170,7 +170,7 @@ export default () => (
         </div>
         <div className="col-md-6">
           <div className="d-flex justify-content-end">
-            <Game type="monterey" className="mr-1">
+            <Game type="monterey" className="me-1">
               <Die number="2" />
               <Die number="3" />
               <Die number="4" />
@@ -181,7 +181,7 @@ export default () => (
             </Game>
           </div>
           <div className="d-flex justify-content-end">
-            <Game type="monterey" className="mr-1">
+            <Game type="monterey" className="me-1">
               <Die number="3" />
               <Die number="4" />
               <Die number="5" />
@@ -207,11 +207,11 @@ export default () => (
         </div>
         <div className="col-md-6">
           <div className="d-flex justify-content-end">
-            <Game type="vegas" className="mr-1">
+            <Game type="vegas" className="me-1">
               <Die number="5" />
               <Die number="6" />
             </Game>
-            <Game type="vegas" className="mr-1">
+            <Game type="vegas" className="me-1">
               <Die number="1" />
               <Die number="6" />
             </Game>
@@ -220,11 +220,11 @@ export default () => (
             </Game>
           </div>
           <div className="d-flex justify-content-end">
-            <Game type="vegas" className="mr-1">
+            <Game type="vegas" className="me-1">
               <Die number="2" />
               <Die number="5" />
             </Game>
-            <Game type="vegas" className="mr-1">
+            <Game type="vegas" className="me-1">
               <Die number="3" />
               <Die number="4" />
             </Game>
@@ -247,7 +247,7 @@ export default () => (
         </div>
         <div className="col-md-6">
           <div className="d-flex justify-content-end">
-            <Game type="pairs" className="mr-1">
+            <Game type="pairs" className="me-1">
               <Die number="2" />
               <Die number="2" />
               <Die number="4" />
@@ -258,7 +258,7 @@ export default () => (
             </Game>
           </div>
           <div className="d-flex justify-content-end">
-            <Game type="pairs" className="mr-1">
+            <Game type="pairs" className="me-1">
               <Die number="6" />
               <Die number="6" />
               <Die number="6" />
@@ -278,14 +278,14 @@ export default () => (
         </div>
         <div className="col-md-6">
           <div className="d-flex justify-content-end">
-            <Game type="razzle: (3) 6's" className="mr-1">
+            <Game type="razzle: (3) 6's" className="me-1">
               <Die number="1" />
               <Die number="6" />
               <Die number="6" />
             </Game>
           </div>
           <div className="d-flex justify-content-end">
-            <Game type="razzle: (4) 5's" className="mr-1">
+            <Game type="razzle: (4) 5's" className="me-1">
               <Die number="1" />
               <Die number="5" />
               <Die number="1" />
@@ -293,7 +293,7 @@ export default () => (
             </Game>
           </div>
           <div className="d-flex justify-content-end">
-            <Game type="razzle: (5) 6's" className="mr-1">
+            <Game type="razzle: (5) 6's" className="me-1">
               <Die number="1" />
               <Die number="1" />
               <Die number="1" />
@@ -322,7 +322,7 @@ export default () => (
         </div>
         <div className="col-md-6">
           <div className="d-flex justify-content-end">
-            <Game type="5 of a kind" className="mr-1">
+            <Game type="5 of a kind" className="me-1">
               <Die number="2" />
               <Die number="2" />
               <Die number="2" />
@@ -331,7 +331,7 @@ export default () => (
             </Game>
           </div>
           <div className="d-flex justify-content-end">
-            <Game type="4 of a kind" className="mr-1">
+            <Game type="4 of a kind" className="me-1">
               <Die number="5" />
               <Die number="5" />
               <Die number="5" />
@@ -339,7 +339,7 @@ export default () => (
             </Game>
           </div>
           <div className="d-flex justify-content-end">
-            <Game type="full house" className="mr-1">
+            <Game type="full house" className="me-1">
               <Die number="4" />
               <Die number="4" />
               <Die number="4" />
@@ -348,14 +348,14 @@ export default () => (
             </Game>
           </div>
           <div className="d-flex justify-content-end">
-            <Game type="3 of a kind" className="mr-1">
+            <Game type="3 of a kind" className="me-1">
               <Die number="1" />
               <Die number="1" />
               <Die number="1" />
             </Game>
           </div>
           <div className="d-flex justify-content-end">
-            <Game type="2 pair" className="mr-1">
+            <Game type="2 pair" className="me-1">
               <Die number="1" />
               <Die number="1" />
               <Die number="3" />
@@ -363,7 +363,7 @@ export default () => (
             </Game>
           </div>
           <div className="d-flex justify-content-end">
-            <Game type="1 pair" className="mr-1">
+            <Game type="1 pair" className="me-1">
               <Die number="5" />
               <Die number="5" />
             </Game>
@@ -383,7 +383,7 @@ export default () => (
         </div>
         <div className="col-md-6">
           <div className="d-flex justify-content-end">
-            <Game type="0" className="mr-1">
+            <Game type="0" className="me-1">
               <Die number="3" />
               <Die number="3" />
               <Die number="3" />
@@ -392,7 +392,7 @@ export default () => (
             </Game>
           </div>
           <div className="d-flex justify-content-end">
-            <Game type="1" className="mr-1">
+            <Game type="1" className="me-1">
               <Die number="3" />
               <Die number="1" />
               <Die number="3" />
@@ -401,7 +401,7 @@ export default () => (
             </Game>
           </div>
           <div className="d-flex justify-content-end">
-            <Game type="2" className="mr-1">
+            <Game type="2" className="me-1">
               <Die number="3" />
               <Die number="1" />
               <Die number="3" />
@@ -410,7 +410,7 @@ export default () => (
             </Game>
           </div>
           <div className="d-flex justify-content-end">
-            <Game type="4" className="mr-1">
+            <Game type="4" className="me-1">
               <Die number="3" />
               <Die number="3" />
               <Die number="3" />
@@ -419,7 +419,7 @@ export default () => (
             </Game>
           </div>
           <div className="d-flex justify-content-end">
-            <Game type="30" className="mr-1">
+            <Game type="30" className="me-1">
               <Die number="6" />
               <Die number="6" />
               <Die number="6" />

@@ -1,19 +1,21 @@
-@import 'src/scss/colors.scss';
+@use "sass:math";
+@use "sass:color";
+@use "../../scss/colors" as *;
 
 $die-size: 2rem;
-$pip-size: $die-size*0.19;
+$pip-size: $die-size * 0.19;
 
 .die {
   display: flex;
   justify-content: center;
   align-items: center;
   font-weight: bold;
-  margin: $die-size/6;
+  margin: math.div($die-size, 6);
   width: $die-size;
   height: $die-size;
-  border-radius: $die-size/8;
+  border-radius: math.div($die-size, 8);
   border: 1px solid $black;
-  box-shadow: $die-size/10 transparentize($black, 0.5);
+  box-shadow: math.div($die-size, 10) color.adjust($black, $alpha: -0.5);
 
 	&.pips {
     position: relative;
