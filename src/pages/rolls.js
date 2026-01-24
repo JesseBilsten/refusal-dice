@@ -1,17 +1,10 @@
 import React from 'react'
 import { graphql } from 'gatsby'
 import Layout from '../components/layout'
-
-function odds(rolls, game) {
-  let success = []
-  if (game === '10-2') {
-    success = rolls.map((roll, index) => {})
-  }
-}
+import Badge from '../components/ui/Badge'
 
 const RollsPage = ({ data }) => {
-  var diceRolls = []
-  var successfulRolls = 0
+  let diceRolls = []
 
   // if (window.localStorage.getItem('diceRolls')) {
     // diceRolls = JSON.parse(window.localStorage.getItem('diceRolls'))
@@ -35,80 +28,40 @@ const RollsPage = ({ data }) => {
     }
   }
 
+  const successfulRolls = diceRolls.filter(roll => (roll.indexOf(6) >= 0 || roll.indexOf(1) >= 0)).length
+
   return (
     <Layout>
-      <section className="container mt-5">
-        <div className="my-5 text-center">
-          <h1>
-            Rolls <span className="badge badge-warning">incomplete</span>
-          </h1>
-          <p className="lead">A visual of all possible rolls</p>
-          <small>{new Date().toLocaleString()}</small>
+      <section className="section-gap">
+        <div className="section-gap container-custom">
+          <header className="mb-6">
+            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">Rolls <Badge>incomplete</Badge></h1>
+            <p className="lead mt-2 content-prose">A visual of all possible rolls</p>
+            <small className="block mt-2">{new Date().toLocaleString()}</small>
+          </header>
         </div>
-        <div className="accordion" id="accordionExample">
           <div className="card">
-            <div className="card-header" id="headingOne">
-              <h5 className="mb-0">
-                <button
-                  className="btn btn-link"
-                  type="button"
-                  data-toggle="collapse"
-                  data-target="#collapseOne"
-                  aria-expanded="true"
-                  aria-controls="collapseOne"
-                >
-                  Collapsible Group Item #1
-                </button>
-              </h5>
-            </div>
-            <div
-              id="collapseOne"
-              className="collapse show"
-              aria-labelledby="headingOne"
-              data-parent="#accordionExample"
-              style={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                fontFamily: 'monospace',
-              }}
-            >
-              <div className="card-body">
+              <div className="font-mono flex flex-wrap">
                 {diceRolls.map((roll, index) => {
-                  let badgeType = 'light'
-                  if (
-                    // roll.indexOf(4) >= 0
-                    roll.indexOf(6) >= 0 ||
-                    roll.indexOf(1) >= 0
-                    // ||
-                    // (roll.lastIndexOf(5) > roll.indexOf(5))
-                  ) {
-                    badgeType = 'success'
-                    successfulRolls++
-                  }
+                  const highlight = (roll.indexOf(6) >= 0 || roll.indexOf(1) >= 0)
                   return (
-                    <p
-                      className={'badge badge-' + badgeType}
+                    <span
+                      key={index}
                       data-number={roll.indexOf(6)}
-                      style={{
-                        margin: '0 1px 1px 0',
-                      }}
+                      className={highlight ? 'inline-flex items-center bg-success-surface text-success-foreground px-2 py-1 mr-1 mb-1 rounded' : 'inline-flex items-center bg-surface text-surface-foreground px-2 py-1 mr-1 mb-1 rounded'}
                     >
-                      {roll[0]}
-                      {roll[1]}
-                      {roll[2]}
-                      {roll[3]}
-                      {roll[4]}
-                    </p>
+                      {roll.join('')}
+                    </span>
                   )
                 })}
               </div>
-            </div>
           </div>
+        </section>
+      <section className="mt-6">
+        <div className="card text-center p-4">
+          <h2 className="text-lg font-semibold">{successfulRolls}/7776</h2>
+          <p className="mt-1 text-sm">{Math.floor((successfulRolls / 7776) * 100)}%</p>
         </div>
-      </section>
-      <section className="container">
-        <h1>{successfulRolls}/7776</h1>
-        <h2>{Math.floor((successfulRolls / 7776) * 100)}%</h2>
       </section>
     </Layout>
   )

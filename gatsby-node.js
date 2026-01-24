@@ -17,39 +17,30 @@ exports.onCreateWebpackConfig = ({ actions, stage, loaders }) => {
     ],
   }
   if (stage === 'build-html') {
-    config.module = {
-      rules: [
-        {
-          test: require.resolve('bootstrap'),
-          use: loaders.null(),
-        },
-        {
-          test: require.resolve('bootstrap-table'),
-          use: loaders.null(),
-        },
-        {
-          test: require.resolve(
-            'bootstrap-table/dist/extensions/mobile/bootstrap-table-mobile'
-          ),
-          use: loaders.null(),
-        },
-        {
-          test: require.resolve(
-            'bootstrap-table/dist/extensions/sticky-header/bootstrap-table-sticky-header'
-          ),
-          use: loaders.null(),
-        },
-        {
-          test: require.resolve(
-            'bootstrap-table/dist/extensions/cookie/bootstrap-table-cookie'
-          ),
-          use: loaders.null(),
-        },
-        {
-          test: require.resolve('jquery'),
-          use: loaders.null(),
-        },
-      ],
+    const rules = []
+
+    const tryResolve = (mod) => {
+      try {
+        return require.resolve(mod)
+      } catch (e) {
+        return null
+      }
+    }
+
+    const pushIf = (mod) => {
+      const resolved = tryResolve(mod)
+      if (resolved) rules.push({ test: resolved, use: loaders.null() })
+    }
+
+    pushIf('bootstrap')
+    pushIf('bootstrap-table')
+    pushIf('bootstrap-table/dist/extensions/mobile/bootstrap-table-mobile')
+    pushIf('bootstrap-table/dist/extensions/sticky-header/bootstrap-table-sticky-header')
+    pushIf('bootstrap-table/dist/extensions/cookie/bootstrap-table-cookie')
+    pushIf('jquery')
+
+    if (rules.length) {
+      config.module = { rules }
     }
   }
   actions.setWebpackConfig(config)

@@ -5,7 +5,7 @@ import { StaticQuery, graphql } from 'gatsby'
 import Header from './header'
 import Footer from './Footer/'
 
-import 'bootstrap/dist/css/bootstrap.min.css'
+import '../styles/tailwind.css'
 import './layout.scss'
 
 const Layout = ({ children }) => (
@@ -42,7 +42,9 @@ const Layout = ({ children }) => (
             Skip to main content
           </a>
           <Header siteTitle={data.site.siteMetadata.title} />
-          <main id="content" role="main">{children}</main>
+          <main id="content" role="main">
+            <div className="container-custom py-8">{children}</div>
+          </main>
           <Footer />
         </div>
       </>
