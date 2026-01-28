@@ -1,7 +1,7 @@
 /* Die component styles - migrated from SCSS to CSS */
 
 .die {
-  display: flex;
+  display: inline-flex;
   justify-content: center;
   align-items: center;
   font-weight: bold;
@@ -12,6 +12,61 @@
   border: 1px solid rgb(10, 10, 10);
   box-shadow: 0.2rem 0.2rem 0 rgba(10, 10, 10, 0.5);
   background-color: rgb(254, 233, 165); /* ivory */
+  vertical-align: middle;
+}
+
+/* Inline variant for use within text */
+.die.inline {
+  width: 1.2em;
+  height: 1.2em;
+  margin: 0 0.15em;
+  border-radius: 0.15em;
+  box-shadow: 0.1em 0.1em 0 rgba(10, 10, 10, 0.5);
+  vertical-align: middle;
+  position: relative;
+  top: -0.05em;
+  line-height: 1;
+}
+
+.die.inline.pips::before {
+  height: 0.23em;
+  width: 0.23em;
+}
+
+.die.inline.pips[data-content="2"]::before {
+  box-shadow: 0.54em 0.54em 0 rgb(227, 70, 39);
+}
+
+.die.inline.pips[data-content="3"]::before {
+  box-shadow:
+    0.26em 0.26em 0 rgb(58, 177, 205),
+    -0.26em -0.26em 0 rgb(58, 177, 205);
+}
+
+.die.inline.pips[data-content="4"]::before {
+  box-shadow:
+    0.53em 0.53em 0 rgb(58, 177, 205),
+    0.53em 0 0 rgb(58, 177, 205),
+    0 0.53em 0 rgb(58, 177, 205);
+}
+
+.die.inline.pips[data-content="5"]::before {
+  box-shadow:
+    0.26em 0.26em 0 rgb(227, 70, 39),
+    -0.26em 0.26em 0 rgb(227, 70, 39),
+    -0.26em -0.26em 0 rgb(227, 70, 39),
+    0.26em -0.26em 0 rgb(227, 70, 39);
+}
+
+.die.inline.pips[data-content="6"]::before {
+  box-shadow:
+    0.53em 0.53em 0 rgb(10, 10, 10),
+    0.53em 0 0 rgb(10, 10, 10),
+    0.53em 0.26em 0 rgb(10, 10, 10),
+    0 0.26em 0 rgb(10, 10, 10),
+    0 0.53em 0 rgb(10, 10, 10);
+  top: -0.26em;
+  left: -0.26em;
 }
 
 .die.pips {

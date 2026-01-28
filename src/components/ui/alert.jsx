@@ -7,6 +7,8 @@ const Alert = React.forwardRef(({ className, variant = "default", ...props }, re
     destructive: "border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive",
     warning: "bg-yellow-50 dark:bg-yellow-950 text-yellow-900 dark:text-yellow-50 border-yellow-200 dark:border-yellow-800",
     success: "bg-green-50 dark:bg-green-950 text-green-900 dark:text-green-50 border-green-200 dark:border-green-800",
+    muted: "bg-muted text-foreground",
+    accent: "bg-accent/30 dark:bg-accent/20 text-foreground",
   }
   
   return (

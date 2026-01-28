@@ -317,7 +317,7 @@ export default () => (
           </p>
           <p>
             High numbers are more valuable than low. E.g. 3 of a kind with{' '}
-            <Die number="6" /> is better than with <Die number="5" />
+            <Die number="6" inline /> is better than with <Die number="5" inline />
           </p>
         </div>
         <div className="">

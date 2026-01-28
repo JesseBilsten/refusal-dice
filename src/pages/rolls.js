@@ -1,6 +1,8 @@
 import React from 'react'
 import { graphql } from 'gatsby'
 import Layout from '../components/layout'
+import { Badge } from '../components/ui/badge'
+import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card'
 
 function odds(rolls, game) {
   let success = []
@@ -39,76 +41,56 @@ const RollsPage = ({ data }) => {
     <Layout>
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="my-5 text-center">
-          <h1>
-            Rolls <span className="badge badge-warning">incomplete</span>
+          <h1 className="flex items-center justify-center gap-2">
+            Rolls <Badge variant="warning">incomplete</Badge>
           </h1>
-          <p className="lead">A visual of all possible rolls</p>
-          <small>{new Date().toLocaleString()}</small>
+          <p className="text-lg text-muted-foreground mt-2">A visual of all possible rolls</p>
+          <small className="text-sm text-muted-foreground">{new Date().toLocaleString()}</small>
         </div>
-        <div className="accordion" id="accordionExample">
-          <div className="card">
-            <div className="card-header" id="headingOne">
-              <h5 className="mb-0">
-                <button
-                  className="btn btn-link"
-                  type="button"
-                  data-toggle="collapse"
-                  data-target="#collapseOne"
-                  aria-expanded="true"
-                  aria-controls="collapseOne"
+        
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle>All Possible Rolls</CardTitle>
+          </CardHeader>
+          <CardContent
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              fontFamily: 'monospace',
+            }}
+          >
+            {diceRolls.map((roll, index) => {
+              let badgeVariant = 'secondary'
+              if (
+                // roll.indexOf(4) >= 0
+                roll.indexOf(6) >= 0 ||
+                roll.indexOf(1) >= 0
+                // ||
+                // (roll.lastIndexOf(5) > roll.indexOf(5))
+              ) {
+                badgeVariant = 'default'
+                successfulRolls++
+              }
+              return (
+                <Badge
+                  key={index}
+                  variant={badgeVariant}
+                  className="m-0.5"
                 >
-                  Collapsible Group Item #1
-                </button>
-              </h5>
-            </div>
-            <div
-              id="collapseOne"
-              className="collapse show"
-              aria-labelledby="headingOne"
-              data-parent="#accordionExample"
-              style={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                fontFamily: 'monospace',
-              }}
-            >
-              <div className="card-body">
-                {diceRolls.map((roll, index) => {
-                  let badgeType = 'light'
-                  if (
-                    // roll.indexOf(4) >= 0
-                    roll.indexOf(6) >= 0 ||
-                    roll.indexOf(1) >= 0
-                    // ||
-                    // (roll.lastIndexOf(5) > roll.indexOf(5))
-                  ) {
-                    badgeType = 'success'
-                    successfulRolls++
-                  }
-                  return (
-                    <p
-                      className={'badge badge-' + badgeType}
-                      data-number={roll.indexOf(6)}
-                      style={{
-                        margin: '0 1px 1px 0',
-                      }}
-                    >
-                      {roll[0]}
-                      {roll[1]}
-                      {roll[2]}
-                      {roll[3]}
-                      {roll[4]}
-                    </p>
-                  )
-                })}
-              </div>
-            </div>
-          </div>
-        </div>
+                  {roll[0]}
+                  {roll[1]}
+                  {roll[2]}
+                  {roll[3]}
+                  {roll[4]}
+                </Badge>
+              )
+            })}
+          </CardContent>
+        </Card>
       </section>
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1>{successfulRolls}/7776</h1>
-        <h2>{Math.floor((successfulRolls / 7776) * 100)}%</h2>
+        <h1 className="text-4xl font-bold">{successfulRolls}/7776</h1>
+        <h2 className="text-2xl font-semibold text-muted-foreground">{Math.floor((successfulRolls / 7776) * 100)}%</h2>
       </section>
     </Layout>
   )
