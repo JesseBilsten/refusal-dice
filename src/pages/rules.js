@@ -4,35 +4,35 @@ import Layout from '../components/layout'
 
 export default () => (
   <Layout>
-    <section className="container mt-5">
-      <div className="my-5 text-center">
-        <h1>Rules</h1>
-        <p class="lead">How to play the game</p>
+    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="my-8 text-center">
+        <h1 className="text-4xl font-bold text-gray-900">Rules</h1>
+        <p className="text-lg text-gray-600">How to play the game</p>
       </div>
-      <hr />
-      <h2>Equipment</h2>
-      <p className="text-muted">What you need to play</p>
-      <h3>5 dice</h3>
-      <p>
+      <hr className="my-8 border-gray-200" />
+      <h2 className="text-3xl font-semibold mb-2 text-gray-900">Equipment</h2>
+      <p className="text-gray-600 mb-4">What you need to play</p>
+      <h3 className="text-2xl font-semibold mb-2">5 dice</h3>
+      <p className="mb-3">
         We prefer Michigan Red Eye's but any die will do. The red eye's make it a little faster to see what game you can play.
       </p>
-      <a class="btn btn-primary" role="button" href="https://amzn.to/47ZTYoX">Buy Michigan Red Eye Dice on Amazon</a>
-      <h3>Dice cup</h3>
-      <p>
+      <a className="inline-flex items-center justify-center rounded-md text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 h-10 px-4 py-2 mb-4" role="button" href="https://amzn.to/47ZTYoX">Buy Michigan Red Eye Dice on Amazon</a>
+      <h3 className="text-2xl font-semibold mb-2 mt-6">Dice cup</h3>
+      <p className="mb-3">
         You could use a dice tower, or a cup. Our group uses a nice Alex Cramer leather cup with ridges inside to help the dice tumble properly.
       </p>
-      <a class="btn btn-primary" role="button" href="https://amzn.to/3w0X0w6">Buy Alex Cramer dice cups on Amazon</a>
-      <h2>Object of the game</h2>
-      <p className="text-muted">Be the last man standing</p>
+      <a className="inline-flex items-center justify-center rounded-md text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 h-10 px-4 py-2 mb-4" role="button" href="https://amzn.to/3w0X0w6">Buy Alex Cramer dice cups on Amazon</a>
+      <h2 className="text-3xl font-semibold mb-2 mt-8">Object of the game</h2>
+      <p className="text-gray-600 mb-4">Be the last man standing</p>
       <p>
         Each game that is called will have 1 loser. In the event of a tie, those
         players who tied will play the same game again until a single loser is
         established. That loser takes a pencil. When you have 3 pencils you are
         out. The last player left without 3 pencils wins.
       </p>
-      <div className="row">
-        <div className="col-sm-6">
-          <div className="alert alert-secondary">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="">
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
             <h5>Variation</h5>
             <p>
               Some players will make an offer to split the pot based on the
@@ -40,8 +40,8 @@ export default () => (
             </p>
           </div>
         </div>
-        <div className="col-sm-6">
-          <div className="alert alert-success">
+        <div className="">
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
             <h5>Example</h5>
             <p>2 players remain:</p>
             <ol>
@@ -68,7 +68,7 @@ export default () => (
       <p>&nbsp;</p>
       <hr />
       <h2>Setup</h2>
-      <p className="text-muted">
+      <p className="text-gray-600">
         What you need to do before starting the game.
       </p>
       <h3>Requirements</h3>
@@ -126,9 +126,9 @@ export default () => (
         the game. Once everyone is in (they've paid their $5 to the pot) then
         players can roll to see who goes first.
       </p>
-      <div className="row">
-        <div className="col-sm-6">
-          <div className="alert alert-secondary">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="">
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
             <h5>Variation</h5>
             <p>
               Some groups of players will have everyone add an additional $5
@@ -138,8 +138,8 @@ export default () => (
             </p>
           </div>
         </div>
-        <div className="col-sm-6">
-          <div className="alert alert-success">
+        <div className="">
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
             <h5>Example</h5>
             <p>
               3 players remain: <em>Player A</em>, <em>Player B</em>, and{' '}
@@ -152,7 +152,7 @@ export default () => (
       </div>
       <p>&nbsp;</p>
       <h3>
-        Who goes first? <small className="text-muted">(aka the "piddle")</small>
+        Who goes first? <small className="text-gray-600">(aka the "piddle")</small>
       </h3>
       <ol>
         <li>Each player rolls 1 die</li>
@@ -162,12 +162,12 @@ export default () => (
         <strong>In the event of a tie:</strong> Players with matching highest
         die values repeat step 1 until only one player has the highest die
       </p>
-      <div className="alert alert-success">
+      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
         <h5>Example</h5>
         <p>
           <em>There are 4 players: A, B, C, and D.</em>
         </p>
-				<div className="row">
+				<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 					<div className="col-md-4">
 						<strong>Roll 1</strong>
 						<ul>
@@ -223,7 +223,7 @@ export default () => (
       <p>&nbsp;</p>
       <hr />
       <h2>Gameplay</h2>
-      <p className="text-muted">
+      <p className="text-gray-600">
         Roll, call game, accept or refuse, play game, award pencil, repeat until
         there's one player left.
       </p>
@@ -231,7 +231,7 @@ export default () => (
       <p>
         Everyone rolls all their dice and hides the results from other players.
       </p>
-      <div className="alert alert-secondary">
+      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
         <h5>Variation</h5>
         <p>
           Some players will wait to roll their hands if they aren't the caller,
@@ -243,8 +243,8 @@ export default () => (
         Whoever won the piddle needs to now look at their dice and call the
         first <Link to="games">game</Link> they wish to play.
       </p>
-      <div className="row">
-        <div className="col-sm-6 col-lg-4 col-xl-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="">
           <div className="card mb-4">
             <h4 className="card-header" id="first-call">
               First Call
@@ -272,7 +272,7 @@ export default () => (
             </ul>
           </div>
         </div>
-        <div class="col-sm-6 col-lg-4 col-xl-3">
+        <div className="">
           <div className="card mb-4">
             <h4 className="card-header" id="first-refusal">
               First Refusal
@@ -300,7 +300,7 @@ export default () => (
             </ul>
           </div>
         </div>
-        <div class="col-sm-6 col-lg-4 col-xl-3">
+        <div className="">
           <div className="card mb-4">
             <h4 className="card-header" id="second-refusal">
               Second Refusal
@@ -327,7 +327,7 @@ export default () => (
             </ul>
           </div>
         </div>
-        <div class="col-sm-6 col-lg-4 col-xl-3">
+        <div className="">
           <div className="card">
             <h4 className="card-header" id="second-call">
               Second Call
@@ -354,14 +354,14 @@ export default () => (
         Call or if the game was refused twice, then whatever the callers Second
         Call is.
       </p>
-      <div class="alert alert-secondary mt-4" role="alert">
-        <h5 className="alert-heading">Ties</h5>
+      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mt-4" role="alert">
+        <h5 className="text-lg font-semibold mb-2">Ties</h5>
         <p>
           Ties are handled by re-rolling the same game. Only the players who tie
           participate and players that aren't tied for the low hand do not have
           to play the next hand.
         </p>
-        <h5 className="alert-heading">Exception: <small>2 players <span role="img" aria-label="player">👨</span><span role="img" aria-label="player">👨</span></small></h5>
+        <h5 className="text-lg font-semibold mb-2">Exception: <small>2 players <span role="img" aria-label="player">👨</span><span role="img" aria-label="player">👨</span></small></h5>
         <p>If there are only two players left, rather than play the same game again, the call is passed. </p>
       </div>
       <h3>Phase 4: Award a pencil</h3>
@@ -369,16 +369,16 @@ export default () => (
         Whomever had the lowest hand in Phase 2 takes a pencil and gets to call
         the next game.
       </p>
-      <div class="alert alert-secondary" role="alert">
-        <h5 className="alert-heading">3 <span role="img" aria-label="pencil">✏️</span>'s</h5>
+      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4" role="alert">
+        <h5 className="text-lg font-semibold mb-2">3 <span role="img" aria-label="pencil">✏️</span>'s</h5>
         <p>
           If a player has 2 pencils already and receives their 3rd, they go out
           and the call passes to the next player to their left who doesn't have
           3 pencils.
         </p>
       </div>
-      <div class="alert alert-secondary" role="alert">
-        <h5 className="alert-heading">Exception: <small>2 players <span role="img" aria-label="player">👨</span><span role="img" aria-label="player">👨</span></small></h5>
+      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4" role="alert">
+        <h5 className="text-lg font-semibold mb-2">Exception: <small>2 players <span role="img" aria-label="player">👨</span><span role="img" aria-label="player">👨</span></small></h5>
         <p>
           If only 2 players remain, the call is passed regardless of who lost.
         </p>

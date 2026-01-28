@@ -2,6 +2,7 @@ import React from 'react'
 import { Link } from 'gatsby'
 import { graphql } from 'gatsby'
 import Layout from '../components/layout'
+import { Badge } from '../components/ui/badge'
 
 const round = (value, decimals) =>
   Number(Math.round(value + 'e' + decimals) + 'e-' + decimals)
@@ -80,16 +81,16 @@ const TableData = ({ game, roll, rowspan }) => {
 const OddsPage = ({ data }) => {
   return (
     <Layout>
-      <section className="container mt-5">
-        <div className="my-5 text-center">
-          <h1>
-            Odds <span className="badge badge-warning">incomplete</span>
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="my-8 text-center">
+          <h1 className="text-4xl font-bold text-gray-900">
+            Odds <Badge variant="warning">incomplete</Badge>
           </h1>
-          <p className="lead">
+          <p className="text-lg text-gray-600">
             How likely are you to roll a specific game or event
           </p>
         </div>
-        <table className="table table-bordered odds">
+        <table className="w-full border-collapse border border-gray-300 odds">
           <thead>
             <tr>
               <th>Game</th>
@@ -157,7 +158,7 @@ const OddsPage = ({ data }) => {
             </tr>
           </tbody>
         </table>
-        <table className="table table-bordered odds">
+        <table className="w-full border-collapse border border odds">
           <thead>
             <tr>
               <td colspan="19">
@@ -258,7 +259,7 @@ const OddsPage = ({ data }) => {
             </tr>
           </tbody>
         </table>
-        <table className="table table-bordered odds">
+        <table className="w-full border-collapse border border odds">
           <thead>
             <tr>
               <td colspan="10">
@@ -335,7 +336,7 @@ const OddsPage = ({ data }) => {
             </tr>
           </tbody>
         </table>
-        <table className="table table-bordered odds">
+        <table className="w-full border-collapse border border odds">
           <thead>
             <tr>
               <td colspan="6">

@@ -37,7 +37,7 @@ const RollsPage = ({ data }) => {
 
   return (
     <Layout>
-      <section className="container mt-5">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="my-5 text-center">
           <h1>
             Rolls <span className="badge badge-warning">incomplete</span>
@@ -106,7 +106,7 @@ const RollsPage = ({ data }) => {
           </div>
         </div>
       </section>
-      <section className="container">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <h1>{successfulRolls}/7776</h1>
         <h2>{Math.floor((successfulRolls / 7776) * 100)}%</h2>
       </section>

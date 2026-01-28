@@ -3,7 +3,7 @@ module.exports = {
     title: 'Refusal Dice',
   },
   plugins: [
-    
+    'gatsby-plugin-postcss',
     {
       resolve: `gatsby-plugin-manifest`,
       options: {

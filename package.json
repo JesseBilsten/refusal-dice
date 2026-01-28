@@ -4,18 +4,18 @@
   "version": "1.0.0",
   "author": "Kyle Mathews <mathews.kyle@gmail.com>",
   "dependencies": {
-    "bootstrap": "^5.3.8",
-    "bootstrap-table": "^1.26.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "gatsby": "^5.15.0",
     "gatsby-plugin-manifest": "^5.15.0",
     "gatsby-plugin-sass": "^6.15.0",
     "gatsby-source-filesystem": "^5.15.0",
-    "jquery": "^3.7.1",
+    "lucide-react": "^0.563.0",
     "react": "^18.2.0",
-    "react-bootstrap": "^2.10.10",
     "react-dom": "^18.2.0",
     "react-helmet": "^6.1.0",
-    "sass": "^1.72.1"
+    "sass": "^1.72.1",
+    "tailwind-merge": "^3.4.0"
   },
   "keywords": [
     "gatsby"
@@ -28,16 +28,20 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.18",
+    "autoprefixer": "^10.4.23",
+    "gatsby-cli": "^5.15.0",
+    "gatsby-plugin-postcss": "^6.16.0",
     "prettier": "^3.7.4",
-    "gatsby-cli": "^5.15.0"
+    "tailwindcss": "^4.1.18"
   },
   "overrides": {
     "lodash.template": "^4.5.1",
     "postcss": ">=8.4.31",
     "qs": ">=6.14.1",
     "tmp": ">=0.2.4",
-    "@parcel/reporter-dev-server": "*"
-    ,"sass-loader": "^12.6.0"
+    "@parcel/reporter-dev-server": "*",
+    "sass-loader": "^12.6.0"
   },
   "repository": {
     "type": "git",

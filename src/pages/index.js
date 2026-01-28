@@ -1,61 +1,63 @@
 import React from 'react'
 import { Link } from 'gatsby'
 import Layout from '../components/layout'
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
+import { Button } from '../components/ui/button'
 
 const IndexPage = () => (
   <Layout>
-    <section className="py-5 bg-light rounded-3">
-      <div className="container py-4">
-        <h1 className="display-5 fw-bold">Refusal Dice</h1>
-        <p className="lead text-muted">
+    <section className="py-12 bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <h1 className="text-5xl font-bold mb-4 text-gray-900">Refusal Dice</h1>
+        <p className="text-lg text-gray-600 max-w-3xl">
           The game plays much like poker in that it is played with groups of
           people typically 2-8 (anymore than 8 and partners are encouraged -
           more on that later) and five, six sided dice.
         </p>
       </div>
     </section>
-    <section className="container">
-      <div className="row">
-        <div className="col-lg-4">
-          <div className="card mb-4">
-            <div className="card-body">
-              <h5 className="card-title">How do I play?</h5>
-              <p className="card-text">
-                Read through an example game and how calls are made and why.
-              </p>
-              <Link to="rules" className="btn btn-primary">
-                Rules
-              </Link>
-            </div>
-          </div>
-        </div>
-        <div className="col-lg-4">
-          <div className="card mb-4">
-            <div className="card-body">
-              <h5 className="card-title">What do I call?</h5>
-              <p className="card-text">
-                A list of the games you can call in Refusal Dice.
-              </p>
-              <Link to="games" className="btn btn-primary">
-                Games
-              </Link>
-            </div>
-          </div>
-        </div>
-        <div className="col-lg-4">
-          <div className="card mb-4">
-            <div className="card-body">
-              <h5 className="card-title">What'd they say?</h5>
-              <p className="card-text">
-                If you're confused about what's being said, read the glossary of
-                common phrases and terms.
-              </p>
-              <Link to="glossary" className="btn btn-primary">
-                Glossary
-              </Link>
-            </div>
-          </div>
-        </div>
+    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>How do I play?</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-gray-600 mb-4">
+              Read through an example game and how calls are made and why.
+            </p>
+            <Link to="/rules">
+              <Button>Rules</Button>
+            </Link>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>What do I call?</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-gray-600 mb-4">
+              A list of the games you can call in Refusal Dice.
+            </p>
+            <Link to="/games">
+              <Button>Games</Button>
+            </Link>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>What'd they say?</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-gray-600 mb-4">
+              If you're confused about what's being said, read the glossary of
+              common phrases and terms.
+            </p>
+            <Link to="/glossary">
+              <Button>Glossary</Button>
+            </Link>
+          </CardContent>
+        </Card>
       </div>
     </section>
   </Layout>
