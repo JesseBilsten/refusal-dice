@@ -4,7 +4,7 @@ import Layout from '../components/layout'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../components/ui/card'
 import { Alert, AlertTitle, AlertDescription } from '../components/ui/alert'
 
-export default () => (
+const RulesPage = () => (
   <Layout>
     <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="my-8 text-center">
@@ -408,3 +408,5 @@ export default () => (
     </section>
   </Layout>
 )
+
+export default RulesPage

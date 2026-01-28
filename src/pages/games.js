@@ -1,11 +1,10 @@
 import React from 'react'
-import { Link } from 'gatsby'
 import Layout from '../components/layout'
 import Die from '../components/Die'
 import Game from '../components/Game'
-import Odds from '../components/Odds'
 
-export default () => (
+const GamesPage = () => (
+
   <Layout>
     <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="my-8 text-center">
@@ -432,3 +431,5 @@ export default () => (
     </section>
   </Layout>
 )
+
+export default GamesPage

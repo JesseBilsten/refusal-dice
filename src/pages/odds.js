@@ -161,17 +161,17 @@ const OddsPage = ({ data }) => {
         <table className="w-full border-collapse border border odds">
           <thead>
             <tr>
-              <td colspan="19">
+              <td colSpan="19">
                 <Link to="/games#razzle">Razzle</Link>
               </td>
             </tr>
             <tr>
-              <td style={{ backgroundColor: '#999' }}>&nbsp;</td>
-              <th colspan="3">5 dice</th>
-              <th colspan="3">4 dice</th>
-              <th colspan="3">3 dice</th>
-              <th colspan="3">2 dice</th>
-              <th colspan="3">1 dice</th>
+              <td style={{ backgroundColor: '#999' }} aria-label="Spacer">&nbsp;</td>
+              <th colSpan="3">5 dice</th>
+              <th colSpan="3">4 dice</th>
+              <th colSpan="3">3 dice</th>
+              <th colSpan="3">2 dice</th>
+              <th colSpan="3">1 dice</th>
             </tr>
             <tr>
               <th># of Sixes</th>
@@ -225,7 +225,7 @@ const OddsPage = ({ data }) => {
               <TableData game="razzle__2__2d6" roll="1" />
               <TableData game="razzle__2__2d6" roll="2" />
               <TableData game="razzle__2__2d6" roll="3" />
-              <td colspan="3" style={{backgroundColor: '#999' }}></td>
+              <td colSpan="3" style={{backgroundColor: '#999' }} aria-label="Not applicable"></td>
             </tr>
             <tr>
               <td align="right">3</td>
@@ -238,7 +238,7 @@ const OddsPage = ({ data }) => {
               <TableData game="razzle__3__3d6" roll="1" />
               <TableData game="razzle__3__3d6" roll="2" />
               <TableData game="razzle__3__3d6" roll="3" />
-              <td colspan="6" style={{backgroundColor: '#999' }}></td>
+              <td colSpan="6" style={{backgroundColor: '#999' }} aria-label="Not applicable"></td>
             </tr>
             <tr>
               <td align="right">4</td>
@@ -248,30 +248,30 @@ const OddsPage = ({ data }) => {
               <TableData game="razzle__4__4d6" roll="1" />
               <TableData game="razzle__4__4d6" roll="2" />
               <TableData game="razzle__4__4d6" roll="3" />
-              <td colspan="9" style={{backgroundColor: '#999' }}></td>
+              <td colSpan="9" style={{backgroundColor: '#999' }} aria-label="Not applicable"></td>
             </tr>
             <tr>
               <td align="right">5</td>
               <TableData game="razzle__5__5d6" roll="1" />
               <TableData game="razzle__5__5d6" roll="2" />
               <TableData game="razzle__5__5d6" roll="3" />
-              <td colspan="12" style={{backgroundColor: '#999' }}></td>
+              <td colSpan="12" style={{backgroundColor: '#999' }} aria-label="Not applicable"></td>
             </tr>
           </tbody>
         </table>
         <table className="w-full border-collapse border border odds">
           <thead>
             <tr>
-              <td colspan="10">
+              <td colSpan="10">
                 <Link to="/games#boss">Boss</Link>
               </td>
             </tr>
             <tr>
-              <th colspan="3" rowspan="2" style={{ verticalAlign: "top" }}>1st Roll</th>
-              <th colspan="7">2nd Roll</th>
+              <th colSpan="3" rowSpan="2" style={{ verticalAlign: "top" }}>1st Roll</th>
+              <th colSpan="7">2nd Roll</th>
             </tr>
             <tr>
-              <th colspan="2">5 dice</th>
+              <th colSpan="2">5 dice</th>
               <th>2 pairs</th>
               <th>3 of a kind</th>
               <th>full house</th>
@@ -283,7 +283,7 @@ const OddsPage = ({ data }) => {
             <tr>
               <th align="right">a 6 high</th>
               <TableData game="boss-6high__5d6" roll="1" />
-              <td colspan="1" style={{ backgroundColor: '#999' }}>N/A</td>
+              <td colSpan="1" style={{ backgroundColor: '#999' }}>N/A</td>
               <TableData game="boss-nomatch__4d6" roll="1" />
               <TableData game="boss-1match__4d6" roll="1" />
               <TableData game="boss-2match__4d6" roll="1" />
@@ -295,8 +295,8 @@ const OddsPage = ({ data }) => {
             <tr>
               <th align="right">1 pair</th>
               <TableData game="boss-1pair__5d6" roll="1" />
-              <TableData game="boss-1pair-orbetter__5d6" roll="1" rowspan="6" />
-              <td colspan="2" style={{ backgroundColor: '#999' }}>N/A</td>
+              <TableData game="boss-1pair-orbetter__5d6" roll="1" rowSpan="6" />
+              <td colSpan="2" style={{ backgroundColor: '#999' }}>N/A</td>
               <TableData game="boss-1pair__3d6" roll="1" />
               <TableData game="boss-1match__3d6" roll="1" />
               <TableData game="boss-3kind__3d6" roll="1" />
@@ -306,14 +306,14 @@ const OddsPage = ({ data }) => {
             <tr>
               <th align="right">2 pair</th>
               <TableData game="boss-2pair__5d6" roll="1" />
-              <td colspan="4" style={{ backgroundColor: '#999' }}>N/A</td>
+              <td colSpan="4" style={{ backgroundColor: '#999' }}>N/A</td>
               <TableData game="boss-house__1d6" roll="1" />
-              <td colspan="2" style={{ backgroundColor: '#999' }}>N/A</td>
+              <td colSpan="2" style={{ backgroundColor: '#999' }}>N/A</td>
             </tr>
             <tr>
               <th align="right">3 of a kind</th>
               <TableData game="boss-3kind__5d6" roll="1" />
-              <td colspan="4" style={{ backgroundColor: '#999' }}>N/A</td>
+              <td colSpan="4" style={{ backgroundColor: '#999' }}>N/A</td>
               <TableData game="boss-1pair__2d6" roll="1" />
               <TableData game="boss-1high__2d6" roll="1" />
               <TableData game="boss-1pair__2d6" roll="1" />
@@ -321,25 +321,25 @@ const OddsPage = ({ data }) => {
             <tr>
               <th align="right">full house</th>
               <TableData game="boss-house__5d6" roll="1" />
-              <td colspan="9" style={{ backgroundColor: '#999' }}>N/A</td>
+              <td colSpan="9" style={{ backgroundColor: '#999' }}>N/A</td>
             </tr>
             <tr>
               <th align="right">4 of a kind</th>
               <TableData game="boss-4kind__5d6" roll="1" />
-              <td colspan="6" style={{ backgroundColor: '#999' }}>N/A</td>
+              <td colSpan="6" style={{ backgroundColor: '#999' }}>N/A</td>
               <TableData game="boss-5kind__1d6" roll="1" />
             </tr>
             <tr>
               <th align="right">5 of a kind</th>
               <TableData game="boss-5kind__5d6" roll="1" />
-              <td colspan="7" style={{ backgroundColor: '#999' }}>N/A</td>
+              <td colSpan="7" style={{ backgroundColor: '#999' }}>N/A</td>
             </tr>
           </tbody>
         </table>
         <table className="w-full border-collapse border border odds">
           <thead>
             <tr>
-              <td colspan="6">
+              <td colSpan="6">
                 <Link to="/games#tres-away">Tres Away</Link>
               </td>
             </tr>

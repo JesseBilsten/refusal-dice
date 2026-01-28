@@ -7,7 +7,7 @@ const Footer = () => (
         <p className="text-sm text-muted-foreground">
           This site built and designed by <a href="http://bilsten.net" className="text-primary hover:underline font-medium">Jesse Bilsten</a>.
         </p>
-        <a href="#" className="text-sm text-primary hover:underline font-medium">Back to top</a>
+        <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="text-sm text-primary hover:underline font-medium">Back to top</button>
       </div>
     </div>
   </footer>

@@ -4,7 +4,7 @@ import Layout from '../components/layout'
 import { Alert, AlertTitle, AlertDescription } from '../components/ui/alert'
 import { Badge } from '../components/ui/badge'
 
-export default () => (
+const GlossaryPage = () => (
   <Layout>
     <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <Alert variant="warning" className="mb-6">
@@ -62,3 +62,5 @@ export default () => (
     </section>
   </Layout>
 )
+
+export default GlossaryPage

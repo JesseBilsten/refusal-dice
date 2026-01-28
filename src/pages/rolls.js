@@ -4,13 +4,6 @@ import Layout from '../components/layout'
 import { Badge } from '../components/ui/badge'
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card'
 
-function odds(rolls, game) {
-  let success = []
-  if (game === '10-2') {
-    success = rolls.map((roll, index) => {})
-  }
-}
-
 const RollsPage = ({ data }) => {
   var diceRolls = []
   var successfulRolls = 0
