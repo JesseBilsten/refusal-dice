@@ -9,21 +9,21 @@ export default () => (
   <Layout>
     <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="my-8 text-center">
-        <h1 className="text-4xl font-bold text-gray-900">Games</h1>
-        <p className="text-lg text-gray-600">A list of the games you can call in Refusal Dice</p>
+        <h1 className="text-4xl font-bold text-foreground">Games</h1>
+        <p className="text-lg text-muted-foreground">A list of the games you can call in Refusal Dice</p>
       </div>
-      <hr className="my-8 border-gray-200" />
-      <div className="pb-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+      <hr className="my-8 border-border" />
+      <div className="pb-8 px-6 py-6 rounded-lg bg-muted/20 grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <h2 id="10-2" className="text-3xl font-semibold mb-3 text-gray-900">
-            ✌️ 10-2 <small className="text-gray-600 text-base">high or low</small>
+          <h2 id="10-2" className="text-3xl font-semibold mb-3 text-foreground">
+            ✌️ 10-2 <small className="text-muted-foreground text-base">high or low</small>
           </h2>
           <p>
             2 dice add up to 10 and the remaining 3 dice are either high or low.
           </p>
         </div>
         <div className="">
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2 mb-2">
             <Game type="10-2" className="mr-1">
               <Die number="4" />
               <Die number="6" />
@@ -34,7 +34,7 @@ export default () => (
               <Die number="1" />
             </Game>
           </div>
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2 mb-2">
             <Game type="10-2" className="mr-1">
               <Die number="5" />
               <Die number="5" />
@@ -48,10 +48,10 @@ export default () => (
         </div>
       </div>
       <hr />
-      <div className="pb-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="pb-8 px-6 py-6 rounded-lg bg-muted/20 grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="">
-          <h2 id="10-3" className="text-3xl font-semibold mb-3 text-gray-900">
-            👌 10-3  <small className="text-gray-600">high or low</small>
+          <h2 id="10-3" className="text-3xl font-semibold mb-3 text-foreground">
+            👌 10-3  <small className="text-muted-foreground">high or low</small>
           </h2>
           <p>
             3 dice add up to 10 and the remaining 2 dice are either high or low.
@@ -59,7 +59,7 @@ export default () => (
           <p>AKA "Frankie"</p>
         </div>
         <div className="">
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2 mb-2">
             <Game type="10-3" className="mr-1">
               <Die number="1" />
               <Die number="3" />
@@ -70,7 +70,7 @@ export default () => (
               <Die number="1" />
             </Game>
           </div>
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2 mb-2">
             <Game type="10-3" className="mr-1">
               <Die number="2" />
               <Die number="3" />
@@ -83,11 +83,11 @@ export default () => (
           </div>
         </div>
       </div>
-      <hr />
-      <div className="pb-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+      <hr className="my-8 border-border" />
+      <div className="pb-8 px-6 py-6 rounded-lg bg-muted/20 grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="">
-          <h2 id="10-4" className="text-3xl font-semibold mb-3 text-gray-900">
-            🔫 10-4 <small className="text-gray-600">high or low</small>
+          <h2 id="10-4" className="text-3xl font-semibold mb-3 text-foreground">
+            🔫 10-4 <small className="text-muted-foreground">high or low</small>
           </h2>
           <p>
             4 dice add up to 10 and the remaining die is either high or low.
@@ -95,7 +95,7 @@ export default () => (
           <p>AKA "Shotgun"</p>
         </div>
         <div className="">
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2 mb-2">
             <Game type="10-4" className="mr-1">
               <Die number="1" />
               <Die number="2" />
@@ -106,7 +106,7 @@ export default () => (
               <Die number="1" />
             </Game>
           </div>
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2 mb-2">
             <Game type="10-4" className="mr-1">
               <Die number="1" />
               <Die number="2" />
@@ -119,11 +119,11 @@ export default () => (
           </div>
         </div>
       </div>
-      <hr />
-      <div className="row pb-5">
+      <hr className="my-8 border-border" />
+      <div className="pb-8 px-6 py-6 rounded-lg bg-muted/20 grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="">
-          <h2 id="ship-captain-crew" className="text-3xl font-semibold mb-3 text-gray-900">
-            ⚓️ Ship, Captain, Crew <small className="text-gray-600">high or low</small>
+          <h2 id="ship-captain-crew" className="text-3xl font-semibold mb-3 text-foreground">
+            ⚓️ Ship, Captain, Crew <small className="text-muted-foreground">high or low</small>
           </h2>
           <p>
             3 dice make up an outside straight and the remaining 2 dice are
@@ -132,7 +132,7 @@ export default () => (
           <p>AKA "Outside straight", "Crew"</p>
         </div>
         <div className="">
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2 mb-2">
             <Game type="ship, captain, crew" className="mr-1">
               <Die number="4" />
               <Die number="5" />
@@ -143,7 +143,7 @@ export default () => (
               <Die number="1" />
             </Game>
           </div>
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2 mb-2">
             <Game type="ship, captain, crew" className="mr-1">
               <Die number="1" />
               <Die number="2" />
@@ -156,11 +156,11 @@ export default () => (
           </div>
         </div>
       </div>
-      <hr />
-      <div className="row pb-5">
+      <hr className="my-8 border-border" />
+      <div className="pb-8 px-6 py-6 rounded-lg bg-muted/20 grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="">
-          <h2 id="monterey" className="text-3xl font-semibold mb-3 text-gray-900">
-            🔄 Monterey <small className="text-gray-600">high or low</small>
+          <h2 id="monterey" className="text-3xl font-semibold mb-3 text-foreground">
+            🔄 Monterey <small className="text-muted-foreground">high or low</small>
           </h2>
           <p>
             3 dice make up an inside straight and the remaining 2 dice are
@@ -169,7 +169,7 @@ export default () => (
           <p>AKA "Inside straight"</p>
         </div>
         <div className="">
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2 mb-2">
             <Game type="monterey" className="mr-1">
               <Die number="2" />
               <Die number="3" />
@@ -180,7 +180,7 @@ export default () => (
               <Die number="1" />
             </Game>
           </div>
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2 mb-2">
             <Game type="monterey" className="mr-1">
               <Die number="3" />
               <Die number="4" />
@@ -193,11 +193,11 @@ export default () => (
           </div>
         </div>
       </div>
-      <hr />
-      <div className="row pb-5">
+      <hr className="my-8 border-border" />
+      <div className="pb-8 px-6 py-6 rounded-lg bg-muted/20 grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="">
-          <h2 id="vegas" className="text-3xl font-semibold mb-3 text-gray-900">
-            🎰 7's <small className="text-gray-600">high or low</small>
+          <h2 id="vegas" className="text-3xl font-semibold mb-3 text-foreground">
+            🎰 7's <small className="text-muted-foreground">high or low</small>
           </h2>
           <p>
             2 sets of 2 dice add up to 7 and or 11 and the remaining die is
@@ -206,7 +206,7 @@ export default () => (
           <p>AKA "7-11", "7 and/or 11's", "Vegas"</p>
         </div>
         <div className="">
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2 mb-2">
             <Game type="vegas" className="mr-1">
               <Die number="5" />
               <Die number="6" />
@@ -219,7 +219,7 @@ export default () => (
               <Die number="1" />
             </Game>
           </div>
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2 mb-2">
             <Game type="vegas" className="mr-1">
               <Die number="2" />
               <Die number="5" />
@@ -234,11 +234,11 @@ export default () => (
           </div>
         </div>
       </div>
-      <hr />
-      <div className="row pb-5">
+      <hr className="my-8 border-border" />
+      <div className="pb-8 px-6 py-6 rounded-lg bg-muted/20 grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="">
-          <h2 id="pairs" className="text-3xl font-semibold mb-3 text-gray-900">
-            🍐 Pairs <small className="text-gray-600">high or low</small>
+          <h2 id="pairs" className="text-3xl font-semibold mb-3 text-foreground">
+            🍐 Pairs <small className="text-muted-foreground">high or low</small>
           </h2>
           <p>
             2 sets of 2 dice are matching pairs and the remaining die is either
@@ -246,7 +246,7 @@ export default () => (
           </p>
         </div>
         <div className="">
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2 mb-2">
             <Game type="pairs" className="mr-1">
               <Die number="2" />
               <Die number="2" />
@@ -257,7 +257,7 @@ export default () => (
               <Die number="1" />
             </Game>
           </div>
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2 mb-2">
             <Game type="pairs" className="mr-1">
               <Die number="6" />
               <Die number="6" />
@@ -270,21 +270,21 @@ export default () => (
           </div>
         </div>
       </div>
-      <hr />
-      <div className="row pb-5">
+      <hr className="my-8 border-border" />
+      <div className="pb-8 px-6 py-6 rounded-lg bg-muted/20 grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="">
-					<h2 id="razzle" className="text-3xl font-semibold mb-3 text-gray-900">✨ Razzle</h2>
+					<h2 id="razzle" className="text-3xl font-semibold mb-3 text-foreground">✨ Razzle</h2>
           <p>Most amount of any one number with aces being wild.</p>
         </div>
         <div className="">
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2 mb-2">
             <Game type="razzle: (3) 6's" className="mr-1">
               <Die number="1" />
               <Die number="6" />
               <Die number="6" />
             </Game>
           </div>
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2 mb-2">
             <Game type="razzle: (4) 5's" className="mr-1">
               <Die number="1" />
               <Die number="5" />
@@ -292,7 +292,7 @@ export default () => (
               <Die number="1" />
             </Game>
           </div>
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2 mb-2">
             <Game type="razzle: (5) 6's" className="mr-1">
               <Die number="1" />
               <Die number="1" />
@@ -302,10 +302,10 @@ export default () => (
           </div>
         </div>
       </div>
-      <hr />
-      <div className="row pb-5">
+      <hr className="my-8 border-border" />
+      <div className="pb-8 px-6 py-6 rounded-lg bg-muted/20 grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="">
-          <h2 id="boss" className="text-3xl font-semibold mb-3 text-gray-900">💼 Boss</h2>
+          <h2 id="boss" className="text-3xl font-semibold mb-3 text-foreground">💼 Boss</h2>
           <p>
             The highest poker hand is the "Boss". If two players have the same
             highest hand, there's no boss and the call is passed to the current
@@ -321,7 +321,7 @@ export default () => (
           </p>
         </div>
         <div className="">
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2 mb-2">
             <Game type="5 of a kind" className="mr-1">
               <Die number="2" />
               <Die number="2" />
@@ -330,7 +330,7 @@ export default () => (
               <Die number="2" />
             </Game>
           </div>
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2 mb-2">
             <Game type="4 of a kind" className="mr-1">
               <Die number="5" />
               <Die number="5" />
@@ -338,7 +338,7 @@ export default () => (
               <Die number="5" />
             </Game>
           </div>
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2 mb-2">
             <Game type="full house" className="mr-1">
               <Die number="4" />
               <Die number="4" />
@@ -347,14 +347,14 @@ export default () => (
               <Die number="1" />
             </Game>
           </div>
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2 mb-2">
             <Game type="3 of a kind" className="mr-1">
               <Die number="1" />
               <Die number="1" />
               <Die number="1" />
             </Game>
           </div>
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2 mb-2">
             <Game type="2 pair" className="mr-1">
               <Die number="1" />
               <Die number="1" />
@@ -362,7 +362,7 @@ export default () => (
               <Die number="3" />
             </Game>
           </div>
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2 mb-2">
             <Game type="1 pair" className="mr-1">
               <Die number="5" />
               <Die number="5" />
@@ -370,10 +370,10 @@ export default () => (
           </div>
         </div>
       </div>
-      <hr />
-      <div className="row pb-5">
+      <hr className="my-8 border-border" />
+      <div className="pb-8 px-6 py-6 rounded-lg bg-muted/20 grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="">
-          <h2 id="tres-away" className="text-3xl font-semibold mb-3 text-gray-900">⛳️ Tres away</h2>
+          <h2 id="tres-away" className="text-3xl font-semibold mb-3 text-foreground">⛳️ Tres away</h2>
           <p>
             Just like golf, highest score loses with each dice being its face
             value except for 3's which are worth 0. Each player must put out at
@@ -382,7 +382,7 @@ export default () => (
           <p>AKA "Man's game", "Road game"</p>
         </div>
         <div className="">
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2 mb-2">
             <Game type="0" className="mr-1">
               <Die number="3" />
               <Die number="3" />
@@ -391,7 +391,7 @@ export default () => (
               <Die number="3" />
             </Game>
           </div>
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2 mb-2">
             <Game type="1" className="mr-1">
               <Die number="3" />
               <Die number="1" />
@@ -400,7 +400,7 @@ export default () => (
               <Die number="3" />
             </Game>
           </div>
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2 mb-2">
             <Game type="2" className="mr-1">
               <Die number="3" />
               <Die number="1" />
@@ -409,7 +409,7 @@ export default () => (
               <Die number="3" />
             </Game>
           </div>
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2 mb-2">
             <Game type="4" className="mr-1">
               <Die number="3" />
               <Die number="3" />
@@ -418,7 +418,7 @@ export default () => (
               <Die number="3" />
             </Game>
           </div>
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2 mb-2">
             <Game type="30" className="mr-1">
               <Die number="6" />
               <Die number="6" />

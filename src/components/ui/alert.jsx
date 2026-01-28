@@ -3,10 +3,10 @@ import { cn } from "../../lib/utils"
 
 const Alert = React.forwardRef(({ className, variant = "default", ...props }, ref) => {
   const variants = {
-    default: "bg-white text-gray-900 border border-gray-200",
-    destructive: "border-red-200 text-red-900 bg-red-50",
-    warning: "bg-yellow-50 text-yellow-900 border-yellow-200",
-    success: "bg-green-50 text-green-900 border-green-200",
+    default: "bg-background text-foreground border border-border",
+    destructive: "border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive",
+    warning: "bg-yellow-50 dark:bg-yellow-950 text-yellow-900 dark:text-yellow-50 border-yellow-200 dark:border-yellow-800",
+    success: "bg-green-50 dark:bg-green-950 text-green-900 dark:text-green-50 border-green-200 dark:border-green-800",
   }
   
   return (

@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import './style.scss'
+import './style.css'
 
 class Die extends Component {
   render() {

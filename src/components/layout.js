@@ -6,7 +6,6 @@ import Header from './header'
 import Footer from './Footer/'
 
 import '../styles/global.css'
-import './layout.scss'
 
 const Layout = ({ children }) => (
   <StaticQuery

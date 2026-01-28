@@ -1,0 +1,92 @@
+/* Die component styles - migrated from SCSS to CSS */
+
+.die {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  margin: 0.33rem;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.25rem;
+  border: 1px solid rgb(10, 10, 10);
+  box-shadow: 0.2rem 0.2rem 0 rgba(10, 10, 10, 0.5);
+  background-color: rgb(254, 233, 165); /* ivory */
+}
+
+.die.pips {
+  position: relative;
+}
+
+.die.pips::before {
+  position: relative;
+  display: block;
+  content: "";
+  border-radius: 100%;
+  border-width: 0px;
+  height: 0.38rem;
+  width: 0.38rem;
+}
+
+/* Die face 1 - black center dot */
+.die.pips[data-content="1"]::before {
+  background-color: rgb(10, 10, 10);
+}
+
+/* Die face 2 - red diagonal dots */
+.die.pips[data-content="2"]::before {
+  background-color: rgb(227, 70, 39);
+  box-shadow: 0.9rem 0.9rem 0 rgb(227, 70, 39);
+  top: -22%;
+  left: -22%;
+}
+
+/* Die face 3 - blue diagonal dots */
+.die.pips[data-content="3"]::before {
+  background-color: rgb(58, 177, 205);
+  box-shadow:
+    0.44rem 0.44rem 0 rgb(58, 177, 205),
+    -0.44rem -0.44rem 0 rgb(58, 177, 205);
+}
+
+/* Die face 4 - blue four corners */
+.die.pips[data-content="4"]::before {
+  background-color: rgb(58, 177, 205);
+  box-shadow:
+    0.88rem 0.88rem 0 rgb(58, 177, 205),
+    0.88rem 0 0 rgb(58, 177, 205),
+    0 0.88rem 0 rgb(58, 177, 205);
+  top: -22%;
+  left: -22%;
+}
+
+/* Die face 5 - red five dots */
+.die.pips[data-content="5"]::before {
+  background-color: rgb(227, 70, 39);
+  box-shadow:
+    0.44rem 0.44rem 0 rgb(227, 70, 39),
+    -0.44rem 0.44rem 0 rgb(227, 70, 39),
+    -0.44rem -0.44rem 0 rgb(227, 70, 39),
+    0.44rem -0.44rem 0 rgb(227, 70, 39);
+}
+
+/* Die face 6 - black six dots */
+.die.pips[data-content="6"]::before {
+  background-color: rgb(10, 10, 10);
+  box-shadow:
+    0.88rem 0.88rem 0 rgb(10, 10, 10),
+    0.88rem 0 0 rgb(10, 10, 10),
+    0.88rem 0.44rem 0 rgb(10, 10, 10),
+    0 0.44rem 0 rgb(10, 10, 10),
+    0 0.88rem 0 rgb(10, 10, 10);
+  top: -0.44rem;
+  left: -0.44rem;
+}
+
+/* Number color variants - Michigan Red-Eye style */
+.die[data-content="1"] { color: rgb(10, 10, 10); }
+.die[data-content="2"] { color: rgb(227, 70, 39); }
+.die[data-content="3"] { color: rgb(58, 177, 205); }
+.die[data-content="4"] { color: rgb(58, 177, 205); }
+.die[data-content="5"] { color: rgb(227, 70, 39); }
+.die[data-content="6"] { color: rgb(10, 10, 10); }

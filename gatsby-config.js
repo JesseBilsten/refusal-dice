@@ -23,14 +23,5 @@ module.exports = {
         path: `${__dirname}/src/`,
       },
     },
-    {
-      resolve: `gatsby-plugin-sass`,
-      options: {
-        sassOptions: {
-          precision: 8,
-        },
-      },
-    },
-    
   ],
 }
