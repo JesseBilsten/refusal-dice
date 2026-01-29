@@ -33,8 +33,8 @@ const RollsPage = ({ data }) => {
   return (
     <Layout>
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="my-5 text-center">
-          <h1 className="flex items-center justify-center gap-2">
+        <div className="my-8 text-center">
+          <h1 className="flex items-center justify-center gap-2 text-4xl font-bold text-foreground">
             Rolls <Badge variant="warning">incomplete</Badge>
           </h1>
           <p className="text-lg text-muted-foreground mt-2">A visual of all possible rolls</p>
@@ -81,8 +81,8 @@ const RollsPage = ({ data }) => {
           </CardContent>
         </Card>
       </section>
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h1 className="text-4xl font-bold">{successfulRolls}/7776</h1>
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+        <h1 className="text-4xl font-bold text-foreground">{successfulRolls}/7776</h1>
         <h2 className="text-2xl font-semibold text-muted-foreground">{Math.floor((successfulRolls / 7776) * 100)}%</h2>
       </section>
     </Layout>
