@@ -3,6 +3,14 @@ import { Link } from 'gatsby'
 import { graphql } from 'gatsby'
 import Layout from '../components/layout'
 import { Badge } from '../components/ui/badge'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '../components/ui/table'
 
 const round = (value, decimals) =>
   Number(Math.round(value + 'e' + decimals) + 'e-' + decimals)
@@ -71,10 +79,16 @@ games['tres-away__1-3__1d6'] = 100 - (Math.pow(3, 1) / Math.pow(6, 1)) * 100
 const rollPercentage = (percentage, rolls) =>
   round((1 - Math.pow(100 - percentage, rolls) / Math.pow(100, rolls)) * 100, 2)
 
-const TableData = ({ game, roll, rowspan }) => {
+const TableData = ({ game, roll, rowSpan }) => {
   const percentage = rollPercentage(games[game], roll)
   return (
-    <td style={{ backgroundColor: getColor(percentage) }} rowspan={rowspan}>{percentage}%</td>
+    <TableCell 
+      style={{ backgroundColor: getColor(percentage) }} 
+      rowSpan={rowSpan}
+      className="text-center font-medium text-gray-900 dark:text-gray-900"
+    >
+      {percentage}%
+    </TableCell>
   )
 }
 
@@ -83,118 +97,120 @@ const OddsPage = ({ data }) => {
     <Layout>
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="my-8 text-center">
-          <h1 className="text-4xl font-bold text-gray-900">
+          <h1 className="text-4xl font-bold text-foreground">
             Odds <Badge variant="warning">incomplete</Badge>
           </h1>
-          <p className="text-lg text-gray-600">
+          <p className="text-lg text-muted-foreground">
             How likely are you to roll a specific game or event
           </p>
         </div>
-        <table className="w-full border-collapse border border-gray-300 odds">
-          <thead>
-            <tr>
-              <th>Game</th>
-              <th>...in 1 roll</th>
-              <th>...in 2 rolls</th>
-              <th>...in 3 rolls</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>
-                <Link to="/games#10-3">10-3</Link>
-              </td>
-              <TableData game="10-3" roll="1" />
-              <TableData game="10-3" roll="2" />
-              <TableData game="10-3" roll="3" />
-            </tr>
-            <tr>
-              <td>
-                <Link to="/games#10-2">10-2</Link>
-              </td>
-              <TableData game="10-2" roll="1" />
-              <TableData game="10-2" roll="2" />
-              <TableData game="10-2" roll="3" />
-            </tr>
-            <tr>
-              <td>
-                <Link to="/games#vegas">Vegas</Link>
-              </td>
-              <TableData game="vegas" roll="1" />
-              <TableData game="vegas" roll="2" />
-              <TableData game="vegas" roll="3" />
-            </tr>
-            <tr>
-              <td>
-                <Link to="/games#ship-captain-crew">Ship, Captain, Crew</Link>
-              </td>
-              <TableData game="ship-captain-crew" roll="1" />
-              <TableData game="ship-captain-crew" roll="2" />
-              <TableData game="ship-captain-crew" roll="3" />
-            </tr>
-            <tr>
-              <td>
-                <Link to="/games#pairs">Pairs</Link>
-              </td>
-              <TableData game="pairs" roll="1" />
-              <TableData game="pairs" roll="2" />
-              <TableData game="pairs" roll="3" />
-            </tr>
-            <tr>
-              <td>
-                <Link to="/games#monterey">Monterey</Link>
-              </td>
-              <TableData game="monterey" roll="1" />
-              <TableData game="monterey" roll="2" />
-              <TableData game="monterey" roll="3" />
-            </tr>
-            <tr>
-              <td>
-                <Link to="/games#10-4">10-4</Link>
-              </td>
-              <TableData game="10-4" roll="1" />
-              <TableData game="10-4" roll="2" />
-              <TableData game="10-4" roll="3" />
-            </tr>
-          </tbody>
-        </table>
-        <table className="w-full border-collapse border border odds">
-          <thead>
-            <tr>
-              <td colSpan="19">
-                <Link to="/games#razzle">Razzle</Link>
-              </td>
-            </tr>
-            <tr>
-              <td style={{ backgroundColor: '#999' }} aria-label="Spacer">&nbsp;</td>
-              <th colSpan="3">5 dice</th>
-              <th colSpan="3">4 dice</th>
-              <th colSpan="3">3 dice</th>
-              <th colSpan="3">2 dice</th>
-              <th colSpan="3">1 dice</th>
-            </tr>
-            <tr>
-              <th># of Sixes</th>
-              <th>1 roll</th>
-              <th>2</th>
-              <th>3</th>
-              <th>1 roll</th>
-              <th>2</th>
-              <th>3</th>
-              <th>1 roll</th>
-              <th>2</th>
-              <th>3</th>
-              <th>1 roll</th>
-              <th>2</th>
-              <th>3</th>
-              <th>1 roll</th>
-              <th>2</th>
-              <th>3</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td align="right">1</td>
+        <div className="space-y-8">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Game</TableHead>
+                <TableHead>...in 1 roll</TableHead>
+                <TableHead>...in 2 rolls</TableHead>
+                <TableHead>...in 3 rolls</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow>
+                <TableCell>
+                  <Link to="/games#10-3" className="text-primary hover:underline">10-3</Link>
+                </TableCell>
+                <TableData game="10-3" roll="1" />
+                <TableData game="10-3" roll="2" />
+                <TableData game="10-3" roll="3" />
+              </TableRow>
+              <TableRow>
+                <TableCell>
+                  <Link to="/games#10-2" className="text-primary hover:underline">10-2</Link>
+                </TableCell>
+                <TableData game="10-2" roll="1" />
+                <TableData game="10-2" roll="2" />
+                <TableData game="10-2" roll="3" />
+              </TableRow>
+              <TableRow>
+                <TableCell>
+                  <Link to="/games#vegas" className="text-primary hover:underline">Vegas</Link>
+                </TableCell>
+                <TableData game="vegas" roll="1" />
+                <TableData game="vegas" roll="2" />
+                <TableData game="vegas" roll="3" />
+              </TableRow>
+              <TableRow>
+                <TableCell>
+                  <Link to="/games#ship-captain-crew" className="text-primary hover:underline">Ship, Captain, Crew</Link>
+                </TableCell>
+                <TableData game="ship-captain-crew" roll="1" />
+                <TableData game="ship-captain-crew" roll="2" />
+                <TableData game="ship-captain-crew" roll="3" />
+              </TableRow>
+              <TableRow>
+                <TableCell>
+                  <Link to="/games#pairs" className="text-primary hover:underline">Pairs</Link>
+                </TableCell>
+                <TableData game="pairs" roll="1" />
+                <TableData game="pairs" roll="2" />
+                <TableData game="pairs" roll="3" />
+              </TableRow>
+              <TableRow>
+                <TableCell>
+                  <Link to="/games#monterey" className="text-primary hover:underline">Monterey</Link>
+                </TableCell>
+                <TableData game="monterey" roll="1" />
+                <TableData game="monterey" roll="2" />
+                <TableData game="monterey" roll="3" />
+              </TableRow>
+              <TableRow>
+                <TableCell>
+                  <Link to="/games#10-4" className="text-primary hover:underline">10-4</Link>
+                </TableCell>
+                <TableData game="10-4" roll="1" />
+                <TableData game="10-4" roll="2" />
+                <TableData game="10-4" roll="3" />
+              </TableRow>
+            </TableBody>
+          </Table>
+
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableCell colSpan="19" className="text-center font-medium">
+                  <Link to="/games#razzle" className="text-primary hover:underline">Razzle</Link>
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell className="bg-muted" aria-label="Spacer">&nbsp;</TableCell>
+                <TableHead colSpan="3" className="text-center">5 dice</TableHead>
+                <TableHead colSpan="3" className="text-center">4 dice</TableHead>
+                <TableHead colSpan="3" className="text-center">3 dice</TableHead>
+                <TableHead colSpan="3" className="text-center">2 dice</TableHead>
+                <TableHead colSpan="3" className="text-center">1 dice</TableHead>
+              </TableRow>
+              <TableRow>
+                <TableHead># of Sixes</TableHead>
+                <TableHead>1 roll</TableHead>
+                <TableHead>2</TableHead>
+                <TableHead>3</TableHead>
+                <TableHead>1 roll</TableHead>
+                <TableHead>2</TableHead>
+                <TableHead>3</TableHead>
+                <TableHead>1 roll</TableHead>
+                <TableHead>2</TableHead>
+                <TableHead>3</TableHead>
+                <TableHead>1 roll</TableHead>
+                <TableHead>2</TableHead>
+                <TableHead>3</TableHead>
+                <TableHead>1 roll</TableHead>
+                <TableHead>2</TableHead>
+                <TableHead>3</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <TableRow>
+                <TableCell className="text-right">1</TableCell>
               <TableData game="razzle__1__5d6" roll="1" />
               <TableData game="razzle__1__5d6" roll="2" />
               <TableData game="razzle__1__5d6" roll="3" />
@@ -210,9 +226,9 @@ const OddsPage = ({ data }) => {
               <TableData game="razzle__1__1d6" roll="1" />
               <TableData game="razzle__1__1d6" roll="2" />
               <TableData game="razzle__1__1d6" roll="3" />
-            </tr>
-            <tr>
-              <td align="right">2</td>
+            </TableRow>
+            <TableRow>
+              <TableCell className="text-right">2</TableCell>
               <TableData game="razzle__2__5d6" roll="1" />
               <TableData game="razzle__2__5d6" roll="2" />
               <TableData game="razzle__2__5d6" roll="3" />
@@ -225,10 +241,10 @@ const OddsPage = ({ data }) => {
               <TableData game="razzle__2__2d6" roll="1" />
               <TableData game="razzle__2__2d6" roll="2" />
               <TableData game="razzle__2__2d6" roll="3" />
-              <td colSpan="3" style={{backgroundColor: '#999' }} aria-label="Not applicable"></td>
-            </tr>
-            <tr>
-              <td align="right">3</td>
+              <TableCell colSpan="3" className="bg-muted" aria-label="Not applicable"></TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="text-right">3</TableCell>
               <TableData game="razzle__3__5d6" roll="1" />
               <TableData game="razzle__3__5d6" roll="2" />
               <TableData game="razzle__3__5d6" roll="3" />
@@ -238,52 +254,53 @@ const OddsPage = ({ data }) => {
               <TableData game="razzle__3__3d6" roll="1" />
               <TableData game="razzle__3__3d6" roll="2" />
               <TableData game="razzle__3__3d6" roll="3" />
-              <td colSpan="6" style={{backgroundColor: '#999' }} aria-label="Not applicable"></td>
-            </tr>
-            <tr>
-              <td align="right">4</td>
+              <TableCell colSpan="6" className="bg-muted" aria-label="Not applicable"></TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="text-right">4</TableCell>
               <TableData game="razzle__4__5d6" roll="1" />
               <TableData game="razzle__4__5d6" roll="2" />
               <TableData game="razzle__4__5d6" roll="3" />
               <TableData game="razzle__4__4d6" roll="1" />
               <TableData game="razzle__4__4d6" roll="2" />
               <TableData game="razzle__4__4d6" roll="3" />
-              <td colSpan="9" style={{backgroundColor: '#999' }} aria-label="Not applicable"></td>
-            </tr>
-            <tr>
-              <td align="right">5</td>
+              <TableCell colSpan="9" className="bg-muted" aria-label="Not applicable"></TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="text-right">5</TableCell>
               <TableData game="razzle__5__5d6" roll="1" />
               <TableData game="razzle__5__5d6" roll="2" />
               <TableData game="razzle__5__5d6" roll="3" />
-              <td colSpan="12" style={{backgroundColor: '#999' }} aria-label="Not applicable"></td>
-            </tr>
-          </tbody>
-        </table>
-        <table className="w-full border-collapse border border odds">
-          <thead>
-            <tr>
-              <td colSpan="10">
-                <Link to="/games#boss">Boss</Link>
-              </td>
-            </tr>
-            <tr>
-              <th colSpan="3" rowSpan="2" style={{ verticalAlign: "top" }}>1st Roll</th>
-              <th colSpan="7">2nd Roll</th>
-            </tr>
-            <tr>
-              <th colSpan="2">5 dice</th>
-              <th>2 pairs</th>
-              <th>3 of a kind</th>
-              <th>full house</th>
-              <th>4 of a kind</th>
-              <th>5 of a kind</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <th align="right">a 6 high</th>
+              <TableCell colSpan="12" className="bg-muted" aria-label="Not applicable"></TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableCell colSpan="10" className="text-center font-medium">
+                <Link to="/games#boss" className="text-primary hover:underline">Boss</Link>
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableHead colSpan="3" rowSpan="2" className="align-middle text-center">1st Roll</TableHead>
+              <TableHead colSpan="7" className="text-center">2nd Roll</TableHead>
+            </TableRow>
+            <TableRow>
+              <TableHead colSpan="2" className="text-center">5 dice</TableHead>
+              <TableHead>2 pairs</TableHead>
+              <TableHead>3 of a kind</TableHead>
+              <TableHead>full house</TableHead>
+              <TableHead>4 of a kind</TableHead>
+              <TableHead>5 of a kind</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <TableRow>
+              <TableHead className="text-right">a 6 high</TableHead>
               <TableData game="boss-6high__5d6" roll="1" />
-              <td colSpan="1" style={{ backgroundColor: '#999' }}>N/A</td>
+              <TableCell colSpan="1" className="bg-muted">N/A</TableCell>
               <TableData game="boss-nomatch__4d6" roll="1" />
               <TableData game="boss-1match__4d6" roll="1" />
               <TableData game="boss-2match__4d6" roll="1" />
@@ -291,94 +308,96 @@ const OddsPage = ({ data }) => {
               <TableData game="boss-house__4d6" roll="1" />
               <TableData game="boss-4kind__4d6" roll="1" />
               <TableData game="boss-5kind__4d6" roll="1" />
-            </tr>
-            <tr>
-              <th align="right">1 pair</th>
+            </TableRow>
+            <TableRow>
+              <TableHead className="text-right">1 pair</TableHead>
               <TableData game="boss-1pair__5d6" roll="1" />
               <TableData game="boss-1pair-orbetter__5d6" roll="1" rowSpan="6" />
-              <td colSpan="2" style={{ backgroundColor: '#999' }}>N/A</td>
+              <TableCell colSpan="2" className="bg-muted">N/A</TableCell>
               <TableData game="boss-1pair__3d6" roll="1" />
               <TableData game="boss-1match__3d6" roll="1" />
               <TableData game="boss-3kind__3d6" roll="1" />
               <TableData game="boss-2match__3d6" roll="1" />
               <TableData game="boss-3match__3d6" roll="1" />
-            </tr>
-            <tr>
-              <th align="right">2 pair</th>
+            </TableRow>
+            <TableRow>
+              <TableHead className="text-right">2 pair</TableHead>
               <TableData game="boss-2pair__5d6" roll="1" />
-              <td colSpan="4" style={{ backgroundColor: '#999' }}>N/A</td>
+              <TableCell colSpan="4" className="bg-muted">N/A</TableCell>
               <TableData game="boss-house__1d6" roll="1" />
-              <td colSpan="2" style={{ backgroundColor: '#999' }}>N/A</td>
-            </tr>
-            <tr>
-              <th align="right">3 of a kind</th>
+              <TableCell colSpan="2" className="bg-muted">N/A</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableHead className="text-right">3 of a kind</TableHead>
               <TableData game="boss-3kind__5d6" roll="1" />
-              <td colSpan="4" style={{ backgroundColor: '#999' }}>N/A</td>
+              <TableCell colSpan="4" className="bg-muted">N/A</TableCell>
               <TableData game="boss-1pair__2d6" roll="1" />
               <TableData game="boss-1high__2d6" roll="1" />
               <TableData game="boss-1pair__2d6" roll="1" />
-            </tr>
-            <tr>
-              <th align="right">full house</th>
+            </TableRow>
+            <TableRow>
+              <TableHead className="text-right">full house</TableHead>
               <TableData game="boss-house__5d6" roll="1" />
-              <td colSpan="9" style={{ backgroundColor: '#999' }}>N/A</td>
-            </tr>
-            <tr>
-              <th align="right">4 of a kind</th>
+              <TableCell colSpan="9" className="bg-muted">N/A</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableHead className="text-right">4 of a kind</TableHead>
               <TableData game="boss-4kind__5d6" roll="1" />
-              <td colSpan="6" style={{ backgroundColor: '#999' }}>N/A</td>
+              <TableCell colSpan="6" className="bg-muted">N/A</TableCell>
               <TableData game="boss-5kind__1d6" roll="1" />
-            </tr>
-            <tr>
-              <th align="right">5 of a kind</th>
+            </TableRow>
+            <TableRow>
+              <TableHead className="text-right">5 of a kind</TableHead>
               <TableData game="boss-5kind__5d6" roll="1" />
-              <td colSpan="7" style={{ backgroundColor: '#999' }}>N/A</td>
-            </tr>
-          </tbody>
-        </table>
-        <table className="w-full border-collapse border border odds">
-          <thead>
-            <tr>
-              <td colSpan="6">
-                <Link to="/games#tres-away">Tres Away</Link>
-              </td>
-            </tr>
-            <tr>
-              <th>Result</th>
-              <th>5 dice</th>
-              <th>4 dice</th>
-              <th>3 dice</th>
-              <th>2 dice</th>
-              <th>1 die</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td align="right">at least a 3</td>
+              <TableCell colSpan="7" className="bg-muted">N/A</TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableCell colSpan="6" className="text-center font-medium">
+                <Link to="/games#tres-away" className="text-primary hover:underline">Tres Away</Link>
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableHead>Result</TableHead>
+              <TableHead>5 dice</TableHead>
+              <TableHead>4 dice</TableHead>
+              <TableHead>3 dice</TableHead>
+              <TableHead>2 dice</TableHead>
+              <TableHead>1 die</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <TableRow>
+              <TableCell className="text-right">at least a 3</TableCell>
               <TableData game="tres-away__3__5d6" roll="1" />
               <TableData game="tres-away__3__4d6" roll="1" />
               <TableData game="tres-away__3__3d6" roll="1" />
               <TableData game="tres-away__3__2d6" roll="1" />
               <TableData game="tres-away__3__1d6" roll="1" />
-            </tr>
-            <tr>
-              <td align="right">a 3 or 1</td>
+            </TableRow>
+            <TableRow>
+              <TableCell className="text-right">a 3 or 1</TableCell>
               <TableData game="tres-away__1,3__5d6" roll="1" />
               <TableData game="tres-away__1,3__4d6" roll="1" />
               <TableData game="tres-away__1,3__3d6" roll="1" />
               <TableData game="tres-away__1,3__2d6" roll="1" />
               <TableData game="tres-away__1,3__1d6" roll="1" />
-            </tr>
-            <tr>
-              <td align="right">a 3, 1, or 2</td>
+            </TableRow>
+            <TableRow>
+              <TableCell className="text-right">a 3, 1, or 2</TableCell>
               <TableData game="tres-away__1-3__5d6" roll="1" />
               <TableData game="tres-away__1-3__4d6" roll="1" />
               <TableData game="tres-away__1-3__3d6" roll="1" />
               <TableData game="tres-away__1-3__2d6" roll="1" />
               <TableData game="tres-away__1-3__1d6" roll="1" />
-            </tr>
-          </tbody>
-        </table>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </div>
       </section>
     </Layout>
   )
