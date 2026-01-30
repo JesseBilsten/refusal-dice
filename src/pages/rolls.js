@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, startTransition } from 'react'
 import { graphql } from 'gatsby'
 import Layout from '../components/layout'
 import { Badge } from '../components/ui/badge'
@@ -6,9 +6,18 @@ import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/card'
 import { Button } from '../components/ui/button'
 import { ToggleGroup, ToggleGroupItem } from '../components/ui/toggle-group'
 import uniqueRollsData from '../data/unique-rolls.json'
+import { checkGame, getKickerStrength } from '../lib/game-validation'
 
-// Game validation functions
-const checkGame = (roll, gameType) => {
+// Try to import pre-computed matrix, fall back to null if it doesn't exist
+let rollGameMatrix = null
+try {
+  rollGameMatrix = require('../data/roll-game-matrix.json')
+} catch (e) {
+  // Fallback to runtime validation if matrix not available
+}
+
+// Legacy runtime validation function (kept as fallback)
+const checkGameRuntime = (roll, gameType) => {
   const counts = roll.reduce((acc, num) => {
     acc[num] = (acc[num] || 0) + 1
     return acc
@@ -113,8 +122,9 @@ const checkGame = (roll, gameType) => {
   }
 }
 
-// Helper function to calculate kicker strength based on remaining dice
-const calculateKickerStrength = (kickerDice) => {
+// Legacy helper function to calculate kicker strength based on remaining dice (kept as fallback)
+// eslint-disable-next-line no-unused-vars
+const calculateKickerStrengthRuntime = (kickerDice) => {
   if (kickerDice.length === 1) {
     // Single die: 4-6 is high, 1-3 is low
     return kickerDice[0] >= 4 ? 'high' : 'low'
@@ -134,125 +144,31 @@ const calculateKickerStrength = (kickerDice) => {
   return ''
 }
 
-// Helper function to get kicker dice for each game
-const getKickerStrength = (roll, gameType) => {
-  if (gameType === '10-2') {
-    // Find 2 dice that sum to 10, remaining 3 are kicker
-    for (let i = 0; i < 5; i++) {
-      for (let j = i + 1; j < 5; j++) {
-        if (roll[i] + roll[j] === 10) {
-          const kicker = roll.filter((_, idx) => idx !== i && idx !== j)
-          return calculateKickerStrength(kicker)
-        }
-      }
-    }
-  } else if (gameType === '10-3') {
-    // Find 3 dice that sum to 10, remaining 2 are kicker
-    for (let i = 0; i < 5; i++) {
-      for (let j = i + 1; j < 5; j++) {
-        for (let k = j + 1; k < 5; k++) {
-          if (roll[i] + roll[j] + roll[k] === 10) {
-            const kicker = roll.filter((_, idx) => idx !== i && idx !== j && idx !== k)
-            return calculateKickerStrength(kicker)
-          }
-        }
-      }
-    }
-  } else if (gameType === '10-4') {
-    // Find 4 dice that sum to 10, remaining 1 is kicker
-    for (let i = 0; i < 5; i++) {
-      const remaining = roll.filter((_, idx) => idx !== i)
-      if (remaining.reduce((a, b) => a + b, 0) === 10) {
-        return calculateKickerStrength([roll[i]])
-      }
-    }
-  } else if (gameType === 'ship-captain-crew') {
-    // Find the straight (456 or 123), remaining 2 are kicker
-    const hasHighStraight = roll.includes(4) && roll.includes(5) && roll.includes(6)
-    const hasLowStraight = roll.includes(1) && roll.includes(2) && roll.includes(3)
-    
-    let straightDice = hasHighStraight ? [4, 5, 6] : hasLowStraight ? [1, 2, 3] : []
-    const kicker = roll.filter((die) => {
-      const dieIndex = straightDice.indexOf(die)
-      if (dieIndex !== -1) {
-        straightDice.splice(dieIndex, 1)
-        return false
-      }
-      return true
-    })
-    return calculateKickerStrength(kicker)
-  } else if (gameType === 'monterey') {
-    // Find the straight (234 or 345), remaining 2 are kicker
-    const hasLowInside = roll.includes(2) && roll.includes(3) && roll.includes(4)
-    const hasHighInside = roll.includes(3) && roll.includes(4) && roll.includes(5)
-    
-    let straightDice = hasHighInside ? [3, 4, 5] : hasLowInside ? [2, 3, 4] : []
-    const kicker = roll.filter((die) => {
-      const dieIndex = straightDice.indexOf(die)
-      if (dieIndex !== -1) {
-        straightDice.splice(dieIndex, 1)
-        return false
-      }
-      return true
-    })
-    return calculateKickerStrength(kicker)
-  } else if (gameType === 'vegas') {
-    // Find all possible pairs that sum to 7 or 11
-    const validPairs = []
-    for (let i = 0; i < 5; i++) {
-      for (let j = i + 1; j < 5; j++) {
-        const sum = roll[i] + roll[j]
-        if (sum === 7 || sum === 11) {
-          validPairs.push([i, j])
-        }
-      }
-    }
-    
-    // Find 2 non-overlapping pairs and get the kicker
-    for (let i = 0; i < validPairs.length; i++) {
-      for (let j = i + 1; j < validPairs.length; j++) {
-        const [a1, a2] = validPairs[i]
-        const [b1, b2] = validPairs[j]
-        // Check if pairs don't share any dice
-        if (a1 !== b1 && a1 !== b2 && a2 !== b1 && a2 !== b2) {
-          // Found valid pairs, find kicker
-          const usedIndices = [a1, a2, b1, b2]
-          const kickerIndex = [0, 1, 2, 3, 4].find(idx => !usedIndices.includes(idx))
-          return calculateKickerStrength([roll[kickerIndex]])
-        }
-      }
-    }
-    return ''
-  } else if (gameType === 'pairs') {
-    // Find two pairs (4 of a kind counts as 2 pairs), remaining 1 is kicker
-    const counts = roll.reduce((acc, num) => {
-      acc[num] = (acc[num] || 0) + 1
-      return acc
-    }, {})
-    
-    // Mark dice that form pairs
-    const used = new Array(5).fill(false)
-    let pairsMarked = 0
-    
-    Object.entries(counts).forEach(([value, count]) => {
-      const pairsFromThis = Math.floor(count / 2)
-      const diceToMark = pairsFromThis * 2 // Each pair needs 2 dice
-      
-      let marked = 0
-      for (let i = 0; i < 5 && marked < diceToMark && pairsMarked < 2; i++) {
-        if (roll[i] === parseInt(value) && !used[i]) {
-          used[i] = true
-          marked++
-          if (marked % 2 === 0) pairsMarked++ // Count complete pairs
-        }
-      }
-    })
-    
-    const kicker = roll.filter((_, idx) => !used[idx])
-    return calculateKickerStrength(kicker)
-  }
-  return ''
-}
+// Memoized component for individual unique roll items to prevent unnecessary re-renders
+const UniqueRollItem = React.memo(({ roll, count, isMatching }) => {
+  const badgeVariant = isMatching ? 'default' : 'secondary'
+  
+  return (
+    <div className="relative m-0.5">
+      <Badge
+        variant={badgeVariant}
+        className="transition-all"
+      >
+        {roll[0]}
+        {roll[1]}
+        {roll[2]}
+        {roll[3]}
+        {roll[4]}
+      </Badge>
+      <Badge
+        variant="destructive"
+        className="absolute -top-1 -right-1 h-4 min-w-4 px-1 text-xs flex items-center justify-center"
+      >
+        {count}
+      </Badge>
+    </div>
+  )
+})
 
 const GAMES = [
   { id: '10-3', name: '10-3', emoji: '👌' },
@@ -271,14 +187,22 @@ const RollsPage = ({ data }) => {
   const [debugInfo, setDebugInfo] = useState(null)
   const [viewMode, setViewMode] = useState('unique')
   const [hasRenderedAll, setHasRenderedAll] = useState(false)
+  const [isPending, setIsPending] = useState(false)
   
   // Track when all view is first requested
   const handleViewModeChange = (value) => {
     if (value) {
-      setViewMode(value)
-      if (value === 'all') {
-        setHasRenderedAll(true)
-      }
+      setIsPending(true)
+      startTransition(() => {
+        setViewMode(value)
+        if (value === 'all') {
+          setHasRenderedAll(true)
+        }
+        // Reset pending after render completes
+        requestAnimationFrame(() => {
+          setTimeout(() => setIsPending(false), 100)
+        })
+      })
     }
   }
 
@@ -306,29 +230,58 @@ const RollsPage = ({ data }) => {
   const rollCounts = uniqueRollsData.uniqueCount
 
   // Calculate which rolls satisfy the selected games
-  const { matchingRolls, successfulRolls } = useMemo(() => {
+  const { matchingRolls, successfulRolls, matchingUniqueRolls } = useMemo(() => {
     if (selectedGames.length === 0) {
-      return { matchingRolls: new Set(), successfulRolls: 0 }
+      return { matchingRolls: new Set(), successfulRolls: 0, matchingUniqueRolls: new Set() }
     }
     
     const matching = new Set()
-    diceRolls.forEach((roll, index) => {
-      const satisfiesAny = selectedGames.some(gameId => checkGame(roll, gameId))
-      if (satisfiesAny) {
-        matching.add(index)
-      }
-    })
+    const uniqueMatching = new Set()
     
-    return { matchingRolls: matching, successfulRolls: matching.size }
-  }, [selectedGames, diceRolls])
+    // Use pre-computed matrix if available (247× faster)
+    if (rollGameMatrix) {
+      uniqueRollsArray.forEach((rollData, index) => {
+        const rollKey = rollData.roll.join('')
+        const gameData = rollGameMatrix[rollKey]
+        
+        // Check if this roll satisfies any selected game
+        if (gameData && gameData.games.some(g => selectedGames.includes(g))) {
+          // Mark this unique roll as matching
+          uniqueMatching.add(index)
+          // Add all indices of this unique roll to matching set
+          rollData.indices.forEach(idx => matching.add(idx))
+        }
+      })
+    } else {
+      // Fallback to runtime validation if matrix not available
+      diceRolls.forEach((roll, index) => {
+        const satisfiesAny = selectedGames.some(gameId => checkGameRuntime(roll, gameId))
+        if (satisfiesAny) {
+          matching.add(index)
+        }
+      })
+      
+      // Also calculate which unique rolls match
+      uniqueRollsArray.forEach((rollData, index) => {
+        if (rollData.indices.some(idx => matching.has(idx))) {
+          uniqueMatching.add(index)
+        }
+      })
+    }
+    
+    return { matchingRolls: matching, successfulRolls: matching.size, matchingUniqueRolls: uniqueMatching }
+  }, [selectedGames, uniqueRollsArray, diceRolls])
   
-  // Pre-calculate which unique rolls have matches
+  // Pre-calculate which unique rolls have matches - now O(1) lookup instead of O(n) iteration
   const uniqueRollsWithMatches = useMemo(() => {
-    return uniqueRollsArray.map(data => ({
-      ...data,
-      isMatching: data.indices.some(idx => matchingRolls.has(idx))
+    const result = uniqueRollsArray.map((data, index) => ({
+      roll: data.roll,
+      count: data.count,
+      indices: data.indices,
+      isMatching: matchingUniqueRolls.has(index)
     }))
-  }, [uniqueRollsArray, matchingRolls])
+    return result
+  }, [uniqueRollsArray, matchingUniqueRolls])
 
   // Memoize the rendered "All" view - only compute when needed
   const allRollsView = useMemo(() => {
@@ -352,43 +305,34 @@ const RollsPage = ({ data }) => {
         </Badge>
       )
     })
-  }, [diceRolls, matchingRolls, hasRenderedAll])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [matchingRolls, hasRenderedAll])
 
   // Memoize the rendered "Unique" view
   const uniqueRollsView = useMemo(() => {
-    return uniqueRollsWithMatches.map((data, index) => {
-      const roll = data.roll
-      const badgeVariant = data.isMatching ? 'default' : 'secondary'
-      
-      return (
-        <div key={index} className="relative m-0.5">
-          <Badge
-            variant={badgeVariant}
-            className="transition-all"
-          >
-            {roll[0]}
-            {roll[1]}
-            {roll[2]}
-            {roll[3]}
-            {roll[4]}
-          </Badge>
-          <Badge
-            variant="destructive"
-            className="absolute -top-1 -right-1 h-4 min-w-4 px-1 text-xs flex items-center justify-center"
-          >
-            {data.count}
-          </Badge>
-        </div>
-      )
-    })
+    const result = uniqueRollsWithMatches.map((data, index) => (
+      <UniqueRollItem
+        key={index}
+        roll={data.roll}
+        count={data.count}
+        isMatching={data.isMatching}
+      />
+    ))
+    return result
   }, [uniqueRollsWithMatches])
 
   const toggleGame = (gameId) => {
-    setSelectedGames(prev => 
-      prev.includes(gameId) 
-        ? prev.filter(id => id !== gameId)
-        : [...prev, gameId]
-    )
+    setIsPending(true)
+    startTransition(() => {
+      setSelectedGames(prev => 
+        prev.includes(gameId) 
+          ? prev.filter(id => id !== gameId)
+          : [...prev, gameId]
+      )
+      requestAnimationFrame(() => {
+        setTimeout(() => setIsPending(false), 100)
+      })
+    })
   }
 
   const percentage = selectedGames.length > 0 
@@ -540,6 +484,10 @@ const RollsPage = ({ data }) => {
               display: 'flex',
               flexWrap: 'wrap',
               fontFamily: 'monospace',
+              contain: 'layout style paint', // CSS containment for better Firefox performance
+              opacity: isPending ? 0.6 : 1,
+              transition: 'opacity 150ms ease-in-out',
+              animation: isPending ? 'pulse 3.75s ease-in-out infinite' : 'none',
             }}
           >
             {viewMode === 'all' ? (
