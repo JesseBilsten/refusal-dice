@@ -12,6 +12,8 @@ const GAMES = [
   { id: 'monterey', name: 'Monterey' },
   { id: '10-4', name: '10-4' },
   { id: 'razzle', name: 'Razzle' },
+  { id: 'boss', name: 'Boss' },
+  { id: 'tres-away', name: 'Tres Away' },
 ];
 
 /**

@@ -341,7 +341,11 @@ const RulesPage = () => (
           <CardContent>
             <p className="mb-4">
               If the first call was refused, all players must play the callers
-              second game.
+              second game. The second call must be a completely different game
+              from the first call (not just a different variant). For example,
+              if the first call was Monterey Low, the second call cannot be
+              Monterey High - it must be an entirely different game like Ship,
+              Captain, Crew or Pairs.
             </p>
             <ul className="space-y-2 divide-y divide-border">
               <li className="pt-2 first:pt-0">
