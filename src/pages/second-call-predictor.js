@@ -1,13 +1,11 @@
-import React, { useState, useMemo } from 'react'
+import React, { useState } from 'react'
 import { graphql } from 'gatsby'
 import Layout from '../components/layout'
 import { Badge } from '../components/ui/badge'
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '../components/ui/card'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
 import { Label } from '../components/ui/label'
-import uniqueRollsData from '../data/unique-rolls.json'
-import { analyzeSecondCallDistribution } from '../lib/game-validation'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
+import SecondCallDistribution from '../components/SecondCallDistribution'
 
 const GAMES = [
   { id: '10-2', name: '10-2', emoji: '✌️', hasVariants: true },
@@ -29,22 +27,6 @@ const SecondCallPredictorPage = ({ data }) => {
 
   const selectedGameObj = GAMES.find(g => g.id === selectedGame)
   const hasVariants = selectedGameObj?.hasVariants || false
-
-  // Calculate second call distribution
-  const analysis = useMemo(() => {
-    const variant = hasVariants ? selectedVariant : null
-    const numOpponents = playerCount - 1
-    
-    return analyzeSecondCallDistribution(
-      selectedGame,
-      variant,
-      uniqueRollsData.uniqueRolls,
-      numOpponents
-    )
-  }, [selectedGame, selectedVariant, hasVariants, playerCount])
-
-  const distribution = analysis.secondCallDistribution || []
-  const insights = analysis.insights || []
 
   return (
     <Layout>
@@ -121,127 +103,14 @@ const SecondCallPredictorPage = ({ data }) => {
         </Card>
 
         {/* Analysis Results */}
-        {analysis.error ? (
-          <Card className="mb-6">
-            <CardContent className="pt-6">
-              <p className="text-destructive text-center">{analysis.error}</p>
-            </CardContent>
-          </Card>
-        ) : (
-          <>
-            {/* Strategic Insights */}
-            {insights.length > 0 && (
-              <Card className="mb-6">
-                <CardHeader>
-                  <CardTitle>Strategic Insights</CardTitle>
-                  <CardDescription>
-                    What the data tells us about calling patterns
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-2">
-                    {insights.map((insight, idx) => (
-                      <li key={idx} className="flex items-start gap-2">
-                        <Badge variant="outline" className="mt-0.5 shrink-0">
-                          {idx + 1}
-                        </Badge>
-                        <span className="text-sm text-muted-foreground">{insight}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Distribution Table */}
-            <Card>
-              <CardHeader>
-                <CardTitle>
-                  Second Call Distribution for {analysis.firstCall}
-                </CardTitle>
-                <CardDescription>
-                  Based on {analysis.totalRolls} unique rolls ({analysis.totalInstances} total instances) that can make this game
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {distribution.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">
-                    No alternative calls found for rolls that can make {analysis.firstCall}
-                  </p>
-                ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-[50px]">Rank</TableHead>
-                        <TableHead>Second Call</TableHead>
-                        <TableHead className="text-right">Likelihood</TableHead>
-                        <TableHead className="text-right">Count</TableHead>
-                        <TableHead className="text-right">Avg Strength</TableHead>
-                        <TableHead>Example Rolls</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {distribution.map((call, idx) => (
-                        <TableRow key={idx}>
-                          <TableCell>
-                            <Badge variant={idx === 0 ? 'default' : 'secondary'}>
-                              #{idx + 1}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="font-medium">
-                            <span className="flex items-center gap-2">
-                              {GAMES.find(g => g.id === call.game)?.emoji || '🎲'}
-                              {call.displayName}
-                            </span>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Badge 
-                              variant="outline"
-                              className={
-                                parseFloat(call.percentage) > 30 
-                                  ? 'bg-green-500/10 text-green-700 dark:text-green-400'
-                                  : parseFloat(call.percentage) > 15
-                                  ? 'bg-blue-500/10 text-blue-700 dark:text-blue-400'
-                                  : ''
-                              }
-                            >
-                              {call.percentage}%
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right font-mono text-sm">
-                            {call.count}
-                          </TableCell>
-                          <TableCell className="text-right font-mono text-sm">
-                            {call.avgOffensiveStrength}%
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex flex-wrap gap-1">
-                              {call.examples.slice(0, 3).map((ex, i) => (
-                                <Badge 
-                                  key={i} 
-                                  variant="secondary" 
-                                  className="font-mono text-xs"
-                                  title={`Strength: ${ex.strength}%`}
-                                >
-                                  {ex.roll}
-                                </Badge>
-                              ))}
-                              {call.examples.length > 3 && (
-                                <Badge variant="outline" className="text-xs">
-                                  +{call.examples.length - 3}
-                                </Badge>
-                              )}
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                )}
-              </CardContent>
-            </Card>
-          </>
-        )}
+        <SecondCallDistribution
+          gameId={selectedGame}
+          hasVariants={hasVariants}
+          variant={hasVariants ? selectedVariant : null}
+          numOpponents={playerCount - 1}
+          showTabs={false}
+          title={`Second Call Distribution for ${selectedGame}${hasVariants && selectedVariant ? ` (${selectedVariant})` : ''}`}
+        />
 
         {/* Explanation */}
         <Card className="mt-6">

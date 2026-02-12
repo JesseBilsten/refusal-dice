@@ -122,5 +122,39 @@ exports.onPreBootstrap = async ({ reporter }) => {
   }
 };
 
-// No special webpack configuration needed
+/**
+ * Create individual game detail pages
+ */
+exports.createPages = async ({ actions }) => {
+  const { createPage } = actions;
+  
+  const gameDetailTemplate = path.resolve('./src/templates/game-detail.js');
+  
+  // List of all games + barking
+  const games = [
+    '10-2',
+    '10-3', 
+    '10-4',
+    'ship-captain-crew',
+    'monterey',
+    'vegas',
+    'pairs',
+    'razzle',
+    'boss',
+    'tres-away',
+    'barking'
+  ];
+  
+  // Create a page for each game
+  games.forEach(gameId => {
+    createPage({
+      path: `/games/${gameId}`,
+      component: gameDetailTemplate,
+      context: {
+        gameId: gameId,
+      },
+    });
+  });
+};
 
+// No special webpack configuration needed

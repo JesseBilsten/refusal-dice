@@ -17,8 +17,6 @@ const MobileNav = () => {
     { to: '/rules', label: 'Rules' },
     { to: '/games', label: 'Games' },
     { to: '/rolls', label: 'Rolls' },
-    { to: '/odds', label: 'Odds' },
-    { to: '/second-call-predictor', label: '2nd Call Predictor' },
     { to: '/strategy-assistant', label: 'Strategy Assistant' },
     { to: '/glossary', label: 'Glossary' },
   ]

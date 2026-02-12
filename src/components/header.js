@@ -40,24 +40,6 @@ const Header = ({ siteTitle }) => (
           </li>
           <li>
             <Link 
-              to="/odds" 
-              className="text-sm font-medium text-foreground/70 hover:text-primary transition-colors"
-              activeClassName="text-primary"
-            >
-              Odds
-            </Link>
-          </li>
-          <li>
-            <Link 
-              to="/second-call-predictor" 
-              className="text-sm font-medium text-foreground/70 hover:text-primary transition-colors"
-              activeClassName="text-primary"
-            >
-              2nd Call
-            </Link>
-          </li>
-          <li>
-            <Link 
               to="/strategy-assistant" 
               className="text-sm font-medium text-foreground/70 hover:text-primary transition-colors"
               activeClassName="text-primary"

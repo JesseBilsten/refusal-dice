@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Slider } from '../components/ui/slider'
 import { LayoutGrid, TableProperties } from 'lucide-react'
 import uniqueRollsData from '../data/unique-rolls.json'
+import SecondCallDistribution from '../components/SecondCallDistribution'
 import { 
   checkGame, 
   getKickerStrength, 
@@ -19,7 +20,6 @@ import {
   getBossHandRank,
   calculateTresAwayScore,
   getRazzleScore,
-  analyzeSecondCallDistribution,
   STRENGTH_DATA_VERSION,
   gameOddsMap
 } from '../lib/game-validation'
@@ -76,7 +76,7 @@ const RollsPage = ({ data }) => {
   const [razzleMinCount, setRazzleMinCount] = useState(4)
   const [razzleTargetValue, setRazzleTargetValue] = useState(6)
   const [tresAwayMaxScore, setTresAwayMaxScore] = useState(uniqueRollsData.thresholds?.tresAwayExpected || 7.31)
-  const [bossMinRank, setBossMinRank] = useState(3) // 3 = Two Pair
+  const [bossMinRank, setBossMinRank] = useState(4) // 4 = Three of a Kind or better
   
   // Table state
   const [sortColumn, setSortColumn] = useState(null)
@@ -84,6 +84,26 @@ const RollsPage = ({ data }) => {
   
   // Settings
   const [playerCount, setPlayerCount] = useState(3)
+
+  // Parse URL parameters on mount to auto-select game filter
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      const gameParam = params.get('game')
+      const viewParam = params.get('view')
+      
+      if (gameParam) {
+        const game = GAMES.find(g => g.id === gameParam)
+        if (game) {
+          setSelectedGame(gameParam)
+        }
+      }
+      
+      if (viewParam === 'table') {
+        setLayoutMode('table')
+      }
+    }
+  }, [])
 
   // Generate all possible dice rolls
   const diceRolls = useMemo(() => {
@@ -117,15 +137,53 @@ const RollsPage = ({ data }) => {
     // Special handling for Razzle
     if (selectedGame === 'razzle') {
       diceRolls.forEach((roll, index) => {
-        const razzleScore = getRazzleScore(roll)
-        if (razzleScore.bestCount >= razzleMinCount && razzleScore.bestValue === razzleTargetValue) {
+        // Count 1s and 6s (1s are wild for 6s)
+        const ones = roll.filter(d => d === 1).length
+        const sixes = roll.filter(d => d === 6).length
+        const wildSixes = ones + sixes
+        
+        // Check for 5+ of any other number (using 1s as wilds)
+        const counts = {}
+        roll.forEach(d => counts[d] = (counts[d] || 0) + 1)
+        
+        let hasFiveOfOther = false
+        for (let num = 2; num <= 5; num++) {
+          const naturalCount = counts[num] || 0
+          if (naturalCount + ones >= 5) {
+            hasFiveOfOther = true
+            break
+          }
+        }
+        
+        // Include if 4+ wild 6s OR 5+ of any other number
+        if (wildSixes >= 4 || hasFiveOfOther) {
           matching.add(index)
         }
       })
       
       uniqueRollsArray.forEach((rollData, index) => {
-        const razzleScore = getRazzleScore(rollData.roll)
-        if (razzleScore.bestCount >= razzleMinCount && razzleScore.bestValue === razzleTargetValue) {
+        const roll = rollData.roll
+        
+        // Count 1s and 6s (1s are wild for 6s)
+        const ones = roll.filter(d => d === 1).length
+        const sixes = roll.filter(d => d === 6).length
+        const wildSixes = ones + sixes
+        
+        // Check for 5+ of any other number (using 1s as wilds)
+        const counts = {}
+        roll.forEach(d => counts[d] = (counts[d] || 0) + 1)
+        
+        let hasFiveOfOther = false
+        for (let num = 2; num <= 5; num++) {
+          const naturalCount = counts[num] || 0
+          if (naturalCount + ones >= 5) {
+            hasFiveOfOther = true
+            break
+          }
+        }
+        
+        // Include if 4+ wild 6s OR 5+ of any other number
+        if (wildSixes >= 4 || hasFiveOfOther) {
           uniqueMatching.add(index)
         }
       })
@@ -230,24 +288,6 @@ const RollsPage = ({ data }) => {
     
     return counts
   }, [selectedGame, matchingRolls, diceRolls])
-
-  // Calculate odds summary (second call distribution)
-  const oddsAnalysis = useMemo(() => {
-    if (!selectedGame) return null
-    
-    // Filter unique rolls to only those matching current game and modifiers
-    const filteredRolls = uniqueRollsArray
-      .map((rollData, index) => ({ ...rollData, originalIndex: index }))
-      .filter((rollData) => matchingUniqueRolls.has(rollData.originalIndex))
-    
-    const numOpponents = playerCount - 1
-    return analyzeSecondCallDistribution(
-      selectedGame,
-      selectedVariant,
-      filteredRolls,
-      numOpponents
-    )
-  }, [selectedGame, selectedVariant, playerCount, matchingUniqueRolls, uniqueRollsArray])
 
   // Handlers
   const handleGameSelect = (gameId) => {
@@ -538,63 +578,17 @@ const RollsPage = ({ data }) => {
 
         {/* Odds Summary */}
         {selectedGame && (
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle>Odds Summary</CardTitle>
-              <CardDescription>
-                Showing {matchingCount.toLocaleString()} of 7,776 rolls ({((matchingCount / 7776) * 100).toFixed(2)}%)
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {oddsAnalysis && oddsAnalysis.secondCallDistribution && oddsAnalysis.secondCallDistribution.length > 0 ? (
-                <div className="space-y-4">
-                  <div>
-                    <h4 className="text-sm font-semibold mb-3">
-                      Other games playable with {selectedGame}{selectedVariant ? ` (${selectedVariant})` : ''} rolls:
-                    </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {oddsAnalysis.secondCallDistribution.slice(0, 8).map((call, idx) => (
-                        <div key={idx} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                          <div className="flex items-center gap-2">
-                            <Badge variant={idx < 3 ? 'default' : 'secondary'}>
-                              #{idx + 1}
-                            </Badge>
-                            <span className="font-medium">
-                              {GAMES.find(g => g.id === call.game)?.emoji} {call.displayName}
-                            </span>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-lg font-bold">{call.percentage}%</div>
-                            <div className="text-xs text-muted-foreground">
-                              {call.count} rolls
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {oddsAnalysis.insights && oddsAnalysis.insights.length > 0 && (
-                    <div className="pt-4 border-t border-border">
-                      <h4 className="text-sm font-semibold mb-2">Strategic Insights:</h4>
-                      <ul className="space-y-2">
-                        {oddsAnalysis.insights.map((insight, idx) => (
-                          <li key={idx} className="text-sm text-muted-foreground flex items-start gap-2">
-                            <Badge variant="outline" className="mt-0.5 shrink-0">{idx + 1}</Badge>
-                            <span>{insight}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <p className="text-center text-muted-foreground py-4">
-                  No alternative games found for this selection
-                </p>
-              )}
-            </CardContent>
-          </Card>
+          <div className="mb-6">
+            <SecondCallDistribution
+              gameId={selectedGame}
+              hasVariants={selectedGameObj?.hasVariants || false}
+              variant={selectedVariant}
+              numOpponents={playerCount - 1}
+              showTabs={false}
+              title="Odds Summary"
+              description={`Showing ${matchingCount.toLocaleString()} of 7,776 rolls (${((matchingCount / 7776) * 100).toFixed(2)}%)`}
+            />
+          </div>
         )}
 
         {/* Results Display */}
@@ -629,26 +623,26 @@ const RollsPage = ({ data }) => {
                     >
                       Roll {sortColumn === 'roll' && (sortDirection === 'asc' ? '↑' : '↓')}
                     </TableHead>
-                    <TableHead className="text-center">10-2 L</TableHead>
-                    <TableHead className="text-center">10-2 H</TableHead>
-                    <TableHead className="text-center">10-3 L</TableHead>
-                    <TableHead className="text-center">10-3 H</TableHead>
-                    <TableHead className="text-center">10-4 L</TableHead>
-                    <TableHead className="text-center">10-4 H</TableHead>
-                    <TableHead className="text-center">SCC L</TableHead>
-                    <TableHead className="text-center">SCC H</TableHead>
-                    <TableHead className="text-center">Mont L</TableHead>
-                    <TableHead className="text-center">Mont H</TableHead>
-                    <TableHead className="text-center">7's L</TableHead>
-                    <TableHead className="text-center">7's H</TableHead>
-                    <TableHead className="text-center">Pairs L</TableHead>
-                    <TableHead className="text-center">Pairs H</TableHead>
-                    <TableHead className="text-center">Razzle</TableHead>
-                    <TableHead className="text-center">Boss</TableHead>
-                    <TableHead className="text-center">Tres</TableHead>
+                    <TableHead className="text-center hidden lg:table-cell">10-2 L</TableHead>
+                    <TableHead className="text-center hidden lg:table-cell">10-2 H</TableHead>
+                    <TableHead className="text-center hidden lg:table-cell">10-3 L</TableHead>
+                    <TableHead className="text-center hidden lg:table-cell">10-3 H</TableHead>
+                    <TableHead className="text-center hidden lg:table-cell">10-4 L</TableHead>
+                    <TableHead className="text-center hidden lg:table-cell">10-4 H</TableHead>
+                    <TableHead className="text-center hidden lg:table-cell">SCC L</TableHead>
+                    <TableHead className="text-center hidden lg:table-cell">SCC H</TableHead>
+                    <TableHead className="text-center hidden lg:table-cell">Mont L</TableHead>
+                    <TableHead className="text-center hidden lg:table-cell">Mont H</TableHead>
+                    <TableHead className="text-center hidden lg:table-cell">7's L</TableHead>
+                    <TableHead className="text-center hidden lg:table-cell">7's H</TableHead>
+                    <TableHead className="text-center hidden lg:table-cell">Pairs L</TableHead>
+                    <TableHead className="text-center hidden lg:table-cell">Pairs H</TableHead>
+                    <TableHead className="text-center hidden lg:table-cell">Razzle</TableHead>
+                    <TableHead className="text-center hidden lg:table-cell">Boss</TableHead>
+                    <TableHead className="text-center hidden lg:table-cell">Tres</TableHead>
                     <TableHead className="text-center">Flex</TableHead>
                     <TableHead className="text-center">Off%</TableHead>
-                    <TableHead className="text-center">Def%</TableHead>
+                    <TableHead className="text-center hidden lg:table-cell">Def%</TableHead>
                     <TableHead className="text-center">Best</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -687,34 +681,34 @@ const RollsPage = ({ data }) => {
                     
                     return (
                       <TableRow key={index} className={isHighlighted ? 'bg-primary/10' : ''}>
-                        <TableCell className="sticky left-0 bg-background z-10 font-mono font-semibold border-r shadow-sm">
+                        <TableCell className="sticky left-0 bg-background z-10 font-mono font-semibold border-r shadow-sm text-xs lg:text-sm px-2 lg:px-3 py-1 lg:py-2">
                           {rollData.roll.join('')}
                         </TableCell>
-                        <TableCell className="text-center font-mono text-sm">{getStrength('10-2', 'low') || '-'}</TableCell>
-                        <TableCell className="text-center font-mono text-sm">{getStrength('10-2', 'high') || '-'}</TableCell>
-                        <TableCell className="text-center font-mono text-sm">{getStrength('10-3', 'low') || '-'}</TableCell>
-                        <TableCell className="text-center font-mono text-sm">{getStrength('10-3', 'high') || '-'}</TableCell>
-                        <TableCell className="text-center font-mono text-sm">{getStrength('10-4', 'low') || '-'}</TableCell>
-                        <TableCell className="text-center font-mono text-sm">{getStrength('10-4', 'high') || '-'}</TableCell>
-                        <TableCell className="text-center font-mono text-sm">{getStrength('ship-captain-crew', 'low') || '-'}</TableCell>
-                        <TableCell className="text-center font-mono text-sm">{getStrength('ship-captain-crew', 'high') || '-'}</TableCell>
-                        <TableCell className="text-center font-mono text-sm">{getStrength('monterey', 'low') || '-'}</TableCell>
-                        <TableCell className="text-center font-mono text-sm">{getStrength('monterey', 'high') || '-'}</TableCell>
-                        <TableCell className="text-center font-mono text-sm">{getStrength('vegas', 'low') || '-'}</TableCell>
-                        <TableCell className="text-center font-mono text-sm">{getStrength('vegas', 'high') || '-'}</TableCell>
-                        <TableCell className="text-center font-mono text-sm">{getStrength('pairs', 'low') || '-'}</TableCell>
-                        <TableCell className="text-center font-mono text-sm">{getStrength('pairs', 'high') || '-'}</TableCell>
-                        <TableCell className="text-center font-mono text-sm">{getStrength('razzle') || '-'}</TableCell>
-                        <TableCell className="text-center font-mono text-sm">{getStrength('boss') || '-'}</TableCell>
-                        <TableCell className="text-center font-mono text-sm">{getStrength('tres-away') || '-'}</TableCell>
-                        <TableCell className="text-center font-mono text-sm font-semibold">{analysis.flexibility || 0}</TableCell>
-                        <TableCell className="text-center font-mono text-sm font-bold text-orange-600 dark:text-orange-400">
+                        <TableCell className="hidden lg:table-cell text-center font-mono text-sm">{getStrength('10-2', 'low') || '-'}</TableCell>
+                        <TableCell className="hidden lg:table-cell text-center font-mono text-sm">{getStrength('10-2', 'high') || '-'}</TableCell>
+                        <TableCell className="hidden lg:table-cell text-center font-mono text-sm">{getStrength('10-3', 'low') || '-'}</TableCell>
+                        <TableCell className="hidden lg:table-cell text-center font-mono text-sm">{getStrength('10-3', 'high') || '-'}</TableCell>
+                        <TableCell className="hidden lg:table-cell text-center font-mono text-sm">{getStrength('10-4', 'low') || '-'}</TableCell>
+                        <TableCell className="hidden lg:table-cell text-center font-mono text-sm">{getStrength('10-4', 'high') || '-'}</TableCell>
+                        <TableCell className="hidden lg:table-cell text-center font-mono text-sm">{getStrength('ship-captain-crew', 'low') || '-'}</TableCell>
+                        <TableCell className="hidden lg:table-cell text-center font-mono text-sm">{getStrength('ship-captain-crew', 'high') || '-'}</TableCell>
+                        <TableCell className="hidden lg:table-cell text-center font-mono text-sm">{getStrength('monterey', 'low') || '-'}</TableCell>
+                        <TableCell className="hidden lg:table-cell text-center font-mono text-sm">{getStrength('monterey', 'high') || '-'}</TableCell>
+                        <TableCell className="hidden lg:table-cell text-center font-mono text-sm">{getStrength('vegas', 'low') || '-'}</TableCell>
+                        <TableCell className="hidden lg:table-cell text-center font-mono text-sm">{getStrength('vegas', 'high') || '-'}</TableCell>
+                        <TableCell className="hidden lg:table-cell text-center font-mono text-sm">{getStrength('pairs', 'low') || '-'}</TableCell>
+                        <TableCell className="hidden lg:table-cell text-center font-mono text-sm">{getStrength('pairs', 'high') || '-'}</TableCell>
+                        <TableCell className="hidden lg:table-cell text-center font-mono text-sm">{getStrength('razzle') || '-'}</TableCell>
+                        <TableCell className="hidden lg:table-cell text-center font-mono text-sm">{getStrength('boss') || '-'}</TableCell>
+                        <TableCell className="hidden lg:table-cell text-center font-mono text-sm">{getStrength('tres-away') || '-'}</TableCell>
+                        <TableCell className="text-center font-mono text-xs lg:text-sm font-semibold px-2 lg:px-3">{analysis.flexibility || 0}</TableCell>
+                        <TableCell className="text-center font-mono text-xs lg:text-sm font-bold text-orange-600 dark:text-orange-400 px-2 lg:px-3">
                           {dynamicOffensiveStrength.toFixed(1)}
                         </TableCell>
-                        <TableCell className="text-center font-mono text-sm font-bold text-blue-600 dark:text-blue-400">
+                        <TableCell className="hidden lg:table-cell text-center font-mono text-sm font-bold text-blue-600 dark:text-blue-400">
                           {dynamicDefensiveStrength.toFixed(1)}
                         </TableCell>
-                        <TableCell className="text-center font-mono text-sm font-bold text-primary">
+                        <TableCell className="text-center font-mono text-xs lg:text-sm font-bold text-primary px-2 lg:px-3">
                           {analysis.overallPercentile || 0}
                         </TableCell>
                       </TableRow>
