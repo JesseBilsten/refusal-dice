@@ -15,7 +15,175 @@
   vertical-align: middle;
 }
 
-/* Inline variant for use within text */
+/* Size variants */
+/* XS - Extra Small (1rem / 16px) */
+.die.size-xs {
+  width: 1rem;
+  height: 1rem;
+  margin: 0.125rem;
+  border-radius: 0.125rem;
+  box-shadow: 0.1rem 0.1rem 0 rgba(10, 10, 10, 0.5);
+}
+
+.die.size-xs.pips::before {
+  height: 0.19rem;
+  width: 0.19rem;
+}
+
+.die.size-xs.pips[data-content="2"]::before {
+  box-shadow: 0.45rem 0.45rem 0 rgb(227, 70, 39);
+}
+
+.die.size-xs.pips[data-content="3"]::before {
+  box-shadow:
+    0.22rem 0.22rem 0 rgb(58, 177, 205),
+    -0.22rem -0.22rem 0 rgb(58, 177, 205);
+}
+
+.die.size-xs.pips[data-content="4"]::before {
+  box-shadow:
+    0.44rem 0.44rem 0 rgb(58, 177, 205),
+    0.44rem 0 0 rgb(58, 177, 205),
+    0 0.44rem 0 rgb(58, 177, 205);
+  top: -0.11rem;
+  left: -0.11rem;
+}
+
+.die.size-xs.pips[data-content="5"]::before {
+  box-shadow:
+    0.22rem 0.22rem 0 rgb(227, 70, 39),
+    -0.22rem 0.22rem 0 rgb(227, 70, 39),
+    -0.22rem -0.22rem 0 rgb(227, 70, 39),
+    0.22rem -0.22rem 0 rgb(227, 70, 39);
+}
+
+.die.size-xs.pips[data-content="6"]::before {
+  box-shadow:
+    0.44rem 0.44rem 0 rgb(10, 10, 10),
+    0.44rem 0 0 rgb(10, 10, 10),
+    0.44rem 0.22rem 0 rgb(10, 10, 10),
+    0 0.22rem 0 rgb(10, 10, 10),
+    0 0.44rem 0 rgb(10, 10, 10);
+  top: -0.22rem;
+  left: -0.22rem;
+}
+
+/* SM - Small (1.5rem / 24px) */
+.die.size-sm {
+  width: 1.5rem;
+  height: 1.5rem;
+  margin: 0.25rem;
+  border-radius: 0.1875rem;
+  box-shadow: 0.15rem 0.15rem 0 rgba(10, 10, 10, 0.5);
+}
+
+.die.size-sm.pips::before {
+  height: 0.285rem;
+  width: 0.285rem;
+}
+
+.die.size-sm.pips[data-content="2"]::before {
+  box-shadow: 0.675rem 0.675rem 0 rgb(227, 70, 39);
+  top: -16.5%;
+  left: -16.5%;
+}
+
+.die.size-sm.pips[data-content="3"]::before {
+  box-shadow:
+    0.33rem 0.33rem 0 rgb(58, 177, 205),
+    -0.33rem -0.33rem 0 rgb(58, 177, 205);
+}
+
+.die.size-sm.pips[data-content="4"]::before {
+  box-shadow:
+    0.66rem 0.66rem 0 rgb(58, 177, 205),
+    0.66rem 0 0 rgb(58, 177, 205),
+    0 0.66rem 0 rgb(58, 177, 205);
+  top: -16.5%;
+  left: -16.5%;
+}
+
+.die.size-sm.pips[data-content="5"]::before {
+  box-shadow:
+    0.33rem 0.33rem 0 rgb(227, 70, 39),
+    -0.33rem 0.33rem 0 rgb(227, 70, 39),
+    -0.33rem -0.33rem 0 rgb(227, 70, 39),
+    0.33rem -0.33rem 0 rgb(227, 70, 39);
+}
+
+.die.size-sm.pips[data-content="6"]::before {
+  box-shadow:
+    0.66rem 0.66rem 0 rgb(10, 10, 10),
+    0.66rem 0 0 rgb(10, 10, 10),
+    0.66rem 0.33rem 0 rgb(10, 10, 10),
+    0 0.33rem 0 rgb(10, 10, 10),
+    0 0.66rem 0 rgb(10, 10, 10);
+  top: -0.33rem;
+  left: -0.33rem;
+}
+
+/* MD - Medium (2rem / 32px) - Default size */
+.die.size-md {
+  width: 2rem;
+  height: 2rem;
+  margin: 0.33rem;
+}
+
+/* LG - Large (3rem / 48px) */
+.die.size-lg {
+  width: 3rem;
+  height: 3rem;
+  margin: 0.5rem;
+  border-radius: 0.375rem;
+  box-shadow: 0.3rem 0.3rem 0 rgba(10, 10, 10, 0.5);
+}
+
+.die.size-lg.pips::before {
+  height: 0.57rem;
+  width: 0.57rem;
+}
+
+.die.size-lg.pips[data-content="2"]::before {
+  box-shadow: 1.35rem 1.35rem 0 rgb(227, 70, 39);
+  top: -22%;
+  left: -22%;
+}
+
+.die.size-lg.pips[data-content="3"]::before {
+  box-shadow:
+    0.66rem 0.66rem 0 rgb(58, 177, 205),
+    -0.66rem -0.66rem 0 rgb(58, 177, 205);
+}
+
+.die.size-lg.pips[data-content="4"]::before {
+  box-shadow:
+    1.32rem 1.32rem 0 rgb(58, 177, 205),
+    1.32rem 0 0 rgb(58, 177, 205),
+    0 1.32rem 0 rgb(58, 177, 205);
+  top: -22%;
+  left: -22%;
+}
+
+.die.size-lg.pips[data-content="5"]::before {
+  box-shadow:
+    0.66rem 0.66rem 0 rgb(227, 70, 39),
+    -0.66rem 0.66rem 0 rgb(227, 70, 39),
+    -0.66rem -0.66rem 0 rgb(227, 70, 39),
+    0.66rem -0.66rem 0 rgb(227, 70, 39);
+}
+
+.die.size-lg.pips[data-content="6"]::before {
+  box-shadow:
+    1.32rem 1.32rem 0 rgb(10, 10, 10),
+    1.32rem 0 0 rgb(10, 10, 10),
+    1.32rem 0.66rem 0 rgb(10, 10, 10),
+    0 0.66rem 0 rgb(10, 10, 10),
+    0 1.32rem 0 rgb(10, 10, 10);
+  top: -0.66rem;
+  left: -0.66rem;
+}
+
+/* Inline variant for use within text - kept for backward compatibility */
 .die.inline {
   width: 1.2em;
   height: 1.2em;
