@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../co
 import { Button } from '../components/ui/button'
 import { Badge } from '../components/ui/badge'
 import { Alert, AlertDescription } from '../components/ui/alert'
-import Die from '../components/Die'
+import DiceDisplay from '../components/DiceDisplay'
 import GameLink from '../components/GameLink'
 import uniqueRollsData from '../data/unique-rolls.json'
 import { GAMES, GAMES_MAP, SPECIALTY_THRESHOLDS, isSpecialtyGame } from '../lib/games-config'
@@ -298,10 +298,8 @@ const PracticePage = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex justify-center gap-3 sm:gap-4">
-              {currentRoll.map((die, idx) => (
-                <Die key={idx} number={die} />
-              ))}
+            <div className="flex justify-center">
+              <DiceDisplay roll={currentRoll} size="md" />
             </div>
           </CardContent>
         </Card>

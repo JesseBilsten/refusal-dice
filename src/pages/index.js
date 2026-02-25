@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { Link } from 'gatsby'
 import Layout from '../components/layout'
-import Die from '../components/Die'
+import DiceDisplay from '../components/DiceDisplay'
 import { CallList } from '../components/RollAnalysis'
 import {
   generateHammerStrategy,
@@ -230,18 +230,16 @@ const IndexPage = () => {
 
             <div className="relative z-10 flex flex-col items-center">
               {/* Dice */}
-              <div className="flex gap-3 sm:gap-4 mb-6">
-                {dice.map((d, i) => (
-                  <div
-                    key={i}
-                    className={`transition-transform duration-150 ${
-                      isRolling ? 'animate-bounce' : ''
-                    }`}
-                    style={{ animationDelay: `${i * 40}ms` }}
-                  >
-                    <Die number={d} />
-                  </div>
-                ))}
+              <div 
+                className={`mb-6 transition-transform duration-150 ${
+                  isRolling ? 'animate-bounce' : ''
+                }`}
+              >
+                <DiceDisplay
+                  roll={dice}
+                  size="lg"
+                  className="gap-3 sm:gap-4"
+                />
               </div>
 
               {/* Progress bar */}
