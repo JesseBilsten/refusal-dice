@@ -1,10 +1,8 @@
 import React, { Component } from 'react'
-import './style.scss'
 
 class Odds extends Component {
   render() {
     const props = this.props
-    let badgeType = 'light'
     let percentage = 0
 
     switch (props.game) {
@@ -28,6 +26,9 @@ class Odds extends Component {
         break
       case 'pairs':
         percentage = 29.01
+        break
+      default:
+        percentage = 0
         break
     }
 

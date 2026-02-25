@@ -1,0 +1,1218 @@
+import React, { useState, useMemo, startTransition, useEffect } from 'react'
+import { graphql } from 'gatsby'
+import Layout from '../components/layout'
+import { Badge } from '../components/ui/badge'
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '../components/ui/card'
+import { Button } from '../components/ui/button'
+import { ToggleGroup, ToggleGroupItem } from '../components/ui/toggle-group'
+import { Alert, AlertDescription } from '../components/ui/alert'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table'
+import { Label } from '../components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
+import { LayoutGrid, TableProperties, List, Grid3x3 } from 'lucide-react'
+import uniqueRollsData from '../data/unique-rolls.json'
+import { 
+  checkGame, 
+  getKickerStrength, 
+  calculateNormalizedStrength,
+  calculateOffensiveStrength,
+  calculateDefensiveStrength,
+  getBossHandRank,
+  calculateTresAwayScore,
+  getRazzleScore,
+  analyzeSecondCallDistribution,
+  STRENGTH_DATA_VERSION,
+  gameOddsMap
+} from '../lib/game-validation'
+
+// Try to import pre-computed matrix, fall back to null if it doesn't exist
+let rollGameMatrix = null
+try {
+  rollGameMatrix = require('../data/roll-game-matrix.json')
+} catch (e) {
+  // Fallback to runtime validation if matrix not available
+}
+
+// Legacy runtime validation function (kept as fallback)
+const checkGameRuntime = (roll, gameType) => {
+  const counts = roll.reduce((acc, num) => {
+    acc[num] = (acc[num] || 0) + 1
+    return acc
+  }, {})
+  
+  switch (gameType) {
+    case '10-2':
+      // 2 dice add up to 10 (remaining 3 dice determine high/low strength, but any is valid)
+      for (let i = 0; i < 5; i++) {
+        for (let j = i + 1; j < 5; j++) {
+          if (roll[i] + roll[j] === 10) {
+            return true
+          }
+        }
+      }
+      return false
+      
+    case '10-3':
+      // 3 dice add up to 10 (remaining 2 dice determine high/low strength, but any is valid)
+      for (let i = 0; i < 5; i++) {
+        for (let j = i + 1; j < 5; j++) {
+          for (let k = j + 1; k < 5; k++) {
+            if (roll[i] + roll[j] + roll[k] === 10) {
+              return true
+            }
+          }
+        }
+      }
+      return false
+      
+    case '10-4':
+      // 4 dice add up to 10 (remaining 1 die determines high/low strength, but any is valid)
+      for (let i = 0; i < 5; i++) {
+        const remaining = roll.filter((_, idx) => idx !== i)
+        if (remaining.reduce((a, b) => a + b, 0) === 10) {
+          return true
+        }
+      }
+      return false
+      
+    case 'ship-captain-crew':
+      // Outside straight: must contain 4-5-6 or 1-2-3
+      const hasHighStraight = roll.includes(4) && roll.includes(5) && roll.includes(6)
+      const hasLowStraight = roll.includes(1) && roll.includes(2) && roll.includes(3)
+      return hasHighStraight || hasLowStraight
+      
+    case 'monterey':
+      // Inside straight: must contain 2-3-4 or 3-4-5
+      const hasLowInside = roll.includes(2) && roll.includes(3) && roll.includes(4)
+      const hasHighInside = roll.includes(3) && roll.includes(4) && roll.includes(5)
+      return hasLowInside || hasHighInside
+      
+    case 'vegas':
+      // Two pairs of dice that sum to 7 or 11
+      // Find all possible pairs that sum to 7 or 11
+      const validPairs = []
+      for (let i = 0; i < 5; i++) {
+        for (let j = i + 1; j < 5; j++) {
+          const sum = roll[i] + roll[j]
+          if (sum === 7 || sum === 11) {
+            validPairs.push([i, j])
+          }
+        }
+      }
+      
+      // Check if we can find 2 non-overlapping pairs
+      if (validPairs.length < 2) return false
+      
+      for (let i = 0; i < validPairs.length; i++) {
+        for (let j = i + 1; j < validPairs.length; j++) {
+          const [a1, a2] = validPairs[i]
+          const [b1, b2] = validPairs[j]
+          // Check if pairs don't share any dice
+          if (a1 !== b1 && a1 !== b2 && a2 !== b1 && a2 !== b2) {
+            return true
+          }
+        }
+      }
+      return false
+      
+    case 'pairs':
+      // Two pairs (4 of a kind counts as 2 pairs of the same number)
+      const totalPairs = Object.values(counts).reduce((total, count) => {
+        return total + Math.floor(count / 2)
+      }, 0)
+      return totalPairs >= 2
+      
+    case 'razzle':
+      // Most of one number (aces/1s are wild and count as any number)
+      const aceCount = counts[1] || 0
+      let maxCount = 0
+      for (let num = 2; num <= 6; num++) {
+        const total = (counts[num] || 0) + aceCount
+        maxCount = Math.max(maxCount, total)
+      }
+      // Also check if all are aces
+      if (aceCount >= 3) maxCount = Math.max(maxCount, aceCount)
+      return maxCount >= 3
+      
+    default:
+      return false
+  }
+}
+
+// Legacy helper function to calculate kicker strength based on remaining dice (kept as fallback)
+// eslint-disable-next-line no-unused-vars
+const calculateKickerStrengthRuntime = (kickerDice) => {
+  if (kickerDice.length === 1) {
+    // Single die: 4-6 is high, 1-3 is low
+    return kickerDice[0] >= 4 ? 'high' : 'low'
+  } else if (kickerDice.length === 2) {
+    // Two dice: range 2-12, closer to 12 is high, closer to 2 is low
+    const sum = kickerDice.reduce((a, b) => a + b, 0)
+    const distToHigh = Math.abs(12 - sum)
+    const distToLow = Math.abs(2 - sum)
+    return distToHigh < distToLow ? 'high' : 'low'
+  } else if (kickerDice.length === 3) {
+    // Three dice: range 3-18, closer to 18 is high, closer to 3 is low
+    const sum = kickerDice.reduce((a, b) => a + b, 0)
+    const distToHigh = Math.abs(18 - sum)
+    const distToLow = Math.abs(3 - sum)
+    return distToHigh < distToLow ? 'high' : 'low'
+  }
+  return ''
+}
+
+// Memoized component for individual unique roll items to prevent unnecessary re-renders
+const UniqueRollItem = React.memo(({ roll, count, isMatching, badgeProps }) => {
+  const defaultBadgeProps = {
+    variant: isMatching ? 'default' : 'secondary',
+    className: 'transition-all'
+  }
+  
+  const finalBadgeProps = badgeProps || defaultBadgeProps
+  
+  return (
+    <div className="relative m-0.5">
+      <Badge
+        {...finalBadgeProps}
+      >
+        {roll[0]}
+        {roll[1]}
+        {roll[2]}
+        {roll[3]}
+        {roll[4]}
+      </Badge>
+      <Badge
+        variant="destructive"
+        className="absolute -top-1 -right-1 h-4 min-w-4 px-1 text-xs flex items-center justify-center"
+      >
+        {count}
+      </Badge>
+    </div>
+  )
+})
+
+const GAMES = [
+  { id: '10-3', name: '10-3', emoji: '👌' },
+  { id: '10-2', name: '10-2', emoji: '✌️' },
+  { id: 'vegas', name: "7's", emoji: '🎰' },
+  { id: 'ship-captain-crew', name: 'Ship, Captain, Crew', emoji: '⚓️' },
+  { id: 'pairs', name: 'Pairs', emoji: '🍐' },
+  { id: 'monterey', name: 'Monterey', emoji: '🔄' },
+  { id: '10-4', name: '10-4', emoji: '🔫' },
+  { id: 'razzle', name: 'Razzle', emoji: '✨' },
+  { id: 'boss', name: 'Boss', emoji: '👑' },
+  { id: 'tres-away', name: 'Tres Away', emoji: '⛳' },
+]
+
+// Helper function to get Boss badge style based on hand rank
+const getBossBadgeStyle = (rank) => {
+  // Rank 7 = 5-of-a-kind (strongest)
+  // Rank 6 = 4-of-a-kind
+  // Rank 5 = Full House
+  // Rank 4 = 3-of-a-kind
+  // Rank 3 = Two Pair
+  // Rank 2 = Pair (weakest valid)
+  // Rank 1 = High Card (not valid for Boss)
+  
+  const colorClasses = {
+    7: 'bg-blue-300 text-gray-900 border-transparent',     // 5-of-a-kind: Lightest
+    6: 'bg-blue-400 text-gray-900 border-transparent',     // 4-of-a-kind
+    5: 'bg-blue-500 text-white border-transparent',        // Full House
+    4: 'bg-blue-600 text-white border-transparent',        // 3-of-a-kind
+    3: 'bg-blue-700 text-white border-transparent',        // Two Pair
+    2: 'bg-blue-900 text-white border-transparent',        // Pair: Darkest
+    1: ''  // High Card: Use secondary variant
+  }
+  
+  const customClass = colorClasses[rank] || ''
+  
+  if (rank === 1 || !customClass) {
+    return {
+      useVariant: true,
+      variant: 'secondary',
+      className: ''
+    }
+  }
+  
+  // Use custom color classes instead of variant
+  return {
+    useVariant: false,
+    className: customClass
+  }
+}
+
+// Helper function to get Razzle badge style based on score
+const getRazzleBadgeStyle = (roll, threshold) => {
+  const razzleScore = getRazzleScore(roll)
+  
+  // Strong hands (4+ matching dice using wilds) get blue badge
+  if (razzleScore.bestCount >= 4) {
+    return {
+      useVariant: false,
+      className: 'bg-blue-300 text-gray-900 border-transparent hover:bg-blue-300/80'
+    }
+  }
+  
+  // Above threshold (3+ matching dice) gets default
+  if (razzleScore.bestCount >= threshold) {
+    return {
+      useVariant: true,
+      variant: 'default',
+      className: 'transition-all'
+    }
+  }
+  
+  // Below threshold = weak
+  return {
+    useVariant: true,
+    variant: 'secondary',
+    className: 'transition-all'
+  }
+}
+
+const RollsPage = ({ data }) => {
+  const [selectedGames, setSelectedGames] = useState([])
+  const [selectedVariant, setSelectedVariant] = useState(null) // 'high' or 'low' for kicker games
+  const [searchRoll, setSearchRoll] = useState('')
+  const [debugInfo, setDebugInfo] = useState(null)
+  const [viewMode, setViewMode] = useState('unique') // 'all' or 'unique'
+  const [layoutMode, setLayoutMode] = useState('grid') // 'grid' or 'table'
+  const [hasRenderedAll, setHasRenderedAll] = useState(false)
+  const [isPending, setIsPending] = useState(false)
+  const [sortColumn, setSortColumn] = useState(null)
+  const [sortDirection, setSortDirection] = useState('asc') // 'asc' or 'desc'
+  const [playerCount, setPlayerCount] = useState(3) // Total players (2-8)
+  const [showAdvancedSettings, setShowAdvancedSettings] = useState(false)
+  
+  // Game-specific modifiers
+  const [razzleMinCount, setRazzleMinCount] = useState(4) // Minimum matching dice for Razzle
+  const [razzleTargetValue, setRazzleTargetValue] = useState(6) // Target value for Razzle (1-6)
+  const [tresAwayScoreRange, setTresAwayScoreRange] = useState([0, uniqueRollsData.thresholds?.tresAwayExpected || 7.31])
+  const [bossHandRange, setBossHandRange] = useState([3, 7]) // 3 = Two Pair, 7 = 5 of a kind
+  
+  // Check data version on mount
+  useEffect(() => {
+    console.log('Version check:', {
+      jsonVersion: uniqueRollsData.version,
+      codeVersion: STRENGTH_DATA_VERSION,
+      match: uniqueRollsData.version === STRENGTH_DATA_VERSION
+    })
+    
+    if (uniqueRollsData.version === STRENGTH_DATA_VERSION) {
+      console.log('Using precomputed data from JSON')
+    } else {
+      console.warn('Version mismatch! Please regenerate unique-rolls.json')
+    }
+  }, [])
+  
+  // Calculate strength data at runtime if needed
+  // Parse query string on mount
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    
+    const params = new URLSearchParams(window.location.search)
+    const gamesParam = params.get('games')
+    
+    if (gamesParam) {
+      const gameIds = gamesParam.split(',').filter(id => 
+        GAMES.some(g => g.id === id)
+      )
+      if (gameIds.length > 0) {
+        setSelectedGames(gameIds)
+      }
+    }
+  }, [])
+  
+  // Update query string when selected games change
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    if (selectedGames.length === 0) return
+    
+    const params = new URLSearchParams()
+    params.set('games', selectedGames.join(','))
+    
+    const newUrl = `${window.location.pathname}?${params.toString()}`
+    window.history.pushState({}, '', newUrl)
+  }, [selectedGames])
+  
+  // Track when all view is first requested
+  const handleViewModeChange = (value) => {
+    if (value) {
+      setIsPending(true)
+      startTransition(() => {
+        setViewMode(value)
+        if (value === 'all') {
+          setHasRenderedAll(true)
+        }
+        // Reset pending after render completes
+        requestAnimationFrame(() => {
+          setTimeout(() => setIsPending(false), 100)
+        })
+      })
+    }
+  }
+
+  // Generate all possible dice rolls
+  const diceRolls = useMemo(() => {
+    const rolls = []
+    let count = 0
+    for (let i = 0; i < 6; i++) {
+      for (let j = 0; j < 6; j++) {
+        for (let k = 0; k < 6; k++) {
+          for (let l = 0; l < 6; l++) {
+            for (let m = 0; m < 6; m++) {
+              rolls[count] = [i + 1, j + 1, k + 1, l + 1, m + 1]
+              count++
+            }
+          }
+        }
+      }
+    }
+    return rolls
+  }, [])
+
+  // Use pre-generated unique rolls data
+  const uniqueRollsArray = uniqueRollsData.uniqueRolls
+  const rollCounts = uniqueRollsData.uniqueCount
+
+  // Calculate which rolls satisfy the selected games
+  const { matchingRolls, successfulRolls, matchingUniqueRolls } = useMemo(() => {
+    if (selectedGames.length === 0) {
+      return { matchingRolls: new Set(), successfulRolls: 0, matchingUniqueRolls: new Set() }
+    }
+    
+    const matching = new Set()
+    const uniqueMatching = new Set()
+    
+    // Special handling for Boss - only show rolls with Two Pair or better (rank 3+)
+    if (selectedGames.includes('boss') && selectedGames.length === 1) {
+      diceRolls.forEach((roll, index) => {
+        const handRank = getBossHandRank(roll)
+        if (handRank.rank >= 3) { // Two Pair or better
+          matching.add(index)
+        }
+      })
+      
+      // Mark unique rolls that have Two Pair or better
+      uniqueRollsArray.forEach((rollData, index) => {
+        const handRank = getBossHandRank(rollData.roll)
+        if (handRank.rank >= 3) {
+          uniqueMatching.add(index)
+        }
+      })
+    } else if (selectedGames.includes('tres-away') && selectedGames.length === 1) {
+      // Special handling for Tres Away - only show rolls with at least one 3
+      diceRolls.forEach((roll, index) => {
+        if (roll.includes(3)) {
+          matching.add(index)
+        }
+      })
+      
+      // Mark unique rolls that have at least one 3
+      uniqueRollsArray.forEach((rollData, index) => {
+        if (rollData.roll.includes(3)) {
+          uniqueMatching.add(index)
+        }
+      })
+    } else {
+      // Use pre-computed matrix if available (247× faster)
+      if (rollGameMatrix) {
+        uniqueRollsArray.forEach((rollData, index) => {
+          const rollKey = rollData.roll.join('')
+          const gameData = rollGameMatrix[rollKey]
+          
+          // Check if this roll satisfies any selected game
+          if (gameData && gameData.games.some(g => selectedGames.includes(g))) {
+            // Mark this unique roll as matching
+            uniqueMatching.add(index)
+            // Add all indices of this unique roll to matching set
+            rollData.indices.forEach(idx => matching.add(idx))
+          }
+        })
+      } else {
+        // Fallback to runtime validation if matrix not available
+        diceRolls.forEach((roll, index) => {
+          const satisfiesAny = selectedGames.some(gameId => checkGameRuntime(roll, gameId))
+          if (satisfiesAny) {
+            matching.add(index)
+          }
+        })
+        
+        // Also calculate which unique rolls match
+        uniqueRollsArray.forEach((rollData, index) => {
+          if (rollData.indices.some(idx => matching.has(idx))) {
+            uniqueMatching.add(index)
+          }
+        })
+      }
+    }
+    
+    return { matchingRolls: matching, successfulRolls: matching.size, matchingUniqueRolls: uniqueMatching }
+  }, [selectedGames, uniqueRollsArray, diceRolls])
+  
+  // Pre-calculate which unique rolls have matches - now O(1) lookup instead of O(n) iteration
+  const uniqueRollsWithMatches = useMemo(() => {
+    const result = uniqueRollsArray.map((data, index) => ({
+      roll: data.roll,
+      count: data.count,
+      indices: data.indices,
+      isMatching: matchingUniqueRolls.has(index)
+    }))
+    return result
+  }, [uniqueRollsArray, matchingUniqueRolls])
+
+  // Memoize the rendered "All" view - only compute when needed
+  const allRollsView = useMemo(() => {
+    if (!hasRenderedAll) return null
+    
+    const isBossOnly = selectedGames.includes('boss') && selectedGames.length === 1
+    const isTresAwayOnly = selectedGames.includes('tres-away') && selectedGames.length === 1
+    const tresAwayThreshold = uniqueRollsData.thresholds?.tresAwayExpected || 7.31
+    
+    return diceRolls.map((roll, index) => {
+      const isMatching = matchingRolls.has(index)
+      
+      // Apply Boss badge styling when Boss is the only selected game
+      if (isBossOnly && isMatching) {
+        const handRank = getBossHandRank(roll)
+        const bossStyle = getBossBadgeStyle(handRank.rank)
+        
+        if (bossStyle.useVariant) {
+          return (
+            <Badge
+              key={index}
+              variant={bossStyle.variant}
+              className={`m-0.5 transition-all ${bossStyle.className}`}
+            >
+              {roll[0]}{roll[1]}{roll[2]}{roll[3]}{roll[4]}
+            </Badge>
+          )
+        } else {
+          return (
+            <Badge
+              key={index}
+              className={`m-0.5 transition-all ${bossStyle.className}`}
+            >
+              {roll[0]}{roll[1]}{roll[2]}{roll[3]}{roll[4]}
+            </Badge>
+          )
+        }
+      }
+      
+      // Apply Tres Away badge styling when Tres Away is the only selected game
+      if (isTresAwayOnly && isMatching) {
+        const score = calculateTresAwayScore(roll)
+        const isBetterThanAverage = score <= tresAwayThreshold
+        const hasThree = roll.includes(3)
+        
+        // Priority: better than average gets blue, has 3 gets default, else secondary
+        if (isBetterThanAverage) {
+          return (
+            <Badge
+              key={index}
+              className="m-0.5 transition-all bg-blue-300 text-gray-900 border-transparent hover:bg-blue-300/80"
+            >
+              {roll[0]}{roll[1]}{roll[2]}{roll[3]}{roll[4]}
+            </Badge>
+          )
+        } else if (hasThree) {
+          return (
+            <Badge
+              key={index}
+              variant="default"
+              className="m-0.5 transition-all"
+            >
+              {roll[0]}{roll[1]}{roll[2]}{roll[3]}{roll[4]}
+            </Badge>
+          )
+        } else {
+          return (
+            <Badge
+              key={index}
+              variant="secondary"
+              className="m-0.5 transition-all"
+            >
+              {roll[0]}{roll[1]}{roll[2]}{roll[3]}{roll[4]}
+            </Badge>
+          )
+        }
+      }
+      
+      return (
+        <Badge
+          key={index}
+          variant={isMatching ? 'default' : 'secondary'}
+          className="m-0.5 transition-all"
+        >
+          {roll[0]}
+          {roll[1]}
+          {roll[2]}
+          {roll[3]}
+          {roll[4]}
+        </Badge>
+      )
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [matchingRolls, hasRenderedAll, selectedGames])
+
+  // Memoize the rendered "Unique" view
+  const uniqueRollsView = useMemo(() => {
+    const isBossOnly = selectedGames.includes('boss') && selectedGames.length === 1
+    const isTresAwayOnly = selectedGames.includes('tres-away') && selectedGames.length === 1
+    const isRazzleOnly = selectedGames.includes('razzle') && selectedGames.length === 1
+    const tresAwayThreshold = uniqueRollsData.thresholds?.tresAwayExpected || 7.31
+    const razzleThreshold = uniqueRollsData.thresholds?.razzleExpectedTotal || 3.5
+    
+    const result = uniqueRollsWithMatches.map((data, index) => {
+      let badgeProps = null
+      
+      // Apply Boss badge styling when Boss is the only selected game
+      if (isBossOnly && data.isMatching) {
+        const handRank = getBossHandRank(data.roll)
+        const bossStyle = getBossBadgeStyle(handRank.rank)
+        
+        if (bossStyle.useVariant) {
+          badgeProps = {
+            variant: bossStyle.variant,
+            className: `transition-all ${bossStyle.className}`
+          }
+        } else {
+          badgeProps = {
+            className: `transition-all ${bossStyle.className}`
+          }
+        }
+      }
+      
+      // Apply Tres Away badge styling when Tres Away is the only selected game
+      if (isTresAwayOnly && data.isMatching) {
+        const score = calculateTresAwayScore(data.roll)
+        const isBetterThanAverage = score <= tresAwayThreshold
+        const hasThree = data.roll.includes(3)
+        
+        // Priority: better than average gets blue, has 3 gets default, else secondary
+        if (isBetterThanAverage) {
+          badgeProps = {
+            className: 'transition-all bg-blue-300 text-gray-900 border-transparent hover:bg-blue-300/80'
+          }
+        } else if (hasThree) {
+          badgeProps = {
+            variant: 'default',
+            className: 'transition-all'
+          }
+        } else {
+          badgeProps = {
+            variant: 'secondary',
+            className: 'transition-all'
+          }
+        }
+      }
+      
+      // Apply Razzle badge styling when Razzle is the only selected game
+      if (isRazzleOnly && data.isMatching) {
+        const razzleStyle = getRazzleBadgeStyle(data.roll, razzleThreshold)
+        
+        if (razzleStyle.useVariant) {
+          badgeProps = {
+            variant: razzleStyle.variant,
+            className: razzleStyle.className
+          }
+        } else {
+          badgeProps = {
+            className: razzleStyle.className
+          }
+        }
+      }
+      
+      return (
+        <UniqueRollItem
+          key={index}
+          roll={data.roll}
+          count={data.count}
+          isMatching={data.isMatching}
+          badgeProps={badgeProps}
+        />
+      )
+    })
+    return result
+  }, [uniqueRollsWithMatches, selectedGames])
+
+  const toggleGame = (gameId) => {
+    setIsPending(true)
+    startTransition(() => {
+      setSelectedGames(prev => {
+        // If clicking the currently selected game, deselect it
+        if (prev.includes(gameId) && prev.length === 1) {
+          return []
+        }
+        // Otherwise, select only this game (deselect all others)
+        return [gameId]
+      })
+      requestAnimationFrame(() => {
+        setTimeout(() => setIsPending(false), 100)
+      })
+    })
+  }
+
+  const handleSort = (column) => {
+    if (sortColumn === column) {
+      // Toggle direction
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc')
+    } else {
+      // New column, default to descending (higher is better)
+      setSortColumn(column)
+      setSortDirection('desc')
+    }
+  }
+
+  // Calculate special stats for Tres Away (rolls with at least one 3)
+  const tresAwayRollsWithThrees = useMemo(() => {
+    if (!selectedGames.includes('tres-away')) return 0
+    
+    let count = 0
+    diceRolls.forEach(roll => {
+      if (roll.includes(3)) {
+        count++
+      }
+    })
+    return count
+  }, [selectedGames, diceRolls])
+
+  const percentage = selectedGames.length > 0 
+    ? selectedGames.includes('tres-away') && selectedGames.length === 1
+      ? ((tresAwayRollsWithThrees / 7776) * 100).toFixed(2)
+      : ((successfulRolls / 7776) * 100).toFixed(2)
+    : 0
+
+  const checkSpecificRoll = () => {
+    if (searchRoll.length !== 5) return
+    const roll = searchRoll.split('').map(Number)
+    if (roll.some(d => d < 1 || d > 6)) return
+    
+    const results = GAMES.map(game => {
+      const matches = checkGame(roll, game.id)
+      let strength = ''
+      if (matches && ['10-2', '10-3', '10-4', 'ship-captain-crew', 'monterey', 'vegas', 'pairs'].includes(game.id)) {
+        strength = getKickerStrength(roll, game.id)
+      }
+      return {
+        game: game.name,
+        matches,
+        strength
+      }
+    })
+    
+    setDebugInfo({
+      roll,
+      results
+    })
+  }
+
+  return (
+    <Layout>
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="my-8 text-center">
+          <h1 className="flex items-center justify-center gap-2 text-4xl font-bold text-foreground">
+            Rolls <Badge variant="warning">incomplete</Badge>
+          </h1>
+          <p className="text-lg text-muted-foreground mt-2">
+            Select games to see which rolls satisfy them
+          </p>
+        </div>
+
+        {/* Game Toggle Buttons */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Select Games</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-2">
+              {GAMES.map(game => (
+                <Button
+                  key={game.id}
+                  onClick={() => toggleGame(game.id)}
+                  variant={selectedGames.includes(game.id) ? 'default' : 'outline'}
+                  className="transition-all"
+                >
+                  <span className="mr-2">{game.emoji}</span>
+                  {game.name}
+                </Button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Advanced Settings */}
+        <Card className="mb-6">
+          <CardHeader className="cursor-pointer" onClick={() => setShowAdvancedSettings(!showAdvancedSettings)}>
+            <div className="flex items-center justify-between">
+              <CardTitle>Advanced Settings</CardTitle>
+              <span className="text-muted-foreground text-sm">
+                {showAdvancedSettings ? '▼' : '▶'}
+              </span>
+            </div>
+          </CardHeader>
+          {showAdvancedSettings && (
+            <CardContent>
+              <div className="space-y-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="player-count" className="text-sm font-medium">
+                    Number of Players
+                  </Label>
+                  <Select 
+                    value={playerCount.toString()} 
+                    onValueChange={(value) => setPlayerCount(parseInt(value))}
+                  >
+                    <SelectTrigger id="player-count" className="w-[180px]">
+                      <SelectValue placeholder="Select players" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="2">2 Players</SelectItem>
+                      <SelectItem value="3">3 Players</SelectItem>
+                      <SelectItem value="4">4 Players</SelectItem>
+                      <SelectItem value="5">5 Players</SelectItem>
+                      <SelectItem value="6">6 Players</SelectItem>
+                      <SelectItem value="7">7 Players</SelectItem>
+                      <SelectItem value="8">8 Players</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Affects offensive and defensive strength calculations. Default rankings use 3 players (2 opponents).
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          )}
+        </Card>
+
+        {/* Debug Tool - Test Specific Roll */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Test a Specific Roll</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex gap-2 items-start">
+              <div className="flex-1">
+                <input
+                  type="text"
+                  value={searchRoll}
+                  onChange={(e) => setSearchRoll(e.target.value)}
+                  placeholder="Enter 5 digits (e.g., 23661)"
+                  maxLength={5}
+                  className="w-full px-3 py-2 border rounded-md bg-background text-foreground"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Enter any 5-digit combination (1-6) to see which games it satisfies
+                </p>
+              </div>
+              <Button onClick={checkSpecificRoll}>Check</Button>
+            </div>
+            {debugInfo && (
+              <div className="mt-4 p-4 bg-muted rounded-md">
+                <h4 className="font-semibold mb-2">
+                  Roll: {debugInfo.roll.join('')}
+                </h4>
+                <div className="space-y-1">
+                  {debugInfo.results.map((result, idx) => (
+                    <div key={idx} className="flex items-center gap-2">
+                      <Badge variant={result.matches ? 'default' : 'secondary'}>
+                        {result.matches ? '✓' : '✗'}
+                      </Badge>
+                      <span className="text-sm">
+                        {result.game}
+                        {result.strength && (
+                          <span className="ml-2 text-xs text-muted-foreground">
+                            ({result.strength})
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Stats Display */}
+        {selectedGames.length > 0 && (
+          <div className="mb-6 p-6 bg-muted/50 rounded-lg text-center">
+            <h2 className="text-3xl font-bold text-foreground mb-2">
+              {selectedGames.includes('boss') && selectedGames.length === 1
+                ? `${successfulRolls} / 7,776`
+                : selectedGames.includes('tres-away') && selectedGames.length === 1
+                ? `${tresAwayRollsWithThrees} / 7,776`
+                : `${successfulRolls} / 7,776`
+              }
+            </h2>
+            <p className="text-xl text-muted-foreground">
+              {selectedGames.includes('boss') && selectedGames.length === 1
+                ? `${percentage}% have Two Pair or better`
+                : selectedGames.includes('tres-away') && selectedGames.length === 1
+                ? `${percentage}% have at least one 3`
+                : `${percentage}% of all possible rolls`
+              }
+            </p>
+            <p className="text-sm text-muted-foreground mt-2">
+              Selected: {selectedGames.map(id => GAMES.find(g => g.id === id)?.name).join(', ')}
+            </p>
+            
+            {/* Boss Two Pair or Better */}
+            {selectedGames.includes('boss') && uniqueRollsData.bossHandDistribution && selectedGames.length > 1 && (
+              <p className="text-lg text-muted-foreground mt-3">
+                <span className="font-semibold text-foreground">
+                  {uniqueRollsData.bossHandDistribution[3]}%
+                </span> chance of Two Pair or better
+              </p>
+            )}
+            
+            {/* Boss Hand Distribution */}
+            {selectedGames.includes('boss') && uniqueRollsData.bossHandDistribution && (
+              <div className="mt-4 text-left max-w-2xl mx-auto">
+                <p className="text-sm font-semibold text-foreground mb-2">Boss Hand Distribution:</p>
+                <div className="space-y-1 text-sm">
+                  {[
+                    { rank: 7, label: '5-of-a-kind' },
+                    { rank: 6, label: '4-of-a-kind' },
+                    { rank: 5, label: 'Full House' },
+                    { rank: 4, label: '3-of-a-kind' },
+                    { rank: 3, label: 'Two Pair' },
+                    { rank: 2, label: 'Pair' }
+                  ].map(({ rank, label }) => {
+                    const bossStyle = getBossBadgeStyle(rank)
+                    return (
+                      <div key={rank} className="flex justify-between">
+                        <span className="text-muted-foreground">{label}:</span>
+                        {bossStyle.useVariant ? (
+                          <Badge variant={bossStyle.variant} className={bossStyle.className}>
+                            {uniqueRollsData.bossHandDistribution[rank]}%
+                          </Badge>
+                        ) : (
+                          <Badge className={bossStyle.className}>
+                            {uniqueRollsData.bossHandDistribution[rank]}%
+                          </Badge>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+            
+            {/* Tres Away Score Distribution */}
+            {selectedGames.includes('tres-away') && uniqueRollsData.tresAwayScoreDistribution && (
+              <div className="mt-4 text-left max-w-2xl mx-auto">
+                <p className="text-sm font-semibold text-foreground mb-2">
+                  Tres Away Statistics:
+                </p>
+                <div className="space-y-1 text-sm">
+                  {(() => {
+                    const betterThanAverage = Object.entries(uniqueRollsData.tresAwayScoreDistribution)
+                      .filter(([score, data]) => data.betterThanAverage)
+                      .reduce((sum, [score, data]) => sum + data.count, 0);
+                    const avgScore = uniqueRollsData.thresholds?.tresAwayExpected || 7.31;
+                    const percentage = ((betterThanAverage / 7776) * 100).toFixed(2);
+                    
+                    return (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">
+                          Rolls with score ≤ {avgScore} (better than average):
+                        </span>
+                        <Badge className="bg-blue-300 text-gray-900 border-transparent hover:bg-blue-300/80">
+                          {percentage}%
+                        </Badge>
+                      </div>
+                    );
+                  })()}
+                </div>
+              </div>
+            )}
+            
+            {/* Razzle Statistics */}
+            {selectedGames.includes('razzle') && uniqueRollsData.thresholds && (
+              <div className="mt-4 text-left max-w-2xl mx-auto">
+                <p className="text-sm font-semibold text-foreground mb-2">
+                  Razzle Statistics:
+                </p>
+                <div className="space-y-1 text-sm">
+                  {(() => {
+                    const razzleThreshold = uniqueRollsData.thresholds?.razzleExpectedTotal || 3.5;
+                    const razzleOdds = uniqueRollsData.thresholds?.razzleOdds || 5.86;
+                    
+                    return (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">
+                          Rolls with {razzleThreshold}+ matching dice (above average):
+                        </span>
+                        <Badge className="bg-blue-300 text-gray-900 border-transparent hover:bg-blue-300/80">
+                          {razzleOdds}%
+                        </Badge>
+                      </div>
+                    );
+                  })()}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+        
+        {/* All Rolls Display - Full Width */}
+        <Card className="relative left-1/2 right-1/2 -mx-[50vw] w-screen">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>
+                All Possible Rolls
+                {selectedGames.length === 0 && (
+                  <span className="text-sm font-normal text-muted-foreground ml-2">
+                    (Select a game above to highlight matching rolls)
+                  </span>
+                )}
+              </CardTitle>
+              <ToggleGroup type="single" value={viewMode} onValueChange={handleViewModeChange}>
+                <ToggleGroupItem value="all">All (7,776)</ToggleGroupItem>
+                <ToggleGroupItem value="unique">Unique ({rollCounts})</ToggleGroupItem>
+                <ToggleGroupItem value="table">Table</ToggleGroupItem>
+              </ToggleGroup>
+            </div>
+          </CardHeader>
+          <CardContent
+            style={{
+              display: viewMode === 'table' ? 'block' : 'flex',
+              flexWrap: viewMode === 'table' ? 'nowrap' : 'wrap',
+              fontFamily: 'monospace',
+              // Note: 'contain' property removed for table view to allow sticky positioning
+              ...(viewMode !== 'table' && { contain: 'layout style paint' }),
+              opacity: isPending ? 0.6 : 1,
+              transition: 'opacity 150ms ease-in-out',
+              animation: isPending ? 'pulse 3.75s ease-in-out infinite' : 'none',
+            }}
+          >
+            {viewMode === 'all' ? (
+              <>{allRollsView}</>
+            ) : viewMode === 'table' ? (
+              <Table>
+            <TableHeader className="sticky top-0 bg-background z-20 border-b shadow-sm">
+              <TableRow className="border-b">
+                <TableHead 
+                  className="sticky left-0 bg-background z-30 cursor-pointer hover:bg-muted border-r"
+                  onClick={() => handleSort('roll')}
+                >
+                  Roll {sortColumn === 'roll' && (sortDirection === 'asc' ? '↑' : '↓')}
+                </TableHead>
+                <TableHead className="text-center cursor-pointer hover:bg-muted" onClick={() => handleSort('10-2-low')} title="10-2 Low">✌️L {sortColumn === '10-2-low' && (sortDirection === 'asc' ? '↑' : '↓')}</TableHead>
+                <TableHead className="text-center cursor-pointer hover:bg-muted" onClick={() => handleSort('10-2-high')} title="10-2 High">✌️H {sortColumn === '10-2-high' && (sortDirection === 'asc' ? '↑' : '↓')}</TableHead>
+                <TableHead className="text-center cursor-pointer hover:bg-muted" onClick={() => handleSort('10-3-low')} title="10-3 Low">👌L {sortColumn === '10-3-low' && (sortDirection === 'asc' ? '↑' : '↓')}</TableHead>
+                <TableHead className="text-center cursor-pointer hover:bg-muted" onClick={() => handleSort('10-3-high')} title="10-3 High">👌H {sortColumn === '10-3-high' && (sortDirection === 'asc' ? '↑' : '↓')}</TableHead>
+                <TableHead className="text-center cursor-pointer hover:bg-muted" onClick={() => handleSort('10-4-low')} title="10-4 Low">🔫L {sortColumn === '10-4-low' && (sortDirection === 'asc' ? '↑' : '↓')}</TableHead>
+                <TableHead className="text-center cursor-pointer hover:bg-muted" onClick={() => handleSort('10-4-high')} title="10-4 High">🔫H {sortColumn === '10-4-high' && (sortDirection === 'asc' ? '↑' : '↓')}</TableHead>
+                <TableHead className="text-center cursor-pointer hover:bg-muted" onClick={() => handleSort('ship-captain-crew-low')} title="Ship, Captain, Crew Low">⚓️L {sortColumn === 'ship-captain-crew-low' && (sortDirection === 'asc' ? '↑' : '↓')}</TableHead>
+                <TableHead className="text-center cursor-pointer hover:bg-muted" onClick={() => handleSort('ship-captain-crew-high')} title="Ship, Captain, Crew High">⚓️H {sortColumn === 'ship-captain-crew-high' && (sortDirection === 'asc' ? '↑' : '↓')}</TableHead>
+                <TableHead className="text-center cursor-pointer hover:bg-muted" onClick={() => handleSort('monterey-low')} title="Monterey Low">🔄L {sortColumn === 'monterey-low' && (sortDirection === 'asc' ? '↑' : '↓')}</TableHead>
+                <TableHead className="text-center cursor-pointer hover:bg-muted" onClick={() => handleSort('monterey-high')} title="Monterey High">🔄H {sortColumn === 'monterey-high' && (sortDirection === 'asc' ? '↑' : '↓')}</TableHead>
+                <TableHead className="text-center cursor-pointer hover:bg-muted" onClick={() => handleSort('vegas-low')} title="Vegas (7s) Low">🎰L {sortColumn === 'vegas-low' && (sortDirection === 'asc' ? '↑' : '↓')}</TableHead>
+                <TableHead className="text-center cursor-pointer hover:bg-muted" onClick={() => handleSort('vegas-high')} title="Vegas (7s) High">🎰H {sortColumn === 'vegas-high' && (sortDirection === 'asc' ? '↑' : '↓')}</TableHead>
+                <TableHead className="text-center cursor-pointer hover:bg-muted" onClick={() => handleSort('pairs-low')} title="Pairs Low">🍐L {sortColumn === 'pairs-low' && (sortDirection === 'asc' ? '↑' : '↓')}</TableHead>
+                <TableHead className="text-center cursor-pointer hover:bg-muted" onClick={() => handleSort('pairs-high')} title="Pairs High">🍐H {sortColumn === 'pairs-high' && (sortDirection === 'asc' ? '↑' : '↓')}</TableHead>
+                <TableHead className="text-center cursor-pointer hover:bg-muted" onClick={() => handleSort('razzle')} title="Razzle">✨ {sortColumn === 'razzle' && (sortDirection === 'asc' ? '↑' : '↓')}</TableHead>
+                <TableHead className="text-center cursor-pointer hover:bg-muted" onClick={() => handleSort('boss')} title="Boss">👑 {sortColumn === 'boss' && (sortDirection === 'asc' ? '↑' : '↓')}</TableHead>
+                <TableHead className="text-center cursor-pointer hover:bg-muted" onClick={() => handleSort('tres-away')} title="Tres Away">⛳ {sortColumn === 'tres-away' && (sortDirection === 'asc' ? '↑' : '↓')}</TableHead>
+                <TableHead className="text-center cursor-pointer hover:bg-muted" onClick={() => handleSort('flexibility')} title="Flexibility">🔀 {sortColumn === 'flexibility' && (sortDirection === 'asc' ? '↑' : '↓')}</TableHead>
+                <TableHead className="text-center cursor-pointer hover:bg-muted" onClick={() => handleSort('offensive')} title="Offensive Strength % - Best when YOU call">🔨% {sortColumn === 'offensive' && (sortDirection === 'asc' ? '↑' : '↓')}</TableHead>
+                <TableHead className="text-center cursor-pointer hover:bg-muted" onClick={() => handleSort('defensive')} title="Defensive Strength % - Best when ACCEPTING calls">🛡️% {sortColumn === 'defensive' && (sortDirection === 'asc' ? '↑' : '↓')}</TableHead>
+                <TableHead className="text-center cursor-pointer hover:bg-muted" onClick={() => handleSort('best')} title="Overall Best Strength">⭐ {sortColumn === 'best' && (sortDirection === 'asc' ? '↑' : '↓')}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {(() => {
+                // Sort the data based on current sort column
+                let sortedData = [...uniqueRollsArray]
+                
+                if (sortColumn) {
+                  sortedData.sort((a, b) => {
+                    let aVal, bVal
+                    
+                    if (sortColumn === 'roll') {
+                      aVal = a.roll.join('')
+                      bVal = b.roll.join('')
+                      return sortDirection === 'asc' 
+                        ? aVal.localeCompare(bVal)
+                        : bVal.localeCompare(aVal)
+                    } else if (sortColumn === 'flexibility') {
+                      aVal = a.analysis?.flexibility || 0
+                      bVal = b.analysis?.flexibility || 0
+                    } else if (sortColumn === 'offensive') {
+                      // Calculate dynamic offensive strength for sorting
+                      const numOpponents = playerCount - 1
+                      aVal = a.analysis?.bestCall 
+                        ? calculateOffensiveStrength(
+                            a.analysis.bestCall.rawStrength, 
+                            numOpponents, 
+                            a.analysis.bestCall.game
+                          )
+                        : 0
+                      bVal = b.analysis?.bestCall 
+                        ? calculateOffensiveStrength(
+                            b.analysis.bestCall.rawStrength, 
+                            numOpponents, 
+                            b.analysis.bestCall.game
+                          )
+                        : 0
+                    } else if (sortColumn === 'defensive') {
+                      // Calculate dynamic defensive strength for sorting
+                      const numOpponents = playerCount - 1
+                      const calcDefensive = (rollData) => {
+                        const variants = rollData.analysis?.variants || []
+                        if (variants.length === 0) return 0
+                        const strengths = variants.map(v => 
+                          calculateDefensiveStrength(v.rawStrength, numOpponents, v.game)
+                        )
+                        const avg = strengths.reduce((a, b) => a + b, 0) / strengths.length
+                        const flexBonus = Math.min(20, (rollData.analysis?.flexibility || 0) * 2)
+                        return Math.min(100, avg + flexBonus)
+                      }
+                      aVal = calcDefensive(a)
+                      bVal = calcDefensive(b)
+                    } else if (sortColumn === 'best') {
+                      aVal = a.analysis?.overallPercentile || 0
+                      bVal = b.analysis?.overallPercentile || 0
+                    } else {
+                      // Game strength columns
+                      const getGameStrength = (rollData, col) => {
+                        const variants = rollData.analysis?.variants || []
+                        let game, variant
+                        
+                        if (col.includes('-low') || col.includes('-high')) {
+                          const parts = col.split('-')
+                          variant = parts[parts.length - 1]
+                          game = parts.slice(0, -1).join('-')
+                        } else {
+                          game = col
+                          variant = null
+                        }
+                        
+                        const v = variants.find(v => 
+                          v.game === game && (variant ? v.variant === variant : !v.variant)
+                        )
+                        
+                        // Use raw strength for all games
+                        return v?.rawStrength || 0
+                      }
+                      
+                      aVal = getGameStrength(a, sortColumn)
+                      bVal = getGameStrength(b, sortColumn)
+                    }
+                    
+                    return sortDirection === 'asc' ? aVal - bVal : bVal - aVal
+                  })
+                }
+                
+                return sortedData.map((rollData, origIndex) => {
+                  const index = uniqueRollsArray.indexOf(rollData)
+                  const isHighlighted = selectedGames.length > 0 && matchingUniqueRolls.has(index)
+                  const analysis = rollData.analysis || {}
+                  const variants = analysis.variants || []
+                  
+                  // Create a map of game variants to their strength values
+                  const rawStrengthMap = {}
+                  variants.forEach(v => {
+                    const key = v.variant ? `${v.game}-${v.variant}` : v.game
+                    rawStrengthMap[key] = v.rawStrength
+                  })
+                  
+                  const getStrength = (game, variant) => {
+                    const key = variant ? `${game}-${variant}` : game
+                    // Use raw strength for all games to show actual percentile rankings
+                    const strength = rawStrengthMap[key]
+                    return strength ? Math.round(strength) : 0
+                  }
+                  
+                  // Calculate dynamic offensive strength based on current player count
+                  const numOpponents = playerCount - 1
+                  const dynamicOffensiveStrength = analysis.bestCall 
+                    ? calculateOffensiveStrength(
+                        analysis.bestCall.rawStrength, 
+                        numOpponents, 
+                        analysis.bestCall.game
+                      )
+                    : 0
+                  
+                  // Calculate dynamic defensive strength (average across all playable games)
+                  let dynamicDefensiveStrength = 0
+                  if (variants.length > 0) {
+                    const defensiveStrengths = variants.map(v => 
+                      calculateDefensiveStrength(v.rawStrength, numOpponents, v.game)
+                    )
+                    const avgDefensive = defensiveStrengths.reduce((a, b) => a + b, 0) / defensiveStrengths.length
+                    const flexibilityBonus = Math.min(20, analysis.flexibility * 2)
+                    dynamicDefensiveStrength = Math.min(100, avgDefensive + flexibilityBonus)
+                  }
+                  
+                  return (
+                    <TableRow key={index} className={isHighlighted ? 'bg-primary/10' : ''}>
+                      <TableCell className="sticky left-0 bg-background z-10 font-mono font-semibold border-r shadow-sm">
+                        {rollData.roll.join('')}
+                      </TableCell>
+                      <TableCell className="text-center font-mono text-sm">{getStrength('10-2', 'low') || '-'}</TableCell>
+                      <TableCell className="text-center font-mono text-sm">{getStrength('10-2', 'high') || '-'}</TableCell>
+                      <TableCell className="text-center font-mono text-sm">{getStrength('10-3', 'low') || '-'}</TableCell>
+                      <TableCell className="text-center font-mono text-sm">{getStrength('10-3', 'high') || '-'}</TableCell>
+                      <TableCell className="text-center font-mono text-sm">{getStrength('10-4', 'low') || '-'}</TableCell>
+                      <TableCell className="text-center font-mono text-sm">{getStrength('10-4', 'high') || '-'}</TableCell>
+                      <TableCell className="text-center font-mono text-sm">{getStrength('ship-captain-crew', 'low') || '-'}</TableCell>
+                      <TableCell className="text-center font-mono text-sm">{getStrength('ship-captain-crew', 'high') || '-'}</TableCell>
+                      <TableCell className="text-center font-mono text-sm">{getStrength('monterey', 'low') || '-'}</TableCell>
+                      <TableCell className="text-center font-mono text-sm">{getStrength('monterey', 'high') || '-'}</TableCell>
+                      <TableCell className="text-center font-mono text-sm">{getStrength('vegas', 'low') || '-'}</TableCell>
+                      <TableCell className="text-center font-mono text-sm">{getStrength('vegas', 'high') || '-'}</TableCell>
+                      <TableCell className="text-center font-mono text-sm">{getStrength('pairs', 'low') || '-'}</TableCell>
+                      <TableCell className="text-center font-mono text-sm">{getStrength('pairs', 'high') || '-'}</TableCell>
+                      <TableCell className="text-center font-mono text-sm">{getStrength('razzle') || '-'}</TableCell>
+                      <TableCell className="text-center font-mono text-sm">{getStrength('boss') || '-'}</TableCell>
+                      <TableCell className="text-center font-mono text-sm">{getStrength('tres-away') || '-'}</TableCell>
+                      <TableCell className="text-center font-mono text-sm font-semibold">{analysis.flexibility || 0}</TableCell>
+                      <TableCell 
+                        className="text-center font-mono text-sm font-bold text-orange-600 dark:text-orange-400" 
+                        title={`Offensive: ${dynamicOffensiveStrength.toFixed(1)}% (${playerCount} players)\nRanking: ${analysis.offensiveRanking || 0}/100`}
+                      >
+                        {dynamicOffensiveStrength.toFixed(1)}
+                      </TableCell>
+                      <TableCell 
+                        className="text-center font-mono text-sm font-bold text-blue-600 dark:text-blue-400" 
+                        title={`Defensive: ${dynamicDefensiveStrength.toFixed(1)}% (${playerCount} players)\nRanking: ${analysis.defensiveRanking || 0}/100`}
+                      >
+                        {dynamicDefensiveStrength.toFixed(1)}
+                      </TableCell>
+                      <TableCell className="text-center font-mono text-sm font-bold text-primary">
+                        {analysis.overallPercentile || 0}
+                      </TableCell>
+                    </TableRow>
+                  )
+                })
+              })()}
+            </TableBody>
+          </Table>
+            ) : (
+              <>{uniqueRollsView}</>
+            )}
+          </CardContent>
+        </Card>
+      </section>
+    </Layout>
+  )
+}
+
+export default RollsPage
+
+export const query = graphql`
+  query {
+    allFile {
+      edges {
+        node {
+          relativePath
+          prettySize
+          extension
+          birthTime(fromNow: true)
+        }
+      }
+    }
+  }
+`

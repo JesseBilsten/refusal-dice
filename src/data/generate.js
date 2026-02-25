@@ -104,20 +104,18 @@ function odds(matrix, game) {
     });
   } else if ( game === '10-3' ) {
     $.each( matrix, function(index, roll) {
-      if(
-          ($.inArray( 6, roll ) >= 0 &&
-           $.inArray( 3, roll ) >= 0 &&
-           $.inArray( 1, roll ) >= 0 ) ||
-          ($.inArray( 5, roll ) >= 0 &&
-           $.inArray( 4, roll ) >= 0 &&
-           $.inArray( 1, roll ) >= 0 ) ||
-          (roll.lastIndexOf(2) > roll.indexOf(2) &&
-           $.inArray( 6, roll ) >= 0 ) ||
-          (roll.lastIndexOf(3) > roll.indexOf(3) &&
-           $.inArray( 4, roll ) >= 0 ) ||
-          (roll.lastIndexOf(4) > roll.indexOf(4) &&
-           $.inArray( 2, roll ) >= 0 )
-        ) {
+      // Check if any 3 dice sum to 10
+      let valid = false;
+      for (let i = 0; i < 5 && !valid; i++) {
+        for (let j = i + 1; j < 5 && !valid; j++) {
+          for (let k = j + 1; k < 5 && !valid; k++) {
+            if (roll[i] + roll[j] + roll[k] === 10) {
+              valid = true;
+            }
+          }
+        }
+      }
+      if (valid) {
         numerator++;
       }
     });

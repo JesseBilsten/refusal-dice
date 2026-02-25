@@ -5,8 +5,7 @@ import { StaticQuery, graphql } from 'gatsby'
 import Header from './header'
 import Footer from './Footer/'
 
-import 'bootstrap/dist/css/bootstrap.min.css'
-import './layout.scss'
+import '../styles/global.css'
 
 const Layout = ({ children }) => (
   <StaticQuery
@@ -38,7 +37,7 @@ const Layout = ({ children }) => (
           <html lang="en" />
         </Helmet>
         <div className="site">
-          <a id="skippy" className="visually-hidden visually-hidden-focusable" href="#content">
+          <a id="skippy" className="sr-only focus:not-sr-only focus:absolute focus:top-0 focus:left-0 focus:z-50" href="#content">
             Skip to main content
           </a>
           <Header siteTitle={data.site.siteMetadata.title} />

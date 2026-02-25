@@ -1,0 +1,115 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-background: 0 0% 100%;
+    --color-foreground: 222.2 84% 4.9%;
+    --color-card: 0 0% 100%;
+    --color-card-foreground: 222.2 84% 4.9%;
+    --color-popover: 0 0% 100%;
+    --color-popover-foreground: 222.2 84% 4.9%;
+    --color-primary: 221.2 83.2% 53.3%;
+    --color-primary-foreground: 210 40% 98%;
+    --color-secondary: 210 40% 96.1%;
+    --color-secondary-foreground: 222.2 47.4% 11.2%;
+    --color-muted: 210 40% 96.1%;
+    --color-muted-foreground: 215.4 16.3% 46.9%;
+    --color-accent: 210 40% 96.1%;
+    --color-accent-foreground: 222.2 47.4% 11.2%;
+    --color-destructive: 0 84.2% 60.2%;
+    --color-destructive-foreground: 210 40% 98%;
+    --color-border: 214.3 31.8% 91.4%;
+    --color-input: 214.3 31.8% 91.4%;
+    --color-ring: 221.2 83.2% 53.3%;
+    --radius-lg: 0.5rem;
+    --radius-md: calc(0.5rem - 2px);
+    --radius-sm: calc(0.5rem - 4px);
+    
+    /* Rarity colors - Gaming theme with WCAG-compliant backgrounds */
+    --color-legendary: 280 70% 96%;  /* Muted purple background */
+    --color-legendary-foreground: 280 90% 20%;  /* Dark purple text */
+    --color-legendary-border: 280 90% 60%;  /* Bright purple border */
+    
+    --color-epic: 45 90% 95%;  /* Muted gold background */
+    --color-epic-foreground: 45 100% 25%;  /* Dark gold text */
+    --color-epic-border: 45 100% 50%;  /* Bright gold border */
+    
+    --color-rare: 210 90% 95%;  /* Muted blue background */
+    --color-rare-foreground: 210 100% 25%;  /* Dark blue text */
+    --color-rare-border: 210 100% 55%;  /* Bright blue border */
+    
+    --color-uncommon: 140 60% 95%;  /* Muted green background */
+    --color-uncommon-foreground: 140 80% 20%;  /* Dark green text */
+    --color-uncommon-border: 140 70% 45%;  /* Bright green border */
+    
+    --color-common: 220 15% 94%;  /* Muted gray background */
+    --color-common-foreground: 220 20% 25%;  /* Dark gray text */
+    --color-common-border: 220 20% 60%;  /* Medium gray border */
+  }
+
+  .dark {
+    --color-background: 222.2 84% 4.9%;
+    --color-foreground: 210 40% 98%;
+    --color-card: 222.2 84% 4.9%;
+    --color-card-foreground: 210 40% 98%;
+    --color-popover: 222.2 84% 4.9%;
+    --color-popover-foreground: 210 40% 98%;
+    --color-primary: 217.2 91.2% 59.8%;
+    --color-primary-foreground: 222.2 47.4% 11.2%;
+    --color-secondary: 217.2 32.6% 17.5%;
+    --color-secondary-foreground: 210 40% 98%;
+    --color-muted: 217.2 32.6% 17.5%;
+    --color-muted-foreground: 215 20.2% 65.1%;
+    --color-accent: 217.2 32.6% 17.5%;
+    --color-accent-foreground: 210 40% 98%;
+    --color-destructive: 0 62.8% 30.6%;
+    --color-destructive-foreground: 210 40% 98%;
+    --color-border: 217.2 32.6% 17.5%;
+    --color-input: 217.2 32.6% 17.5%;
+    --color-ring: 224.3 76.3% 48%;
+    
+    /* Rarity colors - Dark mode with WCAG-compliant backgrounds */
+    --color-legendary: 280 60% 15%;  /* Muted purple background */
+    --color-legendary-foreground: 280 90% 85%;  /* Light purple text */
+    --color-legendary-border: 280 90% 65%;  /* Bright purple border */
+    
+    --color-epic: 45 70% 18%;  /* Muted gold background */
+    --color-epic-foreground: 45 100% 85%;  /* Light gold text */
+    --color-epic-border: 45 100% 60%;  /* Bright gold border */
+    
+    --color-rare: 210 70% 18%;  /* Muted blue background */
+    --color-rare-foreground: 210 100% 85%;  /* Light blue text */
+    --color-rare-border: 210 100% 60%;  /* Bright blue border */
+    
+    --color-uncommon: 140 50% 18%;  /* Muted green background */
+    --color-uncommon-foreground: 140 80% 85%;  /* Light green text */
+    --color-uncommon-border: 140 70% 55%;  /* Bright green border */
+    
+    --color-common: 220 15% 20%;  /* Muted gray background */
+    --color-common-foreground: 220 20% 80%;  /* Light gray text */
+    --color-common-border: 220 20% 50%;  /* Medium gray border */
+  }
+}
+
+@layer base {
+  * {
+    border-color: hsl(var(--color-border));
+  }
+
+  body {
+    background-color: hsl(var(--color-background));
+    color: hsl(var(--color-foreground));
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 0.1;
+  }
+}

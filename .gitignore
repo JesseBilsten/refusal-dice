@@ -7,3 +7,6 @@ yarn-error.log
 /public
 .DS_Store
 *.swp
+
+# Pre-computation metadata
+src/data/.cache-metadata
