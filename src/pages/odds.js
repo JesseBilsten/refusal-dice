@@ -1,32 +1,27 @@
-import React, { useState, useMemo, useCallback, useRef } from 'react'
+import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import { graphql } from 'gatsby'
 import Layout from '../components/layout'
 import { Badge } from '../components/ui/badge'
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '../components/ui/card'
 import { Button } from '../components/ui/button'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table'
-import { Label } from '../components/ui/label'
 import VariantSelector from '../components/VariantSelector'
-import { Switch } from '../components/ui/switch'
 import { Slider } from '../components/ui/slider'
 import { Info, X, Check } from 'lucide-react'
 import GameLink from '../components/GameLink'
 import uniqueRollsData from '../data/unique-rolls.json'
 import rollGameMatrix from '../data/roll-game-matrix.json'
 import {
-  GAMES, GAMES_MAP, fmtPct,
+  GAMES, GAMES_MAP,
   isSpecialtyGame, SPECIALTY_GAME_IDS,
   SPECIALTY_THRESHOLDS, SPECIALTY_FILTERS,
 } from '../lib/games-config'
 import {
   checkGame,
   getKickerStrength,
-  calculateOffensiveStrength,
   classifySpecialtyRoll,
   isCompetitiveSpecialtyHand,
   analyzeRoll,
 } from '../lib/game-validation'
-import { StrengthBar } from '../components/RollAnalysis'
 import { ToggleGroup, ToggleGroupItem } from '../components/ui/toggle-group'
 
 /* ─────────────────────────── helpers ─────────────────────────── */
@@ -277,50 +272,6 @@ const GameOddsCard = ({ game, isSelected, onClick }) => {
   )
 }
 
-/** Strength distribution mini-histogram */
-const StrengthHistogram = ({ rolls, gameId, variant }) => {
-  const bins = useMemo(() => {
-    const b = Array.from({ length: 10 }, (_, i) => ({
-      min: i * 10, max: (i + 1) * 10, instances: 0,
-    }))
-    rolls.forEach(r => {
-      const v = r.analysis?.variants?.find(
-        v => v.game === gameId && (!variant || v.variant === variant)
-      )
-      if (!v) return
-      const idx = Math.min(9, Math.floor(v.rawStrength / 10))
-      b[idx].instances += r.count
-    })
-    return b
-  }, [rolls, gameId, variant])
-
-  const max = Math.max(1, ...bins.map(b => b.instances))
-
-  return (
-    <div className="space-y-1">
-      <p className="text-xs font-medium text-muted-foreground mb-2">
-        Strength Distribution
-      </p>
-      {bins.map((bin, i) => (
-        <div key={i} className="flex items-center gap-2 text-[10px]">
-          <span className="w-10 text-right tabular-nums text-muted-foreground">
-            {bin.min}–{bin.max}
-          </span>
-          <div className="flex-1 h-3 bg-muted rounded-sm overflow-hidden">
-            <div
-              className="h-full bg-primary/60 rounded-sm transition-all duration-300"
-              style={{ width: `${(bin.instances / max) * 100}%` }}
-            />
-          </div>
-          <span className="w-12 tabular-nums text-muted-foreground text-right">
-            {bin.instances || ''}
-          </span>
-        </div>
-      ))}
-    </div>
-  )
-}
-
 /** Co-playable games: other games you could also call on these rolls */
 const CoPlayableGames = ({ matchingRolls, currentGameId, variant }) => {
   const coPlayable = useMemo(() => {
@@ -390,6 +341,7 @@ const CoPlayableGames = ({ matchingRolls, currentGameId, variant }) => {
 const ProofGrid = ({ allRolls, matchSet, matchCount, totalInstances }) => {
   const [expanded, setExpanded] = useState(false)
   const [showAll, setShowAll] = useState(false)
+  const [showInfo, setShowInfo] = useState(false)
 
   const displayRolls = useMemo(() => {
     if (!showAll) return allRolls
@@ -417,18 +369,55 @@ const ProofGrid = ({ allRolls, matchSet, matchCount, totalInstances }) => {
   return (
     <div>
       <div className="flex flex-wrap items-center gap-3 mb-3">
-        <ToggleGroup
-          type="single"
-          value={showAll ? 'all' : 'unique'}
-          onValueChange={v => { if (v) { setShowAll(v === 'all'); setExpanded(false) } }}
-        >
-          <ToggleGroupItem value="unique" className="text-xs h-7 px-2.5">
-            Unique ({allRolls.length})
-          </ToggleGroupItem>
-          <ToggleGroupItem value="all" className="text-xs h-7 px-2.5">
-            All Permutations ({totalPerms.toLocaleString()})
-          </ToggleGroupItem>
-        </ToggleGroup>
+        <div className="flex items-center gap-2">
+          <ToggleGroup
+            type="single"
+            value={showAll ? 'all' : 'unique'}
+            onValueChange={v => { if (v) { setShowAll(v === 'all'); setExpanded(false) } }}
+          >
+            <ToggleGroupItem value="unique" className="text-xs h-7 px-2.5">
+              Unique ({allRolls.length})
+            </ToggleGroupItem>
+            <ToggleGroupItem value="all" className="text-xs h-7 px-2.5">
+              All Permutations ({totalPerms.toLocaleString()})
+            </ToggleGroupItem>
+          </ToggleGroup>
+          <span className="relative inline-flex">
+            <button
+              onClick={() => setShowInfo(o => !o)}
+              className="inline-flex items-center justify-center w-5 h-5 rounded-full
+                text-muted-foreground hover:text-foreground hover:bg-muted
+                transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
+              aria-label="View mode explanation"
+            >
+              <Info className="w-3.5 h-3.5" />
+            </button>
+            {showInfo && (
+              <div
+                className="absolute z-50 top-7 left-0 w-72 rounded-lg border bg-popover
+                  text-popover-foreground shadow-lg p-3 text-xs space-y-2 animate-in fade-in-0 zoom-in-95"
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className="font-semibold text-[11px]">View Modes</span>
+                  <button
+                    onClick={() => setShowInfo(false)}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+                <p className="text-muted-foreground leading-snug">
+                  <strong>Unique (252):</strong> Distinct combinations where order doesn't matter. 
+                  "11234 ×30" means this combination occurs in 30 different arrangements.
+                </p>
+                <p className="text-muted-foreground leading-snug">
+                  <strong>All Permutations (7,776):</strong> Every possible arrangement where order matters. 
+                  "11234" and "43211" are counted separately—the complete sample space.
+                </p>
+              </div>
+            )}
+          </span>
+        </div>
         <span className="text-xs text-muted-foreground">
           <span className="text-green-600 dark:text-green-400 font-semibold">
             {showAll ? totalInstances.toLocaleString() : matchCount} match
@@ -477,10 +466,28 @@ const OddsDashboard = ({ data }) => {
   const [selectedId, setSelectedId] = useState(null)
   const [variant, setVariant] = useState(null) // 'high' | 'low' | null
   const [specialtyFilter, setSpecialtyFilter] = useState(null) // e.g. '3-sixes', 'trips-plus'
-  const [showProof, setShowProof] = useState(false)
   const [barkingFlexThreshold, setBarkingFlexThreshold] = useState([4])
   const [barkingStrengthThreshold, setBarkingStrengthThreshold] = useState([65])
   const detailRef = useRef(null)
+
+  // Read URL parameters on mount to initialize from Games page links
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      const gameParam = params.get('game')
+      const viewParam = params.get('view')
+      
+      if (gameParam) {
+        setSelectedId(gameParam)
+        // Scroll to details section after state updates
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            detailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          })
+        })
+      }
+    }
+  }, [])
 
   const numOpponents = 0 // single-player probability view
   const selectedGame = GAME_ODDS.find(g => g.id === selectedId) || null
@@ -494,7 +501,6 @@ const OddsDashboard = ({ data }) => {
       setSelectedId(id)
       setVariant(null)
       setSpecialtyFilter(null)
-      setShowProof(false)
       requestAnimationFrame(() =>
         detailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
       )
@@ -566,21 +572,6 @@ const OddsDashboard = ({ data }) => {
     matchingRolls.forEach(r => s.add([...r.roll].sort((a, b) => a - b).join(',')))
     return s
   }, [matchingRolls])
-
-  // Top 20 strongest rolls
-  const topRolls = useMemo(() => {
-    if (!matchingRolls.length) return []
-    return [...matchingRolls]
-      .map(r => {
-        const v = r.analysis?.variants?.find(
-          v => v.game === selectedId && (!variant || v.variant === variant)
-        )
-        const off = v ? (numOpponents > 0 ? calculateOffensiveStrength(v.rawStrength, numOpponents, selectedId) : v.rawStrength) : 0
-        return { ...r, gv: v, off }
-      })
-      .sort((a, b) => b.off - a.off)
-      .slice(0, 20)
-  }, [matchingRolls, selectedId, variant, numOpponents])
 
   return (
     <Layout>
@@ -742,94 +733,33 @@ const OddsDashboard = ({ data }) => {
               variant={variant}
             />
 
-            {/* Two-col: top rolls + histogram */}
-            <div className="grid md:grid-cols-2 gap-6 items-start">
-              <Card className="flex flex-col max-h-[420px]">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base">
-                    {selectedId === 'barking' ? 'Weakest Hands' : 'Strongest Rolls'}
-                  </CardTitle>
-                  <CardDescription className="text-xs">
-                    {selectedId === 'barking' ? 'Most common hands to bark on' : 'Top 20 by raw strength'}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="flex-1 overflow-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-20">Roll</TableHead>
-                        <TableHead className="text-right w-10">×</TableHead>
-                        <TableHead>Strength</TableHead>
-                        <TableHead className="text-right w-16">Off%</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {topRolls.map((r, i) => (
-                        <TableRow key={i}>
-                          <TableCell className="font-mono text-sm font-semibold">
-                            {r.roll.join('')}
-                          </TableCell>
-                          <TableCell className="text-right text-xs text-muted-foreground tabular-nums">
-                            {r.count}
-                          </TableCell>
-                          <TableCell>
-                            <StrengthBar value={r.off} />
-                          </TableCell>
-                          <TableCell className="text-right font-mono text-sm font-bold text-orange-600 dark:text-orange-400 tabular-nums">
-                            {fmtPct(r.off)}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </CardContent>
-              </Card>
-
-              <Card className="flex flex-col">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base">Roll Quality Spread</CardTitle>
-                  <CardDescription className="text-xs">
-                    Distribution of rawStrength across matching rolls
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="flex-1">
-                  <StrengthHistogram
-                    rolls={matchingRolls}
-                    gameId={selectedId}
-                    variant={variant}
-                  />
-                </CardContent>
-              </Card>
-            </div>
-
             {/* Verification */}
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-base">Verify: All Rolls</CardTitle>
-                    <CardDescription className="text-xs">
-                        {selectedId === 'barking' 
-                          ? 'Green = hands where you should bark. Count them yourself.'
-                          : 'Every possible roll — green = matches this game. Count them yourself.'}
-                    </CardDescription>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Label htmlFor="proof" className="text-xs text-muted-foreground">Show</Label>
-                    <Switch id="proof" checked={showProof} onCheckedChange={setShowProof} />
-                  </div>
-                </div>
+                <CardTitle className="text-base">Verify: All Rolls</CardTitle>
+                <CardDescription className="text-xs">
+                  <Badge variant="secondary" className="bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-200 border border-green-300 dark:border-green-700 mr-1">
+                    Green
+                  </Badge>
+                  {selectedId === 'barking' 
+                    ? ' = bark-worthy hands. '
+                    : ' = matches this game. '}
+                  <Badge variant="secondary" className="bg-muted/40 text-muted-foreground/50 border border-transparent mr-1">
+                    Grey
+                  </Badge>
+                  {selectedId === 'barking'
+                    ? ' = other hands.'
+                    : ' = doesn\'t match.'}
+                </CardDescription>
               </CardHeader>
-              {showProof && (
-                <CardContent>
-                  <ProofGrid
-                    allRolls={uniqueRollsData.uniqueRolls}
-                    matchSet={matchSet}
-                    matchCount={matchingRolls.length}
-                    totalInstances={totalInstances}
-                  />
-                </CardContent>
-              )}
+              <CardContent>
+                <ProofGrid
+                  allRolls={uniqueRollsData.uniqueRolls}
+                  matchSet={matchSet}
+                  matchCount={matchingRolls.length}
+                  totalInstances={totalInstances}
+                />
+              </CardContent>
             </Card>
           </div>
         )}
