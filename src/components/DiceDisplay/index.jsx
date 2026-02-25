@@ -2,7 +2,6 @@ import React from 'react'
 import Die from '../Die'
 import AnimatedDie from '../Die/AnimatedDie'
 import { isDieLocked, groupLockedIndices } from '../../lib/component-helpers'
-import '../../styles/globals.css'
 
 /**
  * DiceDisplay - Unified component for displaying dice rolls
