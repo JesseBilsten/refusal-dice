@@ -31,20 +31,20 @@ const Header = ({ siteTitle }) => (
           </li>
           <li>
             <Link 
-              to="/rolls" 
-              className="text-sm font-medium text-foreground/70 hover:text-primary transition-colors"
-              activeClassName="text-primary"
-            >
-              Rolls
-            </Link>
-          </li>
-          <li>
-            <Link 
               to="/strategy-assistant" 
               className="text-sm font-medium text-foreground/70 hover:text-primary transition-colors"
               activeClassName="text-primary"
             >
               Strategy
+            </Link>
+          </li>
+          <li>
+            <Link 
+              to="/odds" 
+              className="text-sm font-medium text-foreground/70 hover:text-primary transition-colors"
+              activeClassName="text-primary"
+            >
+              Odds
             </Link>
           </li>
           <li>

@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react'
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import Layout from '../components/layout'
 import Die from '../components/Die'
 import Game from '../components/Game'
-import { Input } from '../components/ui/input'
+import DiceRollInput from '../components/DiceRollInput'
 import { Button } from '../components/ui/button'
 import { Badge } from '../components/ui/badge'
 import { analyzeRoll } from '../lib/game-validation'
@@ -29,7 +29,7 @@ const calculateGameProbabilities = () => {
 const GamesPage = () => {
   const [diceValues, setDiceValues] = useState(['', '', '', '', ''])
   const [analyzedRoll, setAnalyzedRoll] = useState(null)
-  const diceInputRefs = [useRef(), useRef(), useRef(), useRef(), useRef()]
+  const [initialRoll, setInitialRoll] = useState(null)
   const gameProbabilities = useMemo(() => calculateGameProbabilities(), [])
   
   // Read roll from URL on mount
@@ -38,14 +38,12 @@ const GamesPage = () => {
       const params = new URLSearchParams(window.location.search)
       const rollParam = params.get('roll')
       if (rollParam && rollParam.length === 5) {
-        const values = rollParam.split('')
-        setDiceValues(values)
-        analyzeCurrentRoll(values)
+        setInitialRoll(rollParam)
       }
     }
   }, [])
   
-  const analyzeCurrentRoll = (values) => {
+  const analyzeCurrentRoll = useCallback((values) => {
     const roll = values.map(v => parseInt(v)).filter(v => v >= 1 && v <= 6)
     if (roll.length === 5) {
       const analysis = analyzeRoll(roll)
@@ -59,42 +57,20 @@ const GamesPage = () => {
     } else {
       setAnalyzedRoll(null)
     }
-  }
+  }, [])
   
-  const handleDieChange = (index, value) => {
-    const newValues = [...diceValues]
-    
-    // Only allow 1-6 or empty
-    if (value === '' || (value >= '1' && value <= '6' && value.length === 1)) {
-      newValues[index] = value
-      setDiceValues(newValues)
-      
-      // Auto-focus next input if value entered
-      if (value !== '' && index < 4) {
-        diceInputRefs[index + 1].current?.focus()
-      }
-      
-      analyzeCurrentRoll(newValues)
-    }
-  }
+  const handleDiceChange = useCallback((newValues) => {
+    setDiceValues(newValues)
+    analyzeCurrentRoll(newValues)
+  }, [analyzeCurrentRoll])
   
-  const handleRollRandom = () => {
-    const randomRoll = Array.from({ length: 5 }, () => String(Math.floor(Math.random() * 6) + 1))
-    setDiceValues(randomRoll)
-    analyzeCurrentRoll(randomRoll)
-  }
-  
-  const handleClear = () => {
-    setDiceValues(['', '', '', '', ''])
+  const handleClear = useCallback(() => {
     setAnalyzedRoll(null)
-    
     // Clear URL
     if (typeof window !== 'undefined') {
       window.history.replaceState({}, '', '/games')
     }
-    
-    diceInputRefs[0].current?.focus()
-  }
+  }, [])
   
   // Check if a specific game is playable
   const isGamePlayable = (gameId) => {
@@ -126,33 +102,12 @@ const GamesPage = () => {
         <p className="text-center text-muted-foreground mb-4">Enter your roll to see which games you can play</p>
         
         <div className="flex flex-col items-center gap-4">
-          {/* Dice Inputs */}
-          <div className="flex gap-2 sm:gap-3">
-            {diceValues.map((value, index) => (
-              <Input
-                key={index}
-                ref={diceInputRefs[index]}
-                type="text"
-                inputMode="numeric"
-                pattern="[1-6]"
-                maxLength={1}
-                value={value}
-                onChange={(e) => handleDieChange(index, e.target.value)}
-                className="w-14 h-14 sm:w-16 sm:h-16 text-3xl sm:text-4xl text-center font-bold rounded-lg border-2 p-0"
-                placeholder="?"
-              />
-            ))}
-          </div>
-          
-          {/* Action Buttons */}
-          <div className="flex gap-3">
-            <Button onClick={handleRollRandom} variant="default">
-              🎲 Roll Random
-            </Button>
-            <Button onClick={handleClear} variant="outline">
-              Clear
-            </Button>
-          </div>
+          <DiceRollInput
+            diceValues={diceValues}
+            onDiceChange={handleDiceChange}
+            onClear={handleClear}
+            initialRoll={initialRoll}
+          />
           
           {/* Analysis Result */}
           {analyzedRoll && analyzedRoll.variants && analyzedRoll.variants.length > 0 && (
@@ -209,7 +164,7 @@ const GamesPage = () => {
             <Button variant="outline" size="sm" onClick={() => typeof window !== 'undefined' && (window.location.href = '/games/10-2')}>
               Learn more →
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => typeof window !== 'undefined' && (window.location.href = '/rolls?game=10-2&view=table')}>
+            <Button variant="ghost" size="sm" onClick={() => typeof window !== 'undefined' && (window.location.href = '/odds?game=10-2&view=table')}>
               Explore rolls →
             </Button>
           </div>
@@ -262,7 +217,7 @@ const GamesPage = () => {
             <Button variant="outline" size="sm" onClick={() => typeof window !== 'undefined' && (window.location.href = '/games/10-3')}>
               Learn more →
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => typeof window !== 'undefined' && (window.location.href = '/rolls?game=10-3&view=table')}>
+            <Button variant="ghost" size="sm" onClick={() => typeof window !== 'undefined' && (window.location.href = '/odds?game=10-3&view=table')}>
               Explore rolls →
             </Button>
           </div>
@@ -315,7 +270,7 @@ const GamesPage = () => {
             <Button variant="outline" size="sm" onClick={() => typeof window !== 'undefined' && (window.location.href = '/games/10-4')}>
               Learn more →
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => typeof window !== 'undefined' && (window.location.href = '/rolls?game=10-4&view=table')}>
+            <Button variant="ghost" size="sm" onClick={() => typeof window !== 'undefined' && (window.location.href = '/odds?game=10-4&view=table')}>
               Explore rolls →
             </Button>
           </div>
@@ -369,7 +324,7 @@ const GamesPage = () => {
             <Button variant="outline" size="sm" onClick={() => typeof window !== 'undefined' && (window.location.href = '/games/ship-captain-crew')}>
               Learn more →
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => typeof window !== 'undefined' && (window.location.href = '/rolls?game=ship-captain-crew&view=table')}>
+            <Button variant="ghost" size="sm" onClick={() => typeof window !== 'undefined' && (window.location.href = '/odds?game=ship-captain-crew&view=table')}>
               Explore rolls →
             </Button>
           </div>
@@ -423,7 +378,7 @@ const GamesPage = () => {
             <Button variant="outline" size="sm" onClick={() => typeof window !== 'undefined' && (window.location.href = '/games/monterey')}>
               Learn more →
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => typeof window !== 'undefined' && (window.location.href = '/rolls?game=monterey&view=table')}>
+            <Button variant="ghost" size="sm" onClick={() => typeof window !== 'undefined' && (window.location.href = '/odds?game=monterey&view=table')}>
               Explore rolls →
             </Button>
           </div>
@@ -477,7 +432,7 @@ const GamesPage = () => {
             <Button variant="outline" size="sm" onClick={() => typeof window !== 'undefined' && (window.location.href = '/games/vegas')}>
               Learn more →
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => typeof window !== 'undefined' && (window.location.href = '/rolls?game=vegas&view=table')}>
+            <Button variant="ghost" size="sm" onClick={() => typeof window !== 'undefined' && (window.location.href = '/odds?game=vegas&view=table')}>
               Explore rolls →
             </Button>
           </div>
@@ -534,7 +489,7 @@ const GamesPage = () => {
             <Button variant="outline" size="sm" onClick={() => typeof window !== 'undefined' && (window.location.href = '/games/pairs')}>
               Learn more →
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => typeof window !== 'undefined' && (window.location.href = '/rolls?game=pairs&view=table')}>
+            <Button variant="ghost" size="sm" onClick={() => typeof window !== 'undefined' && (window.location.href = '/odds?game=pairs&view=table')}>
               Explore rolls →
             </Button>
           </div>
@@ -569,7 +524,7 @@ const GamesPage = () => {
         <div className="">
 					<h2 id="razzle" className="text-3xl font-semibold mb-3 text-foreground">✨ Razzle</h2>
           <div className="mb-3">
-            <Badge variant="secondary">Threshold: 4+ wild 6s (or 5+ other)</Badge>
+            <Badge variant="secondary">Competitive: 3+ wild 6s (~21%) / Strong: 4+ (~4.5%)</Badge>
             {getGameInfo('razzle').isPlayable && (
               <Badge variant="default" className="ml-2">
                 Playable
@@ -579,13 +534,13 @@ const GamesPage = () => {
           </div>
           <p className="mb-2">Most amount of any one number with aces being wild.</p>
           <div className="mb-3 p-3 bg-primary/10 dark:bg-primary/20 border border-primary/20 dark:border-primary/40 rounded-lg">
-            <strong className="text-primary dark:text-primary">When to Call:</strong> <span className="text-foreground">Call with 4+ wild 6s (1s + 6s), or 5 of any other number. Over 3 rolls, players keeping 1s/6s will average 4+ wild 6s, so this threshold helps ensure you won't be the worst hand (~50% of rolls achieve this).</span>
+            <strong className="text-primary dark:text-primary">When to Call:</strong> <span className="text-foreground">Call with 3+ wild 6s (1s + 6s), or 5 of any other number. About 21% of rolls meet this competitive threshold. 4+ wild sixes (~4.5%) is a strong call. Over 3 rolls keeping 1s and 6s, players average 3.5 wild sixes.</span>
           </div>
           <div className="mt-3 flex gap-2">
             <Button variant="outline" size="sm" onClick={() => typeof window !== 'undefined' && (window.location.href = '/games/razzle')}>
               Learn more →
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => typeof window !== 'undefined' && (window.location.href = '/rolls?game=razzle&view=table')}>
+            <Button variant="ghost" size="sm" onClick={() => typeof window !== 'undefined' && (window.location.href = '/odds?game=razzle&view=table')}>
               Explore rolls →
             </Button>
           </div>
@@ -622,7 +577,7 @@ const GamesPage = () => {
         <div className="">
           <h2 id="boss" className="text-3xl font-semibold mb-3 text-foreground">👑 Boss</h2>
           <div className="mb-3">
-            <Badge variant="secondary">Threshold: 3 of a Kind+ (21.3%)</Badge>
+            <Badge variant="secondary">Competitive: Two Pair+ (~44%) / Strong: Trips+ (~21%)</Badge>
             {getGameInfo('boss').isPlayable && (
               <Badge variant="default" className="ml-2">
                 Playable
@@ -634,7 +589,7 @@ const GamesPage = () => {
             Poker-style hands without straights or flushes. All players reveal their dice, and the highest hand becomes the "Boss."
           </p>
           <div className="mb-3 p-3 bg-primary/10 dark:bg-primary/20 border border-primary/20 dark:border-primary/40 rounded-lg">
-            <strong className="text-primary dark:text-primary">When to Call:</strong> <span className="text-foreground">Call with Three of a Kind or better (rank 4+). You have 21.3% base odds, and can keep your matching dice while re-rolling others twice to improve, giving you the best chance of not being the worst hand.</span>
+            <strong className="text-primary dark:text-primary">When to Call:</strong> <span className="text-foreground">Call with Two Pair or better (competitive threshold, ~44% of rolls). Trips or better (~21%) is a strong call. You can keep matching dice and re-roll the others twice to improve your hand.</span>
           </div>
           <p className="mb-2">
             <strong>Hand Rankings (highest to lowest):</strong>
@@ -658,7 +613,7 @@ const GamesPage = () => {
             <Button variant="outline" size="sm" onClick={() => typeof window !== 'undefined' && (window.location.href = '/games/boss')}>
               Learn more →
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => typeof window !== 'undefined' && (window.location.href = '/rolls?game=boss&view=table')}>
+            <Button variant="ghost" size="sm" onClick={() => typeof window !== 'undefined' && (window.location.href = '/odds?game=boss&view=table')}>
               Explore rolls →
             </Button>
           </div>
@@ -726,7 +681,7 @@ const GamesPage = () => {
         <div className="">
           <h2 id="tres-away" className="text-3xl font-semibold mb-3 text-foreground">⛳️ Tres away</h2>
           <div className="mb-3">
-            <Badge variant="secondary">Threshold: Score ≤7 (6.13%)</Badge>
+            <Badge variant="secondary">Competitive: Score ≤10 (~18%) / Strong: ≤7 (~6%)</Badge>
             {getGameInfo('tres-away').isPlayable && (
               <Badge variant="default" className="ml-2">
                 Playable
@@ -739,7 +694,7 @@ const GamesPage = () => {
             value except for 3's which are worth 0 points.
           </p>
           <div className="mb-3 p-3 bg-primary/10 dark:bg-primary/20 border border-primary/20 dark:border-primary/40 rounded-lg">
-            <strong className="text-primary dark:text-primary">When to Call:</strong> <span className="text-foreground">Call with a score of 7 or less. Only 6.13% of rolls achieve this, making it a strong position.</span>
+            <strong className="text-primary dark:text-primary">When to Call:</strong> <span className="text-foreground">Call with a score of 10 or less (~18% of rolls). Score ≤ 7 is a strong call (~6%). Lower is better — 3s are worth 0, so multiple 3s are premium.</span>
           </div>
           <p className="mb-2">
             <strong>Reveal Cycle Mechanics:</strong> Play happens in cycles. On each cycle, players must reveal at least one die but can reveal more. The optimal strategy (based on Monte Carlo simulation) is to reveal dice with expected value below 2.33 (i.e., 1s, 2s, and 3s always). With remaining dice, re-roll and repeat until all dice are revealed.
@@ -754,7 +709,7 @@ const GamesPage = () => {
             <Button variant="outline" size="sm" onClick={() => typeof window !== 'undefined' && (window.location.href = '/games/tres-away')}>
               Learn more →
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => typeof window !== 'undefined' && (window.location.href = '/rolls?game=tres-away&view=table')}>
+            <Button variant="ghost" size="sm" onClick={() => typeof window !== 'undefined' && (window.location.href = '/odds?game=tres-away&view=table')}>
               Explore rolls →
             </Button>
           </div>

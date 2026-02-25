@@ -13,12 +13,22 @@ import DarkModeToggle from './DarkModeToggle'
 const MobileNav = () => {
   const [open, setOpen] = useState(false)
 
-  const navItems = [
+  const primaryNavItems = [
     { to: '/rules', label: 'Rules' },
     { to: '/games', label: 'Games' },
-    { to: '/rolls', label: 'Rolls' },
-    { to: '/strategy-assistant', label: 'Strategy Assistant' },
+    { to: '/strategy-assistant', label: 'Strategy' },
+    { to: '/odds', label: 'Odds' },
     { to: '/glossary', label: 'Glossary' },
+  ]
+  
+  const secondaryNavItems = [
+    { to: '/strategies', label: 'Advanced Strategies' },
+    { to: '/practice', label: 'Practice Mode' },
+  ]
+  
+  const toolNavItems = [
+    { to: '/odds', label: 'Rolls Explorer' },
+    { to: '/second-call-predictor', label: 'Second Call Predictor' },
   ]
 
   return (
@@ -37,17 +47,51 @@ const MobileNav = () => {
           <SheetTitle>Navigation</SheetTitle>
         </SheetHeader>
         <nav className="flex flex-col gap-4 mt-6">
-          {navItems.map((item) => (
-            <Link
-              key={item.to}
-              to={item.to}
-              className="text-lg font-medium text-foreground hover:text-primary transition-colors py-2"
-              activeClassName="text-primary"
-              onClick={() => setOpen(false)}
-            >
-              {item.label}
-            </Link>
-          ))}
+          <div>
+            <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Main</div>
+            {primaryNavItems.map((item) => (
+              <Link
+                key={item.to}
+                to={item.to}
+                className="block text-base font-medium text-foreground hover:text-primary transition-colors py-2"
+                activeClassName="text-primary"
+                onClick={() => setOpen(false)}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </div>
+          
+          <div className="pt-2 border-t border-border">
+            <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Learn More</div>
+            {secondaryNavItems.map((item) => (
+              <Link
+                key={item.to}
+                to={item.to}
+                className="block text-base font-medium text-foreground hover:text-primary transition-colors py-2"
+                activeClassName="text-primary"
+                onClick={() => setOpen(false)}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </div>
+          
+          <div className="pt-2 border-t border-border">
+            <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Tools</div>
+            {toolNavItems.map((item) => (
+              <Link
+                key={item.to}
+                to={item.to}
+                className="block text-base font-medium text-foreground hover:text-primary transition-colors py-2"
+                activeClassName="text-primary"
+                onClick={() => setOpen(false)}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </div>
+          
           <div className="mt-4 pt-4 border-t border-border">
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">Theme:</span>

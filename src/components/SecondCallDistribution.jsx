@@ -2,7 +2,7 @@ import React, { useMemo } from 'react'
 import { Badge } from './ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs'
+import VariantSelector from './VariantSelector'
 import { analyzeSecondCallDistribution, checkGame, getKickerStrength } from '../lib/game-validation'
 import uniqueRollsData from '../data/unique-rolls.json'
 
@@ -199,6 +199,7 @@ const SecondCallDistribution = ({
     }
   }, [description, showTabs, hasVariants, variant, distributions])
 
+  const [selectedVariant, setSelectedVariant] = React.useState('all')
   if (showTabs && hasVariants) {
     return (
       <Card>
@@ -207,22 +208,14 @@ const SecondCallDistribution = ({
           <CardDescription>{autoDescription}</CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="all" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="all">All Variants</TabsTrigger>
-              <TabsTrigger value="high">High Kicker</TabsTrigger>
-              <TabsTrigger value="low">Low Kicker</TabsTrigger>
-            </TabsList>
-            <TabsContent value="all" className="mt-4">
-              {renderDistributionTable(distributions.all)}
-            </TabsContent>
-            <TabsContent value="high" className="mt-4">
-              {renderDistributionTable(distributions.high)}
-            </TabsContent>
-            <TabsContent value="low" className="mt-4">
-              {renderDistributionTable(distributions.low)}
-            </TabsContent>
-          </Tabs>
+          <VariantSelector
+            selectedVariant={selectedVariant}
+            onChange={setSelectedVariant}
+            className="mb-4"
+          />
+          {selectedVariant === 'all' && renderDistributionTable(distributions.all)}
+          {selectedVariant === 'high' && renderDistributionTable(distributions.high)}
+          {selectedVariant === 'low' && renderDistributionTable(distributions.low)}
         </CardContent>
       </Card>
     )

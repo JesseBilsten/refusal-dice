@@ -909,8 +909,8 @@ const calculateKickerGameTieProbability = (rawStrength, game, handDetails = {}) 
       '10-4': 1,           // 1 kicker die
       'ship-captain-crew': 2,  // 2 kicker dice
       'monterey': 2,       // 2 kicker dice
-      'vegas': 2,          // 2 kicker dice
-      'pairs': 3           // 3 kicker dice
+      'vegas': 1,          // 1 kicker die (4 game dice in 2 pairs)
+      'pairs': 1           // 1 kicker die (4 game dice in 2 pairs)
     }
     
     const numKickerDice = kickerDiceCount[game] || 2
@@ -1007,12 +1007,68 @@ const estimateTieProbability = (rawStrength, game = null) => {
 }
 
 /**
+ * Asymmetric sigmoid for always-valid games (Razzle, Boss, Tres Away).
+ *
+ * Maps rawStrength → display percentage using an S-curve centred on the
+ * "target average" — the hand quality an opponent is expected to achieve
+ * after all their re-rolls.  The curve is calibrated so that:
+ *
+ *   f(minRaw)  ≈  1 %   (worst possible hand)
+ *   f(midpoint) = 50 %   (target average)
+ *   f(maxRaw)  ≈ 99 %   (best possible hand)
+ *
+ * The steepness differs above and below the midpoint (asymmetric sigmoid)
+ * so the 1 % and 99 % endpoints are honoured simultaneously even when the
+ * lower and upper halves of the rawStrength range differ in width.
+ *
+ * @param {number} rawStrength - 0-100 raw hand strength
+ * @param {number} midpoint    - rawStrength value that maps to 50 %
+ * @param {number} minRaw      - lowest observed rawStrength for this game
+ * @param {number} maxRaw      - highest observed rawStrength for this game
+ * @returns {number} 1-99 display percentage
+ */
+const sigmoidStrength = (rawStrength, midpoint, minRaw, maxRaw) => {
+  if (rawStrength <= 0) return 0
+
+  const ln99 = Math.log(99) // ≈ 4.595
+  const k = rawStrength <= midpoint
+    ? ln99 / Math.max(1, midpoint - minRaw)   // f(minRaw) ≈ 1 %
+    : ln99 / Math.max(1, maxRaw - midpoint)    // f(maxRaw) ≈ 99 %
+
+  const sigmoid = 1 / (1 + Math.exp(-k * (rawStrength - midpoint)))
+  return Math.max(1, Math.min(99, sigmoid * 100))
+}
+
+/**
+ * Configuration for always-valid games that use sigmoid-based strength.
+ *
+ * midpoint – the rawStrength that maps to 50 %.  This represents the
+ *            quality an average opponent achieves after taking all their
+ *            re-rolls:
+ *
+ *   • Razzle  (3 rolls, keeping 1s/6s): opponents average ~4 sixes → raw 70
+ *   • Boss    (2 rolls, poker hands):   opponents average ~3-of-a-kind → raw 45
+ *   • Tres Away (5 rolls, score-based): opponents average ~two 3s → raw 55
+ */
+const SIGMOID_CONFIGS = {
+  'razzle':    { midpoint: 70, minRaw:  5, maxRaw: 100 },
+  'boss':      { midpoint: 45, minRaw: 11, maxRaw:  95 },
+  'tres-away': { midpoint: 55, minRaw:  2, maxRaw: 100 },
+}
+
+/**
  * Calculate offensive strength - probability of NOT having the worst hand when YOU call the game
  * This is used when you have the hammer and are choosing which game to call
  * 
- * Accounts for:
- * - Probability that at least one opponent has a strictly worse hand
- * - Tie probability (which leads to roll-off or call passing)
+ * For always-valid games (Razzle, Boss, Tres Away) an asymmetric sigmoid is
+ * used.  The sigmoid is centred on the expected average opponent outcome
+ * after their re-rolls, so 50 % means "you're about as good as a typical
+ * opponent."  This replaces the old formula which subtracted a flat
+ * tie-or-beat probability from the percentile — that approach produced 0 %
+ * for any hand below the tie threshold (e.g. every Razzle hand < 4 sixes).
+ *
+ * For kicker-based games the original percentile-minus-tie formula is used,
+ * with opponent-count scaling via (1 - pStrictlyBetter)^numOpponents.
  * 
  * @param {number} rawStrength - Your hand's raw strength (0-100) in this game
  * @param {number} numOpponents - Number of opponents (total players - 1)
@@ -1021,8 +1077,17 @@ const estimateTieProbability = (rawStrength, game = null) => {
  */
 const calculateOffensiveStrength = (rawStrength, numOpponents = 2, game = null) => {
   if (rawStrength === 0) return 0
+
+  // No opponents: return raw percentile (intrinsic hand quality, no competitive scaling)
+  if (numOpponents === 0) return rawStrength
+
+  // Always-valid games: use sigmoid curve so every valid hand gets ≥ 1 %
+  const cfg = game && SIGMOID_CONFIGS[game]
+  if (cfg) {
+    return sigmoidStrength(rawStrength, cfg.midpoint, cfg.minRaw, cfg.maxRaw)
+  }
   
-  // Estimate tie probability for this hand/game
+  // Kicker games: percentile-minus-tie formula with opponent scaling
   const tieProbability = estimateTieProbability(rawStrength, game)
   
   // Convert rawStrength (0-100) to percentile (what % of hands you beat strictly)
@@ -1038,6 +1103,38 @@ const calculateOffensiveStrength = (rawStrength, numOpponents = 2, game = null) 
   // Preserve precision - don't round to integer
   // This ensures we never show "0.0% chance of losing" when there's actually a small tie risk
   return pAtLeastOneWorse * 100
+}
+
+/**
+ * Calculate global strength — a unified cross-game metric for ranking which game
+ * to call.  Unlike offensiveStrength (which uses different formulas for
+ * always-valid vs kicker games), globalStrength uses a single formula for ALL
+ * games so the values are directly comparable.
+ *
+ * Formula:
+ *   pThreat  = P(one opponent ties or beats your hand)   [already includes
+ *              P(makes game) for kicker games, and is raw for always-valid games]
+ *   P(worst) = pThreat ^ numOpponents   [ALL opponents must beat you]
+ *   globalStrength = (1 − P(worst)) × 100
+ *
+ * @param {number} rawStrength  - Hand's raw strength (0-100)
+ * @param {number} numOpponents - Number of opponents (total players − 1)
+ * @param {string} game         - Game type
+ * @param {object} handDetails  - Kicker, variant, etc.
+ * @returns {number} 0-100 probability you don't have the worst hand
+ */
+const calculateGlobalStrength = (rawStrength, numOpponents = 2, game = null, handDetails = {}) => {
+  if (rawStrength === 0) return 0
+
+  // No opponents: return raw percentile (intrinsic hand quality, no competitive scaling)
+  if (numOpponents === 0) return rawStrength
+
+  const pThreat = calculateOpponentTieOrBeatProbability(rawStrength, game, handDetails)
+
+  // P(you have the worst hand) = P(all opponents tie or beat you)
+  const pWorst = Math.pow(pThreat, numOpponents)
+
+  return Math.max(0, Math.min(100, (1 - pWorst) * 100))
 }
 
 /**
@@ -1086,6 +1183,7 @@ const generateHammerStrategy = (roll, numOpponents = 2, gameOddsMap = {}, thresh
       
       const tieProb = calculateOpponentTieOrBeatProbability(v.rawStrength, v.game, handDetails)
       const offensive = calculateOffensiveStrength(v.rawStrength, numOpponents, v.game)
+      const global = calculateGlobalStrength(v.rawStrength, numOpponents, v.game, handDetails)
       
       // Analyze the trade-off between game difficulty and kicker strength
       const gameInfo = analyzeGameDifficulty(v.game, v.rawStrength, v.kicker, v.variant)
@@ -1095,6 +1193,7 @@ const generateHammerStrategy = (roll, numOpponents = 2, gameOddsMap = {}, thresh
         variant: v.variant,
         rawStrength: v.rawStrength,
         offensiveStrength: offensive,
+        globalStrength: global,
         tieProbability: tieProb,
         kicker: v.kicker,
         details: v.details,
@@ -1103,7 +1202,7 @@ const generateHammerStrategy = (roll, numOpponents = 2, gameOddsMap = {}, thresh
         explanation: generateCallExplanation(v, offensive, tieProb, gameInfo, numOpponents)
       }
     })
-    .sort((a, b) => b.offensiveStrength - a.offensiveStrength)
+    .sort((a, b) => b.globalStrength - a.globalStrength)
   
   // Get top 3 recommendations
   const topRecommendations = recommendations.slice(0, 3)
@@ -1637,13 +1736,17 @@ const calculatePartialMatch = (roll, game, variant) => {
     }
   }
   
-  // Ship-Captain-Crew: Need 6,5,4 (any order)
+  // Ship-Captain-Crew: Need 6,5,4 OR 1,2,3 (either straight)
   if (game === 'ship-captain-crew') {
-    const hasShip = roll.includes(6)
-    const hasCaptain = roll.includes(5)
-    const hasCrew = roll.includes(4)
-    const matches = [hasShip, hasCaptain, hasCrew].filter(Boolean).length
+    // Check high straight (6,5,4)
+    const highMatches = [roll.includes(6), roll.includes(5), roll.includes(4)].filter(Boolean).length
+    // Check low straight (1,2,3)
+    const lowMatches = [roll.includes(1), roll.includes(2), roll.includes(3)].filter(Boolean).length
+    
+    // Use whichever straight has more matches
+    const matches = Math.max(highMatches, lowMatches)
     const diceNeeded = 3 - matches
+    const whichStraight = highMatches >= lowMatches ? 'high (6-5-4)' : 'low (1-2-3)'
     
     if (matches >= 2) {
       const proximity = matches === 2 ? 60 : 90
@@ -1651,7 +1754,7 @@ const calculatePartialMatch = (roll, game, variant) => {
         hasPartialMatch: true,
         proximity,
         diceNeeded,
-        description: `Have ${matches}/3 required dice for SCC. Need ${diceNeeded === 1 ? 'one more' : 'two more'}.`
+        description: `Have ${matches}/3 required dice for SCC ${whichStraight}. Need ${diceNeeded === 1 ? 'one more' : 'two more'}.`
       }
     }
   }
@@ -1812,13 +1915,14 @@ const generateRefuserStrategy = (
   const topSecondCall = secondCallAnalysis.topSecondCall
   
   // Calculate expected re-roll value
-  const gameOdds = gameOddsMap[calledGame] || { singleRoll: 0.35 }
-  const pMakeOnReroll = gameOdds.singleRoll
+  // gameOddsMap values are percentages (e.g., 49.07), not objects
+  const gameOddsPct = gameOddsMap[calledGame] || 35
+  const pMakeOnReroll = gameOddsPct / 100
   const expectedRerollStrength = pMakeOnReroll * 50 // Assume median strength if made
   
   // Game difficulty classification
-  const gameDifficulty = gameOdds.singleRoll > 0.45 ? 'easy' : 
-                         gameOdds.singleRoll > 0.30 ? 'medium' : 'hard'
+  const gameDifficulty = gameOddsPct > 45 ? 'easy' : 
+                         gameOddsPct > 30 ? 'medium' : 'hard'
   
   // Position-specific thresholds
   const acceptThreshold = position === 'first' ? 70 : 60
@@ -1835,7 +1939,7 @@ const generateRefuserStrategy = (
     // We have a partial match but not the complete game
     // Decision: Accept partial match if second call is likely harder OR if we're very close
     
-    const rerollOdds = gameOdds.singleRoll || 0.35
+    const rerollOdds = pMakeOnReroll || 0.35
     let completeGameOdds
     
     // Calculate probability more accurately based on game type
@@ -1869,7 +1973,7 @@ const generateRefuserStrategy = (
     
     if (topSecondCall) {
       // Compare: keeping partial match + rolling to complete it vs. refusing and rolling for second call
-      const secondCallOdds = gameOddsMap[topSecondCall.game]?.singleRoll || 0.35
+      const secondCallOdds = (gameOddsMap[topSecondCall.game] || 35) / 100
       
       // If second call is much harder than completing current game, consider accepting partial
       if (partialMatch.proximity >= 60 && completeGameOdds > secondCallOdds * 1.5) {
@@ -1916,8 +2020,8 @@ const generateRefuserStrategy = (
         topGame: topSecondCall.displayName,
         percentage: topSecondCall.percentage,
         difficulty: (() => {
-          const odds = gameOddsMap[topSecondCall.game]?.singleRoll || 0.35
-          return odds < 0.30 ? 'hard' : odds < 0.45 ? 'medium' : 'easy'
+          const odds = gameOddsMap[topSecondCall.game] || 35
+          return odds < 30 ? 'hard' : odds < 45 ? 'medium' : 'easy'
         })()
       } : null,
       partialMatch,
@@ -2032,9 +2136,12 @@ const generateRefuserStrategy = (
     gameDifficulty,
     expectedRerollValue: expectedRerollStrength,
     secondCallPredictions: topSecondCall ? {
-      topCall: topSecondCall.displayName,
-      probability: topSecondCall.percentage,
-      avgStrength: topSecondCall.avgOffensiveStrength
+      topGame: topSecondCall.displayName,
+      percentage: topSecondCall.percentage,
+      difficulty: (() => {
+        const odds = gameOddsMap[topSecondCall.game] || 35
+        return odds < 30 ? 'hard' : odds < 45 ? 'medium' : 'easy'
+      })()
     } : null,
     partialMatch: null, // No partial match - we have the complete game
     details: {
@@ -2045,6 +2152,400 @@ const generateRefuserStrategy = (
       handDetails: calledVariantData
     }
   }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+ * SPECIALTY GAME CLASSIFICATION
+ * Single source of truth for competitive-hand thresholds.
+ * Thresholds are defined in games-config.js (SPECIALTY_THRESHOLDS).
+ * These functions consume those thresholds so every page shows
+ * consistent numbers.
+ * ══════════════════════════════════════════════════════════════════ */
+
+/**
+ * Classify a roll against all specialty filter tiers for a given game.
+ * Returns an object mapping filter IDs ('competitive', 'strong') to booleans.
+ *
+ * Thresholds (from games-config.js SPECIALTY_THRESHOLDS):
+ *   Razzle  – competitive: 3+ wild sixes (1s or 6s) OR 5-of-a-kind
+ *           – strong:      4+ wild sixes OR 5-of-a-kind
+ *   Boss    – competitive: Two Pair+ (rank ≥ 3)
+ *           – strong:      Trips+    (rank ≥ 4)
+ *   Tres    – competitive: score ≤ 10
+ *           – strong:      score ≤ 7
+ */
+function classifySpecialtyRoll(roll, gameId, thresholds) {
+  if (gameId === 'razzle') {
+    const rs = getRazzleScore(roll)
+    const wildSixes = roll.filter(d => d === 1 || d === 6).length
+    return {
+      competitive: wildSixes >= thresholds.razzle.wildSixesGood || rs.bestCount >= 5,
+      strong:      wildSixes >= thresholds.razzle.wildSixesStrong || rs.bestCount >= 5,
+    }
+  }
+  if (gameId === 'boss') {
+    const hr = getBossHandRank(roll)
+    return {
+      competitive: hr.rank >= thresholds.boss.rankGood,
+      strong:      hr.rank >= thresholds.boss.rankStrong,
+    }
+  }
+  if (gameId === 'tres-away') {
+    const score = calculateTresAwayScore(roll)
+    return {
+      competitive: score <= thresholds['tres-away'].scoreGood,
+      strong:      score <= thresholds['tres-away'].scoreStrong,
+    }
+  }
+  return {}
+}
+
+/**
+ * Quick boolean: does this roll meet the "competitive" bar for a specialty game?
+ * This is the ~20% threshold used for the main odds display.
+ */
+function isCompetitiveSpecialtyHand(roll, gameId, thresholds) {
+  const cls = classifySpecialtyRoll(roll, gameId, thresholds)
+  return cls.competitive === true
+}
+
+/* ══════════════════════════════════════════════════════════════════
+ * REFUSER STRATEGY — "Hammer called X, should I accept or refuse?"
+ *
+ * The refuser doesn't know the Hammer's hand — only the game called.
+ * Step 1: Find rolls that qualify for the called game → these are
+ *         the Hammer's likely hands.
+ * Step 2: See what OTHER games those hands commonly also qualify for
+ *         → those are the likely second calls if the refuser refuses.
+ * Step 3: Evaluate the PLAYER's hand at the called game AND at each
+ *         likely second call.
+ * Step 4: Compare and recommend ACCEPT or REFUSE.
+ * ══════════════════════════════════════════════════════════════════ */
+
+/**
+ * Given a called game, determine the most likely second calls the
+ * Hammer would make (based on what co-playable games their hand
+ * also qualifies for).
+ *
+ * @param {string} calledGame        - game ID the Hammer called
+ * @param {string|null} calledVariant - 'high', 'low', or null
+ * @param {Array} uniqueRolls        - unique-rolls.json .uniqueRolls
+ * @param {Object} thresholds        - SPECIALTY_THRESHOLDS from games-config
+ * @returns {Array<{game, variant, name, emoji, overlapPct}>}
+ */
+function predictHammerSecondCalls(calledGame, calledVariant, uniqueRolls, thresholds) {
+  // GAMES list (duplicated inline to keep game-validation CJS-compatible)
+  const GAMES_LIST = [
+    { id: '10-2', name: '10-2', emoji: '✌️', hasVariants: true },
+    { id: '10-3', name: '10-3', emoji: '👌', hasVariants: true },
+    { id: '10-4', name: '10-4', emoji: '🔫', hasVariants: true },
+    { id: 'ship-captain-crew', name: 'SCC', emoji: '⚓️', hasVariants: true },
+    { id: 'monterey', name: 'Monterey', emoji: '🔄', hasVariants: true },
+    { id: 'vegas', name: "7's", emoji: '🎰', hasVariants: true },
+    { id: 'pairs', name: 'Pairs', emoji: '🍐', hasVariants: true },
+    { id: 'razzle', name: 'Razzle', emoji: '✨', hasVariants: false },
+    { id: 'boss', name: 'Boss', emoji: '👑', hasVariants: false },
+    { id: 'tres-away', name: 'Tres Away', emoji: '⛳', hasVariants: false },
+  ]
+  const GAMES_LOOKUP = Object.fromEntries(GAMES_LIST.map(g => [g.id, g]))
+  const SPEC_IDS = ['razzle', 'boss', 'tres-away']
+
+  if (!uniqueRolls || !Array.isArray(uniqueRolls) || !thresholds) return []
+
+  // 1. Filter to rolls that qualify for the called game
+  const qualifyingRolls = uniqueRolls.filter(r => {
+    if (!checkGame(r.roll, calledGame)) return false
+    if (calledVariant) {
+      const ks = getKickerStrength(r.roll, calledGame)
+      if (ks !== calledVariant) return false
+    }
+    // Specialty games: only count competitive-threshold rolls
+    if (SPEC_IDS.includes(calledGame)) {
+      return isCompetitiveSpecialtyHand(r.roll, calledGame, thresholds)
+    }
+    return true
+  })
+
+  const totalQ = qualifyingRolls.length || 1
+  const counts = {}
+
+  // 2. For each qualifying roll, find co-playable games (excluding the called game)
+  qualifyingRolls.forEach(r => {
+    const seen = new Set()
+    ;(r.analysis?.variants || []).forEach(v => {
+      // Skip the called game (and its variant family)
+      if (v.game === calledGame) return
+      const key = v.variant ? `${v.game}__${v.variant}` : v.game
+      if (seen.has(key)) return
+
+      // Specialty games: apply competitive threshold
+      if (SPEC_IDS.includes(v.game)) {
+        const cls = classifySpecialtyRoll(r.roll, v.game, thresholds)
+        if (!cls.competitive) return
+      }
+
+      seen.add(key)
+      if (!counts[key]) {
+        const g = GAMES_LOOKUP[v.game]
+        const vLabel = v.variant ? ` ${v.variant.charAt(0).toUpperCase() + v.variant.slice(1)}` : ''
+        counts[key] = {
+          game: v.game,
+          variant: v.variant,
+          name: g ? `${g.name}${vLabel}` : v.game,
+          emoji: g?.emoji || '🎲',
+          count: 0,
+        }
+      }
+      counts[key].count += 1
+    })
+  })
+
+  return Object.values(counts)
+    .map(c => ({ ...c, overlapPct: c.count / totalQ }))
+    .sort((a, b) => b.overlapPct - a.overlapPct)
+}
+
+/**
+ * Evaluate a refuser's hand against the called game AND its likely
+ * second calls.  Returns a structured recommendation.
+ *
+ * @param {number[]} roll             - the refuser's 5-die roll
+ * @param {string}   calledGame       - game ID the Hammer called
+ * @param {string|null} calledVariant - 'high', 'low', or null
+ * @param {'first'|'second'} position - refusal position
+ * @param {Array}    uniqueRolls      - unique-rolls .uniqueRolls
+ * @param {Object}   thresholds       - SPECIALTY_THRESHOLDS
+ */
+function evaluateRefuserPosition(roll, calledGame, calledVariant, position, uniqueRolls, thresholds) {
+  const SPEC_IDS = ['razzle', 'boss', 'tres-away']
+  const KICKER_GAMES = ['10-2', '10-3', '10-4', 'ship-captain-crew', 'monterey', 'vegas', 'pairs']
+
+  // ── 1. Evaluate player's hand at the called game ──
+  const canMakeCalled = checkGame(roll, calledGame)
+  let calledRaw = 0
+  let calledDetail = ''
+  if (canMakeCalled) {
+    // For kicker games, if variant not specified, auto-detect player's actual variant
+    let gameVariant = calledVariant ? `${calledGame}-${calledVariant}` : calledGame
+    if (!calledVariant && KICKER_GAMES.includes(calledGame)) {
+      const detectedVariant = getKickerStrength(roll, calledGame)
+      if (detectedVariant) {
+        gameVariant = `${calledGame}-${detectedVariant}`
+      }
+    }
+    
+    calledRaw = calculateRawStrength(roll, gameVariant, {})
+    // For specialty games provide contextual detail
+    if (calledGame === 'razzle') {
+      const rs = getRazzleScore(roll)
+      const wilds = roll.filter(d => d === 1).length
+      const sixes = roll.filter(d => d === 6).length
+      calledDetail = `${sixes} natural 6s${wilds > 0 ? ` + ${wilds} wild 1${wilds > 1 ? 's' : ''}` : ''} (${sixes + wilds} total)`
+    } else if (calledGame === 'boss') {
+      const hr = getBossHandRank(roll)
+      calledDetail = hr.handType
+    } else if (calledGame === 'tres-away') {
+      const score = calculateTresAwayScore(roll)
+      calledDetail = `Score ${score}`
+    }
+  }
+
+  const calledGameAnalysis = {
+    canMake: canMakeCalled,
+    rawStrength: calledRaw,
+    detail: calledDetail,
+    label: canMakeCalled
+      ? (calledRaw >= 60 ? 'Strong hand' : calledRaw >= 35 ? 'Decent hand' : 'Weak hand')
+      : "You can't make this game",
+  }
+
+  // ── 2. Predict the Hammer's likely second calls ──
+  const hammerSecondCalls = predictHammerSecondCalls(
+    calledGame, calledVariant, uniqueRolls, thresholds
+  )
+
+  // ── 3. Evaluate player's hand at each likely second call ──
+  const secondCallAnalysis = hammerSecondCalls.slice(0, 8).map(sc => {
+    const playerCanMake = checkGame(roll, sc.game)
+    let playerRaw = 0
+    let playerDetail = ''
+
+    if (playerCanMake) {
+      const scVariant = sc.variant ? `${sc.game}-${sc.variant}` : sc.game
+      playerRaw = calculateRawStrength(roll, scVariant, {})
+
+      // Penalise non-competitive specialty hands
+      if (SPEC_IDS.includes(sc.game) && !isCompetitiveSpecialtyHand(roll, sc.game, thresholds)) {
+        playerRaw = playerRaw * 0.5
+      }
+
+      if (sc.game === 'razzle') {
+        const wilds = roll.filter(d => d === 1).length
+        const sixes = roll.filter(d => d === 6).length
+        playerDetail = `${sixes} natural 6s${wilds > 0 ? ` + ${wilds} wild${wilds > 1 ? 's' : ''}` : ''}`
+      } else if (sc.game === 'boss') {
+        playerDetail = getBossHandRank(roll).handType
+      } else if (sc.game === 'tres-away') {
+        playerDetail = `Score ${calculateTresAwayScore(roll)}`
+      } else if (sc.variant) {
+        const opt = findOptimalVariants(roll, sc.game)
+        const v = sc.variant === 'high' ? opt?.high : opt?.low
+        if (v) playerDetail = `Kicker: ${v.kicker.join(', ')}`
+      }
+    }
+
+    return {
+      ...sc,
+      playerCanMake,
+      playerRawStrength: playerRaw,
+      playerDetail,
+      playerLabel: !playerCanMake
+        ? "Can't make this game"
+        : playerRaw >= 60 ? 'Strong hand'
+        : playerRaw >= 35 ? 'Decent hand'
+        : 'Weak hand',
+    }
+  })
+
+  // ── 4. Compute weighted expected second-call value ──
+  let weightedVal = 0
+  let totalWeight = 0
+  let bestAlt = null
+  let bestAltScore = 0
+
+  secondCallAnalysis.forEach(sc => {
+    weightedVal += sc.playerRawStrength * sc.overlapPct
+    totalWeight += sc.overlapPct
+    if (sc.playerRawStrength > bestAltScore) {
+      bestAltScore = sc.playerRawStrength
+      bestAlt = sc
+    }
+  })
+
+  const expectedSecondCallStrength = totalWeight > 0 ? weightedVal / totalWeight : 0
+
+  // ── 5. Build decision ──
+  const reasoning = []
+  const factors = []
+  let decision = 'ACCEPT'
+  let confidence = 50
+
+  if (!canMakeCalled) {
+    // Can't make the called game at all
+    if (bestAlt && bestAlt.playerCanMake && bestAltScore > 20) {
+      decision = 'REFUSE'
+      confidence = Math.min(90, Math.round(60 + bestAltScore * 0.3))
+      reasoning.push(
+        `You can't make ${_gn(calledGame)}. Refusing gives a ${(bestAlt.overlapPct * 100).toFixed(0)}% chance the second call is ${bestAlt.name}, where your hand is ${bestAlt.playerLabel.toLowerCase()}.`
+      )
+    } else {
+      decision = 'ACCEPT'
+      confidence = 30
+      reasoning.push(
+        `You can't make ${_gn(calledGame)}, and the likely second calls aren't much better for you. Accept and hope others are weaker.`
+      )
+    }
+  } else if (calledRaw >= 65) {
+    // Strong at the called game
+    decision = 'ACCEPT'
+    confidence = Math.min(95, Math.round(55 + calledRaw * 0.4))
+    reasoning.push(
+      `Your hand is strong at ${_gn(calledGame)} (${calledRaw.toFixed(0)}% strength${calledDetail ? ' — ' + calledDetail : ''}). Accept and play confidently.`
+    )
+  } else if (calledRaw >= 40) {
+    // Decent — compare to expected second call
+    if (expectedSecondCallStrength > calledRaw + 10) {
+      decision = 'REFUSE'
+      confidence = Math.min(85, Math.round(45 + (expectedSecondCallStrength - calledRaw)))
+      reasoning.push(
+        `Decent at ${_gn(calledGame)} (${calledRaw.toFixed(0)}%), but your expected second-call strength is better (${expectedSecondCallStrength.toFixed(0)}%).`
+      )
+      if (bestAlt) {
+        reasoning.push(
+          `Most likely upgrade: ${bestAlt.name} (${(bestAlt.overlapPct * 100).toFixed(0)}% chance) where your hand scores ${bestAltScore.toFixed(0)}%.`
+        )
+      }
+    } else {
+      decision = 'ACCEPT'
+      confidence = Math.min(80, Math.round(40 + calledRaw * 0.35))
+      reasoning.push(
+        `Decent at ${_gn(calledGame)} (${calledRaw.toFixed(0)}%${calledDetail ? ' — ' + calledDetail : ''}). Second-call alternatives aren't significantly better.`
+      )
+    }
+  } else {
+    // Weak at the called game
+    if (expectedSecondCallStrength > calledRaw) {
+      decision = 'REFUSE'
+      confidence = Math.min(90, Math.round(50 + (expectedSecondCallStrength - calledRaw) * 1.5))
+      reasoning.push(
+        `Weak hand for ${_gn(calledGame)} (${calledRaw.toFixed(0)}%${calledDetail ? ' — ' + calledDetail : ''}). Refusing gives better expected outcome (${expectedSecondCallStrength.toFixed(0)}%).`
+      )
+      if (bestAlt && bestAlt.playerCanMake) {
+        reasoning.push(
+          `Best case: ${bestAlt.name} (${(bestAlt.overlapPct * 100).toFixed(0)}% likely) where you score ${bestAltScore.toFixed(0)}%.`
+        )
+      }
+    } else {
+      decision = 'ACCEPT'
+      confidence = Math.round(35 + calledRaw * 0.3)
+      reasoning.push(
+        `Weak at ${_gn(calledGame)} (${calledRaw.toFixed(0)}%), but second-call options are no better. Accept and hope for the best.`
+      )
+    }
+  }
+
+  // Position modifier
+  if (position === 'second') {
+    reasoning.push(
+      "As 2nd Refusal, if you refuse the Hammer must pick their second call — there's no more negotiation."
+    )
+    if (decision === 'REFUSE') confidence = Math.min(95, confidence + 5)
+  } else {
+    reasoning.push(
+      "As 1st Refusal, if you refuse the 2nd Refusal still gets a chance to accept or refuse."
+    )
+  }
+
+  // Factors summary for the UI
+  factors.push({
+    label: `Your ${_gn(calledGame)} strength`,
+    value: calledRaw.toFixed(0) + '%',
+    positive: calledRaw >= 40,
+  })
+  factors.push({
+    label: 'Expected 2nd-call strength',
+    value: expectedSecondCallStrength.toFixed(0) + '%',
+    positive: expectedSecondCallStrength > calledRaw,
+  })
+  if (bestAlt) {
+    factors.push({
+      label: `Best alt: ${bestAlt.name} (${(bestAlt.overlapPct * 100).toFixed(0)}% likely)`,
+      value: bestAltScore.toFixed(0) + '%',
+      positive: bestAltScore > calledRaw,
+    })
+  }
+
+  return {
+    decision,
+    confidence,
+    reasoning,
+    factors,
+    calledGameAnalysis,
+    secondCallAnalysis,
+    bestSecondCallForPlayer: bestAlt,
+    expectedSecondCallStrength,
+  }
+}
+
+/** Tiny helper — game display name (avoids importing GAMES_MAP) */
+function _gn(id) {
+  const m = {
+    '10-2': '10-2', '10-3': '10-3', '10-4': '10-4',
+    'ship-captain-crew': 'SCC', monterey: 'Monterey',
+    vegas: "7's", pairs: 'Pairs',
+    razzle: 'Razzle', boss: 'Boss', 'tres-away': 'Tres Away',
+  }
+  return m[id] || id
 }
 
 // Export for use in both browser and Node.js
@@ -2060,6 +2561,7 @@ if (typeof module !== 'undefined' && module.exports) {
     calculateRawStrength,
     calculateNormalizedStrength,
     calculateOffensiveStrength,
+    calculateGlobalStrength,
     calculateDefensiveStrength,
     estimateTieProbability,
     calculateOpponentTieOrBeatProbability,
@@ -2069,6 +2571,10 @@ if (typeof module !== 'undefined' && module.exports) {
     analyzeSecondCallDistribution,
     calculatePartialMatch,
     generateRefuserStrategy,
+    classifySpecialtyRoll,
+    isCompetitiveSpecialtyHand,
+    predictHammerSecondCalls,
+    evaluateRefuserPosition,
     DEFAULT_DAMPENING,
     STRENGTH_DATA_VERSION,
     gameOddsMap
@@ -2086,6 +2592,7 @@ export {
   calculateRawStrength,
   calculateNormalizedStrength,
   calculateOffensiveStrength,
+  calculateGlobalStrength,
   calculateDefensiveStrength,
   estimateTieProbability,
   calculateOpponentTieOrBeatProbability,
@@ -2095,6 +2602,10 @@ export {
   analyzeSecondCallDistribution,
   calculatePartialMatch,
   generateRefuserStrategy,
+  classifySpecialtyRoll,
+  isCompetitiveSpecialtyHand,
+  predictHammerSecondCalls,
+  evaluateRefuserPosition,
   DEFAULT_DAMPENING,
   STRENGTH_DATA_VERSION,
   gameOddsMap

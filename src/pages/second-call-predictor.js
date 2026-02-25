@@ -23,7 +23,6 @@ const GAMES = [
 const SecondCallPredictorPage = ({ data }) => {
   const [selectedGame, setSelectedGame] = useState('monterey')
   const [selectedVariant, setSelectedVariant] = useState('low')
-  const [playerCount, setPlayerCount] = useState(3)
 
   const selectedGameObj = GAMES.find(g => g.id === selectedGame)
   const hasVariants = selectedGameObj?.hasVariants || false
@@ -49,7 +48,7 @@ const SecondCallPredictorPage = ({ data }) => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="game-select">Game</Label>
                 <Select value={selectedGame} onValueChange={setSelectedGame}>
@@ -80,24 +79,6 @@ const SecondCallPredictorPage = ({ data }) => {
                   </Select>
                 </div>
               )}
-
-              <div className="space-y-2">
-                <Label htmlFor="player-count">Player Count</Label>
-                <Select value={playerCount.toString()} onValueChange={(v) => setPlayerCount(parseInt(v))}>
-                  <SelectTrigger id="player-count">
-                    <SelectValue placeholder="Players" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="2">2 Players</SelectItem>
-                    <SelectItem value="3">3 Players</SelectItem>
-                    <SelectItem value="4">4 Players</SelectItem>
-                    <SelectItem value="5">5 Players</SelectItem>
-                    <SelectItem value="6">6 Players</SelectItem>
-                    <SelectItem value="7">7 Players</SelectItem>
-                    <SelectItem value="8">8 Players</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
             </div>
           </CardContent>
         </Card>
@@ -107,7 +88,7 @@ const SecondCallPredictorPage = ({ data }) => {
           gameId={selectedGame}
           hasVariants={hasVariants}
           variant={hasVariants ? selectedVariant : null}
-          numOpponents={playerCount - 1}
+          numOpponents={2}
           showTabs={false}
           title={`Second Call Distribution for ${selectedGame}${hasVariants && selectedVariant ? ` (${selectedVariant})` : ''}`}
         />

@@ -41,6 +41,31 @@ module.exports = {
           DEFAULT: "hsl(var(--color-card))",
           foreground: "hsl(var(--color-card-foreground))",
         },
+        legendary: {
+          DEFAULT: "hsl(var(--color-legendary))",
+          foreground: "hsl(var(--color-legendary-foreground))",
+          border: "hsl(var(--color-legendary-border))",
+        },
+        epic: {
+          DEFAULT: "hsl(var(--color-epic))",
+          foreground: "hsl(var(--color-epic-foreground))",
+          border: "hsl(var(--color-epic-border))",
+        },
+        rare: {
+          DEFAULT: "hsl(var(--color-rare))",
+          foreground: "hsl(var(--color-rare-foreground))",
+          border: "hsl(var(--color-rare-border))",
+        },
+        uncommon: {
+          DEFAULT: "hsl(var(--color-uncommon))",
+          foreground: "hsl(var(--color-uncommon-foreground))",
+          border: "hsl(var(--color-uncommon-border))",
+        },
+        common: {
+          DEFAULT: "hsl(var(--color-common))",
+          foreground: "hsl(var(--color-common-foreground))",
+          border: "hsl(var(--color-common-border))",
+        },
       },
       borderRadius: {
         lg: "var(--radius-lg)",

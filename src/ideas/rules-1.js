@@ -3,15 +3,22 @@ import { Link } from 'gatsby'
 import Layout from '../components/layout'
 import { Card, CardContent } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
+import { Alert, AlertTitle, AlertDescription } from '../components/ui/alert'
 
 /**
- * RULES: "Numbered Steps" with combined Refusal phase
+ * RULES v1: "Numbered Steps"
  *
- * Refusal v1: "Binary Outcome"
- * Frames the refusal as a single phase with two possible outcomes:
- *   A) Someone accepts → everyone plays the Hammer's call
- *   B) Both refuse → Hammer picks a different game, everyone plays
- * The sub-steps (1st Refusal, 2nd Refusal) are shown as parts of one step.
+ * Strategy: Linear numbered cards. Each gameplay step is a self-contained,
+ * visually distinct tile with a large step number, short title, and concise
+ * explanation. Equipment/setup are collapsed above the fold. The page reads
+ * like a recipe.
+ *
+ * UX Laws:
+ * - Serial Position Effect: Most important info (gameplay) is first visible
+ * - Gestalt Proximity: Related info grouped in cards
+ * - Gestalt Similarity: All steps look the same = scannable
+ * - Progressive Disclosure: Setup/equipment collapsed, gameplay prominent
+ * - Chunking: Each step is one digestible chunk
  */
 
 const Collapse = ({ title, children, defaultOpen = false }) => {
@@ -34,6 +41,7 @@ const Collapse = ({ title, children, defaultOpen = false }) => {
 const StepCard = ({ number, title, icon, children, id }) => (
   <Card id={id} className="scroll-mt-20 shadow-sm overflow-hidden">
     <div className="flex">
+      {/* Step number sidebar */}
       <div className="w-16 sm:w-20 shrink-0 bg-primary/10 flex flex-col items-center justify-center border-r border-primary/20">
         <span className="text-2xl mb-1">{icon}</span>
         <span className="text-xs font-bold text-primary uppercase tracking-wider">Step {number}</span>
@@ -46,7 +54,7 @@ const StepCard = ({ number, title, icon, children, id }) => (
   </Card>
 )
 
-const RulesPage = () => (
+const RulesV1 = () => (
   <Layout>
     <section className="max-w-2xl mx-auto px-4 sm:px-6 py-10">
       {/* Header */}
@@ -107,15 +115,13 @@ const RulesPage = () => (
       <h2 className="text-xl font-bold text-foreground mb-4">Each Round</h2>
 
       <div className="space-y-4">
-        {/* Step 1: Roll */}
         <StepCard number={1} title="Roll" icon="🎲" id="roll">
           <p className="text-sm text-muted-foreground">
             Everyone rolls all 5 dice and <strong>hides</strong> them from other players.
           </p>
         </StepCard>
 
-        {/* Step 2: Call */}
-        <StepCard number={2} title="The Hammer calls a game" icon="🔨" id="call">
+        <StepCard number={2} title="The Hammer calls a game" icon="🔨" id="first-call">
           <p className="text-sm text-muted-foreground mb-3">
             The <Link to="/glossary#hammer" className="text-primary hover:underline">Hammer</Link> looks at their
             dice and announces which <Link to="/games" className="text-primary hover:underline">game</Link> to play.
@@ -126,76 +132,53 @@ const RulesPage = () => (
           </p>
         </StepCard>
 
-        {/* Step 3: Combined Refusal */}
-        <StepCard number={3} title="Refusal" icon="⚖️" id="refusal">
+        <StepCard number={3} title="First Refusal decides" icon="🥇" id="first-refusal">
           <p className="text-sm text-muted-foreground mb-3">
-            Two players get a chance to reject the Hammer's call. If either one accepts, the call stands and everyone plays.
-            If both refuse, the Hammer must call a different game.
+            The player <strong>directly left</strong> of the Hammer checks their dice.
           </p>
-
-          {/* Sub-parts */}
-          <div className="border border-border rounded-lg overflow-hidden mb-3">
-            {/* Part A: 1st Refusal */}
-            <div className="p-3 bg-muted/30">
-              <p className="text-xs font-bold text-primary uppercase tracking-wider mb-1">
-                1st Refusal
-              </p>
-              <p className="text-sm text-muted-foreground">
-                The player <strong>directly left</strong> of the Hammer looks at their dice and decides:
-              </p>
-              <div className="grid grid-cols-2 gap-2 mt-2 text-xs">
-                <div className="rounded bg-green-500/10 border border-green-500/30 p-2 dark:bg-green-500/5">
-                  <p className="font-semibold text-green-700 dark:text-green-400">✅ Accept</p>
-                  <p className="text-muted-foreground mt-0.5">Everyone plays this game.</p>
-                </div>
-                <div className="rounded bg-red-500/10 border border-red-500/30 p-2 dark:bg-red-500/5">
-                  <p className="font-semibold text-red-700 dark:text-red-400">🚫 Refuse</p>
-                  <p className="text-muted-foreground mt-0.5">Passes to 2nd Refusal.</p>
-                </div>
-              </div>
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            <div className="rounded-md bg-green-500/10 border border-green-500/30 p-2.5 dark:bg-green-500/5">
+              <p className="font-semibold text-green-700 dark:text-green-400">✅ Accept</p>
+              <p className="text-muted-foreground mt-1">Everyone plays.</p>
             </div>
-
-            <div className="border-t border-border" />
-
-            {/* Part B: 2nd Refusal */}
-            <div className="p-3">
-              <p className="text-xs font-bold text-primary uppercase tracking-wider mb-1">
-                2nd Refusal
-              </p>
-              <p className="text-sm text-muted-foreground">
-                The player <strong>two seats left</strong> of the Hammer. Only decides if 1st Refusal has refused.
-              </p>
-              <div className="grid grid-cols-2 gap-2 mt-2 text-xs">
-                <div className="rounded bg-green-500/10 border border-green-500/30 p-2 dark:bg-green-500/5">
-                  <p className="font-semibold text-green-700 dark:text-green-400">✅ Accept</p>
-                  <p className="text-muted-foreground mt-0.5">Everyone plays this game.</p>
-                </div>
-                <div className="rounded bg-amber-500/10 border border-amber-500/30 p-2 dark:bg-amber-500/5">
-                  <p className="font-semibold text-amber-700 dark:text-amber-400">🔄 Refuse</p>
-                  <p className="text-muted-foreground mt-0.5">Hammer makes a 2nd call.</p>
-                </div>
-              </div>
+            <div className="rounded-md bg-red-500/10 border border-red-500/30 p-2.5 dark:bg-red-500/5">
+              <p className="font-semibold text-red-700 dark:text-red-400">🚫 Refuse</p>
+              <p className="text-muted-foreground mt-1">Passes to 2nd Refusal.</p>
             </div>
           </div>
-
-          <p className="text-xs text-amber-700 dark:text-amber-400">
-            ⚠️ If you refuse but the other player accepts, you still play!
+          <p className="text-xs text-amber-700 dark:text-amber-400 mt-2">
+            ⚠️ If you refuse and 2nd Refusal accepts, you still play!
           </p>
+        </StepCard>
 
-          {/* Second Call aside */}
-          <div className="mt-3 bg-amber-500/5 border border-amber-500/20 rounded-lg p-3 dark:bg-amber-500/5">
-            <p className="text-sm font-semibold text-amber-700 dark:text-amber-400 mb-1">
-              ↳ Second Call
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Must be a <strong>completely different game</strong> (not just a different variant).
-              No refusals — everyone plays.
-            </p>
+        <StepCard number={4} title="Second Refusal decides" icon="🥈" id="second-refusal">
+          <p className="text-sm text-muted-foreground mb-3">
+            Two seats left of the Hammer. Only decides if 1st Refusal refused.
+          </p>
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            <div className="rounded-md bg-green-500/10 border border-green-500/30 p-2.5 dark:bg-green-500/5">
+              <p className="font-semibold text-green-700 dark:text-green-400">✅ Accept</p>
+              <p className="text-muted-foreground mt-1">Everyone plays.</p>
+            </div>
+            <div className="rounded-md bg-red-500/10 border border-red-500/30 p-2.5 dark:bg-red-500/5">
+              <p className="font-semibold text-red-700 dark:text-red-400">🚫 Refuse</p>
+              <p className="text-muted-foreground mt-1">Hammer must make a 2nd call.</p>
+            </div>
           </div>
         </StepCard>
 
-        {/* Step 4: Play & score */}
-        <StepCard number={4} title="Play & score" icon="✏️" id="play">
+        {/* Second call inline */}
+        <div className="ml-16 sm:ml-20 pl-4 border-l-2 border-dashed border-amber-500/40">
+          <div className="bg-amber-500/5 border border-amber-500/20 rounded-lg p-4 dark:bg-amber-500/5">
+            <p className="text-sm font-semibold text-amber-700 dark:text-amber-400 mb-1">↳ Second Call</p>
+            <p className="text-sm text-muted-foreground">
+              If both refuse, the Hammer calls a <strong>completely different game</strong> (not just a different variant).
+              No refusals — everyone plays.
+            </p>
+          </div>
+        </div>
+
+        <StepCard number={5} title="Play & score" icon="✏️" id="play-game">
           <p className="text-sm text-muted-foreground mb-3">
             Everyone reveals their dice. The player with the <strong>worst{' '}
             <Link to="/glossary#kicker" className="text-primary hover:underline">kickers</Link></strong> loses
@@ -213,7 +196,7 @@ const RulesPage = () => (
             </div>
             <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/50 rounded p-2">
               <span className="shrink-0 mt-0.5">💀</span>
-              <p><strong>3 pencils = out.</strong> You stop playing. Hammer passes to the next player to your left who's still in.</p>
+              <p><strong>3 pencils:</strong> You're out. Hammer goes to the next player to your left.</p>
             </div>
           </div>
         </StepCard>
@@ -238,4 +221,4 @@ const RulesPage = () => (
   </Layout>
 )
 
-export default RulesPage
+export default RulesV1

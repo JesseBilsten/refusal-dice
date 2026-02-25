@@ -145,3 +145,42 @@
 .die[data-content="4"] { color: rgb(58, 177, 205); }
 .die[data-content="5"] { color: rgb(227, 70, 39); }
 .die[data-content="6"] { color: rgb(10, 10, 10); }
+
+/* Roll animation */
+@keyframes roll {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  25% {
+    transform: rotate(90deg) scale(1.1);
+  }
+  50% {
+    transform: rotate(180deg) scale(1);
+  }
+  75% {
+    transform: rotate(270deg) scale(1.1);
+  }
+  100% {
+    transform: rotate(360deg) scale(1);
+  }
+}
+
+.animate-roll {
+  animation: roll 0.6s ease-in-out;
+}
+
+/* Pulse animation for buttons */
+@keyframes pulse-subtle {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.9;
+  }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s ease-in-out infinite;
+}
