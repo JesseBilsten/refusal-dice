@@ -45,8 +45,8 @@
     0.44rem 0.44rem 0 rgb(58, 177, 205),
     0.44rem 0 0 rgb(58, 177, 205),
     0 0.44rem 0 rgb(58, 177, 205);
-  top: -0.11rem;
-  left: -0.11rem;
+  top: -0.22rem;
+  left: -0.22rem;
 }
 
 .die.size-xs.pips[data-content="5"]::before {
@@ -99,8 +99,8 @@
     0.66rem 0.66rem 0 rgb(58, 177, 205),
     0.66rem 0 0 rgb(58, 177, 205),
     0 0.66rem 0 rgb(58, 177, 205);
-  top: -16.5%;
-  left: -16.5%;
+  top: -0.33rem;
+  left: -0.33rem;
 }
 
 .die.size-sm.pips[data-content="5"]::before {
