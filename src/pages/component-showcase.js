@@ -96,29 +96,50 @@ const ComponentShowcasePage = () => {
 
         {/* Locked Dice Feature */}
         <section className="mb-16">
-          <h2 className="text-3xl font-bold mb-6 text-foreground">DiceDisplay - Locked Dice</h2>
+          <h2 className="text-3xl font-bold mb-6 text-foreground">DiceDisplay - Grouped Dice with Rarity</h2>
           <p className="text-muted-foreground mb-6">
-            Visual indication of locked vs. rerollable dice. Locked dice have background tint, unlocked are dimmed.
+            Dice groups with labels and vibrant rarity-based styling. Each group shows game components (like "10-2" or "High") with appropriate strength coloring.
           </p>
 
           <Card className="mb-6">
             <CardHeader>
-              <CardTitle>Locked First Three (Game Portion)</CardTitle>
-              <CardDescription>Showing a completed game with locked dice and rerollable kicker</CardDescription>
+              <CardTitle>Monterey Low with Legendary Kicker (2)</CardTitle>
+              <CardDescription>Purple glow for 90+ strength, labeled groups for game and kicker</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex flex-col gap-6">
                 <div className="flex items-center gap-4">
                   <span className="text-sm text-muted-foreground w-20">Size lg:</span>
-                  <DiceDisplay roll={[4, 6, 5, 3, 1]} size="lg" lockedIndices={[0, 1, 2]} />
+                  <DiceDisplay 
+                    roll={[2, 3, 4, 2, 2]} 
+                    size="lg"
+                    groups={[
+                      { indices: [0, 1, 2], label: 'Monterey', strength: 50 },
+                      { indices: [3, 4], label: 'Low (2)', strength: 95 }
+                    ]}
+                  />
                 </div>
                 <div className="flex items-center gap-4">
                   <span className="text-sm text-muted-foreground w-20">Size md:</span>
-                  <DiceDisplay roll={[4, 6, 5, 3, 1]} size="md" lockedIndices={[0, 1, 2]} />
+                  <DiceDisplay 
+                    roll={[2, 3, 4, 2, 2]} 
+                    size="md"
+                    groups={[
+                      { indices: [0, 1, 2], label: 'Monterey', strength: 50 },
+                      { indices: [3, 4], label: 'Low (2)', strength: 95 }
+                    ]}
+                  />
                 </div>
                 <div className="flex items-center gap-4">
                   <span className="text-sm text-muted-foreground w-20">Size sm:</span>
-                  <DiceDisplay roll={[4, 6, 5, 3, 1]} size="sm" lockedIndices={[0, 1, 2]} />
+                  <DiceDisplay 
+                    roll={[2, 3, 4, 2, 2]} 
+                    size="sm"
+                    groups={[
+                      { indices: [0, 1, 2], label: 'Monterey', strength: 50 },
+                      { indices: [3, 4], label: 'Low (2)', strength: 95 }
+                    ]}
+                  />
                 </div>
               </div>
             </CardContent>
@@ -126,18 +147,123 @@ const ComponentShowcasePage = () => {
 
           <Card className="mb-6">
             <CardHeader>
-              <CardTitle>Multiple Locked Groups</CardTitle>
-              <CardDescription>Non-contiguous locked portions are grouped separately</CardDescription>
+              <CardTitle>10-2 High with Epic Strength</CardTitle>
+              <CardDescription>Gold glow for 75-89 strength</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex flex-col gap-6">
                 <div className="flex items-center gap-4">
-                  <span className="text-sm text-muted-foreground w-32">Indices 0, 1, 4:</span>
-                  <DiceDisplay roll={[6, 6, 3, 2, 5]} size="md" lockedIndices={[0, 1, 4]} />
+                  <span className="text-sm text-muted-foreground w-32">Epic 10-2:</span>
+                  <DiceDisplay 
+                    roll={[4, 6, 6, 6, 5]} 
+                    size="md"
+                    groups={[
+                      { indices: [0, 1], label: '10-2', strength: 60 },
+                      { indices: [2, 3, 4], label: 'High', strength: 82 }
+                    ]}
+                  />
                 </div>
                 <div className="flex items-center gap-4">
-                  <span className="text-sm text-muted-foreground w-32">Indices 1, 3:</span>
-                  <DiceDisplay roll={[2, 5, 3, 5, 1]} size="md" lockedIndices={[1, 3]} />
+                  <span className="text-sm text-muted-foreground w-32">Rare Vegas:</span>
+                  <DiceDisplay 
+                    roll={[6, 1, 5, 6, 3]} 
+                    size="md"
+                    groups={[
+                      { indices: [0, 1, 2, 3], label: "7's", strength: 65 },
+                      { indices: [4], label: 'Kicker', strength: 30 }
+                    ]}
+                  />
+                </div>
+                <div className="flex items-center gap-4">
+                  <span className="text-sm text-muted-foreground w-32">Uncommon SCC:</span>
+                  <DiceDisplay 
+                    roll={[4, 5, 6, 3, 2]} 
+                    size="md"
+                    groups={[
+                      { indices: [0, 1, 2], label: 'SCC', strength: 55 },
+                      { indices: [3, 4], label: 'High', strength: 42 }
+                    ]}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>All Rarity Tiers</CardTitle>
+              <CardDescription>Legendary, Epic, Rare, Uncommon, and Common with vibrant colors and glow</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center gap-4">
+                  <span className="text-sm font-semibold text-legendary-foreground w-24">Legendary:</span>
+                  <DiceDisplay 
+                    roll={[6, 6, 6, 6, 6]} 
+                    size="md"
+                    groups={[
+                      { indices: [0, 1, 2, 3, 4], label: 'Five 6s', strength: 100 }
+                    ]}
+                  />
+                </div>
+                <div className="flex items-center gap-4">
+                  <span className="text-sm font-semibold text-epic-foreground w-24">Epic:</span>
+                  <DiceDisplay 
+                    roll={[5, 5, 6, 6, 6]} 
+                    size="md"
+                    groups={[
+                      { indices: [0, 1], label: '10-2', strength: 50 },
+                      { indices: [2, 3, 4], label: 'High', strength: 85 }
+                    ]}
+                  />
+                </div>
+                <div className="flex items-center gap-4">
+                  <span className="text-sm font-semibold text-rare-foreground w-24">Rare:</span>
+                  <DiceDisplay 
+                    roll={[4, 4, 5, 5, 3]} 
+                    size="md"
+                    groups={[
+                      { indices: [0, 1, 2, 3], label: 'Pairs', strength: 65 },
+                      { indices: [4], label: 'Kicker', strength: 30 }
+                    ]}
+                  />
+                </div>
+                <div className="flex items-center gap-4">
+                  <span className="text-sm font-semibold text-uncommon-foreground w-24">Uncommon:</span>
+                  <DiceDisplay 
+                    roll={[3, 4, 5, 2, 1]} 
+                    size="md"
+                    groups={[
+                      { indices: [0, 1, 2], label: 'Monterey', strength: 45 },
+                      { indices: [3, 4], label: 'Low', strength: 28 }
+                    ]}
+                  />
+                </div>
+                <div className="flex items-center gap-4">
+                  <span className="text-sm font-semibold text-common-foreground w-24">Common:</span>
+                  <DiceDisplay 
+                    roll={[1, 2, 3, 4, 5]} 
+                    size="md"
+                    groups={[
+                      { indices: [0, 1, 2], label: 'SCC', strength: 52 },
+                      { indices: [3, 4], label: 'Low', strength: 18 }
+                    ]}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle>Legacy Locked Dice (Backward Compatible)</CardTitle>
+              <CardDescription>Old locked dice style still works for backward compatibility</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col gap-6">
+                <div className="flex items-center gap-4">
+                  <span className="text-sm text-muted-foreground w-32">Locked indices:</span>
+                  <DiceDisplay roll={[4, 6, 5, 3, 1]} size="md" lockedIndices={[0, 1, 2]} />
                 </div>
               </div>
             </CardContent>
@@ -168,15 +294,103 @@ const ComponentShowcasePage = () => {
                   }}
                 />
                 <DiceDisplay 
-                  roll={[6, 6, 5, 3, 1]} 
+                  roll={[4, 6, 6, 6, 5]} 
                   size="md" 
-                  lockedIndices={[0, 1, 2]}
+                  groups={[
+                    { indices: [0, 1], label: '10-2', strength: 60 },
+                    { indices: [2, 3, 4], label: 'High', strength: 88 }
+                  ]}
                   showOdds 
                   oddsData={{
-                    description: "Odds of improving kicker",
+                    description: "Odds of improving high kicker",
                     probability: 0.417
                   }}
                 />
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
+        {/* Real Game Examples */}
+        <section className="mb-16">
+          <h2 className="text-3xl font-bold mb-6 text-foreground">Real Game Examples</h2>
+          <p className="text-muted-foreground mb-6">
+            Examples of how different games would be displayed with their components grouped and labeled
+          </p>
+
+          <Card>
+            <CardContent className="pt-6">
+              <div className="grid grid-cols-1 gap-6">
+                <div>
+                  <p className="text-sm font-semibold mb-2">10-2 High (6-6-6)</p>
+                  <DiceDisplay 
+                    roll={[4, 6, 6, 6, 6]} 
+                    size="md"
+                    groups={[
+                      { indices: [0, 1], label: '10-2', strength: 55 },
+                      { indices: [2, 3, 4], label: 'High (6)', strength: 100 }
+                    ]}
+                  />
+                </div>
+                
+                <div>
+                  <p className="text-sm font-semibold mb-2">10-3 Low (1-1)</p>
+                  <DiceDisplay 
+                    roll={[1, 2, 3, 4, 1]} 
+                    size="md"
+                    groups={[
+                      { indices: [0, 1, 2], label: '10-3', strength: 50 },
+                      { indices: [3, 4], label: 'Low (1)', strength: 5 }
+                    ]}
+                  />
+                </div>
+
+                <div>
+                  <p className="text-sm font-semibold mb-2">Ship-Captain-Crew High (5-5)</p>
+                  <DiceDisplay 
+                    roll={[4, 5, 6, 5, 5]} 
+                    size="md"
+                    groups={[
+                      { indices: [0, 1, 2], label: 'SCC', strength: 52 },
+                      { indices: [3, 4], label: 'High (5)', strength: 72 }
+                    ]}
+                  />
+                </div>
+
+                <div>
+                  <p className="text-sm font-semibold mb-2">Vegas (7's) with Kicker</p>
+                  <DiceDisplay 
+                    roll={[6, 1, 5, 6, 4]} 
+                    size="md"
+                    groups={[
+                      { indices: [0, 1, 2, 3], label: "7's", strength: 68 },
+                      { indices: [4], label: 'Kicker', strength: 40 }
+                    ]}
+                  />
+                </div>
+
+                <div>
+                  <p className="text-sm font-semibold mb-2">Pairs (4-4, 3-3) with 6 Kicker</p>
+                  <DiceDisplay 
+                    roll={[4, 4, 3, 3, 6]} 
+                    size="md"
+                    groups={[
+                      { indices: [0, 1, 2, 3], label: 'Pairs', strength: 60 },
+                      { indices: [4], label: 'Kicker', strength: 100 }
+                    ]}
+                  />
+                </div>
+
+                <div>
+                  <p className="text-sm font-semibold mb-2">Razzle (Five Wild Sixes)</p>
+                  <DiceDisplay 
+                    roll={[1, 1, 6, 6, 6]} 
+                    size="md"
+                    groups={[
+                      { indices: [0, 1, 2, 3, 4], label: 'Razzle (5 Sixes)', strength: 98 }
+                    ]}
+                  />
+                </div>
               </div>
             </CardContent>
           </Card>
