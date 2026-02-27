@@ -41,7 +41,7 @@ const DiceDisplay = ({
     return null
   }
 
-  // Rarity color configuration with vibrant colors and glow effects
+  // Rarity color configuration with dark backgrounds and vibrant borders/text
   const getRarityStyles = (strength) => {
     const tier = getRarityTier(strength)
     
@@ -49,37 +49,37 @@ const DiceDisplay = ({
       legendary: {
         bg: 'bg-legendary',
         border: 'border-legendary-border',
-        text: 'text-legendary-foreground',
+        text: 'text-legendary-border',
         glow: 'shadow-lg shadow-legendary-border/50',
-        label: 'bg-legendary-border text-white',
+        labelText: 'text-legendary-border',
       },
       epic: {
         bg: 'bg-epic',
         border: 'border-epic-border',
-        text: 'text-epic-foreground',
+        text: 'text-epic-border',
         glow: 'shadow-lg shadow-epic-border/50',
-        label: 'bg-epic-border text-white',
+        labelText: 'text-epic-border',
       },
       rare: {
         bg: 'bg-rare',
         border: 'border-rare-border',
-        text: 'text-rare-foreground',
+        text: 'text-rare-border',
         glow: 'shadow-lg shadow-rare-border/50',
-        label: 'bg-rare-border text-white',
+        labelText: 'text-rare-border',
       },
       uncommon: {
         bg: 'bg-uncommon',
         border: 'border-uncommon-border',
-        text: 'text-uncommon-foreground',
+        text: 'text-uncommon-border',
         glow: 'shadow-lg shadow-uncommon-border/50',
-        label: 'bg-uncommon-border text-white',
+        labelText: 'text-uncommon-border',
       },
       common: {
         bg: 'bg-common',
         border: 'border-common-border',
-        text: 'text-common-foreground',
+        text: 'text-common-border',
         glow: 'shadow-lg shadow-common-border/50',
-        label: 'bg-common-border text-white',
+        labelText: 'text-common-border',
       },
     }
     
@@ -149,6 +149,7 @@ const DiceDisplay = ({
           border-2
           rounded-t-lg rounded-br-lg
           ${groupPadding[size]}
+          shadow-[inset_0_2px_4px_rgba(0,0,0,0.4)]
         `}>
           {indices.map((dieIndex) => renderDie(roll[dieIndex], dieIndex))}
         </div>
@@ -156,13 +157,14 @@ const DiceDisplay = ({
         {/* Label */}
         {label && (
           <div className={`
-            ${rarityStyles.label}
+            ${rarityStyles.bg}
+            ${rarityStyles.labelText}
             ${labelSize[size]}
             px-2 py-0.5
-            rounded-b-lg rounded-tl-lg
+            rounded-b-lg rounded-br-lg
             font-semibold
             whitespace-nowrap
-            shadow-sm
+            shadow-[inset_0_2px_4px_rgba(0,0,0,0.4)]
           `}>
             {label}
           </div>

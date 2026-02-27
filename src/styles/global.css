@@ -27,26 +27,26 @@
     --radius-md: calc(0.5rem - 2px);
     --radius-sm: calc(0.5rem - 4px);
     
-    /* Rarity colors - Gaming theme with WCAG-compliant backgrounds */
-    --color-legendary: 24 100% 95%;  /* Muted orange background */
-    --color-legendary-foreground: 24 100% 25%;  /* Dark orange text */
+    /* Rarity colors - Gaming theme with dark backgrounds and vibrant accents */
+    --color-legendary: 24 100% 10%;  /* Very dark orange background */
+    --color-legendary-foreground: 24 100% 95%;  /* Bright orange text */
     --color-legendary-border: 24 100% 51%;  /* Bright orange border #ff6700 */
     
-    --color-epic: 43 100% 95%;  /* Muted gold background */
-    --color-epic-foreground: 43 100% 25%;  /* Dark gold text */
-    --color-epic-border: 43 100% 50%;  /* Bright gold border #ffb600 */
+    --color-epic: 43 100% 12%;  /* Very dark yellow background */
+    --color-epic-foreground: 43 100% 95%;  /* Bright yellow text */
+    --color-epic-border: 43 100% 50%;  /* Bright yellow border #ffb600 */
     
-    --color-rare: 192 100% 95%;  /* Muted cyan background */
-    --color-rare-foreground: 192 100% 25%;  /* Dark cyan text */
+    --color-rare: 192 100% 10%;  /* Very dark cyan background */
+    --color-rare-foreground: 192 100% 95%;  /* Bright cyan text */
     --color-rare-border: 192 100% 50%;  /* Bright cyan border #00ccff */
     
-    --color-uncommon: 268 100% 95%;  /* Muted purple background */
-    --color-uncommon-foreground: 268 100% 25%;  /* Dark purple text */
+    --color-uncommon: 268 100% 10%;  /* Very dark purple background */
+    --color-uncommon-foreground: 268 100% 95%;  /* Bright purple text */
     --color-uncommon-border: 268 100% 50%;  /* Bright purple border #7700ff */
     
-    --color-common: 220 15% 94%;  /* Muted gray background */
-    --color-common-foreground: 220 20% 25%;  /* Dark gray text */
-    --color-common-border: 220 20% 60%;  /* Medium gray border */
+    --color-common: 220 10% 15%;  /* Very dark gray background */
+    --color-common-foreground: 220 10% 90%;  /* Light gray text */
+    --color-common-border: 220 10% 50%;  /* Medium gray border */
   }
 
   .dark {
@@ -70,26 +70,26 @@
     --color-input: 217.2 32.6% 17.5%;
     --color-ring: 224.3 76.3% 48%;
     
-    /* Rarity colors - Dark mode with WCAG-compliant backgrounds */
-    --color-legendary: 24 100% 18%;  /* Muted orange background */
-    --color-legendary-foreground: 24 100% 85%;  /* Light orange text */
+    /* Rarity colors - Dark mode (already dark, slight adjustments) */
+    --color-legendary: 24 100% 8%;  /* Very dark orange background */
+    --color-legendary-foreground: 24 100% 95%;  /* Bright orange text */
     --color-legendary-border: 24 100% 51%;  /* Bright orange border #ff6700 */
     
-    --color-epic: 43 100% 18%;  /* Muted gold background */
-    --color-epic-foreground: 43 100% 85%;  /* Light gold text */
-    --color-epic-border: 43 100% 50%;  /* Bright gold border #ffb600 */
+    --color-epic: 43 100% 10%;  /* Very dark yellow background */
+    --color-epic-foreground: 43 100% 95%;  /* Bright yellow text */
+    --color-epic-border: 43 100% 50%;  /* Bright yellow border #ffb600 */
     
-    --color-rare: 192 100% 18%;  /* Muted cyan background */
-    --color-rare-foreground: 192 100% 85%;  /* Light cyan text */
+    --color-rare: 192 100% 8%;  /* Very dark cyan background */
+    --color-rare-foreground: 192 100% 95%;  /* Bright cyan text */
     --color-rare-border: 192 100% 50%;  /* Bright cyan border #00ccff */
     
-    --color-uncommon: 268 100% 18%;  /* Muted purple background */
-    --color-uncommon-foreground: 268 100% 85%;  /* Light purple text */
+    --color-uncommon: 268 100% 8%;  /* Very dark purple background */
+    --color-uncommon-foreground: 268 100% 95%;  /* Bright purple text */
     --color-uncommon-border: 268 100% 50%;  /* Bright purple border #7700ff */
     
-    --color-common: 220 15% 20%;  /* Muted gray background */
-    --color-common-foreground: 220 20% 80%;  /* Light gray text */
-    --color-common-border: 220 20% 50%;  /* Medium gray border */
+    --color-common: 220 10% 12%;  /* Very dark gray background */
+    --color-common-foreground: 220 10% 90%;  /* Light gray text */
+    --color-common-border: 220 10% 50%;  /* Medium gray border */
   }
 }
 
