@@ -166,7 +166,7 @@ const DiceDisplay = ({
             ${rarityStyles.border}
             ${rarityStyles.labelText}
             ${labelSize[size]}
-            px-2 py-0.5
+            px-2 pt-0 pb-0.5
             border-2 border-t-0
             rounded-b-lg rounded-br-lg
             font-semibold
