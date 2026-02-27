@@ -147,7 +147,7 @@ const DiceDisplay = ({
           ${rarityStyles.border}
           ${rarityStyles.glow}
           border-2
-          rounded-t-lg rounded-bl-lg
+          rounded-t-lg rounded-br-lg
           ${groupPadding[size]}
         `}>
           {indices.map((dieIndex) => renderDie(roll[dieIndex], dieIndex))}
@@ -159,7 +159,7 @@ const DiceDisplay = ({
             ${rarityStyles.label}
             ${labelSize[size]}
             px-2 py-0.5
-            rounded-b-lg rounded-tr-lg
+            rounded-b-lg rounded-tl-lg
             font-semibold
             whitespace-nowrap
             shadow-sm

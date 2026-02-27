@@ -104,7 +104,7 @@ const ComponentShowcasePage = () => {
           <Card className="mb-6">
             <CardHeader>
               <CardTitle>Monterey Low with Legendary Kicker (2)</CardTitle>
-              <CardDescription>Purple glow for 90+ strength, labeled groups for game and kicker</CardDescription>
+              <CardDescription>Orange glow for 90+ strength, labeled groups for game and kicker. Note the connection between dice container and label at lower-left corner.</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex flex-col gap-6">
@@ -192,7 +192,7 @@ const ComponentShowcasePage = () => {
           <Card className="mb-6">
             <CardHeader>
               <CardTitle>All Rarity Tiers</CardTitle>
-              <CardDescription>Legendary, Epic, Rare, Uncommon, and Common with vibrant colors and glow</CardDescription>
+              <CardDescription>Legendary (orange), Epic (yellow), Rare (cyan), Uncommon (purple), and Common (gray) with vibrant colors and glow</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex flex-col gap-4">
@@ -205,6 +205,7 @@ const ComponentShowcasePage = () => {
                       { indices: [0, 1, 2, 3, 4], label: 'Five 6s', strength: 100 }
                     ]}
                   />
+                  <span className="text-xs text-muted-foreground">Orange #ff6700</span>
                 </div>
                 <div className="flex items-center gap-4">
                   <span className="text-sm font-semibold text-epic-foreground w-24">Epic:</span>
@@ -216,6 +217,7 @@ const ComponentShowcasePage = () => {
                       { indices: [2, 3, 4], label: 'High', strength: 85 }
                     ]}
                   />
+                  <span className="text-xs text-muted-foreground">Yellow #ffb600</span>
                 </div>
                 <div className="flex items-center gap-4">
                   <span className="text-sm font-semibold text-rare-foreground w-24">Rare:</span>
@@ -227,6 +229,7 @@ const ComponentShowcasePage = () => {
                       { indices: [4], label: 'Kicker', strength: 30 }
                     ]}
                   />
+                  <span className="text-xs text-muted-foreground">Cyan #00ccff</span>
                 </div>
                 <div className="flex items-center gap-4">
                   <span className="text-sm font-semibold text-uncommon-foreground w-24">Uncommon:</span>
@@ -238,6 +241,7 @@ const ComponentShowcasePage = () => {
                       { indices: [3, 4], label: 'Low', strength: 28 }
                     ]}
                   />
+                  <span className="text-xs text-muted-foreground">Purple #7700ff</span>
                 </div>
                 <div className="flex items-center gap-4">
                   <span className="text-sm font-semibold text-common-foreground w-24">Common:</span>
@@ -249,6 +253,7 @@ const ComponentShowcasePage = () => {
                       { indices: [3, 4], label: 'Low', strength: 18 }
                     ]}
                   />
+                  <span className="text-xs text-muted-foreground">Gray</span>
                 </div>
               </div>
             </CardContent>
