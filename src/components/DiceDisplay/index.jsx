@@ -139,10 +139,12 @@ const DiceDisplay = ({
     const rarityStyles = getRarityStyles(strength)
     
     return (
-      <div key={`group-${groupIndex}`} className="inline-flex flex-col items-start">
+      <div key={`group-${groupIndex}`} className="inline-flex flex-col items-start relative">
         {/* Dice container */}
         <div className={`
           flex
+          relative
+          z-0
           ${rarityStyles.bg}
           ${rarityStyles.border}
           ${rarityStyles.glow}
@@ -157,10 +159,15 @@ const DiceDisplay = ({
         {/* Label */}
         {label && (
           <div className={`
+            relative
+            z-10
+            -mt-0.5
             ${rarityStyles.bg}
+            ${rarityStyles.border}
             ${rarityStyles.labelText}
             ${labelSize[size]}
             px-2 py-0.5
+            border-2 border-t-0
             rounded-b-lg rounded-br-lg
             font-semibold
             whitespace-nowrap
