@@ -166,12 +166,12 @@ const DiceDisplay = ({
             ${rarityStyles.border}
             ${rarityStyles.labelText}
             ${labelSize[size]}
-            px-2 pt-0 pb-0.5
+            px-3 pt-0.5 pb-1
             border-2 border-t-0
             rounded-b-lg rounded-br-lg
             font-semibold
             whitespace-nowrap
-            shadow-[inset_0_2px_4px_rgba(0,0,0,0.4)]
+            shadow-[inset_0_-2px_4px_rgba(0,0,0,0.4)]
           `}>
             {label}
           </div>

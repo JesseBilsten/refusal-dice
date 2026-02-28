@@ -27,25 +27,25 @@
     --radius-md: calc(0.5rem - 2px);
     --radius-sm: calc(0.5rem - 4px);
     
-    /* Rarity colors - Gaming theme with dark backgrounds and vibrant accents */
-    --color-legendary: 24 100% 10%;  /* Very dark orange background */
-    --color-legendary-foreground: 24 100% 95%;  /* Bright orange text */
+    /* Rarity colors - Light mode: light backgrounds with dark text and vibrant borders */
+    --color-legendary: 24 100% 92%;  /* Light orange background */
+    --color-legendary-foreground: 24 100% 20%;  /* Dark orange text */
     --color-legendary-border: 24 100% 51%;  /* Bright orange border #ff6700 */
     
-    --color-epic: 43 100% 12%;  /* Very dark yellow background */
-    --color-epic-foreground: 43 100% 95%;  /* Bright yellow text */
+    --color-epic: 43 100% 92%;  /* Light yellow background */
+    --color-epic-foreground: 43 100% 20%;  /* Dark yellow text */
     --color-epic-border: 43 100% 50%;  /* Bright yellow border #ffb600 */
     
-    --color-rare: 192 100% 10%;  /* Very dark cyan background */
-    --color-rare-foreground: 192 100% 95%;  /* Bright cyan text */
+    --color-rare: 192 100% 92%;  /* Light cyan background */
+    --color-rare-foreground: 192 100% 20%;  /* Dark cyan text */
     --color-rare-border: 192 100% 50%;  /* Bright cyan border #00ccff */
     
-    --color-uncommon: 268 100% 10%;  /* Very dark purple background */
-    --color-uncommon-foreground: 268 100% 95%;  /* Bright purple text */
+    --color-uncommon: 268 100% 92%;  /* Light purple background */
+    --color-uncommon-foreground: 268 100% 20%;  /* Dark purple text */
     --color-uncommon-border: 268 100% 50%;  /* Bright purple border #7700ff */
     
-    --color-common: 220 10% 15%;  /* Very dark gray background */
-    --color-common-foreground: 220 10% 90%;  /* Light gray text */
+    --color-common: 220 10% 88%;  /* Light gray background */
+    --color-common-foreground: 220 10% 20%;  /* Dark gray text */
     --color-common-border: 220 10% 50%;  /* Medium gray border */
   }
 
