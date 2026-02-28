@@ -151,7 +151,7 @@ const DiceDisplay = ({
           border-2
           rounded-t-lg rounded-br-lg
           ${groupPadding[size]}
-          shadow-[inset_0_2px_4px_rgba(0,0,0,0.4)]
+          shadow-[inset_0_1px_1px_rgba(0,0,0,0.2)]
         `}>
           {indices.map((dieIndex) => renderDie(roll[dieIndex], dieIndex))}
         </div>
@@ -171,7 +171,7 @@ const DiceDisplay = ({
             rounded-b-lg rounded-br-lg
             font-semibold
             whitespace-nowrap
-            shadow-[inset_0_-2px_4px_rgba(0,0,0,0.4)]
+            shadow-[inset_0_-1px_1px_rgba(0,0,0,0.2)]
           `}>
             {label}
           </div>
