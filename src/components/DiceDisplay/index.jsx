@@ -171,7 +171,7 @@ const DiceDisplay = ({
             rounded-b-lg rounded-br-lg
             font-semibold
             whitespace-nowrap
-            shadow-[inset_1px_0_1px_rgba(0,0,0,0.2)]
+            shadow-[inset_1px_0_0_rgba(0,0,0,0.2)]
           `}>
             {label}
           </div>
