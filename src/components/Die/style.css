@@ -83,9 +83,9 @@
 }
 
 .die.size-sm.pips[data-content="2"]::before {
-  box-shadow: 0.675rem 0.675rem 0 rgb(227, 70, 39);
-  top: -16.5%;
-  left: -16.5%;
+  box-shadow: 0.75rem 0.75rem 0 rgb(227, 70, 39);
+  top: -25%;
+  left: -25%;
 }
 
 .die.size-sm.pips[data-content="3"]::before {
@@ -144,9 +144,9 @@
 }
 
 .die.size-lg.pips[data-content="2"]::before {
-  box-shadow: 1.35rem 1.35rem 0 rgb(227, 70, 39);
-  top: -22%;
-  left: -22%;
+  box-shadow: 1.5rem 1.5rem 0 rgb(227, 70, 39);
+  top: -25%;
+  left: -25%;
 }
 
 .die.size-lg.pips[data-content="3"]::before {
@@ -259,9 +259,9 @@
 /* Die face 2 - red diagonal dots */
 .die.pips[data-content="2"]::before {
   background-color: rgb(227, 70, 39);
-  box-shadow: 0.9rem 0.9rem 0 rgb(227, 70, 39);
-  top: -22%;
-  left: -22%;
+  box-shadow: 1rem 1rem 0 rgb(227, 70, 39);
+  top: -25%;
+  left: -25%;
 }
 
 /* Die face 3 - blue diagonal dots */
