@@ -73,7 +73,7 @@ const CardDesignsPage = () => {
           <div className="flex items-start justify-between mb-3">
             <div>
               <h3 className="text-xl font-bold text-foreground">{game.name}</h3>
-              <p className="text-xs text-muted-foreground uppercase tracking-wide">{rarity.name}</p>
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">{rarity.label}</p>
             </div>
             <span className="text-xs border border-border rounded px-2 py-1">
               {game.probability.toFixed(3)}%
@@ -143,7 +143,7 @@ const CardDesignsPage = () => {
         <div className={`bg-${rarity.tier}/10 border-b-2 border-${rarity.tier}-border px-4 py-2 flex items-center justify-between`}>
           <div className="flex items-center gap-2">
             <span className={`bg-${rarity.tier}-border text-white text-xs font-bold px-2 py-0.5 rounded`}>
-              {rarity.name.toUpperCase()}
+              {rarity.label.toUpperCase()}
             </span>
             <h3 className="text-lg font-bold text-foreground">{game.name}</h3>
           </div>
@@ -230,7 +230,7 @@ const CardDesignsPage = () => {
              style={{ borderTopColor: `hsl(var(--color-${rarity.tier}-border))` }}>
         </div>
         <div className="absolute top-2 right-2 text-white text-[10px] font-bold uppercase rotate-45 origin-top-right">
-          {rarity.name}
+          {rarity.label}
         </div>
 
         <div className="px-4 py-3">
