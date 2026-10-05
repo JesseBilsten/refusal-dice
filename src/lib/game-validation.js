@@ -1202,7 +1202,16 @@ const generateHammerStrategy = (roll, numOpponents = 2, gameOddsMap = {}, thresh
         explanation: generateCallExplanation(v, offensive, tieProb, gameInfo, numOpponents)
       }
     })
-    .sort((a, b) => b.globalStrength - a.globalStrength)
+    .sort((a, b) => {
+      // Primary sort: globalStrength (descending)
+      if (Math.abs(a.globalStrength - b.globalStrength) > 0.01) {
+        return b.globalStrength - a.globalStrength
+      }
+      // Tiebreaker: when equal, prefer harder game (lower base probability)
+      const aProb = a.gameInfo.baseOdds || 1.0
+      const bProb = b.gameInfo.baseOdds || 1.0
+      return aProb - bProb  // Lower probability = harder game = better
+    })
   
   // Get top 3 recommendations
   const topRecommendations = recommendations.slice(0, 3)
@@ -1224,10 +1233,13 @@ const analyzeGameDifficulty = (game, rawStrength, kicker, variant) => {
   const kickerGames = ['10-2', '10-3', '10-4', 'ship-captain-crew', 'monterey', 'vegas', 'pairs']
   
   if (!kickerGames.includes(game)) {
+    // For specialty games, use high baseOdds so they don't get tiebreaker advantage
     return {
       hasKicker: false,
       gameDifficulty: game === 'boss' ? 'medium' : game === 'razzle' ? 'easy' : 'hard',
-      kickerStrength: null
+      kickerStrength: null,
+      baseOdds: 1.0,  // Always playable
+      baseProbabilityPct: 100
     }
   }
   
@@ -1256,7 +1268,8 @@ const analyzeGameDifficulty = (game, rawStrength, kicker, variant) => {
     gameDifficulty,
     kickerStrength,
     baseOdds,
-    kickerValue: kicker
+    kickerValue: kicker,
+    baseProbabilityPct: Math.round(baseOdds * 100)  // For display
   }
 }
 
@@ -1270,53 +1283,57 @@ const generateCallExplanation = (variant, offensive, tieProb, gameInfo, numOppon
   // Show <0.1% instead of 0.0% for very small but non-zero probabilities
   const pLose = 100 - offensive
   const losePct = (pLose < 0.1 && pLose > 0) ? '<0.1' : pLose.toFixed(1)
+  const tiePct = (tieProb * 100)
+  const tiePctStr = tiePct < 0.1 ? '<0.1' : tiePct.toFixed(1)
   
   if (!gameInfo.hasKicker) {
     // Non-kicker games (Boss, Razzle, Tres Away)
-    const tiePct = (tieProb * 100).toFixed(1)
     const tieRiskLabel = tieProb < 0.02 ? 'very low' : 
                          tieProb < 0.05 ? 'low' : 
                          tieProb < 0.10 ? 'moderate' :
                          tieProb < 0.20 ? 'significant' : 'high'
     
     if (pLose <= 5) {
-      return `Excellent - ${gameLabel} with only ${losePct}% chance of losing. ${tieRiskLabel.charAt(0).toUpperCase() + tieRiskLabel.slice(1)} tie risk (${tiePct}%).`
+      return `**Excellent** — ${losePct}% chance of losing. ${tieRiskLabel.charAt(0).toUpperCase() + tieRiskLabel.slice(1)} opponent threat (${tiePctStr}%).`
     } else if (pLose <= 20) {
-      return `Strong - ${gameLabel} with ${losePct}% chance of losing. Tie risk: ${tiePct}%.`
+      return `**Strong** — ${losePct}% chance of losing. Opponents have ${tiePctStr}% chance to beat/tie you.`
     } else if (pLose <= 40) {
-      return `Moderate - ${gameLabel} with ${losePct}% chance of losing. Consider alternatives if available.`
+      return `**Moderate** — ${losePct}% chance of losing. Consider alternatives if available.`
     } else {
-      return `Risky - ${gameLabel} with ${losePct}% chance of losing. High tie/beat risk (${tiePct}%).`
+      return `**Risky** — ${losePct}% chance of losing. Opponents have ${tiePctStr}% chance to beat/tie you.`
     }
   }
   
-  // Kicker games - explain trade-off
-  const parts = []
-  
+  // Kicker games - explain trade-off with base probability context
+  let strengthLabel = ''
   if (pLose <= 5) {
-    parts.push(`Excellent`)
+    strengthLabel = '**Excellent**'
   } else if (pLose <= 20) {
-    parts.push(`Strong`)
+    strengthLabel = '**Strong**'
   } else if (pLose <= 40) {
-    parts.push(`Moderate`)
+    strengthLabel = '**Moderate**'
   } else {
-    parts.push(`Risky`)
+    strengthLabel = '**Risky**'
   }
   
-  // Explain the combination
-  if (gameInfo.gameDifficulty === 'hard' && gameInfo.kickerStrength === 'excellent') {
-    parts.push(`- hard game to make but ${gameInfo.kickerStrength} kicker protects you`)
-  } else if (gameInfo.gameDifficulty === 'easy' && gameInfo.kickerStrength === 'poor') {
-    parts.push(`- easy game to make but ${gameInfo.kickerStrength} kicker is vulnerable`)
-  } else if (gameInfo.gameDifficulty === 'hard' && ['weak', 'poor'].includes(gameInfo.kickerStrength)) {
-    parts.push(`- difficult game with ${gameInfo.kickerStrength} kicker makes this risky`)
-  } else if (gameInfo.gameDifficulty === 'easy' && ['excellent', 'strong'].includes(gameInfo.kickerStrength)) {
-    parts.push(`- easy game with ${gameInfo.kickerStrength} kicker makes this safe`)
+  // Build explanation with probability context
+  const parts = [strengthLabel, '—', `${losePct}% chance of losing.`]
+  
+  // Add game difficulty context
+  const baseProb = gameInfo.baseProbabilityPct || 50
+  if (gameInfo.gameDifficulty === 'hard') {
+    parts.push(`Hard game to make (~${baseProb}% base)`)
+  } else if (gameInfo.gameDifficulty === 'easy') {
+    parts.push(`Easier game to make (~${baseProb}% base)`)
   } else {
-    parts.push(`- ${gameInfo.gameDifficulty} game, ${gameInfo.kickerStrength} kicker`)
+    parts.push(`Medium difficulty (~${baseProb}% base)`)
   }
   
-  parts.push(`(${losePct}% chance of losing, ${(tieProb * 100).toFixed(1)}% tie risk)`)
+  // Add kicker context
+  parts.push(`with ${gameInfo.kickerStrength} kicker [${variant.kicker.join(',')}].`)
+  
+  // Add opponent threat
+  parts.push(`Opponents: ${tiePctStr}% chance to beat/tie.`)
   
   return parts.join(' ')
 }
@@ -1337,6 +1354,12 @@ const generateStrategySummary = (topRecommendations, numOpponents) => {
   const loseBest = 100 - best.offensiveStrength
   const pLoseBest = (loseBest < 0.1 && loseBest > 0) ? '<0.1' : loseBest.toFixed(1)
   
+  // Check for bark threshold: if best option has >50% chance of losing
+  const barkThreshold = 50
+  if (loseBest > barkThreshold) {
+    return `🐕 **Consider barking** — Best option (${best.game}${best.variant ? ` ${best.variant}` : ''}) has ${pLoseBest}% chance of losing. When all options are unfavorable (>50% lose), passing may be smarter.`
+  }
+  
   if (!second) {
     return `Call ${best.game}${best.variant ? ` ${best.variant}` : ''} - your only option (${pLoseBest}% chance of losing vs ${numOpponents} ${playerWord}).`
   }
@@ -1349,6 +1372,9 @@ const generateStrategySummary = (topRecommendations, numOpponents) => {
     return `Clear choice: ${best.game}${best.variant ? ` ${best.variant}` : ''} (${pLoseBest}% lose) is significantly safer than alternatives.`
   } else if (strengthDiff >= 10) {
     return `Best call: ${best.game}${best.variant ? ` ${best.variant}` : ''} (${pLoseBest}% lose). Backup: ${second.game}${second.variant ? ` ${second.variant}` : ''} (${pLoseSecond}% lose).`
+  } else if (strengthDiff < 1) {
+    // Nearly identical options
+    return `Tied options: ${best.game}${best.variant ? ` ${best.variant}` : ''} and ${second.game}${second.variant ? ` ${second.variant}` : ''} are equally strong (${pLoseBest}% lose). ${best.gameInfo?.baseProbabilityPct && second.gameInfo?.baseProbabilityPct && best.gameInfo.baseProbabilityPct < second.gameInfo.baseProbabilityPct ? best.game + ' is harder to make, so slightly preferred.' : 'Choose based on preference.'}`
   } else {
     return `Close decision: ${best.game}${best.variant ? ` ${best.variant}` : ''} (${pLoseBest}% lose) and ${second.game}${second.variant ? ` ${second.variant}` : ''} (${pLoseSecond}% lose) are similar. Consider preference.`
   }

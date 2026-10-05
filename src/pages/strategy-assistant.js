@@ -458,7 +458,16 @@ const HammerResults = ({ strategy, playerCount }) => (
       )}
       <div className="grid grid-cols-3 gap-4">
         <div className="p-3 bg-background rounded-md">
-          <div className="text-xs text-muted-foreground mb-1">Global Strength</div>
+          <div className="text-xs text-muted-foreground mb-1">
+            <Tooltip>
+              <TooltipTrigger className="cursor-help border-b border-dotted border-muted-foreground">
+                Win Probability
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs">
+                <p>Your probability of NOT having the worst hand with this call</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
           <div className="text-2xl font-bold">
             {strategy.bestCall?.globalStrength?.toFixed(1) || '0'}%
           </div>
@@ -468,7 +477,16 @@ const HammerResults = ({ strategy, playerCount }) => (
           <div className="text-2xl font-bold">{strategy.flexibility || 0}/10</div>
         </div>
         <div className="p-3 bg-background rounded-md">
-          <div className="text-xs text-muted-foreground mb-1">Difficulty</div>
+          <div className="text-xs text-muted-foreground mb-1">
+            <Tooltip>
+              <TooltipTrigger className="cursor-help border-b border-dotted border-muted-foreground">
+                Base Difficulty
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs">
+                <p>How likely opponents are to MAKE this game ({strategy.bestCall?.gameInfo?.baseProbabilityPct || '?'}% base probability). Separate from your specific win probability with this kicker.</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
           <div className="text-2xl font-bold capitalize">
             {strategy.bestCall?.gameInfo?.gameDifficulty || 'N/A'}
           </div>
@@ -494,7 +512,11 @@ const HammerResults = ({ strategy, playerCount }) => (
                 <span className="text-xs text-muted-foreground">({call.kicker})</span>
               )}
             </div>
-            <p className="text-sm text-muted-foreground mb-2">{call.explanation}</p>
+            <p className="text-sm text-muted-foreground mb-2" dangerouslySetInnerHTML={{ 
+              __html: call.explanation
+                .replace(/\*\*(.+?)\*\*/g, '<strong class="text-foreground">$1</strong>')
+                .replace(/—/g, '&mdash;')
+            }} />
             <div className="flex gap-4 text-xs">
               <span><strong>Global:</strong> {call.globalStrength.toFixed(1)}%</span>
               <span><strong>Tie Risk:</strong> {(call.tieProbability * 100).toFixed(1)}%</span>
@@ -518,10 +540,10 @@ const HammerResults = ({ strategy, playerCount }) => (
                   <TableHead className="text-right">
                     <Tooltip>
                       <TooltipTrigger className="cursor-help border-b border-dotted border-muted-foreground">
-                        Global %
+                        Win %
                       </TooltipTrigger>
                       <TooltipContent className="max-w-xs">
-                        <p>Cross-game ranking metric: probability you won't have the worst hand. Click ℹ on any row to see the full formula.</p>
+                        <p>Probability you won't have the worst hand with this call. This is what determines rankings.</p>
                       </TooltipContent>
                     </Tooltip>
                   </TableHead>
@@ -545,7 +567,16 @@ const HammerResults = ({ strategy, playerCount }) => (
                       </TooltipContent>
                     </Tooltip>
                   </TableHead>
-                  <TableHead className="text-center">Difficulty</TableHead>
+                  <TableHead className="text-center">
+                    <Tooltip>
+                      <TooltipTrigger className="cursor-help border-b border-dotted border-muted-foreground">
+                        Base Difficulty
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-xs">
+                        <p>How likely opponents are to MAKE this game (not accounting for kicker quality)</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TableHead>
                   <TableHead className="w-8"></TableHead>
                 </TableRow>
               </TableHeader>
@@ -581,7 +612,7 @@ const HammerResults = ({ strategy, playerCount }) => (
           </TooltipProvider>
         </div>
         <p className="text-xs text-muted-foreground mt-2">
-          Sorted by Global Strength. Global % = (1 − P(threat)<sup>{playerCount - 1}</sup>) × 100 — probability you won't have the worst hand vs {playerCount - 1} opponent{playerCount > 2 ? 's' : ''}. Click ℹ on any row for the full breakdown.
+          Sorted by Win %. "Win %" = your probability of NOT having the worst hand. "Base Difficulty" = how likely opponents are to make the game (Easy: ~50%, Medium: ~30%, Hard: ~25%). Click ℹ on any row for detailed probability breakdown.
         </p>
       </div>
     )}
