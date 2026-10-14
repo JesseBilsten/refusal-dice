@@ -97,7 +97,7 @@ Each rule is tagged by where it came from:
   - Anyone who made the game beats anyone who didn't.
   - **Exactly one** player misses: they lose.
   - **Two or more** miss: everyone who made it is **safe**. The players who missed start a new **cycle**: the same called game (variant included) with 3 fresh rolls each. This repeats with whoever still misses until a single loser emerges. If everyone in a cycle makes it, the worst kicker among them loses.
-  - **Everyone** made it: the worst kicker total loses.
+  - **Everyone** made it: the **weakest hand** loses. The call (game + High/Low) defines what's weakest, so no separate kicker comparison is needed: in 10-3 High, a player with kickers 2+1 = 3 loses to everyone with higher kickers. [confirmed]
 - **Ties for the loser:**
   - The tied players **replay the same called game, variant included**, starting over with fresh rolls, until one loser remains. [confirmed]
   - **Exception, 2-player table:** when only 2 players are left in the whole game and they tie, no pencil is taken and the Hammer passes to the other player. [site]

@@ -258,8 +258,8 @@ const RulesPage = () => (
             <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/50 rounded p-2">
               <span className="shrink-0 mt-0.5">➕</span>
               <p>
-                <strong>Everyone made it?</strong> Add up each player's kickers. In <em>High</em> the lowest total
-                loses; in <em>Low</em> the highest loses. Only kickers count: 5+6 = 11 beats 5+5 = 10.
+                <strong>Everyone made it?</strong> The weakest hand loses. The call already says what's weakest:
+                in <em>10-3 High</em>, a player whose kickers are 2+1 = 3 loses to everyone with higher kickers.
               </p>
             </div>
             <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/50 rounded p-2">
