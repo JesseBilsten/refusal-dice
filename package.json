@@ -33,15 +33,21 @@
     "build": "gatsby build",
     "develop": "gatsby develop",
     "format": "prettier --write '**/*.js'",
-    "test": "jest --verbose"
+    "test": "jest --verbose",
+    "typecheck": "tsc"
   },
   "devDependencies": {
+    "@babel/preset-env": "^7.29.7",
+    "@babel/preset-typescript": "^7.29.7",
+    "@types/jest": "^30.0.0",
     "autoprefixer": "^10.4.23",
+    "babel-jest": "^30.5.2",
     "gatsby-cli": "^5.15.0",
     "gatsby-plugin-postcss": "^6.16.0",
     "jest": "^30.2.0",
     "prettier": "^3.7.4",
-    "tailwindcss": "^3.4.19"
+    "tailwindcss": "^3.4.19",
+    "typescript": "^5.9.3"
   },
   "overrides": {
     "lodash.template": "^4.5.1",

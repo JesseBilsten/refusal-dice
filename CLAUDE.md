@@ -13,10 +13,11 @@ npm ci            # install from the lockfile (preferred over npm install)
 npm run develop   # dev server at http://localhost:8000 (GraphiQL at /___graphql)
 npm run build     # production build into /public
 npm test          # Jest
+npm run typecheck # tsc over the TypeScript engine
 npm run format    # Prettier
 ```
 
-Run `npm test` and `npm run build` before calling work done. A change isn't verified until the build passes.
+Run `npm run typecheck`, `npm test` and `npm run build` before calling work done. A change isn't verified until the build passes.
 
 ## Stack
 
@@ -46,14 +47,18 @@ src/
   styles/global.css Tailwind layers + CSS color tokens (light/dark)
 ```
 
-### Target layout (Phase 0, see ROADMAP)
+### Game engine (`src/engine/`, TypeScript)
 
 ```
-src/engine/     Pure game engine, TypeScript, no React/DOM/Gatsby imports
-  rules/        Playable-game checks, hand/kicker comparison, ties
-  round/        Full-game state machine (state + actions + reducer)
-src/strategy/   Recommendation and odds logic (consumes engine/)
+src/engine/
+  types.ts         Die, Call, HouseRules, EngineError
+  dice-source.ts   Seeded (mulberry32) or scripted dice; pure
+  rules/           Kicker games: making the game, kicker totals, finding a cycle's loser
+  round/game.ts    Full game: createGame / applyAction (reducer) / viewFor (hidden info)
+  index.ts         Public API; import from '../engine'
 ```
+
+Kicker games are fully playable. Tres Away, Boss and Razzle are rejected by `validateCall` until their procedures (docs/RULES.md §3.2–3.4) are implemented. Planned: `src/strategy/` for recommendation and odds logic built on the engine.
 
 ## Code style
 
@@ -78,7 +83,7 @@ src/strategy/   Recommendation and odds logic (consumes engine/)
 ## Engine & strategy rules (important)
 
 - **The engine is pure.** No React, DOM, Gatsby, network or `Math.random()`. Randomness comes from an injected, seedable RNG so games are reproducible in tests and replays. The same engine will run on the server for online play.
-- **Write the engine in TypeScript** (`.ts`). Gatsby compiles TS natively. When the first `.ts` file lands, add TypeScript support to Jest (`babel-jest` with `@babel/preset-typescript`) and keep `npm test` green.
+- **The engine is TypeScript** (`.ts`, `strict`). Gatsby compiles it natively. Jest compiles it with `babel-jest` using an **inline** config in `jest.config.js`. Don't add a project-level `babel.config.js` or `.babelrc`, because Gatsby would pick it up and change how the site builds. Engine tests are `src/__tests__/engine-*.test.ts`.
 - **Model the game as an explicit state machine:** `(state, action) → state`, with per-player views that hide other players' dice. UI, bots and the server all go through the same action interface.
 - **Rules changes need tests.** Any change to game matching, kicker comparison, tie handling or round flow gets a Jest test with concrete dice. Add the test first if you can.
 - **Odds shown to users must be computed, not guessed.** Prefer exact enumeration (252 sorted rolls / 7,776 ordered) or seeded Monte Carlo with stated sample size. Label anything heuristic as such in the UI.

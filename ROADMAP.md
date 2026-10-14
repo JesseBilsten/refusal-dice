@@ -68,7 +68,7 @@ Build it once and every later phase gets cheaper.
    - Replace `window.location.href` with `<Link>`/`navigate`.
    - Fix the manifest name and colors; replace the README with a project README.
 2. **One game list.** ✅ _done 2026-10-14. `games-config.js` is now CommonJS so `gatsby-node.js` and the generators share it. `game-validation.js` still has an inline copy until step 3 moves the rules into `engine/`._
-3. **Extract the engine** from `game-validation.js`:
+3. **Extract the engine** from `game-validation.js`: 🟡 _in progress. The kicker-game engine landed 2026-10-14 (`src/engine/`): full round flow, cycles, ties, elimination, hidden-info views, seeded and scripted dice. Tests check it against `checkGame` on all 7,776 rolls and run 2,000 random full games. Next: Tres Away, Boss and Razzle procedures, then moving `game-validation.js`'s strategy code into `src/strategy/` on top of the engine._
    - `src/engine/rules`: playable-game checks, kicker/hand comparison, tie rules. Pure functions.
    - `src/engine/round`: an explicit state machine (states + actions + reducer) for a full game, implementing **[docs/RULES.md](docs/RULES.md)** exactly. That's the authoritative rules spec, and engine tests are written against it. Note the per-game play procedures: kicker games use 3 simultaneous rolls; Tres Away uses caller-paced put-out cycles; Boss uses a hidden Boss re-roll then "come up" / "don't come up".
    - `src/strategy/`: the current recommendation logic, moved as-is for now.
