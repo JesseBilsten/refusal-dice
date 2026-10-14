@@ -15,6 +15,6 @@
     "exactOptionalPropertyTypes": false,
     "skipLibCheck": true
   },
-  "include": ["src/engine/**/*.ts", "src/__tests__/**/*.ts"],
+  "include": ["src/engine/**/*.ts", "src/strategy/**/*.ts", "src/__tests__/**/*.ts"],
   "exclude": ["node_modules", "public", ".cache"]
 }

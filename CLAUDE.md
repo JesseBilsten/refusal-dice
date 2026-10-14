@@ -59,7 +59,19 @@ src/engine/
   index.ts         Public API; import from '../engine'
 ```
 
-All ten games are playable. Kicker games and Razzle use the `play` phase (simultaneous rolls); Tres Away (`tresAway` phase: `putOut`/`roll`, caller-paced) and Boss (`boss` phase: hidden Boss roll, `comeUp`/`dontComeUp`) have their own phases. `viewFor` hides what a player mustn't see, including redacting other players' hidden rolls from the log. Planned: `src/strategy/` for recommendation and odds logic built on the engine.
+All ten games are playable. Kicker games and Razzle use the `play` phase (simultaneous rolls); Tres Away (`tresAway` phase: `putOut`/`roll`, caller-paced) and Boss (`boss` phase: hidden Boss roll, `comeUp`/`dontComeUp`) have their own phases. `viewFor` hides what a player mustn't see, including redacting other players' hidden rolls from the log.
+
+### Strategy (`src/strategy/`, TypeScript)
+
+```
+src/strategy/
+  make-odds.ts   Exact chance of making a kicker game with optimal keeps (DP over the 252 sorted hands)
+  bots.ts        "Solid" heuristic bot: call, refuse and play decisions for every game (botAction)
+  simulate.ts    Seeded Monte Carlo through the engine: your chance of the pencil per decision
+                 (simulateHammer, simulateRefusal); common random numbers across options
+```
+
+Simulated odds mean "against (and as) solid bots". Show the sample size and that assumption wherever they appear. Strategy code may only read what its player could see.
 
 ## Code style
 

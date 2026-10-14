@@ -68,7 +68,7 @@ Build it once and every later phase gets cheaper.
    - Replace `window.location.href` with `<Link>`/`navigate`.
    - Fix the manifest name and colors; replace the README with a project README.
 2. **One game list.** ✅ _done 2026-10-14. `games-config.js` is now CommonJS so `gatsby-node.js` and the generators share it. `game-validation.js` still has an inline copy until step 3 moves the rules into `engine/`._
-3. **Extract the engine** from `game-validation.js`: 🟡 _in progress. The engine (`src/engine/`) plays all ten games as of 2026-10-14: full round flow, cycles, ties, elimination, hidden-info views (Tres Away hands, the Boss's secret roll), seeded and scripted dice. Tests check it against `checkGame` on all 7,776 rolls and run 2,000 random full games across every game. Next: moving `game-validation.js`'s strategy code into `src/strategy/` on top of the engine._
+3. **Extract the engine** from `game-validation.js`: 🟡 _in progress. The engine (`src/engine/`) plays all ten games as of 2026-10-14: full round flow, cycles, ties, elimination, hidden-info views (Tres Away hands, the Boss's secret roll), seeded and scripted dice. Tests check it against `checkGame` on all 7,776 rolls and run 2,000 random full games across every game. `src/strategy/` (2026-10-14) adds exact make-the-game odds, solid bot policies for every decision, and a seeded Monte Carlo of your chance of the pencil that plays rounds through the engine. The Strategy Assistant's refusal advice and Hammer pencil odds use it. Next: move the remaining heuristics (`generateHammerStrategy`, odds-page classifiers) once the computed odds cover them. `game-validation.js` stays for the plain-Node generators, which can't import TypeScript._
    - `src/engine/rules`: playable-game checks, kicker/hand comparison, tie rules. Pure functions.
    - `src/engine/round`: an explicit state machine (states + actions + reducer) for a full game, implementing **[docs/RULES.md](docs/RULES.md)** exactly. That's the authoritative rules spec, and engine tests are written against it. Note the per-game play procedures: kicker games use 3 simultaneous rolls; Tres Away uses caller-paced put-out cycles; Boss uses a hidden Boss re-roll then "come up" / "don't come up".
    - `src/strategy/`: the current recommendation logic, moved as-is for now.
@@ -125,7 +125,7 @@ Build it once and every later phase gets cheaper.
 3. **Decision trainer.** Show a situation, take the player's decision, then reveal the odds of every option and the trade-off in plain words. Example: "Refusing costs you 4% now but dodges a 30% second-call risk."
 4. **Player-count aware everywhere** (2–8), especially the Strategy Assistant.
 5. **Personal stats** in `localStorage`: accuracy by decision type, and weak spots to drill.
-6. **Fix the refuser model's assumption.** `REFUSER_STRATEGY.md` and `evaluateRefuserPosition` assume a player who refuses must throw away their roll and re-roll. Per the owner, nobody is forced to re-roll: a refuser who has the game keeps it (`docs/RULES.md` section 2.3). Re-base the refusal advice on the correct rule.
+6. ✅ _Done 2026-10-14._ **Fix the refuser model's assumption.** The old model (`evaluateRefuserPosition`, `REFUSER_STRATEGY.md`) assumed a refuser re-rolls. It's deleted; refusal advice is now simulated on the engine, where refusers keep their dice (`simulateRefusal` in `src/strategy/simulate.ts`).
 7. Retire or re-base the heuristic thresholds in `strategy/` once the computed odds exist. Keep the heuristics only as the "novice/solid" bot policies.
 
 **Measure:** trainer sessions per returning user; accuracy improvement over time.
@@ -195,4 +195,5 @@ Build it once and every later phase gets cheaper.
 | 2026-10-14 | `docs/RULES.md` is the authoritative rules spec | Engine tests are written against it; player-facing pages must agree with it |
 | 2026-10-14 | House rules are a site-wide setting that recalculates all odds | Owner requirement |
 | 2026-10-14 | 3D dice and sounds are opt-in, off and muted by default | Owner request |
+| 2026-10-14 | Decision advice = simulated chance of the pencil, through the engine with bot players | Accounts for refusals, second calls and play; labeled with sample size and the bot assumption |
 | 2026-10-14 | Odds Lab ships ahead of Phase 0 | Self-contained (`roll-query.js` is pure and tested), so it doesn't block or depend on the engine split |

@@ -6,12 +6,11 @@
  *   2. Razzle: 1s are wild, 6s are natural
  *   3. Specialty game scoring (Boss, Tres Away)
  *   4. Kicker & variant logic (high/low)
- *   5. Refuser strategy recommendations (evaluateRefuserPosition)
- *   6. Hammer strategy recommendations (generateHammerStrategy)
- *   7. Second-call prediction (predictHammerSecondCalls)
- *   8. Partial-match detection (calculatePartialMatch)
- *   9. Precision invariant (perfect kickers never show 0.0%)
- *  10. Legacy refuser strategy (generateRefuserStrategy)
+ *   5. Hammer strategy recommendations (generateHammerStrategy)
+ *   6. Partial-match detection (calculatePartialMatch)
+ *   7. Precision invariant (perfect kickers never show 0.0%)
+ *
+ * Refusal advice is simulated on the engine now: see strategy.test.ts.
  *
  * Run:  npm test
  */
@@ -26,9 +25,6 @@ const {
   findOptimalVariants,
   calculateRawStrength,
   generateHammerStrategy,
-  generateRefuserStrategy,
-  evaluateRefuserPosition,
-  predictHammerSecondCalls,
   calculatePartialMatch,
   calculateOffensiveStrength,
   calculateGlobalStrength,
@@ -37,8 +33,6 @@ const {
   gameOddsMap,
 } = require('../lib/game-validation')
 
-const uniqueRollsData = require('../data/unique-rolls.json')
-const uniqueRolls = uniqueRollsData.uniqueRolls
 
 // Specialty thresholds (mirror games-config.js — CJS-friendly)
 const SPECIALTY_THRESHOLDS = {
@@ -531,213 +525,6 @@ describe('gameOddsMap', () => {
 })
 
 /* ════════════════════════════════════════════════════════════
-   8. PREDICT HAMMER SECOND CALLS
-   ════════════════════════════════════════════════════════════ */
-describe('predictHammerSecondCalls', () => {
-  test('returns non-empty array for a common game', () => {
-    const result = predictHammerSecondCalls('10-2', null, uniqueRolls, SPECIALTY_THRESHOLDS)
-    expect(Array.isArray(result)).toBe(true)
-    expect(result.length).toBeGreaterThan(0)
-  })
-
-  test('does NOT include the called game in results', () => {
-    const result = predictHammerSecondCalls('monterey', null, uniqueRolls, SPECIALTY_THRESHOLDS)
-    result.forEach(r => {
-      expect(r.game).not.toBe('monterey')
-    })
-  })
-
-  test('overlapPct values are between 0 and 1', () => {
-    const result = predictHammerSecondCalls('10-2', null, uniqueRolls, SPECIALTY_THRESHOLDS)
-    result.forEach(r => {
-      expect(r.overlapPct).toBeGreaterThan(0)
-      expect(r.overlapPct).toBeLessThanOrEqual(1)
-    })
-  })
-
-  test('results are sorted descending by overlapPct', () => {
-    const result = predictHammerSecondCalls('pairs', null, uniqueRolls, SPECIALTY_THRESHOLDS)
-    for (let i = 1; i < result.length; i++) {
-      expect(result[i].overlapPct).toBeLessThanOrEqual(result[i - 1].overlapPct)
-    }
-  })
-
-  test('each entry has game, name, emoji, overlapPct', () => {
-    const result = predictHammerSecondCalls('vegas', null, uniqueRolls, SPECIALTY_THRESHOLDS)
-    result.forEach(r => {
-      expect(r).toHaveProperty('game')
-      expect(r).toHaveProperty('name')
-      expect(r).toHaveProperty('emoji')
-      expect(r).toHaveProperty('overlapPct')
-    })
-  })
-})
-
-/* ════════════════════════════════════════════════════════════
-   9. EVALUATE REFUSER POSITION
-   ════════════════════════════════════════════════════════════ */
-describe('evaluateRefuserPosition', () => {
-  // ── Return shape ──
-  test('returns correct shape', () => {
-    const result = evaluateRefuserPosition(
-      [2, 3, 6, 6, 1], 'razzle', null, 'first', uniqueRolls, SPECIALTY_THRESHOLDS
-    )
-    expect(result).toHaveProperty('decision')
-    expect(result).toHaveProperty('confidence')
-    expect(result).toHaveProperty('reasoning')
-    expect(result).toHaveProperty('factors')
-    expect(result).toHaveProperty('calledGameAnalysis')
-    expect(result).toHaveProperty('secondCallAnalysis')
-    expect(result).toHaveProperty('expectedSecondCallStrength')
-    expect(['ACCEPT', 'REFUSE']).toContain(result.decision)
-    expect(result.confidence).toBeGreaterThanOrEqual(0)
-    expect(result.confidence).toBeLessThanOrEqual(100)
-    expect(Array.isArray(result.reasoning)).toBe(true)
-    expect(Array.isArray(result.factors)).toBe(true)
-    expect(Array.isArray(result.secondCallAnalysis)).toBe(true)
-  })
-
-  // ── Scenario: Strong Razzle hand → ACCEPT ──
-  test('[6,6,1,1,6] vs Razzle → ACCEPT (strong hand: 5 wild sixes)', () => {
-    const result = evaluateRefuserPosition(
-      [6, 6, 1, 1, 6], 'razzle', null, 'first', uniqueRolls, SPECIALTY_THRESHOLDS
-    )
-    expect(result.decision).toBe('ACCEPT')
-    expect(result.calledGameAnalysis.rawStrength).toBeGreaterThan(60)
-  })
-
-  // ── Scenario: Weak Razzle hand → REFUSE ──
-  test('[2,3,4,5,6] vs Razzle → REFUSE (only 1 natural 6, no wilds)', () => {
-    const result = evaluateRefuserPosition(
-      [2, 3, 4, 5, 6], 'razzle', null, 'first', uniqueRolls, SPECIALTY_THRESHOLDS
-    )
-    // Single 6 with no wilds is very weak for Razzle
-    expect(result.calledGameAnalysis.rawStrength).toBeLessThan(30)
-    // Should prefer to refuse and hope for a better second call
-    expect(result.decision).toBe('REFUSE')
-  })
-
-  // ── Scenario: 23661 vs Razzle ──
-  test('[2,3,6,6,1] vs Razzle → strategy analysis includes Razzle detail', () => {
-    const result = evaluateRefuserPosition(
-      [2, 3, 6, 6, 1], 'razzle', null, 'first', uniqueRolls, SPECIALTY_THRESHOLDS
-    )
-    // 2 natural 6s + 1 wild 1 = 3 wild sixes total → competitive threshold
-    expect(result.calledGameAnalysis.canMake).toBe(true)
-    expect(result.calledGameAnalysis.detail).toMatch(/natural 6/)
-    expect(result.calledGameAnalysis.detail).toMatch(/wild 1/)
-  })
-
-  // ── Scenario: Can't make a kicker game ──
-  test("roll that can't make 10-4 should still return valid result", () => {
-    // [6,6,6,6,6] → 4 dice sum = 24, not 10
-    const result = evaluateRefuserPosition(
-      [6, 6, 6, 6, 6], '10-4', null, 'first', uniqueRolls, SPECIALTY_THRESHOLDS
-    )
-    expect(result.calledGameAnalysis.canMake).toBe(false)
-    expect(result.calledGameAnalysis.rawStrength).toBe(0)
-    // Should still have reasoning
-    expect(result.reasoning.length).toBeGreaterThan(0)
-  })
-
-  // ── Scenario: Strong Boss hand → ACCEPT ──
-  test('[5,5,5,5,2] vs Boss → ACCEPT (four of a kind)', () => {
-    const result = evaluateRefuserPosition(
-      [5, 5, 5, 5, 2], 'boss', null, 'first', uniqueRolls, SPECIALTY_THRESHOLDS
-    )
-    expect(result.decision).toBe('ACCEPT')
-    expect(result.calledGameAnalysis.rawStrength).toBeGreaterThan(60)
-  })
-
-  // ── Position difference ──
-  test('second refusal reasoning mentions 2nd refusal context', () => {
-    const result = evaluateRefuserPosition(
-      [2, 3, 6, 6, 1], 'razzle', null, 'second', uniqueRolls, SPECIALTY_THRESHOLDS
-    )
-    const allReasoning = result.reasoning.join(' ')
-    expect(allReasoning).toMatch(/2nd Refusal/i)
-  })
-
-  test('first refusal reasoning mentions 1st refusal context', () => {
-    const result = evaluateRefuserPosition(
-      [2, 3, 6, 6, 1], 'razzle', null, 'first', uniqueRolls, SPECIALTY_THRESHOLDS
-    )
-    const allReasoning = result.reasoning.join(' ')
-    expect(allReasoning).toMatch(/1st Refusal/i)
-  })
-
-  // ── Second call analysis populated ──
-  test('secondCallAnalysis entries have playerRawStrength', () => {
-    const result = evaluateRefuserPosition(
-      [2, 3, 6, 6, 1], 'monterey', null, 'first', uniqueRolls, SPECIALTY_THRESHOLDS
-    )
-    result.secondCallAnalysis.forEach(sc => {
-      expect(sc).toHaveProperty('playerRawStrength')
-      expect(sc).toHaveProperty('playerLabel')
-      expect(sc).toHaveProperty('overlapPct')
-      expect(sc.playerRawStrength).toBeGreaterThanOrEqual(0)
-    })
-  })
-
-  // ── REGRESSION TEST: Kicker game with null variant should auto-detect ──
-  test('[1,3,5,4,4] vs Monterey (null variant) should auto-detect Low variant', () => {
-    // This is a regression test for a bug where calling a kicker game without
-    // specifying a variant would result in rawStrength=0 instead of properly
-    // detecting the player's actual variant and evaluating it.
-    // See: https://github.com/issue/kicker-variant-detection
-    const roll = [1, 3, 5, 4, 4]
-    
-    // Verify roll makes Monterey and is Low variant
-    expect(checkGame(roll, 'monterey')).toBe(true)
-    expect(getKickerStrength(roll, 'monterey')).toBe('low')
-    
-    // Call Monterey without variant specified (null)
-    const result = evaluateRefuserPosition(
-      roll, 'monterey', null, 'first', uniqueRolls, SPECIALTY_THRESHOLDS
-    )
-    
-    // Should auto-detect as Low and evaluate correctly
-    expect(result.calledGameAnalysis.canMake).toBe(true)
-    expect(result.calledGameAnalysis.rawStrength).toBeGreaterThan(60) // Low variant with [1,4] is strong
-    expect(result.calledGameAnalysis.label).toBe('Strong hand')
-    expect(result.decision).toBe('ACCEPT') // Strong hand → accept
-    expect(result.confidence).toBeGreaterThan(80)
-  })
-
-  // ── Kicker games with all three calling methods should work ──
-  test('[4,5,6,2,3] vs SCC: explicitly Low, null (auto-detect Low), and explicitly High all work', () => {
-    const roll = [4, 5, 6, 2, 3]
-    
-    // Verify this is SCC Low
-    expect(checkGame(roll, 'ship-captain-crew')).toBe(true)
-    expect(getKickerStrength(roll, 'ship-captain-crew')).toBe('low')
-    
-    // Test 1: Explicit Low variant
-    const resultLow = evaluateRefuserPosition(
-      roll, 'ship-captain-crew', 'low', 'first', uniqueRolls, SPECIALTY_THRESHOLDS
-    )
-    expect(resultLow.calledGameAnalysis.canMake).toBe(true)
-    expect(resultLow.calledGameAnalysis.rawStrength).toBeGreaterThan(50)
-    
-    // Test 2: Null variant (should auto-detect Low)
-    const resultNull = evaluateRefuserPosition(
-      roll, 'ship-captain-crew', null, 'first', uniqueRolls, SPECIALTY_THRESHOLDS
-    )
-    expect(resultNull.calledGameAnalysis.canMake).toBe(true)
-    // Should match the Low variant strength
-    expect(resultNull.calledGameAnalysis.rawStrength).toBe(resultLow.calledGameAnalysis.rawStrength)
-    
-    // Test 3: Explicit High variant (different evaluation)
-    const resultHigh = evaluateRefuserPosition(
-      roll, 'ship-captain-crew', 'high', 'first', uniqueRolls, SPECIALTY_THRESHOLDS
-    )
-    expect(resultHigh.calledGameAnalysis.canMake).toBe(true)
-    // High and Low should have different strengths for the same roll
-    expect(resultHigh.calledGameAnalysis.rawStrength).not.toBe(resultLow.calledGameAnalysis.rawStrength)
-  })
-})
-
-/* ════════════════════════════════════════════════════════════
    10. HAMMER STRATEGY — generateHammerStrategy
    ════════════════════════════════════════════════════════════ */
 describe('generateHammerStrategy', () => {
@@ -816,36 +603,6 @@ describe('calculateRawStrength', () => {
   test('best Tres Away hand [3,3,3,3,3] → 100%', () => {
     const str = calculateRawStrength([3, 3, 3, 3, 3], 'tres-away', {})
     expect(str).toBe(100)
-  })
-})
-
-/* ════════════════════════════════════════════════════════════
-   12. RAZZLE DETAIL IN evaluateRefuserPosition
-   ════════════════════════════════════════════════════════════ */
-describe('Razzle detail string correctness', () => {
-  test('[6,6,1,1,3] detail mentions "natural 6s" and "wild 1s"', () => {
-    const result = evaluateRefuserPosition(
-      [6, 6, 1, 1, 3], 'razzle', null, 'first', uniqueRolls, SPECIALTY_THRESHOLDS
-    )
-    expect(result.calledGameAnalysis.detail).toMatch(/2 natural 6s/)
-    expect(result.calledGameAnalysis.detail).toMatch(/2 wild 1s/)
-  })
-
-  test('[1,1,1,6,2] detail: "1 natural 6s + 3 wild 1s"', () => {
-    const result = evaluateRefuserPosition(
-      [1, 1, 1, 6, 2], 'razzle', null, 'first', uniqueRolls, SPECIALTY_THRESHOLDS
-    )
-    expect(result.calledGameAnalysis.detail).toMatch(/1 natural 6/)
-    expect(result.calledGameAnalysis.detail).toMatch(/3 wild 1/)
-  })
-
-  test('[6,6,6,6,6] detail: no "wild" mentioned (0 wilds)', () => {
-    const result = evaluateRefuserPosition(
-      [6, 6, 6, 6, 6], 'razzle', null, 'first', uniqueRolls, SPECIALTY_THRESHOLDS
-    )
-    // 5 natural 6s, 0 wilds → detail should NOT mention wild
-    expect(result.calledGameAnalysis.detail).toMatch(/5 natural 6s/)
-    expect(result.calledGameAnalysis.detail).not.toMatch(/wild/)
   })
 })
 
@@ -1025,65 +782,3 @@ describe('Precision: perfect kickers have non-zero lose chance', () => {
   })
 })
 
-/* ════════════════════════════════════════════════════════════
-   15. LEGACY REFUSER STRATEGY — generateRefuserStrategy
-       (old function kept for backward compat)
-   ════════════════════════════════════════════════════════════ */
-describe('generateRefuserStrategy', () => {
-  const call = (roll, game, variant, pos, numOpp) =>
-    generateRefuserStrategy(roll, game, variant, pos, numOpp, uniqueRolls, gameOddsMap)
-
-  test('returns correct shape', () => {
-    // Use a roll that actually makes the game so we get the full shape
-    const r = call([4, 6, 6, 6, 6], '10-2', 'high', 'first', 2)
-    expect(r).toHaveProperty('decision')
-    expect(r).toHaveProperty('confidence')
-    expect(r).toHaveProperty('reason')
-    expect(r).toHaveProperty('currentStrength')
-    expect(r).toHaveProperty('flexibility')
-    expect(r).toHaveProperty('gameDifficulty')
-    expect(['ACCEPT', 'REFUSE', 'UNCERTAIN']).toContain(r.decision)
-  })
-
-  test('strong hand on easy game → ACCEPT', () => {
-    // [1,1,2,2,2] makes 10-2 low (1+1... wait let's check: 2+2=4 no)
-    // Actually, let's use a roll we know makes 10-2: [4,6,6,6,6] = 4+6=10, kicker 666 = high
-    const r = call([4, 6, 6, 6, 6], '10-2', 'high', 'first', 2)
-    expect(r.decision).toBe('ACCEPT')
-  })
-
-  test('strong hand on hard game → ACCEPT confidently', () => {
-    // [4,5,6,6,6] makes Monterey high (3+4+5), kicker [6,6]
-    const r = call([3, 4, 5, 6, 6], 'monterey', 'high', 'first', 2)
-    expect(r.decision).toBe('ACCEPT')
-    expect(r.confidence).toBeGreaterThan(50)
-  })
-
-  test('complete game → ACCEPT', () => {
-    // [6,5,4,3,2] makes SCC with kicker 3+2=5 → low variant
-    const r = call([6, 5, 4, 3, 2], 'ship-captain-crew', 'low', 'first', 2)
-    expect(r.decision).toBe('ACCEPT')
-  })
-
-  test('Razzle (no variant) → ACCEPT for strong hand', () => {
-    const r = call([1, 1, 6, 6, 6], 'razzle', null, 'first', 2)
-    expect(r.decision).toBe('ACCEPT')
-  })
-
-  test('partial match for Monterey detected', () => {
-    // [1,3,4,6,6] has 3,4 (Monterey low partial match: need 2 and 5)
-    const r = call([1, 3, 4, 6, 6], 'monterey', 'low', 'first', 2)
-    // The function should detect partial match
-    if (r.partialMatch) {
-      expect(r.partialMatch.hasPartialMatch).toBe(true)
-    }
-  })
-
-  test('second call predictions populated for non-trivial games', () => {
-    const r = call([4, 6, 1, 2, 3], '10-2', 'low', 'first', 2)
-    // Second call predictions should exist when uniqueRolls is provided
-    if (r.secondCallPredictions) {
-      expect(r.secondCallPredictions).toHaveProperty('topGame')
-    }
-  })
-})
