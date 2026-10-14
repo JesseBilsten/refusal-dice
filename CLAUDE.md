@@ -25,7 +25,8 @@ Run `npm test` and `npm run build` before calling work done. A change isn't veri
 - **Radix UI** primitives, **lucide-react** icons, **framer-motion** for animation
 - **Jest** for tests
 - Hosting: **Netlify**. Preview deploys have been used (commit `8745485`), but there's no `netlify.toml` yet; adding one is a Phase 0 task.
-- Node: `.nvmrc` pins 18 (end of life); the site currently builds on Node 25. Moving to current LTS is a Phase 0 task.
+- Node: `.nvmrc` pins **24** (LTS). Gatsby 5 supports Node 18–25.
+- CI: GitHub Actions (`.github/workflows/ci.yml`) runs `npm test`, `npm run build` and checks that regenerated `src/data` is committed, on every push to `master` and every PR.
 
 ## Layout
 

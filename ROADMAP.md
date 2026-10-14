@@ -53,7 +53,7 @@ Build it once and every later phase gets cheaper.
 - **The Practice page's email signup only does `console.log`.**
 - **`npm audit` reports 128 vulnerabilities,** mostly transitive through Gatsby 5.
 - ✅ ~~**Wrong odds feeding strategy.**~~ Fixed 2026-10-14: 10-3 was hardcoded at 53.43% (exact: 63.85%) in the odds table behind Hammer/refuser advice. Odds are now computed from the rules.
-- **Node version mismatch.** `.nvmrc` pins Node 18 (end of life); the site currently builds fine on Node 25.
+- ✅ ~~**Node version mismatch.**~~ `.nvmrc` now pins Node 24 (LTS).
 
 ---
 
@@ -74,9 +74,9 @@ Build it once and every later phase gets cheaper.
    - `src/strategy/`: the current recommendation logic, moved as-is for now.
    - Engine code has **no React, no DOM, no Gatsby** so a server can import it later. Use TypeScript for the engine (see `CLAUDE.md`).
    - Seedable RNG passed in (never `Math.random()` inside the engine) so games are replayable and testable.
-4. **Node version.** Move `.nvmrc` to the current LTS and verify Gatsby builds on it.
+4. **Node version.** ✅ _`.nvmrc` → 24 (LTS), verified in CI._
 5. **Deploys.** Confirm Netlify builds from `master` with preview deploys on PRs; add a `netlify.toml` so the setup lives in the repo.
-6. **CI.** GitHub Action running tests + build on every PR.
+6. **CI.** ✅ _GitHub Actions: tests, build, and generated-data check on every push/PR._
 
 **Done when:** the engine can play a full scripted game in a Jest test, every page still works, and nav has no dead links.
 
