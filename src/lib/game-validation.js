@@ -418,14 +418,24 @@ const DEFAULT_DAMPENING = 0.5
 const STRENGTH_DATA_VERSION = 6
 
 // Game odds map - probability of making a valid hand for each game
+// Exact single-roll odds (%) for each kicker game, counted with checkGame over
+// all 7,776 ordered rolls so they can never drift from the rules.
+const KICKER_GAME_IDS = ['10-2', '10-3', '10-4', 'ship-captain-crew', 'monterey', 'vegas', 'pairs']
+const SINGLE_ROLL_ODDS = (() => {
+  const counts = Object.fromEntries(KICKER_GAME_IDS.map(id => [id, 0]))
+  for (let i = 0; i < 7776; i++) {
+    const roll = [0, 1, 2, 3, 4].map(d => (Math.floor(i / Math.pow(6, d)) % 6) + 1)
+    KICKER_GAME_IDS.forEach(id => {
+      if (checkGame(roll, id)) counts[id]++
+    })
+  }
+  return Object.fromEntries(
+    KICKER_GAME_IDS.map(id => [id, Math.round((counts[id] / 7776) * 10000) / 100])
+  )
+})()
+
 const gameOddsMap = {
-  '10-2': 49.07,
-  '10-3': 53.43,
-  '10-4': 22.25,
-  'ship-captain-crew': 31.64,
-  'monterey': 25.46,
-  'vegas': 32.41,
-  'pairs': 29.01,
+  ...SINGLE_ROLL_ODDS,
   'razzle': 95.06,  // RAZZLE_ODDS
   'boss': 49.92,    // BOSS_ODDS (Pair or better)
   'tres-away': 89.68 // TRES_AWAY_ODDS
@@ -862,15 +872,9 @@ const calculateNormalizedStrength = (rawStrength, gameOdds, dampeningExponent = 
  */
 const calculateKickerGameTieProbability = (rawStrength, game, handDetails = {}) => {
   // Base probability of making the hand in 1 roll
-  const singleRollOdds = {
-    '10-2': 0.4907,           // 49.07%
-    '10-3': 0.5343,           // 53.43%
-    '10-4': 0.2225,           // 22.25%
-    'ship-captain-crew': 0.3164,  // 31.64% (has 1,2,3 or 4,5,6)
-    'monterey': 0.2546,       // 25.46% (has 2,3,4 or 3,4,5 or 4,5,6)
-    'vegas': 0.3241,          // 32.41% (has 7 or 11)
-    'pairs': 0.2901           // 29.01% (has at least 1 pair)
-  }
+  const singleRollOdds = Object.fromEntries(
+    Object.entries(SINGLE_ROLL_ODDS).map(([id, pct]) => [id, pct / 100])
+  )
   
   // With partial keepers over 3 rolls, probability increases
   // Improvement factor accounts for keeper rules
@@ -2577,6 +2581,7 @@ if (typeof module !== 'undefined' && module.exports) {
     evaluateRefuserPosition,
     DEFAULT_DAMPENING,
     STRENGTH_DATA_VERSION,
+    SINGLE_ROLL_ODDS,
     gameOddsMap
   }
 }
@@ -2608,5 +2613,6 @@ export {
   evaluateRefuserPosition,
   DEFAULT_DAMPENING,
   STRENGTH_DATA_VERSION,
+  SINGLE_ROLL_ODDS,
   gameOddsMap
 }

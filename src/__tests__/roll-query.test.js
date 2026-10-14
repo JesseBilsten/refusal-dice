@@ -8,7 +8,7 @@
  * Run:  npm test
  */
 
-const { checkGame } = require('../lib/game-validation.js')
+const { checkGame, SINGLE_ROLL_ODDS } = require('../lib/game-validation.js')
 const {
   PRESETS,
   arrangements,
@@ -75,6 +75,20 @@ describe('game presets agree with checkGame on all 7,776 rolls', () => {
       })
       expect(result.matched).toBe(siteCount)
     })
+  })
+})
+
+describe("strategy odds table agrees with the site's rules", () => {
+  // Regression: 10-3 was hardcoded as 53.43% while the rules give 63.85%.
+  PRESETS.filter((p) => p.gameId).forEach((preset) => {
+    test(preset.label, () => {
+      const exact = Math.round(evaluateQuery(preset.query).probability * 10000) / 100
+      expect(SINGLE_ROLL_ODDS[preset.gameId]).toBe(exact)
+    })
+  })
+
+  test('10-3 is 63.85%', () => {
+    expect(SINGLE_ROLL_ODDS['10-3']).toBe(63.85)
   })
 })
 

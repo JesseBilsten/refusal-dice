@@ -9,14 +9,28 @@ const {
   calculateNormalizedStrength,
   calculateOffensiveStrength,
   calculateDefensiveStrength,
-  STRENGTH_DATA_VERSION
+  STRENGTH_DATA_VERSION,
+  SINGLE_ROLL_ODDS
 } = require('../lib/game-validation');
 
 // Parse command line arguments for Monte Carlo iterations
 const args = process.argv.slice(2);
 const iterations = args[0] ? parseInt(args[0]) : 10000;
 
-console.log(`Starting unique rolls generation with ${iterations} Monte Carlo iterations...\n`);
+// Seeded PRNG (mulberry32) so regenerating produces identical output.
+// Change SEED only when you intend to resample.
+const SEED = 20261014;
+const random = (() => {
+  let a = SEED;
+  return () => {
+    a = (a + 0x6d2b79f5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+})();
+
+console.log(`Starting unique rolls generation with ${iterations} Monte Carlo iterations (seed ${SEED})...\n`);
 
 // Generate all possible dice rolls
 const diceRolls = [];
@@ -79,7 +93,7 @@ const simulateTresAwayGame = (initialRoll, strategy) => {
     
     // If dice remain, roll them
     if (remainingDice.length > 0) {
-      remainingDice = remainingDice.map(() => Math.floor(Math.random() * 6) + 1);
+      remainingDice = remainingDice.map(() => Math.floor(random() * 6) + 1);
     }
   }
   
@@ -195,7 +209,7 @@ strategies.forEach(strategy => {
   // Run simulations on a sample of rolls
   const sampleSize = Math.min(iterations, diceRolls.length);
   for (let i = 0; i < sampleSize; i++) {
-    const roll = diceRolls[Math.floor(Math.random() * diceRolls.length)];
+    const roll = diceRolls[Math.floor(random() * diceRolls.length)];
     const score = simulateTresAwayGame(roll, strategy);
     totalScore += score;
   }
@@ -242,7 +256,7 @@ const simulateRazzleGame = (initialRoll) => {
     
     // Reroll the non-1/6 dice for next iteration
     if (rollNum < 2) { // Don't roll after the 3rd roll
-      currentRoll = others.map(() => Math.floor(Math.random() * 6) + 1);
+      currentRoll = others.map(() => Math.floor(random() * 6) + 1);
     }
   }
   
@@ -262,7 +276,7 @@ let totalMatching = 0;
 // Run simulations on all possible initial rolls
 const razzleSampleSize = Math.min(iterations, diceRolls.length);
 for (let i = 0; i < razzleSampleSize; i++) {
-  const roll = diceRolls[Math.floor(Math.random() * diceRolls.length)];
+  const roll = diceRolls[Math.floor(random() * diceRolls.length)];
   const result = simulateRazzleGame(roll);
   totalOnes += result.ones;
   totalSixes += result.sixes;
@@ -390,15 +404,9 @@ console.log(`✓ Razzle strategic viability odds (${RAZZLE_EXPECTED_TOTAL}+ matc
 // GAME ODDS MAP
 // ==============================================================================
 
-// Load existing odds from 5dice.json
+// Kicker-game odds are computed exactly from checkGame in game-validation.js
 let gameOddsMap = {
-  '10-2': 49.07,
-  '10-3': 53.43,
-  '10-4': 22.25,
-  'ship-captain-crew': 31.64,
-  'monterey': 25.46,
-  'vegas': 32.41,
-  'pairs': 29.01,
+  ...SINGLE_ROLL_ODDS,
   'razzle': RAZZLE_ODDS,
   'boss': BOSS_ODDS,
   'tres-away': TRES_AWAY_ODDS
@@ -559,6 +567,7 @@ const outputData = {
   version: STRENGTH_DATA_VERSION,
   generatedAt: new Date().toISOString(),
   monteCarloIterations: iterations,
+  seed: SEED,
   optimalTresAwayStrategy: bestStrategyName,
   thresholds: {
     bossMedian: BOSS_MEDIAN,
