@@ -1,5 +1,5 @@
 import { DiceSource, rollDice } from '../dice-source'
-import { isKickerGame } from '../rules/kicker-games'
+import { isKickerGame, keepsKickers } from '../rules/kicker-games'
 import { resolveKickerCycle } from '../rules/resolve'
 import {
   bestHands,
@@ -588,6 +588,10 @@ export function applyAction(state: GameState, action: Action): GameState {
 
         const keep = action.keep
         if (!validIndices(keep)) throw new EngineError('Keep must be distinct die positions 0–4')
+        const call = phase.call
+        if (isKickerGame(call.game) && keepsKickers(keep.map((i) => state.dice[action.player][i]), call.game)) {
+          throw new EngineError('Kickers are rolled together: keep only the dice that make the game, or stand')
+        }
         const rolled = rollPositions(state, action.player, [0, 1, 2, 3, 4].filter((i) => !keep.includes(i)))
         const dice = rolled.dice[action.player]
 

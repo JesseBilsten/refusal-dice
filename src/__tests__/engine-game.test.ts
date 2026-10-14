@@ -10,6 +10,8 @@ import {
   GameState,
   KICKER_GAMES,
   SPECIALTY_GAMES,
+  isKickerGame,
+  keepsKickers,
   activeSeats,
   applyAction,
   createGame,
@@ -204,6 +206,19 @@ describe('playing and scoring (§3.1, §4)', () => {
     expect(end.phase).toMatchObject({ kind: 'roundOver', loser: 'c' })
   })
 
+  test('kickers are rolled together: once the kept dice make the game, every other die is re-rolled', () => {
+    // a has 4,6 (10-2) + 6,6,5: keeping a kicker is not allowed
+    const g = start([1, 2, 3])
+    expect(() => applyAction(g, { type: 'reroll', player: 'a', keep: [0, 1, 2] })).toThrow(/rolled together/)
+    expect(() => applyAction(g, { type: 'reroll', player: 'a', keep: [0, 1, 2, 3, 4] })).toThrow(/rolled together/)
+    // keeping just the game dice re-rolls all three kickers
+    const next = applyAction(g, { type: 'reroll', player: 'a', keep: [0, 1] })
+    expect(dice(next, 'a')).toEqual([4, 6, 1, 2, 3])
+    // breaking up the game is still allowed, and so is keeping dice toward a game you haven't made
+    expect(() => applyAction(g, { type: 'reroll', player: 'a', keep: [1, 2] })).not.toThrow()
+    expect(() => applyAction(g, { type: 'reroll', player: 'c', keep: [3, 0] })).not.toThrow()
+  })
+
   test('a tie for worst kicker replays the same call (3+ players)', () => {
     // c re-rolls to 4,6 + 1,1,2 = 4, tying b's 4
     const g = play(
@@ -328,9 +343,12 @@ describe('random games always finish and keep invariants', () => {
       case 'play': {
         const rolling = g.phase.rolling
         const id = pick(Object.keys(rolling).filter((p) => !rolling[p].done))
-        return r() < 0.4
-          ? { type: 'stand', player: id }
-          : { type: 'reroll', player: id, keep: [0, 1, 2, 3, 4].filter(() => r() < 0.5) }
+        if (r() < 0.4) return { type: 'stand', player: id }
+        let keep = [0, 1, 2, 3, 4].filter(() => r() < 0.5)
+        const game = g.phase.call.game
+        // Kickers are rolled together: a keep that makes the game can't hold extra dice
+        if (isKickerGame(game) && keepsKickers(keep.map((i) => g.dice[id][i]), game)) keep = []
+        return { type: 'reroll', player: id, keep }
       }
       case 'tresAway': {
         const { turn, hands } = g.phase

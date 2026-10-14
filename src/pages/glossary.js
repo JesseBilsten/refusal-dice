@@ -107,6 +107,7 @@ const GLOSSARY_TERMS = [
         </p>
         <p className="text-sm text-muted-foreground">
           <strong>High vs Low:</strong> Kickers are added up. In "High" games the higher total wins; in "Low" games the lower total wins.<br/>
+          <strong>Rolled together:</strong> Once the dice you keep make the game, all your kickers are re-rolled at once. You can't keep one kicker and re-roll another.<br/>
           <strong>See also:</strong> <Link to="/games" className="text-primary hover:underline">Games</Link>,{' '}
           <Link to="/strategy-assistant" className="text-primary hover:underline">Strategy Assistant</Link>
         </p>

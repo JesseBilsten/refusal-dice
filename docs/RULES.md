@@ -42,6 +42,8 @@ Each rule is tagged by where it came from:
 - **Everyone rolls at the same time** (not in turn order). [confirmed]
 - **Dice are visible to everyone** from the start of play onward; only the initial roll is hidden (until play starts). [confirmed]
 - A player tries to **make the game** and then get kickers that beat the worst kicker at the table (e.g. in 10-3, roll until you have the game and a better kicker than the worst player). [confirmed]
+- **Kickers are rolled together.** Once the dice a player keeps make the game, only those dice stay on the table: the player re-rolls **all** the kickers or stands. They can't keep one kicker and re-roll another (e.g. with 10-3 made by 2+4+4 and kickers 6+1, they re-roll both the 6 and the 1). This is what makes 10-2 interesting: its three kickers are re-rolled as a block, so a total near the top or bottom of the range is very hard to beat. [confirmed]
+  - The engine rejects a keep that holds a set making the game plus extra dice. Breaking up a made game, or keeping dice toward a game not yet made, is still allowed.
 - **Kickers** are the dice not used to make the game, scored as an **additive total**:
   - **High:** higher total wins; **Low:** lower total wins.
   - Example: kickers 5+6 = 11 beat 5+5 = 10 in High. [confirmed]

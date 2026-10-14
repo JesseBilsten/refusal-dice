@@ -145,8 +145,10 @@ const Tutorial = () => {
       )
       return
     }
+    // Kickers are rolled together: picking one picks them all up
+    const kickers = mine.made ? mine.hand.kickerDice : [i]
     setFeedback(null)
-    setSelected((s) => (s.includes(i) ? s.filter((j) => j !== i) : [...s, i]))
+    setSelected((s) => (s.includes(i) ? [] : kickers))
   }
 
   const rollMine = () => {
@@ -305,13 +307,20 @@ const Tutorial = () => {
       ),
     },
     ava: {
-      title: 'Ava keeps her 10 and re-rolls a kicker',
+      title: 'Ava keeps her 10 and re-rolls her kickers',
       body: (
-        <p>
-          After each roll you <strong>keep</strong> any dice and re-roll the
-          rest. Ava keeps 2+4+4 and re-rolls her 1. She gets a 6: kickers 6+6 =
-          12, the best possible. She stops rolling.
-        </p>
+        <>
+          <p>
+            After each roll you <strong>keep</strong> dice and re-roll the rest.
+            Once the dice you keep make the game, only those stay on the table:
+            your <strong>kickers are always re-rolled together</strong>. You
+            can't keep a good kicker and re-roll a bad one.
+          </p>
+          <p>
+            Ava keeps 2+4+4 and re-rolls both kickers, the 6 and the 1. She gets
+            6+6 = 12, the best possible, and stops rolling.
+          </p>
+        </>
       ),
       action: (
         <Button
@@ -329,8 +338,8 @@ const Tutorial = () => {
       body: (
         <>
           <p>
-            Ben keeps 6+3+1 and re-rolls his 2. He gets a 4: kickers{' '}
-            {ben.text.split('kickers ')[1]}. He stops.
+            Ben keeps 6+3+1 and re-rolls both kickers, the 6 and the 2. He gets
+            kickers {ben.text.split('kickers ')[1]}, and stops.
           </p>
           <p>
             Now look at the table: your kickers (10) <strong>tie</strong> Ben's
@@ -342,17 +351,17 @@ const Tutorial = () => {
       action: <Button onClick={() => setStep('yourRoll')}>Your turn</Button>,
     },
     yourRoll: {
-      title: 'Re-roll a kicker',
+      title: 'Re-roll your kickers',
       body: (
         <p>
-          Tap one or both of your 5s to pick them up, then roll. Keep your 1, 3
-          and 6: they make your 10, and without them you'd be chasing the game
-          again.
+          Tap your 5s to pick up both kickers, then roll. Your 1, 3 and 6 stay
+          on the table: they make your 10. You can't keep one 5, because kickers
+          are rolled together.
         </p>
       ),
       action: (
         <Button onClick={rollMine} disabled={!selected.length}>
-          Roll {selected.length || ''} {selected.length === 1 ? 'die' : 'dice'}
+          Roll your kickers
         </Button>
       ),
     },
@@ -394,6 +403,11 @@ const Tutorial = () => {
             <li>
               The Hammer can <T to="bark">bark</T> instead of calling: the
               Hammer passes left and everyone re-rolls.
+            </li>
+            <li>
+              10-2 leaves <strong>three</strong> kickers, all re-rolled
+              together, so a total near the top or bottom of the range is very
+              hard to beat.
             </li>
             <li>Tres Away, Boss and Razzle each play a little differently.</li>
           </ul>

@@ -24,21 +24,37 @@ const FACE_PLACEMENT = {
   6: 'rotateY(180deg)',
 }
 
-const Cube = ({ value, size, rollId }) => {
-  // Each roll adds whole turns, so the cube tumbles but lands on `value`
+const cubeTransform = (value, size, rollId) => {
+  // Each roll adds two whole turns, so the cube tumbles but lands on `value`
   const [x, y] = FACE_ROTATION[value]
-  const turns = 360 * (2 * rollId)
+  const turns = 720 * rollId
+  return `translateZ(${-size / 2}px) rotateX(${x + turns}deg) rotateY(${y + turns}deg)`
+}
+
+const Cube = ({ value, size, rollId, bouncing }) => {
+  const target = cubeTransform(value, size, rollId)
+  // A cube that appears already rolled (the first roll, or 3D just switched
+  // on) starts a roll behind and tumbles into place instead of popping in
+  const [shown, setShown] = useState(() =>
+    rollId > 0 ? cubeTransform(value, size, rollId - 1) : target
+  )
+  useEffect(() => {
+    let inner
+    const outer = requestAnimationFrame(() => {
+      inner = requestAnimationFrame(() => setShown(target))
+    })
+    return () => {
+      cancelAnimationFrame(outer)
+      cancelAnimationFrame(inner)
+    }
+  }, [target])
+
   return (
     <div
-      className="dice-scene"
+      className={cn('dice-scene', bouncing && 'dice-bounce')}
       style={{ width: size, height: size, perspective: size * 6 }}
     >
-      <div
-        className="dice-cube"
-        style={{
-          transform: `translateZ(${-size / 2}px) rotateX(${x + turns}deg) rotateY(${y + turns}deg)`,
-        }}
-      >
+      <div className="dice-cube" style={{ transform: shown }}>
         {[1, 2, 3, 4, 5, 6].map((face) => (
           <div
             key={face}
@@ -77,23 +93,24 @@ const Die = ({
 }) => {
   const [prefs] = useDicePrefs()
   const reduced = usePrefersReducedMotion()
-  const [wobble, setWobble] = useState(false)
+  const [rolling, setRolling] = useState(false)
 
+  // Flat dice wobble; 3D dice bounce while they tumble
   useEffect(() => {
-    if (!rollId || reduced || prefs.dice3d) return
-    setWobble(true)
-    const t = setTimeout(() => setWobble(false), 500)
+    if (!rollId || reduced) return
+    setRolling(true)
+    const t = setTimeout(() => setRolling(false), 950)
     return () => clearTimeout(t)
-  }, [rollId, reduced, prefs.dice3d])
+  }, [rollId, reduced])
 
   const show3d = prefs.dice3d && !reduced && value
   const face = show3d ? (
-    <Cube value={value} size={size} rollId={rollId} />
+    <Cube value={value} size={size} rollId={rollId} bouncing={rolling} />
   ) : (
     <DieFace
       value={value}
       size={size}
-      className={wobble ? 'dice-wobble' : undefined}
+      className={rolling ? 'dice-wobble' : undefined}
     />
   )
 

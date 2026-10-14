@@ -14,10 +14,7 @@ const kickers = (g: GameState, id: string) => {
   return hand.made ? hand.kickerTotal : null
 }
 
-test.each([
-  ['one 5', [0, 1, 2, 3]],
-  ['both 5s', [0, 1, 2]],
-])('re-rolling %s beats Ben, who takes the pencil', (_, keep) => {
+test('everyone re-rolls both kickers; you beat Ben, who takes the pencil', () => {
   let g = newTutorialGame()
   g = [
     { type: 'call', player: 'you', call: CALL },
@@ -35,8 +32,12 @@ test.each([
     12, 10, 10,
   ])
 
-  g = applyAction(g, { type: 'reroll', player: 'you', keep })
-  expect(kickers(g, 'you')).toBeGreaterThan(10)
+  // You can't keep one 5: kickers are rolled together
+  expect(() =>
+    applyAction(g, { type: 'reroll', player: 'you', keep: [0, 1, 2, 3] })
+  ).toThrow(/rolled together/)
+  g = applyAction(g, { type: 'reroll', player: 'you', keep: [0, 1, 2] })
+  expect(kickers(g, 'you')).toBe(11)
   g = applyAction(g, { type: 'stand', player: 'you' })
   expect(g.phase).toMatchObject({ kind: 'roundOver', loser: 'ben' })
 })

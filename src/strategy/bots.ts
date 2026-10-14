@@ -129,10 +129,29 @@ function playAction(state: GameState, player: PlayerId): Action {
   if (!hand.made) return { type: 'reroll', player, keep: bestKeepToMake(dice, game, rerolls) }
   if (safeInPlay(state, player)) return { type: 'stand', player }
 
-  // Made it but not safe yet: re-roll weak kickers
-  const weak = hand.kickerDice.filter((i) => (variant === 'high' ? dice[i] <= 3 : dice[i] >= 4))
-  if (!weak.length) return { type: 'stand', player }
-  return { type: 'reroll', player, keep: [0, 1, 2, 3, 4].filter((i) => !weak.includes(i)) }
+  // Made it but not safe yet. Kickers are rolled together, so the choice is
+  // to stand or re-roll every kicker: re-roll when the kickers are worse than
+  // a fresh roll would average, or when they're the worst made hand in sight
+  const n = hand.kickerDice.length
+  const average = 3.5 * n
+  const belowAverage = variant === 'high' ? hand.kickerTotal < average : hand.kickerTotal > average
+  if (belowAverage || worstMadeHand(state, player)) return { type: 'reroll', player, keep: hand.gameDice }
+  return { type: 'stand', player }
+}
+
+/** Is `player`'s made hand the worst (or tied worst) among players who made the game? */
+function worstMadeHand(state: GameState, player: PlayerId): boolean {
+  const phase = state.phase
+  if (phase.kind !== 'play' || !isKickerGame(phase.call.game)) return false
+  const game = phase.call.game
+  const variant = phase.call.variant!
+  const totals = Object.keys(phase.rolling)
+    .map((id) => ({ id, hand: evaluateKickerHand(state.dice[id], game, variant) }))
+    .filter((e) => e.hand.made)
+    .map((e) => ({ id: e.id, total: e.hand.made ? e.hand.kickerTotal : 0 }))
+  const mine = totals.find((t) => t.id === player)
+  if (!mine || totals.length < 2) return false
+  return totals.every((t) => (variant === 'high' ? mine.total <= t.total : mine.total >= t.total))
 }
 
 /** The action the bot takes for whoever must act next. */

@@ -106,6 +106,18 @@ export function evaluateKickerHand(dice: Dice, game: KickerGameId, variant: Vari
 export const makesGame = (dice: Dice, game: KickerGameId): boolean =>
   evaluateKickerHand(dice, game, 'high').made
 
+/**
+ * Kickers are rolled together (docs/RULES.md §3.1): once the dice a player
+ * keeps make the game, every other die must be re-rolled. True when `kept`
+ * holds a set that makes the game plus extra dice, which would be keeping
+ * a kicker.
+ */
+export const keepsKickers = (kept: Dice, game: KickerGameId): boolean =>
+  kept.length > SHAPES[game].size && makesGame(kept, game)
+
+/** How many dice make the game (the rest are kickers) */
+export const gameSize = (game: KickerGameId): number => SHAPES[game].size
+
 /** Positive when kicker total `a` beats `b` for the variant, 0 when equal. */
 export const compareKickerTotals = (a: number, b: number, variant: Variant): number =>
   variant === 'high' ? a - b : b - a

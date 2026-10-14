@@ -22,13 +22,13 @@ const GAME_CONTENT = {
   '10-2': {
     subtitle: 'high or low',
     description: '2 dice add up to 10 and the remaining 3 dice are either high or low.',
-    partialKeep: 'You can keep dice that sum to 10 and re-roll the rest to improve your kickers. This multi-roll strategy significantly improves your odds.',
+    partialKeep: 'Keep the two dice that make 10. Kickers are rolled together, so to improve them you re-roll all three at once. With three kickers, totals near the top or bottom of the range are very hard to beat.',
   },
   '10-3': {
     subtitle: 'high or low',
     description: '3 dice add up to 10 and the remaining 2 dice are either high or low.',
     aka: 'Frankie',
-    partialKeep: 'You can keep dice that sum to 10 and re-roll the rest to improve your kickers. This multi-roll strategy significantly improves your odds.',
+    partialKeep: 'Keep the three dice that make 10. Kickers are rolled together, so to improve them you re-roll both at once.',
   },
   '10-4': {
     subtitle: 'high or low',

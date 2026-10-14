@@ -210,6 +210,10 @@ const RulesPage = () => (
               <Link to="/glossary#kicker" className="text-primary hover:underline">kickers</Link>: the dice
               that aren't part of the game.
             </li>
+            <li>
+              <strong>Kickers are rolled together.</strong> Once the dice you keep make the game, only those
+              stay on the table: re-roll every kicker or none. You can't keep a 6 and re-roll a 1.
+            </li>
             <li>Watch the table: you only need to beat the worst hand.</li>
           </ul>
 

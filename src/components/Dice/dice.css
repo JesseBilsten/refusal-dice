@@ -17,6 +17,35 @@
   backface-visibility: hidden;
 }
 
+/* 3D dice: hop and settle while the cube tumbles */
+@keyframes dice-bounce {
+  0% {
+    transform: translateY(0);
+  }
+  15% {
+    transform: translateY(-70%);
+  }
+  38% {
+    transform: translateY(0);
+  }
+  55% {
+    transform: translateY(-25%);
+  }
+  72% {
+    transform: translateY(0);
+  }
+  85% {
+    transform: translateY(-7%);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.dice-bounce {
+  animation: dice-bounce 0.9s cubic-bezier(0.3, 0.6, 0.5, 1);
+}
+
 /* Flat dice: a short wobble when rolled */
 @keyframes dice-wobble {
   0% {
@@ -41,7 +70,8 @@
   .dice-cube {
     transition: none;
   }
-  .dice-wobble {
+  .dice-wobble,
+  .dice-bounce {
     animation: none;
   }
 }

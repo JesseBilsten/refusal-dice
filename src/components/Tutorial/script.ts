@@ -14,8 +14,9 @@ export const PLAYERS = [
 
 // Deal (seat order): you 1-3-6-5-5 · Ava 2-4-4-6-1 · Ben 6-6-2-3-1
 const DEAL = [1, 3, 6, 5, 5, 2, 4, 4, 6, 1, 6, 6, 2, 3, 1]
-// Then: Ava's re-roll, Ben's re-roll, and plenty of 6s for yours
-const LATER = [6, 4, 6, 6, 6, 6, 6]
+// Then each player re-rolls both kickers (kickers are rolled together):
+// Ava 6+6, Ben 6+4, you 6+5, then spare 6s
+const LATER = [6, 6, 6, 4, 6, 5, 6, 6, 6]
 
 export const CALL: Call = { game: '10-3', variant: 'high' }
 
@@ -28,10 +29,10 @@ export const newTutorialGame = () =>
 
 /** The bots' moves, in order */
 export const AVA_ROLLS: Action[] = [
-  { type: 'reroll', player: 'ava', keep: [0, 1, 2, 3] },
+  { type: 'reroll', player: 'ava', keep: [0, 1, 2] },
   { type: 'stand', player: 'ava' },
 ]
 export const BEN_ROLLS: Action[] = [
-  { type: 'reroll', player: 'ben', keep: [0, 1, 3, 4] },
+  { type: 'reroll', player: 'ben', keep: [0, 3, 4] },
   { type: 'stand', player: 'ben' },
 ]
