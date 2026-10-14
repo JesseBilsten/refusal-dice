@@ -24,7 +24,7 @@ Run `npm test` and `npm run build` before calling work done. A change isn't veri
 - **Tailwind CSS 3** + **shadcn/ui** (JavaScript variant, `components.json`; generated components live in `src/components/ui/`)
 - **Radix UI** primitives, **lucide-react** icons, **framer-motion** for animation
 - **Jest** for tests
-- Hosting: **Netlify**. Preview deploys have been used (commit `8745485`), but there's no `netlify.toml` yet; adding one is a Phase 0 task.
+- Hosting: **Netlify**, configured by `netlify.toml` (build `npm run build`, publish `public`; Gatsby's Netlify adapter is installed automatically).
 - Node: `.nvmrc` pins **24** (LTS). Gatsby 5 supports Node 18–25.
 - CI: GitHub Actions (`.github/workflows/ci.yml`) runs `npm test`, `npm run build` and checks that regenerated `src/data` is committed, on every push to `master` and every PR.
 
@@ -96,7 +96,7 @@ src/strategy/   Recommendation and odds logic (consumes engine/)
 
 ## Game domain cheat sheet
 
-Full rules: `src/pages/rules.js`; terms: `src/pages/glossary.js`.
+**Authoritative rules: [`docs/RULES.md`](docs/RULES.md)** (the engine and its tests follow it; player-facing pages must agree with it). Player-facing copy: `src/pages/rules.js`, `src/pages/games.js`, `src/pages/glossary.js`.
 
 - **Players and setup:** 2–8 players, 5 dice each.
 - **Piddle:** everyone rolls one die; the highest roll gets the **Hammer**.

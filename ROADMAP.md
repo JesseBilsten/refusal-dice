@@ -70,20 +70,27 @@ Build it once and every later phase gets cheaper.
 2. **One game list.** ✅ _done 2026-10-14. `games-config.js` is now CommonJS so `gatsby-node.js` and the generators share it. `game-validation.js` still has an inline copy until step 3 moves the rules into `engine/`._
 3. **Extract the engine** from `game-validation.js`:
    - `src/engine/rules`: playable-game checks, kicker/hand comparison, tie rules. Pure functions.
-   - `src/engine/round`: an explicit state machine (states + actions + reducer) for a full game: piddle, Hammer, call, bark, 1st/2nd refusal, second call (must be a *different game*, not just a variant), reveal, loser takes a pencil and the Hammer, ties (3+ players replay; 2 players no pencil), 3 pencils = out, last player standing wins.
+   - `src/engine/round`: an explicit state machine (states + actions + reducer) for a full game, implementing **[docs/RULES.md](docs/RULES.md)** exactly. That's the authoritative rules spec, and engine tests are written against it. Note the per-game play procedures: kicker games use 3 simultaneous rolls; Tres Away uses caller-paced put-out cycles; Boss uses a hidden Boss re-roll then "come up" / "don't come up".
    - `src/strategy/`: the current recommendation logic, moved as-is for now.
    - Engine code has **no React, no DOM, no Gatsby** so a server can import it later. Use TypeScript for the engine (see `CLAUDE.md`).
    - Seedable RNG passed in (never `Math.random()` inside the engine) so games are replayable and testable.
 4. **Node version.** ✅ _`.nvmrc` → 24 (LTS), verified in CI._
-5. **Deploys.** Confirm Netlify builds from `master` with preview deploys on PRs; add a `netlify.toml` so the setup lives in the repo.
+5. **Deploys.** ✅ _`netlify.toml` added. Still to confirm in the Netlify dashboard: the site builds from `master` with deploy previews on PRs._
 6. **CI.** ✅ _GitHub Actions: tests, build, and generated-data check on every push/PR._
 
 **Done when:** the engine can play a full scripted game in a Jest test, every page still works, and nav has no dead links.
+
+### House rules system (after the engine; before Phase 2's odds tables)
+
+- **Owner requirement:** house rules are selectable site-wide (header or user preferences), and changing them recalculates every probability on the site. See `docs/RULES.md` section 5.
+- **Engine and data:** the engine takes a `HouseRules` object; every rule and odds function is parameterized by it. Precomputed tables are generated for the default rules, and other rule sets are computed on demand (or a small set of common presets is precomputed).
+- **Game detail pages** explain common variations and show the odds for each, e.g. a Monterey table that only requires keeping a 3 or 4.
 
 ## Phase 1 — Learn fast (new players)
 
 **Goal:** someone who has never played can play a round with friends after ~5 minutes on the site.
 
+0. **Teach re-rolling (highest priority).** The Rules page currently goes from the call straight to "everyone reveals their dice" and never explains the up-to-3 rolls with keepers, or the different procedures for Tres Away and Boss (see `docs/RULES.md` section 3). New players can't learn the game from it as written.
 1. **Interactive first round.** A guided tutorial on the engine with scripted dice, explaining each step in context instead of asking people to read the rules first.
 2. **"What can I call?" as the centerpiece.** Tap your five dice and see the playable games and hand strength. The logic exists in `games.js` and the Strategy Assistant; give it a fast, mobile-first screen and make it prominent on the homepage.
 3. **Inline jargon.** Use the existing `Term` component everywhere: Hammer, kicker, pencil, bark, piddle, parity, refusal.
@@ -117,7 +124,8 @@ Build it once and every later phase gets cheaper.
 3. **Decision trainer.** Show a situation, take the player's decision, then reveal the odds of every option and the trade-off in plain words. Example: "Refusing costs you 4% now but dodges a 30% second-call risk."
 4. **Player-count aware everywhere** (2–8), especially the Strategy Assistant.
 5. **Personal stats** in `localStorage`: accuracy by decision type, and weak spots to drill.
-6. Retire or re-base the heuristic thresholds in `strategy/` once the computed odds exist. Keep the heuristics only as the "novice/solid" bot policies.
+6. **Fix the refuser model's assumption.** `REFUSER_STRATEGY.md` and `evaluateRefuserPosition` assume a player who refuses must throw away their roll and re-roll. Per the owner, nobody is forced to re-roll: a refuser who has the game keeps it (`docs/RULES.md` section 2.3). Re-base the refusal advice on the correct rule.
+7. Retire or re-base the heuristic thresholds in `strategy/` once the computed odds exist. Keep the heuristics only as the "novice/solid" bot policies.
 
 **Measure:** trainer sessions per returning user; accuracy improvement over time.
 
@@ -183,4 +191,6 @@ Build it once and every later phase gets cheaper.
 | 2026-10-14 | Defer the framework choice (Gatsby vs Next/Vite) to the start of Phase 4 | Engine is framework-free either way |
 | 2026-10-14 | Supabase + Resend as the default plan for online play | Revisit at Phase 4 |
 | 2026-10-14 | Commit directly to `master` while there's a single developer | Switch to PRs when collaborators join |
+| 2026-10-14 | `docs/RULES.md` is the authoritative rules spec | Engine tests are written against it; player-facing pages must agree with it |
+| 2026-10-14 | House rules are a site-wide setting that recalculates all odds | Owner requirement |
 | 2026-10-14 | Odds Lab ships ahead of Phase 0 | Self-contained (`roll-query.js` is pure and tested), so it doesn't block or depend on the engine split |

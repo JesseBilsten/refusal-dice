@@ -1,0 +1,11 @@
+# Netlify build settings. Node version comes from .nvmrc.
+# Gatsby 5.12+ installs gatsby-adapter-netlify automatically on Netlify,
+# which sets caching headers and routing, so none are configured here.
+
+[build]
+  command = "npm run build"
+  publish = "public"
+
+[build.environment]
+  # Gatsby telemetry off in CI builds
+  GATSBY_TELEMETRY_DISABLED = "1"
