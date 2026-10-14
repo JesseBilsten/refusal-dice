@@ -1236,17 +1236,7 @@ const analyzeGameDifficulty = (game, rawStrength, kicker, variant) => {
   }
   
   // Base hand odds
-  const singleRollOdds = {
-    '10-2': 0.4907,
-    '10-3': 0.5343,
-    '10-4': 0.2225,
-    'ship-captain-crew': 0.3164,
-    'monterey': 0.2546,
-    'vegas': 0.3241,
-    'pairs': 0.2901
-  }
-  
-  const baseOdds = singleRollOdds[game] || 0.3
+  const baseOdds = (SINGLE_ROLL_ODDS[game] || 30) / 100
   const gameDifficulty = baseOdds > 0.45 ? 'easy' : baseOdds > 0.30 ? 'medium' : 'hard'
   
   // Kicker strength (simplified: rawStrength reflects kicker quality)
