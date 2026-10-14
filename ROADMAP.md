@@ -35,7 +35,7 @@ Build it once and every later phase gets cheaper.
 
 **Stack:** Gatsby 5 static site, React 18, Tailwind 3 + shadcn/ui (JS, not TSX), Jest. No backend.
 
-**Pages:** Rules, Games (10 games + Barking, with `/games/<id>` detail pages), Glossary, Odds, Strategy Assistant, Second Call Predictor, three roll-explorer variants, and a "Coming Soon" Practice page.
+**Pages:** Rules, Games (10 games + Barking, with `/games/<id>` detail pages), Glossary, Odds, Odds Lab (added 2026-10-14), Strategy Assistant, Second Call Predictor, three roll-explorer variants, and a "Coming Soon" Practice page.
 
 **Core logic:** `src/lib/game-validation.js` (~2,600 lines) handles game matching (`checkGame`), kicker strength, Boss rank, Tres Away score, Razzle, Hammer call recommendations, refuser advice and second-call prediction. 148 Jest tests pass.
 
@@ -104,10 +104,19 @@ Build it once and every later phase gets cheaper.
    - opponent policy assumption
 
    Precompute the tables at build time, as `roll-game-matrix.json` is today (hash-based regeneration in `gatsby-node.js`).
-2. **Decision trainer.** Show a situation, take the player's decision, then reveal the odds of every option and the trade-off in plain words. Example: "Refusing costs you 4% now but dodges a 30% second-call risk."
-3. **Player-count aware everywhere** (2–8), especially the Strategy Assistant.
-4. **Personal stats** in `localStorage`: accuracy by decision type, and weak spots to drill.
-5. Retire or re-base the heuristic thresholds in `strategy/` once the computed odds exist. Keep the heuristics only as the "novice/solid" bot policies.
+2. **Odds Lab — shipped 2026-10-14** (`/odds-lab`, `src/lib/roll-query.js`).
+   - **What it does:** users build any roll query from 1–5 dice and see exact odds live, as every outcome lights up or fades.
+     - Requirement types: specific dice, runs, of-a-kinds, sums, per-die limits and counts.
+     - Combining: requirements within a pattern use their own dice (AND); multiple patterns are alternatives (OR); "remaining dice" means the kickers.
+   - **Checks the site:** queries can be compared with the site's own game definitions (`checkGame`), and differing rolls are outlined. The game presets are verified against `checkGame` on all 7,776 rolls in Jest.
+   - **Follow-ups:**
+     - Specialty-game scoring rules (Razzle wilds as a "count toward" rule, Boss rank, Tres Away score).
+     - Conditional odds ("given I hold X, chance my re-roll makes Y"), which leads into the trainer.
+     - "Beat a hand" queries, comparing against N opponents.
+3. **Decision trainer.** Show a situation, take the player's decision, then reveal the odds of every option and the trade-off in plain words. Example: "Refusing costs you 4% now but dodges a 30% second-call risk."
+4. **Player-count aware everywhere** (2–8), especially the Strategy Assistant.
+5. **Personal stats** in `localStorage`: accuracy by decision type, and weak spots to drill.
+6. Retire or re-base the heuristic thresholds in `strategy/` once the computed odds exist. Keep the heuristics only as the "novice/solid" bot policies.
 
 **Measure:** trainer sessions per returning user; accuracy improvement over time.
 
@@ -172,3 +181,5 @@ Build it once and every later phase gets cheaper.
 | 2026-10-14 | Build a pure, shared game engine before any new feature surfaces | Powers the tutorial, trainer, AI and online server |
 | 2026-10-14 | Defer the framework choice (Gatsby vs Next/Vite) to the start of Phase 4 | Engine is framework-free either way |
 | 2026-10-14 | Supabase + Resend as the default plan for online play | Revisit at Phase 4 |
+| 2026-10-14 | Commit directly to `master` while there's a single developer | Switch to PRs when collaborators join |
+| 2026-10-14 | Odds Lab ships ahead of Phase 0 | Self-contained (`roll-query.js` is pure and tested), so it doesn't block or depend on the engine split |

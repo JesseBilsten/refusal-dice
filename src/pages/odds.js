@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react'
-import { graphql } from 'gatsby'
+import { graphql, Link } from 'gatsby'
 import Layout from '../components/layout'
 import { Badge } from '../components/ui/badge'
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '../components/ui/card'
@@ -582,6 +582,11 @@ const OddsDashboard = ({ data }) => {
           <p className="text-base text-muted-foreground mt-2 max-w-lg mx-auto">
             Probability of rolling each game on a single throw of 5 dice.
             Tap a game to drill into its data.
+          </p>
+          <p className="text-sm mt-2">
+            <Link to="/odds-lab" className="text-primary hover:underline">
+              Model your own roll in the Odds Lab →
+            </Link>
           </p>
         </div>
 

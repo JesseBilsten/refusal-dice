@@ -38,6 +38,7 @@ src/
     games-config.js     SINGLE SOURCE OF TRUTH for the game list and metadata
     game-validation.js  Rules + heuristic strategy (being split up, see below)
     roll-strength.js    Rarity/strength classification
+    roll-query.js       Odds Lab query engine: exact odds for any dice requirement (pure, CommonJS)
     utils.js            cn() class merger
   data/             Generated JSON + the generator scripts
   __tests__/        Jest tests
@@ -81,6 +82,7 @@ src/strategy/   Recommendation and odds logic (consumes engine/)
 - **Model the game as an explicit state machine:** `(state, action) → state`, with per-player views that hide other players' dice. UI, bots and the server all go through the same action interface.
 - **Rules changes need tests.** Any change to game matching, kicker comparison, tie handling or round flow gets a Jest test with concrete dice. Add the test first if you can.
 - **Odds shown to users must be computed, not guessed.** Prefer exact enumeration (252 sorted rolls / 7,776 ordered) or seeded Monte Carlo with stated sample size. Label anything heuristic as such in the UI.
+- `roll-query.js` is CommonJS (`module.exports`) so Jest can load it without a Babel config; Gatsby/webpack imports it fine with named imports. Its game presets must keep matching `checkGame`; the Jest suite enforces this on all 7,776 rolls.
 - `game-validation.js` is loaded both as ESM (Gatsby) and CJS (Node generators, Jest via `jest-strip-esm-export.js`). Keep both export styles working until it's split into `engine/` + `strategy/`.
 
 ## Generated data
@@ -112,10 +114,10 @@ Full rules: `src/pages/rules.js`; terms: `src/pages/glossary.js`.
 ## Git & workflow
 
 - Remote: `git@github-jessebilsten:JesseBilsten/refusal-dice.git`. Always use the `github-jessebilsten` SSH alias; commits must be authored as `jessebilsten <jesse@bilsten.net>`.
-- Default branch: `master`. Work on a branch (`feature/…`, `fix/…`, `chore/…`) and merge through a GitHub PR.
+- Default branch: `master`. While there's a single developer, **commit directly to `master`** and push. Once collaborators join, switch to branches (`feature/…`, `fix/…`, `chore/…`) merged through GitHub PRs.
 - Commit messages: Conventional Commits, matching history (`feat:`, `fix:`, `refactor:`, `chore(deps):`, …).
 - Don't commit `/public`, `.cache` or `node_modules`.
-- Prefer small PRs that map to a roadmap item; reference the phase/item in the PR description.
+- Keep commits small and mapped to a roadmap item where possible.
 
 ## Infrastructure direction (Phase 4, not built yet)
 

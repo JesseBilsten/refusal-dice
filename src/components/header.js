@@ -49,6 +49,15 @@ const Header = ({ siteTitle }) => (
           </li>
           <li>
             <Link 
+              to="/odds-lab" 
+              className="text-sm font-medium text-foreground/70 hover:text-primary transition-colors"
+              activeClassName="text-primary"
+            >
+              Odds Lab
+            </Link>
+          </li>
+          <li>
+            <Link 
               to="/glossary" 
               className="text-sm font-medium text-foreground/70 hover:text-primary transition-colors"
               activeClassName="text-primary"
