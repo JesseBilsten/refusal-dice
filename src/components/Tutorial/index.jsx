@@ -6,7 +6,18 @@ import {
   refusalSeats,
   viewFor,
 } from '../../engine'
-import { AVA_ROLLS, BEN_ROLLS, CALL, PLAYERS, newTutorialGame } from './script'
+import {
+  AVA_ROLLS,
+  BEN_REPLAY_ROLLS,
+  BEN_ROLLS,
+  CALL,
+  PLAYERS,
+  ROLL_PATH_DICE,
+  TIE_PATH_DICE,
+  newTutorialGame,
+  withDice,
+} from './script'
+import { rollOrTakeTie } from '../../strategy'
 import { Button, buttonVariants } from '../ui/button'
 import { Badge } from '../ui/badge'
 import { Die, DiceSettings, playRollSound, useDicePrefs } from '../Dice'
@@ -35,6 +46,17 @@ const WRONG_CALL = {
 }
 
 const newGame = newTutorialGame
+
+const pct = (p) => `${Math.round(p * 100)}%`
+const pct1 = (p) => `${(p * 100).toFixed(1)}%`
+
+// Tied with Ben at 5+5 = 10 in 10-3 High, with a roll left
+const TIE_ODDS = rollOrTakeTie({
+  kickers: 2,
+  variant: 'high',
+  total: 10,
+  tied: 2,
+})
 
 const T = ({ to, children }) => (
   <Link
@@ -67,29 +89,31 @@ const Tutorial = () => {
     ava: [0, 0, 0, 0, 0],
     ben: [0, 0, 0, 0, 0],
   })
-  const [selected, setSelected] = useState([])
   const [feedback, setFeedback] = useState(null)
   const [prefs] = useDicePrefs()
 
   const view = useMemo(() => viewFor(game, 'you'), [game])
   const inPlay = game.phase.kind === 'play' || game.phase.kind === 'roundOver'
 
-  /** Apply engine actions; animate (and sound) any dice that were re-rolled */
-  const act = useCallback(
-    (...actions) => {
-      let next = game
-      const bumps = {}
-      for (const action of actions) {
-        next = applyAction(next, action)
-        if (action.type === 'reroll') {
-          bumps[action.player] = [0, 1, 2, 3, 4].filter(
-            (i) => !action.keep.includes(i)
-          )
-        }
-      }
+  /**
+   * Apply engine actions (from `start`, default the current game) and
+   * animate (and sound) every die that was rolled, including a replay's deal
+   */
+  const actFrom = useCallback(
+    (start, ...actions) => {
+      const next = actions.reduce(applyAction, start)
       setGame(next)
-      const rerolled = Object.values(bumps).flat().length
-      if (rerolled) {
+      const bumps = {}
+      next.log.slice(start.log.length).forEach((e) => {
+        if (e.type === 'rolled') {
+          bumps[e.player] = [0, 1, 2, 3, 4].filter((i) => !e.kept.includes(i))
+        }
+        if (e.type === 'cycle') {
+          e.players.forEach((id) => (bumps[id] = [0, 1, 2, 3, 4]))
+        }
+      })
+      const rolled = Object.values(bumps).flat().length
+      if (rolled) {
         setRollIds((ids) => {
           const out = { ...ids }
           Object.entries(bumps).forEach(([id, idx]) => {
@@ -97,16 +121,16 @@ const Tutorial = () => {
           })
           return out
         })
-        if (prefs.sound) playRollSound(rerolled)
+        if (prefs.sound) playRollSound(Math.min(rolled, 10))
       }
     },
-    [game, prefs.sound]
+    [prefs.sound]
   )
+  const act = (...actions) => actFrom(game, ...actions)
 
   const restart = () => {
     setGame(newGame())
     setStep('welcome')
-    setSelected([])
     setFeedback(null)
     setRollIds({
       you: [0, 0, 0, 0, 0],
@@ -137,30 +161,6 @@ const Tutorial = () => {
 
   const mine = describeHand(game.dice.you)
   const ben = describeHand(game.dice.ben)
-
-  const toggleDie = (i) => {
-    if (mine.made && mine.hand.gameDice.includes(i)) {
-      setFeedback(
-        `That die is part of your 10 (${mine.hand.gameDice.map((j) => game.dice.you[j]).join('+')}). Re-rolling it could break your game, so only re-roll kickers.`
-      )
-      return
-    }
-    // Kickers are rolled together: picking one picks them all up
-    const kickers = mine.made ? mine.hand.kickerDice : [i]
-    setFeedback(null)
-    setSelected((s) => (s.includes(i) ? [] : kickers))
-  }
-
-  const rollMine = () => {
-    act({
-      type: 'reroll',
-      player: 'you',
-      keep: [0, 1, 2, 3, 4].filter((i) => !selected.includes(i)),
-    })
-    setSelected([])
-    setFeedback(null)
-    setStep('afterRoll')
-  }
 
   /* ── Narration and the one control for each step ── */
   const steps = {
@@ -343,35 +343,118 @@ const Tutorial = () => {
           </p>
           <p>
             Now look at the table: your kickers (10) <strong>tie</strong> Ben's
-            for the weakest hand. Tied players would replay the game. You've
-            used 1 roll and have 2 left, so improve your kickers.
+            for the weakest hand, and Ben has stopped rolling. You've used 1
+            roll and have 2 left.
           </p>
         </>
       ),
-      action: <Button onClick={() => setStep('yourRoll')}>Your turn</Button>,
+      action: <Button onClick={() => setStep('decide')}>Your turn</Button>,
     },
-    yourRoll: {
-      title: 'Re-roll your kickers',
+    decide: {
+      title: 'Take the tie, or roll?',
       body: (
-        <p>
-          Tap your 5s to pick up both kickers, then roll. Your 1, 3 and 6 stay
-          on the table: they make your 10. You can't keep one 5, because kickers
-          are rolled together.
-        </p>
+        <>
+          <p>
+            You can <strong>take the tie</strong>: stand, and you and Ben replay
+            10-3 High from scratch while Ava is safe. Or you can roll your
+            kickers, both 5s together, hoping to beat 10.
+          </p>
+          <p>
+            Two fresh dice beat 10 only {pct1(TIE_ODDS.better)} of the time and
+            tie it {pct1(TIE_ODDS.equal)}. The other {pct1(TIE_ODDS.worse)},
+            you'd drop below Ben and take the pencil. Rolling loses about{' '}
+            <strong>{pct(TIE_ODDS.loseIfRoll)}</strong> of the time; a replay
+            against Ben is closer to a coin flip,{' '}
+            <strong>{pct(TIE_ODDS.loseIfTie)}</strong>.
+          </p>
+          <p>
+            With 5+5, nobody rolls: take the tie. The weaker your tied kickers,
+            the better rolling looks, and sometimes your last roll beats a
+            replay.
+          </p>
+        </>
       ),
       action: (
-        <Button onClick={rollMine} disabled={!selected.length}>
-          Roll your kickers
+        <div className="flex flex-wrap gap-2">
+          <Button
+            onClick={() => {
+              actFrom(withDice(game, TIE_PATH_DICE), {
+                type: 'stand',
+                player: 'you',
+              })
+              setStep('replay')
+            }}
+          >
+            Take the tie
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => {
+              actFrom(withDice(game, ROLL_PATH_DICE), {
+                type: 'reroll',
+                player: 'you',
+                keep: mine.hand.gameDice,
+              })
+              setStep('lucky')
+            }}
+          >
+            Roll my kickers
+          </Button>
+        </div>
+      ),
+    },
+    replay: {
+      title: 'You and Ben replay 10-3 High',
+      body: (
+        <>
+          <p>
+            Tied players replay the same call, High included, with fresh dice
+            and three rolls. Everyone else is safe, so Ava is out of this one.
+          </p>
+          <p>
+            You roll {mine.text}: the best kickers possible. Ben rolls{' '}
+            {ben.text}.
+          </p>
+        </>
+      ),
+      action: (
+        <Button
+          onClick={() => {
+            act(...BEN_REPLAY_ROLLS)
+            setStep('benReplay')
+          }}
+        >
+          Next: Ben rolls
         </Button>
       ),
     },
-    afterRoll: {
-      title: mine.made ? `Kickers ${mine.total}: you beat Ben` : 'Your roll',
+    benReplay: {
+      title: 'Ben chases your 12',
       body: (
         <p>
-          {mine.text}. Ben's 10 is now the weakest hand at the table. You could
-          roll once more, but you're already safe, so <strong>stand</strong> to
-          keep what you have.
+          Ben keeps his 10 and re-rolls both kickers, twice. He ends on{' '}
+          {ben.text.split('· ')[1]} and he's out of rolls. Nothing can beat your
+          12, so stand.
+        </p>
+      ),
+      action: (
+        <Button
+          onClick={() => {
+            act({ type: 'stand', player: 'you' })
+            setStep('done')
+          }}
+        >
+          Stand
+        </Button>
+      ),
+    },
+    lucky: {
+      title: mine.made ? `Kickers ${mine.total}: that paid off` : 'Your roll',
+      body: (
+        <p>
+          {mine.text}. You beat Ben's 10, but it was a long shot: only{' '}
+          {pct(TIE_ODDS.better)} of rolls do that. Next time, take the tie. You
+          still have a roll, but you're safe now, so <strong>stand</strong>.
         </p>
       ),
       action: (
@@ -440,11 +523,21 @@ const Tutorial = () => {
           [seats.second]: '2nd refusal',
         }
   const decisions = {}
+  let replaying = null
   game.log.forEach((e) => {
     if (e.type === 'refused') decisions[e.player] = 'Refused'
     if (e.type === 'accepted') decisions[e.player] = 'Accepted'
     if (e.type === 'stood') decisions[e.player] = 'Standing'
+    if (e.type === 'cycle') {
+      replaying = e.players
+      e.players.forEach((id) => (decisions[id] = 'Replaying'))
+    }
   })
+  if (replaying) {
+    PLAYERS.forEach((p) => {
+      if (!replaying.includes(p.id)) decisions[p.id] = 'Safe'
+    })
+  }
 
   return (
     <div className="space-y-6">
@@ -459,7 +552,6 @@ const Tutorial = () => {
           const status = inPlay ? describeHand(game.dice[p.id]) : null
           const isLoser =
             game.phase.kind === 'roundOver' && game.phase.loser === p.id
-          const pickable = p.id === 'you' && step === 'yourRoll'
           return (
             <div
               key={p.id}
@@ -496,8 +588,6 @@ const Tutorial = () => {
                           : 'kicker'
                         : undefined
                     }
-                    selected={pickable && selected.includes(i)}
-                    onClick={pickable ? () => toggleDie(i) : undefined}
                   />
                 ))}
               </div>

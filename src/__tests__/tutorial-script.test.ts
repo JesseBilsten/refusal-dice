@@ -1,42 +1,84 @@
 /**
- * The tutorial's scripted round plays out as the lesson says.
+ * The tutorial's scripted round plays out as the lesson says, on both paths.
  */
-import { applyAction, evaluateKickerHand, GameState } from '../engine'
+import { Action, GameState, applyAction, evaluateKickerHand } from '../engine'
+import { rollOrTakeTie } from '../strategy'
 import {
   AVA_ROLLS,
+  BEN_REPLAY_ROLLS,
   BEN_ROLLS,
   CALL,
+  ROLL_PATH_DICE,
+  TIE_PATH_DICE,
   newTutorialGame,
+  withDice,
 } from '../components/Tutorial/script'
 
 const kickers = (g: GameState, id: string) => {
   const hand = evaluateKickerHand(g.dice[id], '10-3', 'high')
   return hand.made ? hand.kickerTotal : null
 }
+const play = (g: GameState, ...actions: Action[]) =>
+  actions.reduce(applyAction, g)
 
-test('everyone re-rolls both kickers; you beat Ben, who takes the pencil', () => {
-  let g = newTutorialGame()
-  g = [
+/** Up to the decision: you and Ben tied at 10, Ava 12 */
+function toDecision() {
+  let g = play(
+    newTutorialGame(),
     { type: 'call', player: 'you', call: CALL },
     { type: 'refuse', player: 'ava' },
-    { type: 'accept', player: 'ben' },
-  ].reduce((s, a) => applyAction(s, a as never), g)
+    { type: 'accept', player: 'ben' }
+  )
   // At the reveal: you 10, Ava 7, Ben 8
   expect([kickers(g, 'you'), kickers(g, 'ava'), kickers(g, 'ben')]).toEqual([
     10, 7, 8,
   ])
-
-  g = [...AVA_ROLLS, ...BEN_ROLLS].reduce(applyAction, g)
-  // Ava 12; Ben ties you at 10
+  g = play(g, ...AVA_ROLLS, ...BEN_ROLLS)
   expect([kickers(g, 'ava'), kickers(g, 'ben'), kickers(g, 'you')]).toEqual([
     12, 10, 10,
   ])
-
   // You can't keep one 5: kickers are rolled together
   expect(() =>
     applyAction(g, { type: 'reroll', player: 'you', keep: [0, 1, 2, 3] })
   ).toThrow(/rolled together/)
-  g = applyAction(g, { type: 'reroll', player: 'you', keep: [0, 1, 2] })
+  return g
+}
+
+test('the odds say take the tie with 5+5', () => {
+  const odds = rollOrTakeTie({
+    kickers: 2,
+    variant: 'high',
+    total: 10,
+    tied: 2,
+  })
+  expect(odds.better).toBeCloseTo(3 / 36, 10)
+  expect(odds.equal).toBeCloseTo(3 / 36, 10)
+  expect(odds.choice).toBe('tie')
+})
+
+test('taking the tie: you and Ben replay, and Ben loses the replay', () => {
+  let g = applyAction(withDice(toDecision(), TIE_PATH_DICE), {
+    type: 'stand',
+    player: 'you',
+  })
+  expect(g.phase).toMatchObject({ kind: 'play', cycle: 1 })
+  expect(Object.keys(g.phase.kind === 'play' ? g.phase.rolling : {})).toEqual([
+    'you',
+    'ben',
+  ])
+  expect([kickers(g, 'you'), kickers(g, 'ben')]).toEqual([12, 2])
+  g = play(g, ...BEN_REPLAY_ROLLS)
+  expect(kickers(g, 'ben')).toBe(5)
+  g = applyAction(g, { type: 'stand', player: 'you' })
+  expect(g.phase).toMatchObject({ kind: 'roundOver', loser: 'ben' })
+})
+
+test('rolling anyway: 6+5 beats Ben, who takes the pencil', () => {
+  let g = applyAction(withDice(toDecision(), ROLL_PATH_DICE), {
+    type: 'reroll',
+    player: 'you',
+    keep: [0, 1, 2],
+  })
   expect(kickers(g, 'you')).toBe(11)
   g = applyAction(g, { type: 'stand', player: 'you' })
   expect(g.phase).toMatchObject({ kind: 'roundOver', loser: 'ben' })

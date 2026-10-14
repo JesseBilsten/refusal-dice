@@ -35,25 +35,43 @@ const estimate = (losses: number, samples: number): Estimate => {
   return { pencil: p, error: Math.sqrt((p * (1 - p)) / samples), samples }
 }
 
-const sameCall = (a: Call, b: Call) => a.game === b.game && a.variant === b.variant
+const sameCall = (a: Call, b: Call) =>
+  a.game === b.game && a.variant === b.variant
 
 /** Play the current round to its end with bots; returns the loser (null: no pencil) */
-export function playOutRound(state: GameState): { loser: PlayerId | null; state: GameState } {
+export function playOutRound(state: GameState): {
+  loser: PlayerId | null
+  state: GameState
+} {
   let g = state
-  for (let steps = 0; g.phase.kind !== 'roundOver' && g.phase.kind !== 'gameOver'; steps++) {
+  for (
+    let steps = 0;
+    g.phase.kind !== 'roundOver' && g.phase.kind !== 'gameOver';
+    steps++
+  ) {
     if (steps > 5000) throw new Error('Round did not finish')
     g = applyAction(g, botAction(g))
   }
-  return { loser: g.phase.kind === 'roundOver' ? g.phase.loser : null, state: g }
+  return {
+    loser: g.phase.kind === 'roundOver' ? g.phase.loser : null,
+    state: g,
+  }
 }
 
 /** Seat ids in order: the Hammer first, then to their left */
 function seatIds(players: number, mySeat: number): PlayerId[] {
-  return Array.from({ length: players }, (_, i) => (i === mySeat ? ME : `p${i}`))
+  return Array.from({ length: players }, (_, i) =>
+    i === mySeat ? ME : `p${i}`
+  )
 }
 
 /** A table with your dice fixed and everyone else's random */
-function deal(players: number, mySeat: number, dice: Dice, seed: number): GameState {
+function deal(
+  players: number,
+  mySeat: number,
+  dice: Dice,
+  seed: number
+): GameState {
   const ids = seatIds(players, mySeat)
   const g = createGame({
     players: ids.map((id) => ({ id, name: id })),
@@ -66,10 +84,15 @@ function deal(players: number, mySeat: number, dice: Dice, seed: number): GameSt
 }
 
 /** Mix the sample index into the seed */
-const sampleSeed = (seed: number, i: number) => (Math.imul(seed ^ 0x9e3779b9, 31) + Math.imul(i + 1, 0x85ebca6b)) | 0
+const sampleSeed = (seed: number, i: number) =>
+  (Math.imul(seed ^ 0x9e3779b9, 31) + Math.imul(i + 1, 0x85ebca6b)) | 0
 
 /** Draw dice until `accept(dice)` holds (or give up and use the last draw) */
-function conditionedDice(seed: number, accept: (d: Dice) => boolean, tries = 400): Dice {
+function conditionedDice(
+  seed: number,
+  accept: (d: Dice) => boolean,
+  tries = 400
+): Dice {
   let source = seeded(seed)
   let dice: Dice = [1, 1, 1, 1, 1]
   for (let t = 0; t < tries; t++) {
@@ -87,17 +110,27 @@ export interface HammerOption extends Estimate {
  * You're the Hammer holding `dice`: the chance of taking the pencil for
  * every call, best first.
  */
-export function simulateHammer(options: { dice: Dice; players?: number; samples?: number; seed?: number }): HammerOption[] {
+export function simulateHammer(options: {
+  dice: Dice
+  players?: number
+  samples?: number
+  seed?: number
+}): HammerOption[] {
   const { dice, players = 3, samples = 400, seed = 1 } = options
   const losses = ALL_CALLS.map(() => 0)
   for (let i = 0; i < samples; i++) {
     const g = deal(players, 0, dice, sampleSeed(seed, i))
     ALL_CALLS.forEach((call, c) => {
-      const { loser } = playOutRound(applyAction(g, { type: 'call', player: ME, call }))
+      const { loser } = playOutRound(
+        applyAction(g, { type: 'call', player: ME, call })
+      )
       if (loser === ME) losses[c]++
     })
   }
-  return ALL_CALLS.map((call, c) => ({ call, ...estimate(losses[c], samples) })).sort((a, b) => a.pencil - b.pencil)
+  return ALL_CALLS.map((call, c) => ({
+    call,
+    ...estimate(losses[c], samples),
+  })).sort((a, b) => a.pencil - b.pencil)
 }
 
 export interface RefusalEstimate {
@@ -129,22 +162,40 @@ export function simulateRefusal(options: {
   const players = Math.max(options.players ?? 3, position === 2 ? 3 : 2)
   let accepted = 0
   let refused = 0
-  const second = new Map<string, { call: Call; count: number; losses: number }>()
+  const second = new Map<
+    string,
+    { call: Call; count: number; losses: number }
+  >()
 
   for (let i = 0; i < samples; i++) {
     const s = sampleSeed(seed, i)
     let g = deal(players, position, dice, s)
     const hammer = g.seats[0].id
-    const hammerDice = conditionedDice(s ^ 0x51ed27, (d) => sameCall(chooseCall(d), call))
+    const hammerDice = conditionedDice(s ^ 0x51ed27, (d) =>
+      sameCall(chooseCall(d), call)
+    )
     g = { ...g, dice: { ...g.dice, [hammer]: hammerDice } }
     if (position === 2) {
       const first = g.seats[1].id
-      g = { ...g, dice: { ...g.dice, [first]: conditionedDice(s ^ 0x2c1b3c6d, (d) => !wouldAccept(d, call)) } }
+      g = {
+        ...g,
+        dice: {
+          ...g.dice,
+          [first]: conditionedDice(
+            s ^ 0x2c1b3c6d,
+            (d) => !wouldAccept(d, call)
+          ),
+        },
+      }
     }
     g = applyAction(g, { type: 'call', player: hammer, call })
-    if (position === 2) g = applyAction(g, { type: 'refuse', player: g.seats[1].id })
+    if (position === 2)
+      g = applyAction(g, { type: 'refuse', player: g.seats[1].id })
 
-    if (playOutRound(applyAction(g, { type: 'accept', player: ME })).loser === ME) accepted++
+    if (
+      playOutRound(applyAction(g, { type: 'accept', player: ME })).loser === ME
+    )
+      accepted++
 
     const out = playOutRound(applyAction(g, { type: 'refuse', player: ME }))
     const lost = out.loser === ME
@@ -164,7 +215,11 @@ export function simulateRefusal(options: {
     accept: estimate(accepted, samples),
     refuse: estimate(refused, samples),
     secondCalls: [...second.values()]
-      .map((e) => ({ call: e.call, share: e.count / Math.max(1, secondTotal), pencil: e.losses / e.count }))
+      .map((e) => ({
+        call: e.call,
+        share: e.count / Math.max(1, secondTotal),
+        pencil: e.losses / e.count,
+      }))
       .sort((a, b) => b.share - a.share),
     conditioned: true,
   }
