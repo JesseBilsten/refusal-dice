@@ -1885,7 +1885,7 @@ const generateRefuserStrategy = (
         partialMatch: null,
         details: {
           mustRefuse: true,
-          explanation: `Your roll cannot make ${calledGame} ${calledVariant || ''}. Refuse and re-roll.`
+          explanation: `Your roll can't make ${calledGame} ${calledVariant || ''} yet. Refuse: if the other refuser also refuses, the Hammer must call a different game, which may suit your dice better.`
         }
       }
     }
@@ -1984,7 +1984,7 @@ const generateRefuserStrategy = (
         decision = 'REFUSE'
         confidence = 75
         reason = 'Partial match too weak'
-        explanation = `${partialMatch.description} But completing the game is difficult (~${(completeGameOdds * 100).toFixed(0)}%). Second call likely ${topSecondCall.displayName}. Better to refuse and re-roll all dice.`
+        explanation = `${partialMatch.description} But completing the game is difficult (~${(completeGameOdds * 100).toFixed(0)}%). Second call likely ${topSecondCall.displayName}. Better to refuse and hope for a second call that suits your dice.`
       }
     } else {
       // No second call data - use generic logic
@@ -1997,7 +1997,7 @@ const generateRefuserStrategy = (
         decision = 'REFUSE'
         confidence = 70
         reason = 'Too far from completing game'
-        explanation = `${partialMatch.description} Too difficult to complete. Refuse and re-roll.`
+        explanation = `${partialMatch.description} Too difficult to complete. Refuse and hope for a better second call.`
       }
     }
     
@@ -2041,25 +2041,25 @@ const generateRefuserStrategy = (
     confidence = position === 'second' ? 85 : 75
     reason = 'Strong hand for called game'
     explanation = position === 'second'
-      ? `You're in second refusal with a strong hand (${currentStrength.toFixed(1)}%ile). First refusal showed weakness. Accept and make them re-roll.`
+      ? `You're in second refusal with a strong hand (${currentStrength.toFixed(1)}%ile). First refusal said no, so they likely don't have this game and will have to roll for it. Accept and lock it in.`
       : `Strong hand (${currentStrength.toFixed(1)}%ile). Lock it in by accepting.`
   }
   // Weak hand
   else if (currentStrength < refuseThreshold) {
     decision = 'REFUSE'
     confidence = 80
-    reason = 'Weak hand - better to re-roll'
+    reason = 'Weak hand - hope for a better second call'
     
     if (topSecondCall) {
       const secondCallEasier = topSecondCall.avgOffensiveStrength < currentStrength
       if (secondCallEasier) {
-        explanation = `Weak hand (${currentStrength.toFixed(1)}%ile). Most likely second call is ${topSecondCall.displayName} which appears easier. Refuse and re-roll.`
+        explanation = `Weak hand (${currentStrength.toFixed(1)}%ile). Most likely second call is ${topSecondCall.displayName}, which appears easier for your dice. Refuse.`
         confidence = 85
       } else {
-        explanation = `Weak hand (${currentStrength.toFixed(1)}%ile). Second call likely ${topSecondCall.displayName}. Re-roll for better position.`
+        explanation = `Weak hand (${currentStrength.toFixed(1)}%ile). Second call likely ${topSecondCall.displayName}. Refuse and hope for a call that suits your dice.`
       }
     } else {
-      explanation = `Weak hand (${currentStrength.toFixed(1)}%ile). Re-rolling gives ~50% chance of improvement. Refuse.`
+      explanation = `Weak hand (${currentStrength.toFixed(1)}%ile). Refuse and hope for a better second call.`
     }
   }
   // Medium hand - most complex decision
@@ -2108,7 +2108,7 @@ const generateRefuserStrategy = (
             decision = 'REFUSE'
             confidence = 55
             reason = 'Medium hand, uncertain second call'
-            explanation = `${currentStrength.toFixed(1)}%ile is borderline. Second call likely ${topSecondCall.displayName}. Refuse for re-roll opportunity.`
+            explanation = `${currentStrength.toFixed(1)}%ile is borderline. Second call likely ${topSecondCall.displayName}. Refusing gives you a shot at a second call.`
           }
         } else {
           decision = 'UNCERTAIN'

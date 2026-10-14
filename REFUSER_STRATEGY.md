@@ -1,5 +1,7 @@
 # Refuser Strategy - Implementation Summary
 
+> **Correction (2026-10-14):** this document originally assumed a player who refuses must throw away their roll and re-roll. That's not the rule. Nobody is forced to re-roll, and everyone's initial roll counts as roll 1 of whatever game is played, including a second call (see [docs/RULES.md](docs/RULES.md) §2). What refusing can win you is a **different game** for the same dice, not fresh dice. The rule statements below have been corrected, but the probability model still reflects the old assumption. Re-basing it is a Phase 2 roadmap item.
+
 ## Overview
 The refuser strategy helps players decide whether to **accept** or **refuse** a called game. Unlike the hammer strategy (which focuses on making the best call), refusers must evaluate their current hand against the risk of re-rolling and facing a second (potentially harder) call.
 
@@ -10,8 +12,8 @@ The refuser strategy helps players decide whether to **accept** or **refuse** a 
   - Can accept → Everyone plays the called game
   - Can refuse → Passes to Second Refusal
 - **Second Refusal** (second player left of caller):
-  - Can accept → Everyone plays the first call (first refuser re-rolls)
-  - Can refuse → **BOTH refusers re-roll**, caller makes Second Call, NO MORE REFUSALS
+  - Can accept → Everyone plays the first call, including the first refuser (who keeps their roll)
+  - Can refuse → caller makes a Second Call (a different game), NO MORE REFUSALS; everyone keeps their roll as roll 1
 - **Key Insight**: Your position (first vs second refusal) dramatically changes strategy
 - Strategy balances "current hand quality" vs "expected value of re-rolling" vs "second call risk"
 
@@ -25,7 +27,7 @@ The refuser strategy helps players decide whether to **accept** or **refuse** a 
 - Can refuse weak hands knowing second refusal has another chance
 
 **Disadvantages:**
-- If you refuse and second accepts, YOU re-roll but everyone plays first call
+- If you refuse and second accepts, you still play the first call with your current roll
 - You don't know what second refusal will do
 
 **Decision Framework:**
@@ -43,11 +45,11 @@ The refuser strategy helps players decide whether to **accept** or **refuse** a 
 - Can make informed decision based on first refusal's action
 
 **Disadvantages:**
-- If you refuse, BOTH you and first refusal re-roll (no escape from second call)
+- If you refuse, everyone plays the Second Call with their current rolls (no escape from it)
 - Second call might be harder than first
 
 **Decision Framework:**
-- **Strong hand (>60%ile)**: ACCEPT (first refusal will re-roll, you keep strong hand)
+- **Strong hand (>60%ile)**: ACCEPT (first refusal likely doesn't have this game and must roll for it)
 - **Medium hand (35-60%ile)**: Evaluate second call predictions + your flexibility
 - **Weak hand (<35%ile)**: REFUSE if predicted second call is easier or you need flexibility
 - **Critical consideration**: First refusal already showed weakness, so accepting medium hands is more valuable
@@ -250,7 +252,7 @@ Most Likely Second Calls:
 | Current Hand | Game Difficulty | Flexibility | Recommendation |
 |--------------|----------------|-------------|----------------|
 | Excellent (>90%ile) | Any | Any | ACCEPT |
-| Strong (70-90%ile) | Any | Any | ACCEPT (first refuser re-rolls) |
+| Strong (70-90%ile) | Any | Any | ACCEPT (first refuser likely lacks the game) |
 | Moderate (50-70%ile) | Easy | Any | ACCEPT (capitalize on first refuser's weakness) |
 | Moderate (50-70%ile) | Medium | High (7+) | ACCEPT |
 | Moderate (50-70%ile) | Medium | Low | Check second call predictions |
@@ -360,8 +362,8 @@ predicted_second: 'pairs' (easier, 39% vs 25%)
 2. ✅ **Refusal Rules**: Only ONE refusal round, BOTH players must refuse to trigger second call
 3. ✅ **Position Matters**: First vs second refusal have different strategies
 4. ✅ **Re-roll Scenarios**: 
-   - First refuses + Second accepts = First re-rolls, everyone plays first call
-   - Both refuse = Both re-roll, everyone plays second call
+   - First refuses + Second accepts = everyone plays first call with current rolls
+   - Both refuse = everyone plays second call with current rolls
 5. ✅ **Modeling**: Assume callers use hammer strategy for best statistical predictions
 
 ## Questions Still Open
