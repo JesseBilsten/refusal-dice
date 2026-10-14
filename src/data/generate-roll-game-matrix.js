@@ -1,20 +1,11 @@
 const fs = require('fs');
 const path = require('path');
 const { checkGame, getKickerStrength } = require('../lib/game-validation.js');
+const { CALLABLE_GAMES } = require('../lib/games-config.js');
 const uniqueRollsData = require('./unique-rolls.json');
 
-const GAMES = [
-  { id: '10-3', name: '10-3' },
-  { id: '10-2', name: '10-2' },
-  { id: 'vegas', name: "7's" },
-  { id: 'ship-captain-crew', name: 'Ship, Captain, Crew' },
-  { id: 'pairs', name: 'Pairs' },
-  { id: 'monterey', name: 'Monterey' },
-  { id: '10-4', name: '10-4' },
-  { id: 'razzle', name: 'Razzle' },
-  { id: 'boss', name: 'Boss' },
-  { id: 'tres-away', name: 'Tres Away' },
-];
+// Every callable game, from the single source of truth
+const GAMES = CALLABLE_GAMES;
 
 /**
  * Generate a pre-computed matrix of which games each unique roll satisfies

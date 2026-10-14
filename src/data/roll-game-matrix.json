@@ -500,15 +500,15 @@
       4
     ],
     "games": [
-      "pairs",
       "10-4",
+      "pairs",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
-      "pairs": "low",
-      "10-4": "low"
+      "10-4": "low",
+      "pairs": "low"
     },
     "indices": [
       21,
@@ -854,15 +854,15 @@
       5
     ],
     "games": [
-      "pairs",
       "10-4",
+      "pairs",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
-      "pairs": "high",
-      "10-4": "low"
+      "10-4": "low",
+      "pairs": "high"
     },
     "indices": [
       46,
@@ -908,16 +908,16 @@
     ],
     "games": [
       "10-3",
-      "pairs",
       "10-4",
+      "pairs",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
       "10-3": "low",
-      "pairs": "high",
-      "10-4": "low"
+      "10-4": "low",
+      "pairs": "high"
     },
     "indices": [
       47,
@@ -1015,17 +1015,17 @@
       4
     ],
     "games": [
+      "10-4",
       "ship-captain-crew",
       "monterey",
-      "10-4",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
+      "10-4": "low",
       "ship-captain-crew": "low",
-      "monterey": "low",
-      "10-4": "low"
+      "monterey": "low"
     },
     "indices": [
       51,
@@ -1101,16 +1101,16 @@
     ],
     "games": [
       "10-3",
-      "ship-captain-crew",
       "10-4",
+      "ship-captain-crew",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
       "10-3": "low",
-      "ship-captain-crew": "low",
-      "10-4": "low"
+      "10-4": "low",
+      "ship-captain-crew": "low"
     },
     "indices": [
       52,
@@ -1186,16 +1186,16 @@
     ],
     "games": [
       "10-3",
-      "ship-captain-crew",
       "10-4",
+      "ship-captain-crew",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
       "10-3": "low",
-      "ship-captain-crew": "low",
-      "10-4": "low"
+      "10-4": "low",
+      "ship-captain-crew": "low"
     },
     "indices": [
       53,
@@ -1271,16 +1271,16 @@
     ],
     "games": [
       "10-3",
-      "pairs",
       "10-4",
+      "pairs",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
       "10-3": "low",
-      "pairs": "low",
-      "10-4": "low"
+      "10-4": "low",
+      "pairs": "low"
     },
     "indices": [
       57,
@@ -1542,15 +1542,15 @@
       6
     ],
     "games": [
-      "vegas",
       "10-4",
+      "vegas",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
-      "vegas": "low",
-      "10-4": "high"
+      "10-4": "high",
+      "vegas": "low"
     },
     "indices": [
       65,
@@ -1625,17 +1625,17 @@
       6
     ],
     "games": [
+      "10-4",
       "vegas",
       "pairs",
-      "10-4",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
+      "10-4": "high",
       "vegas": "low",
-      "pairs": "low",
-      "10-4": "high"
+      "pairs": "low"
     },
     "indices": [
       71,
@@ -1680,15 +1680,15 @@
       3
     ],
     "games": [
-      "pairs",
       "10-4",
+      "pairs",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
-      "pairs": "low",
-      "10-4": "low"
+      "10-4": "low",
+      "pairs": "low"
     },
     "indices": [
       86,
@@ -1766,15 +1766,15 @@
       5
     ],
     "games": [
-      "pairs",
       "10-4",
+      "pairs",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
-      "pairs": "high",
-      "10-4": "low"
+      "10-4": "low",
+      "pairs": "high"
     },
     "indices": [
       88,
@@ -1872,15 +1872,15 @@
       4
     ],
     "games": [
-      "pairs",
       "10-4",
+      "pairs",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
-      "pairs": "low",
-      "10-4": "low"
+      "10-4": "low",
+      "pairs": "low"
     },
     "indices": [
       93,
@@ -1926,16 +1926,16 @@
     ],
     "games": [
       "10-3",
-      "monterey",
       "10-4",
+      "monterey",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
       "10-3": "low",
-      "monterey": "low",
-      "10-4": "high"
+      "10-4": "high",
+      "monterey": "low"
     },
     "indices": [
       94,
@@ -2010,16 +2010,16 @@
       6
     ],
     "games": [
-      "10-3",
       "10-2",
+      "10-3",
       "vegas",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
-      "10-3": "low",
       "10-2": "low",
+      "10-3": "low",
       "vegas": "low"
     },
     "indices": [
@@ -2096,16 +2096,16 @@
     ],
     "games": [
       "10-2",
-      "pairs",
       "10-4",
+      "pairs",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
       "10-2": "low",
-      "pairs": "low",
-      "10-4": "high"
+      "10-4": "high",
+      "pairs": "low"
     },
     "indices": [
       100,
@@ -2288,15 +2288,15 @@
       4
     ],
     "games": [
-      "pairs",
       "10-4",
+      "pairs",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
-      "pairs": "high",
-      "10-4": "high"
+      "10-4": "high",
+      "pairs": "high"
     },
     "indices": [
       129,
@@ -2322,16 +2322,16 @@
     ],
     "games": [
       "10-3",
-      "pairs",
       "10-4",
+      "pairs",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
       "10-3": "low",
-      "pairs": "high",
-      "10-4": "high"
+      "10-4": "high",
+      "pairs": "high"
     },
     "indices": [
       130,
@@ -2377,16 +2377,16 @@
     ],
     "games": [
       "10-2",
-      "pairs",
       "10-4",
+      "pairs",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
       "10-2": "low",
-      "pairs": "high",
-      "10-4": "high"
+      "10-4": "high",
+      "pairs": "high"
     },
     "indices": [
       131,
@@ -2431,16 +2431,16 @@
       5
     ],
     "games": [
-      "10-3",
       "10-2",
+      "10-3",
       "pairs",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
-      "10-3": "low",
       "10-2": "low",
+      "10-3": "low",
       "pairs": "high"
     },
     "indices": [
@@ -2486,16 +2486,16 @@
       6
     ],
     "games": [
-      "10-3",
       "10-2",
+      "10-3",
       "ship-captain-crew",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
-      "10-3": "low",
       "10-2": "low",
+      "10-3": "low",
       "ship-captain-crew": "low"
     },
     "indices": [
@@ -2988,17 +2988,17 @@
       3
     ],
     "games": [
+      "10-4",
       "ship-captain-crew",
       "pairs",
-      "10-4",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
+      "10-4": "low",
       "ship-captain-crew": "low",
-      "pairs": "low",
-      "10-4": "low"
+      "pairs": "low"
     },
     "indices": [
       266,
@@ -3043,17 +3043,17 @@
       4
     ],
     "games": [
+      "10-4",
       "ship-captain-crew",
       "monterey",
-      "10-4",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
+      "10-4": "low",
       "ship-captain-crew": "low",
-      "monterey": "low",
-      "10-4": "low"
+      "monterey": "low"
     },
     "indices": [
       267,
@@ -3129,16 +3129,16 @@
     ],
     "games": [
       "10-3",
-      "ship-captain-crew",
       "10-4",
+      "ship-captain-crew",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
       "10-3": "low",
-      "ship-captain-crew": "low",
-      "10-4": "low"
+      "10-4": "low",
+      "ship-captain-crew": "low"
     },
     "indices": [
       268,
@@ -3432,15 +3432,15 @@
       6
     ],
     "games": [
-      "10-3",
       "10-2",
+      "10-3",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
-      "10-3": "low",
-      "10-2": "low"
+      "10-2": "low",
+      "10-3": "low"
     },
     "indices": [
       275,
@@ -3516,18 +3516,18 @@
     ],
     "games": [
       "10-2",
+      "10-4",
       "vegas",
       "pairs",
-      "10-4",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
       "10-2": "low",
+      "10-4": "high",
       "vegas": "low",
-      "pairs": "low",
-      "10-4": "high"
+      "pairs": "low"
     },
     "indices": [
       280,
@@ -3573,16 +3573,16 @@
     ],
     "games": [
       "10-3",
-      "vegas",
       "10-4",
+      "vegas",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
       "10-3": "low",
-      "vegas": "low",
-      "10-4": "high"
+      "10-4": "high",
+      "vegas": "low"
     },
     "indices": [
       281,
@@ -3710,15 +3710,15 @@
       3
     ],
     "games": [
-      "ship-captain-crew",
       "10-4",
+      "ship-captain-crew",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
-      "ship-captain-crew": "low",
-      "10-4": "low"
+      "10-4": "low",
+      "ship-captain-crew": "low"
     },
     "indices": [
       302,
@@ -3754,18 +3754,18 @@
     ],
     "games": [
       "10-3",
+      "10-4",
       "ship-captain-crew",
       "monterey",
-      "10-4",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
       "10-3": "low",
+      "10-4": "low",
       "ship-captain-crew": "low",
-      "monterey": "low",
-      "10-4": "low"
+      "monterey": "low"
     },
     "indices": [
       303,
@@ -4007,18 +4007,18 @@
     ],
     "games": [
       "10-3",
+      "10-4",
       "ship-captain-crew",
       "monterey",
-      "10-4",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
       "10-3": "low",
+      "10-4": "high",
       "ship-captain-crew": "high",
-      "monterey": "low",
-      "10-4": "high"
+      "monterey": "low"
     },
     "indices": [
       309,
@@ -4094,20 +4094,20 @@
     ],
     "games": [
       "10-3",
-      "vegas",
+      "10-4",
       "ship-captain-crew",
       "monterey",
-      "10-4",
+      "vegas",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
       "10-3": "low",
-      "vegas": "low",
+      "10-4": "high",
       "ship-captain-crew": "high",
       "monterey": "low",
-      "10-4": "high"
+      "vegas": "low"
     },
     "indices": [
       310,
@@ -4242,23 +4242,23 @@
       6
     ],
     "games": [
-      "10-3",
       "10-2",
-      "vegas",
+      "10-3",
+      "10-4",
       "ship-captain-crew",
       "monterey",
-      "10-4",
+      "vegas",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
-      "10-3": "low",
       "10-2": "low",
-      "vegas": "low",
+      "10-3": "low",
+      "10-4": "high",
       "ship-captain-crew": "high",
       "monterey": "low",
-      "10-4": "high"
+      "vegas": "low"
     },
     "indices": [
       311,
@@ -4393,16 +4393,16 @@
       5
     ],
     "games": [
-      "10-3",
       "10-2",
+      "10-3",
       "ship-captain-crew",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
-      "10-3": "low",
       "10-2": "low",
+      "10-3": "low",
       "ship-captain-crew": "high"
     },
     "indices": [
@@ -4479,16 +4479,16 @@
     ],
     "games": [
       "10-3",
-      "vegas",
       "ship-captain-crew",
+      "vegas",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
       "10-3": "low",
-      "vegas": "low",
-      "ship-captain-crew": "high"
+      "ship-captain-crew": "high",
+      "vegas": "low"
     },
     "indices": [
       317,
@@ -4828,15 +4828,15 @@
       6
     ],
     "games": [
-      "10-3",
       "10-2",
+      "10-3",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
-      "10-3": "low",
-      "10-2": "low"
+      "10-2": "low",
+      "10-3": "low"
     },
     "indices": [
       347,
@@ -4911,15 +4911,15 @@
       5
     ],
     "games": [
-      "10-3",
       "10-2",
+      "10-3",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
-      "10-3": "low",
-      "10-2": "low"
+      "10-2": "low",
+      "10-3": "low"
     },
     "indices": [
       352,
@@ -4994,19 +4994,19 @@
       6
     ],
     "games": [
-      "10-3",
       "10-2",
-      "vegas",
+      "10-3",
       "ship-captain-crew",
+      "vegas",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
-      "10-3": "high",
       "10-2": "low",
-      "vegas": "high",
-      "ship-captain-crew": "low"
+      "10-3": "high",
+      "ship-captain-crew": "low",
+      "vegas": "high"
     },
     "indices": [
       353,
@@ -5465,15 +5465,15 @@
       3
     ],
     "games": [
-      "pairs",
       "10-4",
+      "pairs",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
-      "pairs": "low",
-      "10-4": "low"
+      "10-4": "low",
+      "pairs": "low"
     },
     "indices": [
       518,
@@ -5758,16 +5758,16 @@
       6
     ],
     "games": [
-      "10-3",
       "10-2",
+      "10-3",
       "vegas",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
-      "10-3": "low",
       "10-2": "low",
+      "10-3": "low",
       "vegas": "low"
     },
     "indices": [
@@ -6151,16 +6151,16 @@
       6
     ],
     "games": [
-      "10-3",
       "10-2",
+      "10-3",
       "vegas",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
-      "10-3": "high",
       "10-2": "low",
+      "10-3": "high",
       "vegas": "high"
     },
     "indices": [
@@ -6236,16 +6236,16 @@
       5
     ],
     "games": [
-      "10-3",
       "10-2",
+      "10-3",
       "monterey",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
-      "10-3": "high",
       "10-2": "low",
+      "10-3": "high",
       "monterey": "low"
     },
     "indices": [
@@ -6321,21 +6321,21 @@
       6
     ],
     "games": [
-      "10-3",
       "10-2",
-      "vegas",
+      "10-3",
       "ship-captain-crew",
       "monterey",
+      "vegas",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
-      "10-3": "high",
       "10-2": "low",
-      "vegas": "high",
+      "10-3": "high",
       "ship-captain-crew": "low",
-      "monterey": "low"
+      "monterey": "low",
+      "vegas": "high"
     },
     "indices": [
       569,
@@ -6470,16 +6470,16 @@
       6
     ],
     "games": [
-      "10-3",
       "10-2",
+      "10-3",
       "vegas",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
-      "10-3": "high",
       "10-2": "low",
+      "10-3": "high",
       "vegas": "high"
     },
     "indices": [
@@ -6596,15 +6596,15 @@
       6
     ],
     "games": [
-      "10-3",
       "10-2",
+      "10-3",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
-      "10-3": "high",
-      "10-2": "low"
+      "10-2": "low",
+      "10-3": "high"
     },
     "indices": [
       605,
@@ -6911,16 +6911,16 @@
       5
     ],
     "games": [
-      "10-3",
       "10-2",
+      "10-3",
       "pairs",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
-      "10-3": "high",
       "10-2": "low",
+      "10-3": "high",
       "pairs": "low"
     },
     "indices": [
@@ -6966,16 +6966,16 @@
       6
     ],
     "games": [
-      "10-3",
       "10-2",
+      "10-3",
       "ship-captain-crew",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
-      "10-3": "high",
       "10-2": "low",
+      "10-3": "high",
       "ship-captain-crew": "low"
     },
     "indices": [
@@ -7104,15 +7104,15 @@
       5
     ],
     "games": [
-      "10-3",
       "10-2",
+      "10-3",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
-      "10-3": "high",
-      "10-2": "low"
+      "10-2": "low",
+      "10-3": "high"
     },
     "indices": [
       820,
@@ -7147,16 +7147,16 @@
       6
     ],
     "games": [
-      "10-3",
       "10-2",
+      "10-3",
       "ship-captain-crew",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
-      "10-3": "high",
       "10-2": "high",
+      "10-3": "high",
       "ship-captain-crew": "low"
     },
     "indices": [
@@ -7232,19 +7232,19 @@
       6
     ],
     "games": [
-      "10-3",
       "10-2",
-      "vegas",
+      "10-3",
       "ship-captain-crew",
+      "vegas",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
-      "10-3": "high",
       "10-2": "high",
-      "vegas": "high",
-      "ship-captain-crew": "low"
+      "10-3": "high",
+      "ship-captain-crew": "low",
+      "vegas": "high"
     },
     "indices": [
       827,
@@ -7599,15 +7599,15 @@
       4
     ],
     "games": [
-      "pairs",
       "10-4",
+      "pairs",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
-      "pairs": "high",
-      "10-4": "low"
+      "10-4": "low",
+      "pairs": "high"
     },
     "indices": [
       1557,
@@ -7681,15 +7681,15 @@
       3
     ],
     "games": [
-      "pairs",
       "10-4",
+      "pairs",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
-      "pairs": "low",
-      "10-4": "low"
+      "10-4": "low",
+      "pairs": "low"
     },
     "indices": [
       1562,
@@ -7714,15 +7714,15 @@
       4
     ],
     "games": [
-      "monterey",
       "10-4",
+      "monterey",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
-      "monterey": "low",
-      "10-4": "low"
+      "10-4": "low",
+      "monterey": "low"
     },
     "indices": [
       1563,
@@ -7840,16 +7840,16 @@
     ],
     "games": [
       "10-3",
-      "pairs",
       "10-4",
+      "pairs",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
       "10-3": "low",
-      "pairs": "low",
-      "10-4": "high"
+      "10-4": "high",
+      "pairs": "low"
     },
     "indices": [
       1569,
@@ -7915,16 +7915,16 @@
       6
     ],
     "games": [
-      "10-3",
       "10-2",
+      "10-3",
       "10-4",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
-      "10-3": "low",
       "10-2": "low",
+      "10-3": "low",
       "10-4": "high"
     },
     "indices": [
@@ -8069,15 +8069,15 @@
       3
     ],
     "games": [
-      "pairs",
       "10-4",
+      "pairs",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
-      "pairs": "low",
-      "10-4": "low"
+      "10-4": "low",
+      "pairs": "low"
     },
     "indices": [
       1598,
@@ -8103,18 +8103,18 @@
     ],
     "games": [
       "10-3",
-      "pairs",
-      "monterey",
       "10-4",
+      "monterey",
+      "pairs",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
       "10-3": "low",
-      "pairs": "high",
+      "10-4": "high",
       "monterey": "low",
-      "10-4": "high"
+      "pairs": "high"
     },
     "indices": [
       1599,
@@ -8160,16 +8160,16 @@
     ],
     "games": [
       "10-3",
-      "pairs",
       "10-4",
+      "pairs",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
       "10-3": "low",
-      "pairs": "high",
-      "10-4": "high"
+      "10-4": "high",
+      "pairs": "high"
     },
     "indices": [
       1600,
@@ -8215,16 +8215,16 @@
     ],
     "games": [
       "10-3",
-      "pairs",
       "10-4",
+      "pairs",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
       "10-3": "low",
-      "pairs": "high",
-      "10-4": "high"
+      "10-4": "high",
+      "pairs": "high"
     },
     "indices": [
       1601,
@@ -8270,16 +8270,16 @@
     ],
     "games": [
       "10-3",
-      "pairs",
       "monterey",
+      "pairs",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
       "10-3": "low",
-      "pairs": "low",
-      "monterey": "low"
+      "monterey": "low",
+      "pairs": "low"
     },
     "indices": [
       1605,
@@ -8325,16 +8325,16 @@
     ],
     "games": [
       "10-3",
-      "vegas",
       "monterey",
+      "vegas",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
       "10-3": "low",
-      "vegas": "low",
-      "monterey": "low"
+      "monterey": "low",
+      "vegas": "low"
     },
     "indices": [
       1606,
@@ -8409,16 +8409,16 @@
       6
     ],
     "games": [
-      "10-3",
       "10-2",
+      "10-3",
       "monterey",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
-      "10-3": "low",
       "10-2": "low",
+      "10-3": "low",
       "monterey": "high"
     },
     "indices": [
@@ -8494,8 +8494,8 @@
       5
     ],
     "games": [
-      "10-3",
       "10-2",
+      "10-3",
       "vegas",
       "pairs",
       "razzle",
@@ -8503,8 +8503,8 @@
       "tres-away"
     ],
     "kickerStrengths": {
-      "10-3": "low",
       "10-2": "low",
+      "10-3": "low",
       "vegas": "low",
       "pairs": "low"
     },
@@ -8771,16 +8771,16 @@
       6
     ],
     "games": [
-      "10-3",
       "10-2",
+      "10-3",
       "pairs",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
-      "10-3": "high",
       "10-2": "low",
+      "10-3": "high",
       "pairs": "high"
     },
     "indices": [
@@ -8881,16 +8881,16 @@
       6
     ],
     "games": [
-      "10-3",
       "10-2",
+      "10-3",
       "ship-captain-crew",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
-      "10-3": "high",
       "10-2": "low",
+      "10-3": "high",
       "ship-captain-crew": "low"
     },
     "indices": [
@@ -8966,16 +8966,16 @@
       6
     ],
     "games": [
-      "10-3",
       "10-2",
+      "10-3",
       "pairs",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
-      "10-3": "high",
       "10-2": "low",
+      "10-3": "high",
       "pairs": "high"
     },
     "indices": [
@@ -9056,8 +9056,8 @@
       6
     ],
     "games": [
-      "10-3",
       "10-2",
+      "10-3",
       "vegas",
       "pairs",
       "razzle",
@@ -9065,8 +9065,8 @@
       "tres-away"
     ],
     "kickerStrengths": {
-      "10-3": "high",
       "10-2": "low",
+      "10-3": "high",
       "vegas": "high",
       "pairs": "high"
     },
@@ -9348,18 +9348,18 @@
     ],
     "games": [
       "10-3",
+      "monterey",
       "vegas",
       "pairs",
-      "monterey",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
       "10-3": "low",
+      "monterey": "low",
       "vegas": "low",
-      "pairs": "low",
-      "monterey": "low"
+      "pairs": "low"
     },
     "indices": [
       1821,
@@ -9405,16 +9405,16 @@
     ],
     "games": [
       "10-3",
-      "vegas",
       "monterey",
+      "vegas",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
       "10-3": "low",
-      "vegas": "low",
-      "monterey": "low"
+      "monterey": "low",
+      "vegas": "low"
     },
     "indices": [
       1822,
@@ -9489,16 +9489,16 @@
       6
     ],
     "games": [
-      "10-3",
       "10-2",
+      "10-3",
       "monterey",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
-      "10-3": "high",
       "10-2": "low",
+      "10-3": "high",
       "monterey": "high"
     },
     "indices": [
@@ -9574,16 +9574,16 @@
       5
     ],
     "games": [
-      "10-3",
       "10-2",
+      "10-3",
       "pairs",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
-      "10-3": "high",
       "10-2": "low",
+      "10-3": "high",
       "pairs": "low"
     },
     "indices": [
@@ -9805,16 +9805,16 @@
     ],
     "games": [
       "10-3",
-      "vegas",
       "monterey",
+      "vegas",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
       "10-3": "high",
-      "vegas": "high",
-      "monterey": "low"
+      "monterey": "low",
+      "vegas": "high"
     },
     "indices": [
       1858,
@@ -9889,16 +9889,16 @@
       6
     ],
     "games": [
-      "10-3",
       "10-2",
+      "10-3",
       "monterey",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
-      "10-3": "high",
       "10-2": "low",
+      "10-3": "high",
       "monterey": "high"
     },
     "indices": [
@@ -9974,19 +9974,19 @@
       5
     ],
     "games": [
-      "10-3",
       "10-2",
-      "vegas",
+      "10-3",
       "monterey",
+      "vegas",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
-      "10-3": "high",
       "10-2": "low",
-      "vegas": "high",
-      "monterey": "low"
+      "10-3": "high",
+      "monterey": "low",
+      "vegas": "high"
     },
     "indices": [
       1864,
@@ -10061,21 +10061,21 @@
       6
     ],
     "games": [
-      "10-3",
       "10-2",
-      "vegas",
+      "10-3",
       "ship-captain-crew",
       "monterey",
+      "vegas",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
-      "10-3": "high",
       "10-2": "low",
-      "vegas": "high",
+      "10-3": "high",
       "ship-captain-crew": "low",
-      "monterey": "high"
+      "monterey": "high",
+      "vegas": "high"
     },
     "indices": [
       1865,
@@ -10293,15 +10293,15 @@
       5
     ],
     "games": [
-      "10-3",
       "10-2",
+      "10-3",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
-      "10-3": "high",
-      "10-2": "low"
+      "10-2": "low",
+      "10-3": "high"
     },
     "indices": [
       1900,
@@ -10336,16 +10336,16 @@
       6
     ],
     "games": [
-      "10-3",
       "10-2",
+      "10-3",
       "vegas",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
-      "10-3": "high",
       "10-2": "high",
+      "10-3": "high",
       "vegas": "low"
     },
     "indices": [
@@ -10609,15 +10609,15 @@
       6
     ],
     "games": [
-      "10-3",
       "10-2",
+      "10-3",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
-      "10-3": "high",
-      "10-2": "low"
+      "10-2": "low",
+      "10-3": "high"
     },
     "indices": [
       2075,
@@ -10652,16 +10652,16 @@
       5
     ],
     "games": [
-      "10-3",
       "10-2",
+      "10-3",
       "pairs",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
-      "10-3": "high",
       "10-2": "low",
+      "10-3": "high",
       "pairs": "low"
     },
     "indices": [
@@ -10707,16 +10707,16 @@
       6
     ],
     "games": [
-      "10-3",
       "10-2",
+      "10-3",
       "ship-captain-crew",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
-      "10-3": "high",
       "10-2": "high",
+      "10-3": "high",
       "ship-captain-crew": "low"
     },
     "indices": [
@@ -10792,16 +10792,16 @@
       6
     ],
     "games": [
-      "10-3",
       "10-2",
+      "10-3",
       "pairs",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
-      "10-3": "high",
       "10-2": "high",
+      "10-3": "high",
       "pairs": "low"
     },
     "indices": [
@@ -10889,16 +10889,16 @@
     ],
     "games": [
       "10-2",
-      "vegas",
       "ship-captain-crew",
+      "vegas",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
       "10-2": "high",
-      "vegas": "high",
-      "ship-captain-crew": "low"
+      "ship-captain-crew": "low",
+      "vegas": "high"
     },
     "indices": [
       2117,
@@ -11467,15 +11467,15 @@
       6
     ],
     "games": [
-      "10-3",
       "10-2",
+      "10-3",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
-      "10-3": "high",
-      "10-2": "low"
+      "10-2": "low",
+      "10-3": "high"
     },
     "indices": [
       3119,
@@ -11648,18 +11648,18 @@
     ],
     "games": [
       "10-3",
+      "monterey",
       "vegas",
       "pairs",
-      "monterey",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
       "10-3": "high",
+      "monterey": "low",
       "vegas": "high",
-      "pairs": "high",
-      "monterey": "low"
+      "pairs": "high"
     },
     "indices": [
       3154,
@@ -11704,8 +11704,8 @@
       6
     ],
     "games": [
-      "10-3",
       "10-2",
+      "10-3",
       "vegas",
       "pairs",
       "razzle",
@@ -11713,8 +11713,8 @@
       "tres-away"
     ],
     "kickerStrengths": {
-      "10-3": "high",
       "10-2": "low",
+      "10-3": "high",
       "vegas": "high",
       "pairs": "high"
     },
@@ -11761,19 +11761,19 @@
       5
     ],
     "games": [
-      "10-3",
       "10-2",
-      "pairs",
+      "10-3",
       "monterey",
+      "pairs",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
-      "10-3": "high",
       "10-2": "low",
-      "pairs": "high",
-      "monterey": "high"
+      "10-3": "high",
+      "monterey": "high",
+      "pairs": "high"
     },
     "indices": [
       3160,
@@ -11818,21 +11818,21 @@
       6
     ],
     "games": [
-      "10-3",
       "10-2",
-      "vegas",
+      "10-3",
       "ship-captain-crew",
       "monterey",
+      "vegas",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
-      "10-3": "high",
       "10-2": "high",
-      "vegas": "low",
+      "10-3": "high",
       "ship-captain-crew": "low",
-      "monterey": "high"
+      "monterey": "high",
+      "vegas": "low"
     },
     "indices": [
       3161,
@@ -11907,16 +11907,16 @@
       6
     ],
     "games": [
-      "10-3",
       "10-2",
+      "10-3",
       "pairs",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
-      "10-3": "high",
       "10-2": "high",
+      "10-3": "high",
       "pairs": "high"
     },
     "indices": [
@@ -12239,16 +12239,16 @@
     ],
     "games": [
       "10-2",
-      "pairs",
       "monterey",
+      "pairs",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
       "10-2": "high",
-      "pairs": "low",
-      "monterey": "high"
+      "monterey": "high",
+      "pairs": "low"
     },
     "indices": [
       3376,
@@ -12294,18 +12294,18 @@
     ],
     "games": [
       "10-2",
-      "vegas",
       "ship-captain-crew",
       "monterey",
+      "vegas",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
       "10-2": "high",
-      "vegas": "high",
       "ship-captain-crew": "low",
-      "monterey": "high"
+      "monterey": "high",
+      "vegas": "high"
     },
     "indices": [
       3377,
@@ -12477,18 +12477,18 @@
     ],
     "games": [
       "10-2",
-      "vegas",
       "ship-captain-crew",
       "monterey",
+      "vegas",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
       "10-2": "high",
-      "vegas": "high",
       "ship-captain-crew": "high",
-      "monterey": "high"
+      "monterey": "high",
+      "vegas": "high"
     },
     "indices": [
       3413,
@@ -12564,18 +12564,18 @@
     ],
     "games": [
       "10-2",
-      "vegas",
       "ship-captain-crew",
       "monterey",
+      "vegas",
       "razzle",
       "boss",
       "tres-away"
     ],
     "kickerStrengths": {
       "10-2": "high",
-      "vegas": "high",
       "ship-captain-crew": "high",
-      "monterey": "high"
+      "monterey": "high",
+      "vegas": "high"
     },
     "indices": [
       3419,
@@ -13312,8 +13312,8 @@
     ],
     "games": [
       "10-2",
-      "vegas",
       "ship-captain-crew",
+      "vegas",
       "pairs",
       "razzle",
       "boss",
@@ -13321,8 +13321,8 @@
     ],
     "kickerStrengths": {
       "10-2": "high",
-      "vegas": "high",
       "ship-captain-crew": "high",
+      "vegas": "high",
       "pairs": "high"
     },
     "indices": [

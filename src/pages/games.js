@@ -8,13 +8,12 @@ import { buttonVariants } from '../components/ui/button'
 import { Badge } from '../components/ui/badge'
 import { analyzeRoll } from '../lib/game-validation'
 import rollGameMatrix from '../data/roll-game-matrix.json'
+import { CALLABLE_GAMES } from '../lib/games-config'
 
 // Calculate single-roll probability for each game
 const calculateGameProbabilities = () => {
   const probabilities = {}
-  const games = ['10-2', '10-3', '10-4', 'ship-captain-crew', 'monterey', 'vegas', 'pairs', 'razzle', 'boss', 'tres-away']
-  
-  games.forEach((gameId) => {
+  CALLABLE_GAMES.forEach(({ id: gameId }) => {
     let totalCount = 0
     Object.values(rollGameMatrix).forEach(rollData => {
       if (rollData.games && rollData.games.includes(gameId)) {

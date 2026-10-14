@@ -1,13 +1,17 @@
 /**
  * Shared games configuration — single source of truth for all game metadata.
  * Import this instead of defining GAMES/GAMES_MAP per-page.
+ *
+ * CommonJS so Node scripts (gatsby-node.js, src/data generators) can require
+ * it too; pages and components use named imports as usual.
  */
 
-export const GAMES = [
+/** `name` is the short label; `fullName` is for places with room to spare. */
+const GAMES = [
   { id: '10-2', name: '10-2', emoji: '✌️', hasVariants: true },
   { id: '10-3', name: '10-3', emoji: '👌', hasVariants: true },
   { id: '10-4', name: '10-4', emoji: '🔫', hasVariants: true },
-  { id: 'ship-captain-crew', name: 'SCC', emoji: '⚓️', hasVariants: true },
+  { id: 'ship-captain-crew', name: 'SCC', fullName: 'Ship, Captain, Crew', emoji: '⚓️', hasVariants: true },
   { id: 'monterey', name: 'Monterey', emoji: '🔄', hasVariants: true },
   { id: 'vegas', name: "7's", emoji: '🎰', hasVariants: true },
   { id: 'pairs', name: 'Pairs', emoji: '🍐', hasVariants: true },
@@ -17,11 +21,17 @@ export const GAMES = [
   { id: 'barking', name: 'Barking', emoji: '🐶', hasVariants: false },
 ]
 
+/** Every callable game (Barking is an action, not a game) */
+const CALLABLE_GAMES = GAMES.filter(g => g.id !== 'barking')
+
+/** Games decided by making a hand and then comparing kickers (have high/low variants) */
+const KICKER_GAME_IDS = GAMES.filter(g => g.hasVariants).map(g => g.id)
+
 /** IDs of always-playable specialty games */
-export const SPECIALTY_GAME_IDS = ['razzle', 'boss', 'tres-away']
+const SPECIALTY_GAME_IDS = ['razzle', 'boss', 'tres-away']
 
 /** Quick check: is this game an always-playable specialty game? */
-export const isSpecialtyGame = (id) => SPECIALTY_GAME_IDS.includes(id)
+const isSpecialtyGame = (id) => SPECIALTY_GAME_IDS.includes(id)
 
 /* ── Competitive thresholds ──
  * Each specialty game is technically playable on every roll, but these
@@ -39,7 +49,7 @@ export const isSpecialtyGame = (id) => SPECIALTY_GAME_IDS.includes(id)
  * Tres    competitive: Score ≤ 10    →  18.2%  (1413 / 7776)
  *         strong:      Score ≤ 7     →   6.1%  ( 477 / 7776)
  */
-export const SPECIALTY_THRESHOLDS = {
+const SPECIALTY_THRESHOLDS = {
   razzle: {
     /** Minimum wild sixes (1s + 6s) for a competitive Razzle hand */
     wildSixesGood: 3,
@@ -68,7 +78,7 @@ export const SPECIALTY_THRESHOLDS = {
  * 'competitive' is the default tier (~20% threshold).
  * 'strong' is the premium tier for the best hands.
  */
-export const SPECIALTY_FILTERS = {
+const SPECIALTY_FILTERS = {
   razzle: [
     { id: 'competitive', label: '3+ Sixes', description: 'Competitive (~21%)' },
     { id: 'strong', label: '4+ / 5-Kind', description: 'Strong (~4.5%)' },
@@ -84,24 +94,27 @@ export const SPECIALTY_FILTERS = {
 }
 
 /** Lookup map by game id */
-export const GAMES_MAP = Object.fromEntries(
+const GAMES_MAP = Object.fromEntries(
   GAMES.map(g => [g.id, g])
 )
 
+/** Get the long display name for a game id, e.g. 'Ship, Captain, Crew' */
+const getGameFullName = (id) => GAMES_MAP[id]?.fullName || getGameName(id)
+
 /** Get display name for a game id */
-export const getGameName = (id) => GAMES_MAP[id]?.name || id
+const getGameName = (id) => GAMES_MAP[id]?.name || id
 
 /** Get emoji for a game id */
-export const getGameEmoji = (id) => GAMES_MAP[id]?.emoji || '🎲'
+const getGameEmoji = (id) => GAMES_MAP[id]?.emoji || '🎲'
 
 /** Get the detail-page path for a game id, e.g. '/games/10-2' */
-export const getGamePath = (id) => `/games/${id}`
+const getGamePath = (id) => `/games/${id}`
 
 /**
  * Format a recommendation into a display label.
  * e.g. "10-2 High", "Boss", "Razzle"
  */
-export const formatCallLabel = (rec) => {
+const formatCallLabel = (rec) => {
   const g = GAMES_MAP[rec.game] || { name: rec.game }
   const variant = rec.variant
     ? ` ${rec.variant === 'high' ? 'High' : 'Low'}`
@@ -113,9 +126,26 @@ export const formatCallLabel = (rec) => {
  * Format strength percentage.
  * Never rounds to 100% unless truly 100%.
  */
-export const fmtPct = (v) => {
+const fmtPct = (v) => {
   if (v >= 100) return '100%'
   if (v >= 99.5) return '>99%'
   if (v < 1 && v > 0) return '<1%'
   return `${Math.round(v)}%`
+}
+
+module.exports = {
+  GAMES,
+  CALLABLE_GAMES,
+  KICKER_GAME_IDS,
+  SPECIALTY_GAME_IDS,
+  isSpecialtyGame,
+  SPECIALTY_THRESHOLDS,
+  SPECIALTY_FILTERS,
+  GAMES_MAP,
+  getGameFullName,
+  getGameName,
+  getGameEmoji,
+  getGamePath,
+  formatCallLabel,
+  fmtPct,
 }

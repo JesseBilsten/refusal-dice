@@ -35,7 +35,7 @@ src/
   templates/        game-detail.js → /games/<id> (created in gatsby-node.js)
   components/       App components; ui/ = shadcn primitives; nav-items.js = site navigation
   lib/
-    games-config.js     SINGLE SOURCE OF TRUTH for the game list and metadata
+    games-config.js     SINGLE SOURCE OF TRUTH for the game list and metadata (CommonJS; also used by gatsby-node.js and generators)
     game-validation.js  Rules + heuristic strategy (being split up, see below)
     roll-strength.js    Rarity/strength classification
     roll-query.js       Odds Lab query engine: exact odds for any dice requirement (pure, CommonJS)
@@ -66,7 +66,7 @@ src/strategy/   Recommendation and odds logic (consumes engine/)
   - Merge classes with `cn()` from `src/lib/utils.js`.
 - **UI primitives:** reuse `src/components/ui/*` before writing new ones; add new shadcn components with the shadcn CLI (JS, not TSX) so they match.
 - **Navigation:** always use Gatsby `<Link>` or `navigate()`. Never `window.location.href` for internal routes. For a link that looks like a button, use `<Link className={buttonVariants({ variant, size })}>`. Add new pages to `src/components/nav-items.js`, which feeds both the header and the mobile menu.
-- **Game metadata:** import from `src/lib/games-config.js` (`GAMES`, `GAMES_MAP`, `getGameName`, `formatCallLabel`, `fmtPct`). Never redefine a local `GAMES` array.
+- **Game metadata:** import from `src/lib/games-config.js` (`GAMES`, `CALLABLE_GAMES`, `KICKER_GAME_IDS`, `GAMES_MAP`, `getGameName`, `getGameFullName`, `formatCallLabel`, `fmtPct`). Never redefine a local `GAMES` array. (The one exception left is inside `game-validation.js`, which can't import it until the engine split.)
 - **SSR safety:** Gatsby renders pages in Node at build time. Guard `window`, `document` and `localStorage` access (`typeof window !== 'undefined'` or inside `useEffect`), and wrap storage access in try/catch.
 - **Accessibility:**
   - Interactive elements are real buttons/links with labels.
@@ -82,6 +82,8 @@ src/strategy/   Recommendation and odds logic (consumes engine/)
 - **Rules changes need tests.** Any change to game matching, kicker comparison, tie handling or round flow gets a Jest test with concrete dice. Add the test first if you can.
 - **Odds shown to users must be computed, not guessed.** Prefer exact enumeration (252 sorted rolls / 7,776 ordered) or seeded Monte Carlo with stated sample size. Label anything heuristic as such in the UI.
 - `roll-query.js` is CommonJS (`module.exports`) so Jest can load it without a Babel config; Gatsby/webpack imports it fine with named imports. Its game presets must keep matching `checkGame`; the Jest suite enforces this on all 7,776 rolls.
+- **Game odds are computed, never typed in.** `SINGLE_ROLL_ODDS` in `game-validation.js` counts each kicker game with `checkGame` over all 7,776 rolls. A hardcoded copy once left 10-3 at 53.43% instead of 63.85%.
+- **Data generators must be deterministic.** Use a seeded PRNG (see `generate-unique-rolls.js`), never `Math.random()`, so regenerating only changes what the logic change caused.
 - `game-validation.js` is loaded both as ESM (Gatsby) and CJS (Node generators, Jest via `jest-strip-esm-export.js`). Keep both export styles working until it's split into `engine/` + `strategy/`.
 
 ## Generated data

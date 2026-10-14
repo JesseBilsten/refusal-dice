@@ -49,9 +49,10 @@ Build it once and every later phase gets cheaper.
 - **Full page reloads.** Some buttons use `window.location.href` instead of Gatsby `<Link>`/`navigate`.
 - **Dead code.** `rolls-explorer`, `rolls-hybrid` and `rolls-original` are three parallel pages; `src/ideas/` holds about 12 abandoned prototypes; `src/pages/rolls.js.archive` is unused.
 - **Starter leftovers.** The manifest is still named "gatsby-starter-default" and the README is Gatsby boilerplate.
-- **The game list is defined in several places:** `gatsby-node.js`, `second-call-predictor.js`, `generate-roll-game-matrix.js`, `game-validation.js` (`predictHammerSecondCalls`) and `games-config.js`.
+- ✅ ~~**The game list is defined in several places:**~~ (fixed) `gatsby-node.js`, `second-call-predictor.js`, `generate-roll-game-matrix.js`, `game-validation.js` (`predictHammerSecondCalls`) and `games-config.js`.
 - **The Practice page's email signup only does `console.log`.**
 - **`npm audit` reports 128 vulnerabilities,** mostly transitive through Gatsby 5.
+- ✅ ~~**Wrong odds feeding strategy.**~~ Fixed 2026-10-14: 10-3 was hardcoded at 53.43% (exact: 63.85%) in the odds table behind Hammer/refuser advice. Odds are now computed from the rules.
 - **Node version mismatch.** `.nvmrc` pins Node 18 (end of life); the site currently builds fine on Node 25.
 
 ---
@@ -66,7 +67,7 @@ Build it once and every later phase gets cheaper.
    - Fix the mobile nav (`/strategies`, duplicate Odds entry).
    - Replace `window.location.href` with `<Link>`/`navigate`.
    - Fix the manifest name and colors; replace the README with a project README.
-2. **One game list.** Every module imports from `src/lib/games-config.js` (including `gatsby-node.js` and the data generators).
+2. **One game list.** ✅ _done 2026-10-14. `games-config.js` is now CommonJS so `gatsby-node.js` and the generators share it. `game-validation.js` still has an inline copy until step 3 moves the rules into `engine/`._
 3. **Extract the engine** from `game-validation.js`:
    - `src/engine/rules`: playable-game checks, kicker/hand comparison, tie rules. Pure functions.
    - `src/engine/round`: an explicit state machine (states + actions + reducer) for a full game: piddle, Hammer, call, bark, 1st/2nd refusal, second call (must be a *different game*, not just a variant), reveal, loser takes a pencil and the Hammer, ties (3+ players replay; 2 players no pencil), 3 pencils = out, last player standing wins.

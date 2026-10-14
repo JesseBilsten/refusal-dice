@@ -6,19 +6,9 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '../co
 import { Label } from '../components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select'
 import SecondCallDistribution from '../components/SecondCallDistribution'
+import { CALLABLE_GAMES, getGameFullName } from '../lib/games-config'
 
-const GAMES = [
-  { id: '10-2', name: '10-2', emoji: '✌️', hasVariants: true },
-  { id: '10-3', name: '10-3', emoji: '👌', hasVariants: true },
-  { id: '10-4', name: '10-4', emoji: '🔫', hasVariants: true },
-  { id: 'ship-captain-crew', name: 'Ship, Captain, Crew', emoji: '⚓️', hasVariants: true },
-  { id: 'monterey', name: 'Monterey', emoji: '🔄', hasVariants: true },
-  { id: 'vegas', name: "7's", emoji: '🎰', hasVariants: true },
-  { id: 'pairs', name: 'Pairs', emoji: '🍐', hasVariants: true },
-  { id: 'razzle', name: 'Razzle', emoji: '✨', hasVariants: false },
-  { id: 'boss', name: 'Boss', emoji: '👑', hasVariants: false },
-  { id: 'tres-away', name: 'Tres Away', emoji: '⛳', hasVariants: false },
-]
+const GAMES = CALLABLE_GAMES.map(g => ({ ...g, name: getGameFullName(g.id) }))
 
 const SecondCallPredictorPage = ({ data }) => {
   const [selectedGame, setSelectedGame] = useState('monterey')

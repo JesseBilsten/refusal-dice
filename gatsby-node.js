@@ -7,6 +7,7 @@
 const fs = require('fs');
 const crypto = require('crypto');
 const path = require('path');
+const { GAMES } = require('./src/lib/games-config');
 
 /**
  * Calculate MD5 hash of a file
@@ -42,6 +43,7 @@ function needsRegeneration() {
     const dependencies = {
       'src/data/generate-roll-game-matrix.js': path.join(__dirname, 'src/data/generate-roll-game-matrix.js'),
       'src/lib/game-validation.js': path.join(__dirname, 'src/lib/game-validation.js'),
+      'src/lib/games-config.js': path.join(__dirname, 'src/lib/games-config.js'),
       'src/data/unique-rolls.json': path.join(__dirname, 'src/data/unique-rolls.json')
     };
     
@@ -75,6 +77,7 @@ function saveMetadata() {
   const dependencies = {
     'src/data/generate-roll-game-matrix.js': path.join(__dirname, 'src/data/generate-roll-game-matrix.js'),
     'src/lib/game-validation.js': path.join(__dirname, 'src/lib/game-validation.js'),
+    'src/lib/games-config.js': path.join(__dirname, 'src/lib/games-config.js'),
     'src/data/unique-rolls.json': path.join(__dirname, 'src/data/unique-rolls.json')
   };
   
@@ -130,20 +133,8 @@ exports.createPages = async ({ actions }) => {
   
   const gameDetailTemplate = path.resolve('./src/templates/game-detail.js');
   
-  // List of all games + barking
-  const games = [
-    '10-2',
-    '10-3', 
-    '10-4',
-    'ship-captain-crew',
-    'monterey',
-    'vegas',
-    'pairs',
-    'razzle',
-    'boss',
-    'tres-away',
-    'barking'
-  ];
+  // Every game (and Barking) gets a detail page
+  const games = GAMES.map(g => g.id);
   
   // Create a page for each game
   games.forEach(gameId => {
