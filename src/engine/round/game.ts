@@ -2,9 +2,19 @@ import { DiceSource, rollDice } from '../dice-source'
 import { isKickerGame } from '../rules/kicker-games'
 import { resolveKickerCycle } from '../rules/resolve'
 import {
+  bestHands,
+  bossHand,
+  compareBoss,
+  compareRazzle,
+  compareTresAway,
+  isSpecialtyGame,
+  worstHands,
+} from '../rules/specialty-games'
+import {
   Call,
   DEFAULT_HOUSE_RULES,
   Dice,
+  Die,
   EngineError,
   HouseRules,
   PlayerId,
@@ -17,8 +27,8 @@ import {
  * State is plain data (including the dice source), so games can be saved,
  * replayed, sent over the network and run identically on a server.
  *
- * Only kicker games can be played so far; Tres Away, Boss and Razzle have
- * their own procedures (§3.2–3.4) and come next.
+ * Kicker games and Razzle use the `play` phase (everyone rolls at once, up
+ * to 3 rolls). Tres Away (§3.2) and Boss (§3.3) have their own phases.
  */
 
 export const MAX_ROLLS = 3
@@ -37,6 +47,24 @@ export interface PlayerRolls {
   done: boolean
 }
 
+/** A Tres Away player's progress: which dice are out, and whether the hand has been rolled since the last put-out */
+export interface TresHand {
+  /** Indices (0–4) of dice put out, in order; final and visible */
+  out: number[]
+  /** The dice in hand were just rolled, so the player must put out at least one */
+  fresh: boolean
+  /** Rolls used this cycle, including the first */
+  rolls: number
+}
+
+export type BossStage =
+  /** The Boss rolls once more (hidden), keeping the dice that made them Boss */
+  | 'bossRoll'
+  /** The Boss says "come up" or "don't come up" */
+  | 'decide'
+  /** The others take one last roll each, in order from the Boss's left */
+  | 'comeUp'
+
 export type Phase =
   /** The Hammer calls a game or barks */
   | { kind: 'call' }
@@ -44,8 +72,30 @@ export type Phase =
   | { kind: 'refusal'; seat: 1 | 2; call: Call }
   /** Both refused: the Hammer must call a different game */
   | { kind: 'secondCall'; refused: Call }
-  /** Players in `rolling` are playing the call; cycle 0 is the main game, 1+ are replays */
+  /** Kicker games and Razzle. Players in `rolling` are playing the call; cycle 0 is the main game, 1+ are replays */
   | { kind: 'play'; call: Call; cycle: number; rolling: Record<PlayerId, PlayerRolls> }
+  /** Tres Away: `pacer` sets the pace; `turn` is who acts; `order` starts at the pacer and goes left */
+  | {
+      kind: 'tresAway'
+      call: Call
+      cycle: number
+      pacer: PlayerId
+      order: PlayerId[]
+      hands: Record<PlayerId, TresHand>
+      turn: PlayerId
+    }
+  /** Boss: `mustKeep` are the Boss's hand dice; `hidden` the dice the Boss re-rolled in secret; `waiting` who still gets a last roll */
+  | {
+      kind: 'boss'
+      call: Call
+      cycle: number
+      players: PlayerId[]
+      boss: PlayerId
+      stage: BossStage
+      mustKeep: number[]
+      hidden: number[]
+      waiting: PlayerId[]
+    }
   /** Round finished; `loser` is null when no pencil was taken. `hammer` already holds the next Hammer. */
   | { kind: 'roundOver'; call: Call; loser: PlayerId | null }
   | { kind: 'gameOver'; winner: PlayerId }
@@ -56,11 +106,18 @@ export type GameEvent =
   | { type: 'barked'; player: PlayerId }
   | { type: 'accepted'; player: PlayerId }
   | { type: 'refused'; player: PlayerId }
-  | { type: 'rolled'; player: PlayerId; dice: Dice; kept: number[] }
+  /** `hidden`: only the roller may see these dice (Tres Away hands, the Boss's secret roll) */
+  | { type: 'rolled'; player: PlayerId; dice: Dice; kept: number[]; hidden?: boolean }
+  | { type: 'putOut'; player: PlayerId; dice: Die[] }
+  | { type: 'boss'; player: PlayerId }
+  | { type: 'noBoss'; players: PlayerId[] }
+  | { type: 'comeUp'; player: PlayerId }
+  | { type: 'dontComeUp'; player: PlayerId }
+  | { type: 'revealed'; player: PlayerId; dice: Dice }
   | { type: 'stood'; player: PlayerId }
   | { type: 'cycle'; players: PlayerId[]; reason: 'missed' | 'tie' }
   | { type: 'pencil'; player: PlayerId; pencils: number; out: boolean }
-  | { type: 'noPencil'; reason: 'two-player-tie' | 'two-player-miss' }
+  | { type: 'noPencil'; reason: 'two-player-tie' | 'two-player-miss' | 'no-boss' | 'boss-stayed-down' }
   | { type: 'gameOver'; winner: PlayerId }
 
 export interface GameState {
@@ -81,9 +138,17 @@ export type Action =
   | { type: 'bark'; player: PlayerId }
   | { type: 'accept'; player: PlayerId }
   | { type: 'refuse'; player: PlayerId }
-  /** Re-roll every die except the kept indices (0–4) */
+  /** Re-roll every die except the kept indices (0–4). Kicker games, Razzle, Boss */
   | { type: 'reroll'; player: PlayerId; keep: number[] }
   | { type: 'stand'; player: PlayerId }
+  /** Tres Away: roll every die still in hand */
+  | { type: 'roll'; player: PlayerId }
+  /** Tres Away: put out these die positions (0–4) from a fresh roll */
+  | { type: 'putOut'; player: PlayerId; dice: number[] }
+  /** Boss: everyone else gets one last roll */
+  | { type: 'comeUp'; player: PlayerId }
+  /** Boss: no loser this round */
+  | { type: 'dontComeUp'; player: PlayerId }
   | { type: 'nextRound' }
 
 export interface CreateGameOptions {
@@ -113,6 +178,18 @@ export function refusalSeats(state: GameState): { first: PlayerId; second?: Play
   const first = nextActive(state, state.hammer)
   const second = nextActive(state, first)
   return second === state.hammer ? { first } : { first, second }
+}
+
+/** `ids` in seat order, starting at `from` (or the first of them to its left) */
+export function seatOrderFrom(state: GameState, from: PlayerId, ids: PlayerId[]): PlayerId[] {
+  const start = state.seats.findIndex((s) => s.id === from)
+  const n = state.seats.length
+  const out: PlayerId[] = []
+  for (let step = 0; step < n; step++) {
+    const id = state.seats[(start + step) % n].id
+    if (ids.includes(id)) out.push(id)
+  }
+  return out
 }
 
 /* ── Setup ── */
@@ -184,35 +261,108 @@ function assertActor(player: PlayerId, expected: PlayerId, what: string) {
 }
 
 function validateCall(call: Call) {
-  if (!isKickerGame(call.game)) {
-    throw new EngineError(`${call.game} can't be played in the engine yet`)
+  if (isSpecialtyGame(call.game)) {
+    if (call.variant !== undefined) throw new EngineError(`${call.game} has no high/low variant`)
+    return
   }
+  if (!isKickerGame(call.game)) throw new EngineError(`Unknown game: ${call.game}`)
   if (call.variant !== 'high' && call.variant !== 'low') {
     throw new EngineError(`${call.game} needs a variant (high or low)`)
   }
 }
 
-function startPlay(state: GameState, call: Call): GameState {
-  const rolling: Record<PlayerId, PlayerRolls> = {}
-  activeSeats(state).forEach((s) => (rolling[s.id] = { rollsUsed: 1, done: false }))
-  return { ...state, phase: { kind: 'play', call, cycle: 0, rolling } }
+const validIndices = (indices: number[]) =>
+  new Set(indices).size === indices.length && indices.every((i) => Number.isInteger(i) && i >= 0 && i <= 4)
+
+/** Roll the given die positions of a player's dice; the rest stay. */
+function rollPositions(state: GameState, player: PlayerId, positions: number[]): GameState {
+  const [fresh, source] = rollDice(state.source, positions.length)
+  const dice = [...state.dice[player]]
+  positions.forEach((i, j) => (dice[i] = fresh[j]))
+  return { ...state, source, dice: { ...state.dice, [player]: dice } }
 }
+
+/** Enter the called game's play phase for `players`, who already hold their roll 1. */
+function enterPlay(state: GameState, call: Call, cycle: number, players: PlayerId[]): GameState {
+  if (call.game === 'tres-away') {
+    // The caller sets the pace; in a replay, the tied player nearest the caller does [inferred]
+    const pacer = seatOrderFrom(state, state.hammer, players)[0]
+    const hands: Record<PlayerId, TresHand> = {}
+    players.forEach((id) => (hands[id] = { out: [], fresh: true, rolls: 1 }))
+    const order = seatOrderFrom(state, pacer, players)
+    return { ...state, phase: { kind: 'tresAway', call, cycle, pacer, order, hands, turn: pacer } }
+  }
+
+  if (call.game === 'boss') {
+    const best = bestHands(players, (id) => state.dice[id], compareBoss)
+    if (best.length > 1) {
+      // A tie for the best hand: no Boss. In the main game nobody loses;
+      // in a replay the tied players start over [inferred]
+      const next = log(state, { type: 'noBoss', players: best })
+      return cycle === 0 ? noPencil(next, call, 'no-boss') : startCycle(next, call, cycle, players, 'tie')
+    }
+    const boss = best[0]
+    return log(
+      {
+        ...state,
+        phase: {
+          kind: 'boss',
+          call,
+          cycle,
+          players,
+          boss,
+          stage: 'bossRoll',
+          mustKeep: bossHand(state.dice[boss]).handDice,
+          hidden: [],
+          waiting: [],
+        },
+      },
+      { type: 'boss', player: boss }
+    )
+  }
+
+  const rolling: Record<PlayerId, PlayerRolls> = {}
+  players.forEach((id) => (rolling[id] = { rollsUsed: 1, done: false }))
+  return { ...state, phase: { kind: 'play', call, cycle, rolling } }
+}
+
+const startPlay = (state: GameState, call: Call): GameState =>
+  enterPlay(
+    state,
+    call,
+    0,
+    activeSeats(state).map((s) => s.id)
+  )
 
 /** Players start a new cycle of the same call with fresh rolls. */
 function startCycle(state: GameState, call: Call, cycle: number, players: PlayerId[], reason: 'missed' | 'tie'): GameState {
   let source = state.source
   const dice = { ...state.dice }
-  const rolling: Record<PlayerId, PlayerRolls> = {}
   players.forEach((id) => {
     const [roll, next] = rollDice(source, 5)
     dice[id] = roll
     source = next
-    rolling[id] = { rollsUsed: 1, done: false }
   })
+  return enterPlay(log({ ...state, dice, source }, { type: 'cycle', players, reason }), call, cycle + 1, players)
+}
+
+/** The round ends without a pencil; the Hammer passes left. */
+function noPencil(
+  state: GameState,
+  call: Call,
+  reason: 'two-player-tie' | 'two-player-miss' | 'no-boss' | 'boss-stayed-down'
+): GameState {
   return log(
-    { ...state, dice, source, phase: { kind: 'play', call, cycle: cycle + 1, rolling } },
-    { type: 'cycle', players, reason }
+    { ...state, hammer: nextActive(state, state.hammer), phase: { kind: 'roundOver', call, loser: null } },
+    { type: 'noPencil', reason }
   )
+}
+
+/** Worst hand loses; tied worst hands replay, except with two players left (§4). */
+function settleWorst(state: GameState, call: Call, cycle: number, worst: PlayerId[]): GameState {
+  if (worst.length === 1) return scorePencil(state, call, worst[0])
+  if (activeSeats(state).length === 2) return noPencil(state, call, 'two-player-tie')
+  return startCycle(state, call, cycle, worst, 'tie')
 }
 
 function scorePencil(state: GameState, call: Call, loser: PlayerId): GameState {
@@ -241,23 +391,127 @@ function maybeResolve(state: GameState): GameState {
   if (!Object.values(phase.rolling).every((r) => r.done)) return state
 
   const call = phase.call
+  const players = Object.keys(phase.rolling)
+  if (call.game === 'razzle') {
+    return settleWorst(state, call, phase.cycle, worstHands(players, (id) => state.dice[id], compareRazzle))
+  }
   if (!isKickerGame(call.game) || !call.variant) throw new EngineError('Unsupported call in play')
 
   const hands: Record<PlayerId, Dice> = {}
-  Object.keys(phase.rolling).forEach((id) => (hands[id] = state.dice[id]))
+  players.forEach((id) => (hands[id] = state.dice[id]))
   const result = resolveKickerCycle(hands, call.game, call.variant)
 
   if (result.kind === 'loser') return scorePencil(state, call, result.loser)
+  if (result.kind === 'tie') return settleWorst(state, call, phase.cycle, result.players)
+  // Two or more missed. With only two players left in the game: no pencil, the Hammer passes.
+  if (activeSeats(state).length === 2) return noPencil(state, call, 'two-player-miss')
+  return startCycle(state, call, phase.cycle, result.players, 'missed')
+}
 
-  // With only two players left in the game, a tie or both missing: no pencil, the Hammer passes.
-  if (activeSeats(state).length === 2) {
+/* ── Tres Away (§3.2) ── */
+
+/**
+ * Whose turn it is: anyone behind the pacer's count catches up, in order
+ * from the pacer's left; then the pacer goes again. Null when all dice are out.
+ */
+function tresTurn(order: PlayerId[], hands: Record<PlayerId, TresHand>): PlayerId | null {
+  const [pacer, ...others] = order
+  const target = hands[pacer].out.length
+  const behind = others.find((id) => hands[id].out.length < target)
+  if (behind) return behind
+  return hands[pacer].out.length < 5 ? pacer : null
+}
+
+function tresAwayAction(state: GameState, action: Action): GameState {
+  const phase = state.phase
+  if (phase.kind !== 'tresAway') throw new EngineError('Not playing Tres Away')
+  if (action.type !== 'roll' && action.type !== 'putOut') {
+    throw new EngineError(`Can't ${action.type} in Tres Away`)
+  }
+  assertActor(action.player, phase.turn, action.type === 'roll' ? 'roll' : 'put out dice')
+  const hand = phase.hands[action.player]
+  const inHand = [0, 1, 2, 3, 4].filter((i) => !hand.out.includes(i))
+
+  if (action.type === 'roll') {
+    if (hand.fresh) throw new EngineError('Put out at least one die from this roll first')
+    let next = rollPositions(state, action.player, inHand)
+    next = log(next, { type: 'rolled', player: action.player, dice: next.dice[action.player], kept: hand.out, hidden: true })
+    const rolled: TresHand = { ...hand, fresh: true, rolls: hand.rolls + 1 }
+    next = { ...next, phase: { ...phase, hands: { ...phase.hands, [action.player]: rolled } } }
+    // A last single die is put out as soon as it's rolled
+    return inHand.length === 1 ? tresAwayAction(next, { type: 'putOut', player: action.player, dice: inHand }) : next
+  }
+
+  if (!hand.fresh) throw new EngineError('Roll before putting out more dice')
+  if (!action.dice.length || !validIndices(action.dice) || action.dice.some((i) => !inHand.includes(i))) {
+    throw new EngineError('Put out at least one die from your hand')
+  }
+  const hands = { ...phase.hands, [action.player]: { ...hand, out: [...hand.out, ...action.dice], fresh: false } }
+  const next = log(state, {
+    type: 'putOut',
+    player: action.player,
+    dice: action.dice.map((i) => state.dice[action.player][i]),
+  })
+  const turn = tresTurn(phase.order, hands)
+  if (turn) return { ...next, phase: { ...phase, hands, turn } }
+
+  // Everyone's dice are out: the highest score loses
+  const worst = worstHands(phase.order, (id) => state.dice[id], compareTresAway)
+  return settleWorst({ ...next, phase: { ...phase, hands } }, phase.call, phase.cycle, worst)
+}
+
+/* ── Boss (§3.3) ── */
+
+function bossAction(state: GameState, action: Action): GameState {
+  const phase = state.phase
+  if (phase.kind !== 'boss') throw new EngineError('Not playing Boss')
+
+  if (phase.stage === 'bossRoll') {
+    if (action.type !== 'reroll' && action.type !== 'stand') throw new EngineError('The Boss rolls once more first')
+    assertActor(action.player, phase.boss, 'roll as Boss')
+    if (action.type === 'stand') return { ...state, phase: { ...phase, stage: 'decide' } }
+    if (!validIndices(action.keep)) throw new EngineError('Keep must be distinct die positions 0–4')
+    if (phase.mustKeep.some((i) => !action.keep.includes(i))) {
+      throw new EngineError('The Boss must keep the dice that made them Boss')
+    }
+    const positions = [0, 1, 2, 3, 4].filter((i) => !action.keep.includes(i))
+    const next = rollPositions(state, action.player, positions)
     return log(
-      { ...state, hammer: nextActive(state, state.hammer), phase: { kind: 'roundOver', call, loser: null } },
-      { type: 'noPencil', reason: result.kind === 'cycle' ? 'two-player-miss' : 'two-player-tie' }
+      { ...next, phase: { ...phase, stage: 'decide', hidden: positions } },
+      { type: 'rolled', player: action.player, dice: next.dice[action.player], kept: [...action.keep], hidden: true }
     )
   }
-  if (result.kind === 'cycle') return startCycle(state, call, phase.cycle, result.players, 'missed')
-  return startCycle(state, call, phase.cycle, result.players, 'tie')
+
+  if (phase.stage === 'decide') {
+    if (action.type !== 'comeUp' && action.type !== 'dontComeUp') {
+      throw new EngineError('The Boss decides: come up or don’t come up')
+    }
+    assertActor(action.player, phase.boss, 'decide')
+    if (action.type === 'dontComeUp') {
+      return noPencil(log(state, { type: 'dontComeUp', player: action.player }), phase.call, 'boss-stayed-down')
+    }
+    const waiting = seatOrderFrom(state, phase.boss, phase.players).slice(1)
+    return log({ ...state, phase: { ...phase, stage: 'comeUp', waiting } }, { type: 'comeUp', player: action.player })
+  }
+
+  // comeUp: one last roll each, in order from the Boss's left, shown as soon as it's rolled
+  if (action.type !== 'reroll' && action.type !== 'stand') throw new EngineError('Take your last roll')
+  const [current, ...waiting] = phase.waiting
+  assertActor(action.player, current, 'take a last roll')
+  let next = state
+  if (action.type === 'reroll') {
+    if (!validIndices(action.keep)) throw new EngineError('Keep must be distinct die positions 0–4')
+    next = rollPositions(state, action.player, [0, 1, 2, 3, 4].filter((i) => !action.keep.includes(i)))
+    next = log(next, { type: 'rolled', player: action.player, dice: next.dice[action.player], kept: [...action.keep] })
+  } else {
+    next = log(next, { type: 'stood', player: action.player })
+  }
+  if (waiting.length) return { ...next, phase: { ...phase, waiting } }
+
+  // Everyone has rolled: the Boss shows their dice, and the worst hand loses (it can be the Boss)
+  next = log({ ...next, phase: { ...phase, waiting, hidden: [] } }, { type: 'revealed', player: phase.boss, dice: next.dice[phase.boss] })
+  const worst = worstHands(phase.players, (id) => next.dice[id], compareBoss)
+  return settleWorst(next, phase.call, phase.cycle, worst)
 }
 
 /* ── The reducer ── */
@@ -333,20 +587,13 @@ export function applyAction(state: GameState, action: Action): GameState {
         }
 
         const keep = action.keep
-        if (new Set(keep).size !== keep.length || keep.some((i) => !Number.isInteger(i) || i < 0 || i > 4)) {
-          throw new EngineError('Keep must be distinct die positions 0–4')
-        }
-        const current = state.dice[action.player]
-        const toRoll = current.map((_, i) => i).filter((i) => !keep.includes(i))
-        const [fresh, source] = rollDice(state.source, toRoll.length)
-        const dice = [...current]
-        toRoll.forEach((i, j) => (dice[i] = fresh[j]))
+        if (!validIndices(keep)) throw new EngineError('Keep must be distinct die positions 0–4')
+        const rolled = rollPositions(state, action.player, [0, 1, 2, 3, 4].filter((i) => !keep.includes(i)))
+        const dice = rolled.dice[action.player]
 
         const rollsUsed = rolls.rollsUsed + 1
         const next: GameState = {
-          ...state,
-          source,
-          dice: { ...state.dice, [action.player]: dice },
+          ...rolled,
           phase: {
             ...phase,
             rolling: { ...phase.rolling, [action.player]: { rollsUsed, done: rollsUsed >= MAX_ROLLS } },
@@ -356,6 +603,12 @@ export function applyAction(state: GameState, action: Action): GameState {
       }
       break
     }
+
+    case 'tresAway':
+      return tresAwayAction(state, action)
+
+    case 'boss':
+      return bossAction(state, action)
 
     case 'roundOver': {
       if (action.type === 'nextRound') {
@@ -373,26 +626,45 @@ export function applyAction(state: GameState, action: Action): GameState {
 
 /* ── Views ── */
 
+/** A player's dice as one viewer sees them: null for a hidden die, or for a fully hidden hand */
+export type VisibleDice = (Die | null)[] | null
+
 export interface PlayerView {
   viewer: PlayerId
   seats: Seat[]
   hammer: PlayerId
   round: number
   phase: Phase
-  /** Other players' dice are null while hidden (before play starts) */
-  dice: Record<PlayerId, Dice | null>
+  dice: Record<PlayerId, VisibleDice>
+  /** Other players' hidden rolls have their dice removed */
   log: GameEvent[]
 }
 
+/** Which of `id`'s dice the other players can't see right now */
+function hiddenPositions(state: GameState, id: PlayerId): number[] | 'all' {
+  const { phase } = state
+  // The initial roll is hidden until play starts (§2)
+  if (phase.kind === 'call' || phase.kind === 'refusal' || phase.kind === 'secondCall') return 'all'
+  // Tres Away: dice in hand stay hidden until put out (§3.2)
+  if (phase.kind === 'tresAway' && phase.hands[id]) {
+    return [0, 1, 2, 3, 4].filter((i) => !phase.hands[id].out.includes(i))
+  }
+  // Boss: the Boss's extra roll is hidden until the end (§3.3)
+  if (phase.kind === 'boss' && phase.boss === id) return phase.hidden
+  return []
+}
+
 /**
- * What one player is allowed to see. The initial roll is hidden until play
- * starts (§2, §3.1). The dice source is never exposed, since it would reveal
- * future rolls.
+ * What one player is allowed to see. The dice source is never exposed,
+ * since it would reveal future rolls.
  */
 export function viewFor(state: GameState, viewer: PlayerId): PlayerView {
-  const hidden = state.phase.kind === 'call' || state.phase.kind === 'refusal' || state.phase.kind === 'secondCall'
-  const dice: Record<PlayerId, Dice | null> = {}
-  Object.entries(state.dice).forEach(([id, d]) => (dice[id] = hidden && id !== viewer ? null : d))
+  const dice: Record<PlayerId, VisibleDice> = {}
+  Object.entries(state.dice).forEach(([id, d]) => {
+    const hidden = id === viewer ? [] : hiddenPositions(state, id)
+    dice[id] = hidden === 'all' ? null : d.map((face, i) => (hidden.includes(i) ? null : face))
+  })
+  const log = state.log.map((e) => (e.type === 'rolled' && e.hidden && e.player !== viewer ? { ...e, dice: [] } : e))
   return {
     viewer,
     seats: state.seats,
@@ -400,6 +672,6 @@ export function viewFor(state: GameState, viewer: PlayerId): PlayerView {
     round: state.round,
     phase: state.phase,
     dice,
-    log: state.log,
+    log,
   }
 }

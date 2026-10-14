@@ -53,12 +53,13 @@ src/
 src/engine/
   types.ts         Die, Call, HouseRules, EngineError
   dice-source.ts   Seeded (mulberry32) or scripted dice; pure
-  rules/           Kicker games: making the game, kicker totals, finding a cycle's loser
+  rules/           Kicker games (making the game, kicker totals, a cycle's loser) and
+                   specialty-games.ts (Tres Away score, Razzle score, Boss poker hands)
   round/game.ts    Full game: createGame / applyAction (reducer) / viewFor (hidden info)
   index.ts         Public API; import from '../engine'
 ```
 
-Kicker games are fully playable. Tres Away, Boss and Razzle are rejected by `validateCall` until their procedures (docs/RULES.md §3.2–3.4) are implemented. Planned: `src/strategy/` for recommendation and odds logic built on the engine.
+All ten games are playable. Kicker games and Razzle use the `play` phase (simultaneous rolls); Tres Away (`tresAway` phase: `putOut`/`roll`, caller-paced) and Boss (`boss` phase: hidden Boss roll, `comeUp`/`dontComeUp`) have their own phases. `viewFor` hides what a player mustn't see, including redacting other players' hidden rolls from the log. Planned: `src/strategy/` for recommendation and odds logic built on the engine.
 
 ## Code style
 
@@ -115,7 +116,7 @@ Kicker games are fully playable. Tres Away, Boss and Razzle are rejected by `val
 - **End:** 3 pencils = out; last player standing wins the pot.
 - **Games** (ids from `games-config.js`):
   - `10-2`, `10-3`, `10-4`, `ship-captain-crew`, `monterey`, `vegas` (7's) and `pairs` have high/low variants.
-  - `razzle` (1s are wild for 6s), `boss` and `tres-away` are always playable specialty games.
+  - `razzle` (1s wild; most of one number, higher face breaks equal counts), `boss` (poker hands) and `tres-away` (lowest total, 3s = 0) are specialty games with no variant.
   - `barking` is a non-game entry used for the bark option.
 
 ## Git & workflow

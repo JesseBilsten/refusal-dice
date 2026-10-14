@@ -27,6 +27,7 @@ Each rule is tagged by where it came from:
    - If they refuse, **2nd refusal** (two seats left) accepts or refuses. [site]
    - If either accepts, **everyone plays the call**, including a refuser who refused. A refuser who already has the game keeps their roll and doesn't have to re-roll; nobody is forced to re-roll because they refused. [confirmed]
    - If both refuse, the Hammer makes a **second call**. It must be a different game (not just the other variant), and it can't be refused. Everyone plays it. [site] [confirmed]
+   - **2 players:** there's only a 1st refusal. If they refuse, the Hammer makes the second call and both play it. [confirmed]
 4. **Play** the called game (section 3), then **find the loser** (section 4).
 5. **Score.** The loser takes a pencil and becomes the next Hammer. [site]
    - A player with 3 pencils is out; if the Hammer would pass to them, it goes to the next active player on the left. [site]
@@ -116,8 +117,14 @@ Known variations to support:
 
 ## 6. Open questions
 
-1. **Two players left: refusal.** With only 2 players, there's no second refusal seat. [inferred: the one refuser decides; if they refuse, the Hammer makes a second call]
+Engine choices made without a ruling yet (the engine does the [inferred] thing until told otherwise):
+
+1. **Tres Away replay: who sets the pace?** When tied highest scores replay, the caller may not be among them. [inferred: the tied player nearest the caller, going left, starting with the caller]
+2. **Boss replay: a tie for the best hand.** When tied worst hands replay Boss and two of them tie for the best hand, the main-game rule (no Boss, no loser) would let them all off. [inferred: the replaying players start over with fresh rolls]
+3. **Boss on high card: which dice must the Boss keep?** [inferred: the single highest die. For other hands, the dice of the pairs/sets]
+4. **Boss: may the Boss skip the extra roll?** [inferred: yes, standing is allowed]
+5. **Boss "come up": strict order?** [inferred: the engine enforces order from the Boss's left, since in online play waiting can be an advantage]
 
 ## Resolved questions (2026-10-14)
 
-Players who miss the game cycle until there's one loser; dice are visible during play (except Tres Away/Boss); the initial roll counts after a second call; re-rolling is unrestricted except in Tres Away; Boss re-rolls once keeping their hand, others keep anything, and the Boss can lose; Razzle 1s are wild for any number; only kickers break ties. Boss: a tie for the best initial hand means no Boss and a new game; Razzle: face value breaks equal counts; 2-player table: both missing is a tie (no pencil, Hammer passes).
+Players who miss the game cycle until there's one loser; dice are visible during play (except Tres Away/Boss); the initial roll counts after a second call; re-rolling is unrestricted except in Tres Away; Boss re-rolls once keeping their hand, others keep anything, and the Boss can lose; Razzle 1s are wild for any number; only kickers break ties. Boss: a tie for the best initial hand means no Boss and a new game; Razzle: face value breaks equal counts; 2-player table: both missing is a tie (no pencil, Hammer passes); with 2 players there's only a 1st refusal, and a refusal goes straight to the second call.

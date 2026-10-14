@@ -19,7 +19,7 @@ export type KickerGameId =
   | 'vegas'
   | 'pairs'
 
-/** Games with their own procedures (§3.2–3.4); not playable in the engine yet */
+/** Games with their own procedures (§3.2–3.4) */
 export type SpecialtyGameId = 'razzle' | 'boss' | 'tres-away'
 
 export type GameId = KickerGameId | SpecialtyGameId

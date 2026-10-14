@@ -9,6 +9,7 @@ import {
   EngineError,
   GameState,
   KICKER_GAMES,
+  SPECIALTY_GAMES,
   activeSeats,
   applyAction,
   createGame,
@@ -106,10 +107,10 @@ describe('call and refusal (§2)', () => {
     expect(() => applyAction(called, { type: 'accept', player: 'c' })).toThrow(/not c's turn/)
   })
 
-  test('kicker games need a variant; specialty games are not playable yet', () => {
+  test('kicker games need a variant; unknown games are rejected', () => {
     const g = deal3()
     expect(() => applyAction(g, { type: 'call', player: 'a', call: { game: '10-2' } })).toThrow(/variant/)
-    expect(() => applyAction(g, { type: 'call', player: 'a', call: { game: 'boss' } })).toThrow(/can't be played/)
+    expect(() => applyAction(g, { type: 'call', player: 'a', call: { game: 'yahtzee' as never } })).toThrow(/Unknown/)
   })
 
   test('with two players there is no 2nd refusal', () => {
@@ -305,7 +306,11 @@ describe('random games always finish and keep invariants', () => {
   /** A legal (if not smart) move for whoever must act */
   function randomAction(g: GameState, r: () => number): Action {
     const pick = <T,>(xs: readonly T[]) => xs[Math.floor(r() * xs.length)]
-    const call = () => ({ game: pick(KICKER_GAMES), variant: pick(['high', 'low'] as const) })
+    const call = () =>
+      r() < 0.3
+        ? { game: pick(SPECIALTY_GAMES) }
+        : { game: pick(KICKER_GAMES), variant: pick(['high', 'low'] as const) }
+    const someOf = (xs: number[]) => xs.filter(() => r() < 0.5)
     switch (g.phase.kind) {
       case 'call':
         return r() < 0.1 ? { type: 'bark', player: g.hammer } : { type: 'call', player: g.hammer, call: call() }
@@ -326,6 +331,25 @@ describe('random games always finish and keep invariants', () => {
         return r() < 0.4
           ? { type: 'stand', player: id }
           : { type: 'reroll', player: id, keep: [0, 1, 2, 3, 4].filter(() => r() < 0.5) }
+      }
+      case 'tresAway': {
+        const { turn, hands } = g.phase
+        if (!hands[turn].fresh) return { type: 'roll', player: turn }
+        const inHand = [0, 1, 2, 3, 4].filter((i) => !hands[turn].out.includes(i))
+        const out = someOf(inHand)
+        return { type: 'putOut', player: turn, dice: out.length ? out : [pick(inHand)] }
+      }
+      case 'boss': {
+        const { boss, stage, mustKeep, waiting } = g.phase
+        if (stage === 'bossRoll') {
+          return r() < 0.2
+            ? { type: 'stand', player: boss }
+            : { type: 'reroll', player: boss, keep: [...new Set([...mustKeep, ...someOf([0, 1, 2, 3, 4])])] }
+        }
+        if (stage === 'decide') return { type: r() < 0.8 ? 'comeUp' : 'dontComeUp', player: boss }
+        return r() < 0.2
+          ? { type: 'stand', player: waiting[0] }
+          : { type: 'reroll', player: waiting[0], keep: someOf([0, 1, 2, 3, 4]) }
       }
       case 'roundOver':
         return { type: 'nextRound' }

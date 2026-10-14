@@ -68,7 +68,7 @@ Build it once and every later phase gets cheaper.
    - Replace `window.location.href` with `<Link>`/`navigate`.
    - Fix the manifest name and colors; replace the README with a project README.
 2. **One game list.** ✅ _done 2026-10-14. `games-config.js` is now CommonJS so `gatsby-node.js` and the generators share it. `game-validation.js` still has an inline copy until step 3 moves the rules into `engine/`._
-3. **Extract the engine** from `game-validation.js`: 🟡 _in progress. The kicker-game engine landed 2026-10-14 (`src/engine/`): full round flow, cycles, ties, elimination, hidden-info views, seeded and scripted dice. Tests check it against `checkGame` on all 7,776 rolls and run 2,000 random full games. Next: Tres Away, Boss and Razzle procedures, then moving `game-validation.js`'s strategy code into `src/strategy/` on top of the engine._
+3. **Extract the engine** from `game-validation.js`: 🟡 _in progress. The engine (`src/engine/`) plays all ten games as of 2026-10-14: full round flow, cycles, ties, elimination, hidden-info views (Tres Away hands, the Boss's secret roll), seeded and scripted dice. Tests check it against `checkGame` on all 7,776 rolls and run 2,000 random full games across every game. Next: moving `game-validation.js`'s strategy code into `src/strategy/` on top of the engine._
    - `src/engine/rules`: playable-game checks, kicker/hand comparison, tie rules. Pure functions.
    - `src/engine/round`: an explicit state machine (states + actions + reducer) for a full game, implementing **[docs/RULES.md](docs/RULES.md)** exactly. That's the authoritative rules spec, and engine tests are written against it. Note the per-game play procedures: kicker games use 3 simultaneous rolls; Tres Away uses caller-paced put-out cycles; Boss uses a hidden Boss re-roll then "come up" / "don't come up".
    - `src/strategy/`: the current recommendation logic, moved as-is for now.
@@ -94,6 +94,7 @@ Build it once and every later phase gets cheaper.
 1. **Interactive first round.** A guided tutorial on the engine with scripted dice, explaining each step in context instead of asking people to read the rules first.
 2. **"What can I call?" as the centerpiece.** Tap your five dice and see the playable games and hand strength. The logic exists in `games.js` and the Strategy Assistant; give it a fast, mobile-first screen and make it prominent on the homepage.
 3. **Inline jargon.** Use the existing `Term` component everywhere: Hammer, kicker, pencil, bark, piddle, parity, refusal.
+   - **3D dice with sound (optional).** Rolling 3D dice and dice sounds for the tutorial and game table. Both start **off and muted**; players turn them on in preferences (remembered per browser). Respect `prefers-reduced-motion`, and keep the flat dice as the default and the fallback. Owner request, 2026-10-14.
 4. **Micro-drills.** Quick quizzes with instant feedback: "Which games does this roll make?", "Who takes the pencil?", "Is this second call legal?"
 5. **Simpler information architecture:** **Learn / Practice / Analyze / Play** replaces the current seven tool pages.
 
@@ -193,4 +194,5 @@ Build it once and every later phase gets cheaper.
 | 2026-10-14 | Commit directly to `master` while there's a single developer | Switch to PRs when collaborators join |
 | 2026-10-14 | `docs/RULES.md` is the authoritative rules spec | Engine tests are written against it; player-facing pages must agree with it |
 | 2026-10-14 | House rules are a site-wide setting that recalculates all odds | Owner requirement |
+| 2026-10-14 | 3D dice and sounds are opt-in, off and muted by default | Owner request |
 | 2026-10-14 | Odds Lab ships ahead of Phase 0 | Self-contained (`roll-query.js` is pure and tested), so it doesn't block or depend on the engine split |
