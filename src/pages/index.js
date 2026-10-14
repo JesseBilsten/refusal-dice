@@ -198,7 +198,7 @@ const IndexPage = () => {
 
             <div className="flex flex-col sm:flex-row gap-3 mb-6">
               <Link
-                to="/rules"
+                to="/learn"
                 className="inline-flex items-center justify-center rounded-md text-sm font-medium h-11 px-6 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
               >
                 Learn to Play

@@ -1,6 +1,7 @@
 /** Site navigation, shared by the desktop header and the mobile menu. */
 
 export const PRIMARY_NAV = [
+  { to: '/learn', label: 'Learn' },
   { to: '/rules', label: 'Rules' },
   { to: '/games', label: 'Games' },
   { to: '/strategy-assistant', label: 'Strategy' },

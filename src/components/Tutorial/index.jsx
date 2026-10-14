@@ -1,0 +1,538 @@
+import React, { useCallback, useMemo, useState } from 'react'
+import { Link } from 'gatsby'
+import {
+  applyAction,
+  evaluateKickerHand,
+  refusalSeats,
+  viewFor,
+} from '../../engine'
+import { AVA_ROLLS, BEN_ROLLS, CALL, PLAYERS, newTutorialGame } from './script'
+import { Button, buttonVariants } from '../ui/button'
+import { Badge } from '../ui/badge'
+import { Die, DiceSettings, playRollSound, useDicePrefs } from '../Dice'
+import { cn } from '../../lib/utils'
+
+/**
+ * Interactive first round, played on the real engine with scripted dice so
+ * every player sees the same lesson: call a game, see refusals, play with
+ * keepers, and find the loser.
+ */
+
+const CALL_OPTIONS = [
+  { label: '10-3 High', call: CALL },
+  { label: '10-3 Low', call: { game: '10-3', variant: 'low' } },
+  { label: '10-2 High', call: { game: '10-2', variant: 'high' } },
+  { label: 'Pairs High', call: { game: 'pairs', variant: 'high' } },
+]
+
+const WRONG_CALL = {
+  '10-3 Low':
+    'In Low, the lowest kickers win. Your kickers would be 5+5 = 10, almost the highest possible, so Low is a bad fit.',
+  '10-2 High':
+    'You do make 10-2 with 5+5, but then your kickers are 1+3+6 = 10 out of a possible 18. Only middling.',
+  'Pairs High':
+    'Pairs needs two pairs. You only have one (5-5), so you’d be rolling to make the game.',
+}
+
+const newGame = newTutorialGame
+
+const T = ({ to, children }) => (
+  <Link
+    to={`/glossary#${to}`}
+    className="font-medium text-primary underline-offset-2 hover:underline"
+  >
+    {children}
+  </Link>
+)
+
+/** The dice that make 10-3 and the kicker total, in words */
+function describeHand(dice) {
+  const hand = evaluateKickerHand(dice, '10-3', 'high')
+  if (!hand.made) return { made: false, text: 'No 10-3 yet' }
+  const game = hand.gameDice.map((i) => dice[i]).join('+')
+  const kick = hand.kickerDice.map((i) => dice[i]).join('+')
+  return {
+    made: true,
+    hand,
+    total: hand.kickerTotal,
+    text: `${game} = 10 · kickers ${kick} = ${hand.kickerTotal}`,
+  }
+}
+
+const Tutorial = () => {
+  const [game, setGame] = useState(newGame)
+  const [step, setStep] = useState('welcome')
+  const [rollIds, setRollIds] = useState({
+    you: [0, 0, 0, 0, 0],
+    ava: [0, 0, 0, 0, 0],
+    ben: [0, 0, 0, 0, 0],
+  })
+  const [selected, setSelected] = useState([])
+  const [feedback, setFeedback] = useState(null)
+  const [prefs] = useDicePrefs()
+
+  const view = useMemo(() => viewFor(game, 'you'), [game])
+  const inPlay = game.phase.kind === 'play' || game.phase.kind === 'roundOver'
+
+  /** Apply engine actions; animate (and sound) any dice that were re-rolled */
+  const act = useCallback(
+    (...actions) => {
+      let next = game
+      const bumps = {}
+      for (const action of actions) {
+        next = applyAction(next, action)
+        if (action.type === 'reroll') {
+          bumps[action.player] = [0, 1, 2, 3, 4].filter(
+            (i) => !action.keep.includes(i)
+          )
+        }
+      }
+      setGame(next)
+      const rerolled = Object.values(bumps).flat().length
+      if (rerolled) {
+        setRollIds((ids) => {
+          const out = { ...ids }
+          Object.entries(bumps).forEach(([id, idx]) => {
+            out[id] = ids[id].map((n, i) => (idx.includes(i) ? n + 1 : n))
+          })
+          return out
+        })
+        if (prefs.sound) playRollSound(rerolled)
+      }
+    },
+    [game, prefs.sound]
+  )
+
+  const restart = () => {
+    setGame(newGame())
+    setStep('welcome')
+    setSelected([])
+    setFeedback(null)
+    setRollIds({
+      you: [0, 0, 0, 0, 0],
+      ava: [0, 0, 0, 0, 0],
+      ben: [0, 0, 0, 0, 0],
+    })
+  }
+
+  const firstRoll = () => {
+    setRollIds((ids) => ({
+      you: ids.you.map((n) => n + 1),
+      ava: ids.ava,
+      ben: ids.ben,
+    }))
+    if (prefs.sound) playRollSound(5)
+    setStep('roll')
+  }
+
+  const chooseCall = (option) => {
+    if (option.label !== '10-3 High') {
+      setFeedback(WRONG_CALL[option.label])
+      return
+    }
+    setFeedback(null)
+    act({ type: 'call', player: 'you', call: CALL })
+    setStep('called')
+  }
+
+  const mine = describeHand(game.dice.you)
+  const ben = describeHand(game.dice.ben)
+
+  const toggleDie = (i) => {
+    if (mine.made && mine.hand.gameDice.includes(i)) {
+      setFeedback(
+        `That die is part of your 10 (${mine.hand.gameDice.map((j) => game.dice.you[j]).join('+')}). Re-rolling it could break your game, so only re-roll kickers.`
+      )
+      return
+    }
+    setFeedback(null)
+    setSelected((s) => (s.includes(i) ? s.filter((j) => j !== i) : [...s, i]))
+  }
+
+  const rollMine = () => {
+    act({
+      type: 'reroll',
+      player: 'you',
+      keep: [0, 1, 2, 3, 4].filter((i) => !selected.includes(i)),
+    })
+    setSelected([])
+    setFeedback(null)
+    setStep('afterRoll')
+  }
+
+  /* ── Narration and the one control for each step ── */
+  const steps = {
+    welcome: {
+      title: 'Your first round',
+      body: (
+        <>
+          <p>
+            You're at a table with Ava and Ben. Everyone has five dice. At the
+            start of the game everyone <T to="piddle">piddles</T> (rolls one
+            die), and you rolled highest, so you hold the{' '}
+            <T to="hammer">Hammer</T>: you'll call the game this round.
+          </p>
+          <p>
+            Whoever has the worst hand at the end of the round takes a{' '}
+            <T to="pencil">pencil</T>. Let's play one.
+          </p>
+        </>
+      ),
+      action: <Button onClick={firstRoll}>Roll the dice</Button>,
+    },
+    roll: {
+      title: 'Everyone rolls, and hides their dice',
+      body: (
+        <>
+          <p>
+            Everyone rolls all five dice at once and keeps them hidden. You can
+            see yours; Ava's and Ben's are face down.
+          </p>
+          <p>
+            This roll counts: it's roll 1 of 3 in whatever game gets played.
+          </p>
+        </>
+      ),
+      action: (
+        <Button onClick={() => setStep('call')}>Next: make a call</Button>
+      ),
+    },
+    call: {
+      title: 'Call a game',
+      body: (
+        <>
+          <p>
+            As the Hammer, you name a game, and for most games whether{' '}
+            <strong>High</strong> or <strong>Low</strong>{' '}
+            <T to="kicker">kickers</T> win. Kickers are the dice left over after
+            you make the game.
+          </p>
+          <p>Your dice already make two games:</p>
+          <ul className="list-disc pl-5 space-y-1">
+            <li>
+              <strong>10-3</strong>: three dice adding to 10 (1+3+6), leaving
+              kickers 5+5 = 10
+            </li>
+            <li>
+              <strong>10-2</strong>: two dice adding to 10 (5+5), leaving
+              kickers 1+3+6 = 10
+            </li>
+          </ul>
+          <p>Which call gives you the strongest hand?</p>
+        </>
+      ),
+      action: (
+        <div className="flex flex-wrap gap-2">
+          {CALL_OPTIONS.map((o) => (
+            <Button
+              key={o.label}
+              variant="outline"
+              onClick={() => chooseCall(o)}
+            >
+              {o.label}
+            </Button>
+          ))}
+        </div>
+      ),
+    },
+    called: {
+      title: 'You called 10-3 High',
+      body: (
+        <p>
+          Two kickers can total at most 12, so your 5+5 = 10 is strong. Now the
+          players to your left get a say: first the{' '}
+          <T to="first-refusal">1st refusal</T>, then the{' '}
+          <T to="second-refusal">2nd refusal</T>.
+        </p>
+      ),
+      action: (
+        <Button
+          onClick={() => {
+            act({ type: 'refuse', player: refusalSeats(game).first })
+            setStep('refused')
+          }}
+        >
+          Next: 1st refusal
+        </Button>
+      ),
+    },
+    refused: {
+      title: 'Ava refuses',
+      body: (
+        <p>
+          Ava sits on your left, so she's 1st refusal. She doesn't like her dice
+          for 10-3 High, so she refuses. Refusing doesn't give her new dice: it
+          only asks for a different game. Now it's Ben's turn as 2nd refusal.
+        </p>
+      ),
+      action: (
+        <Button
+          onClick={() => {
+            act({ type: 'accept', player: 'ben' })
+            setStep('accepted')
+          }}
+        >
+          Next: 2nd refusal
+        </Button>
+      ),
+    },
+    accepted: {
+      title: 'Ben accepts, so everyone plays 10-3 High',
+      body: (
+        <>
+          <p>
+            Once anyone accepts, the whole table plays your call, Ava included.
+            (If Ben had refused too, you'd have to call a different game, and
+            nobody could refuse that one.)
+          </p>
+          <p>
+            Play starts and all dice are turned face up. Each player gets up to
+            3 rolls in total, and the first one has already happened. Everyone's
+            best 10 is outlined; the rest are kickers. You have the best kickers
+            right now.
+          </p>
+        </>
+      ),
+      action: (
+        <Button
+          onClick={() => {
+            act(...AVA_ROLLS)
+            setStep('ava')
+          }}
+        >
+          Next: everyone rolls
+        </Button>
+      ),
+    },
+    ava: {
+      title: 'Ava keeps her 10 and re-rolls a kicker',
+      body: (
+        <p>
+          After each roll you <strong>keep</strong> any dice and re-roll the
+          rest. Ava keeps 2+4+4 and re-rolls her 1. She gets a 6: kickers 6+6 =
+          12, the best possible. She stops rolling.
+        </p>
+      ),
+      action: (
+        <Button
+          onClick={() => {
+            act(...BEN_ROLLS)
+            setStep('ben')
+          }}
+        >
+          Next: Ben rolls
+        </Button>
+      ),
+    },
+    ben: {
+      title: 'Ben catches up',
+      body: (
+        <>
+          <p>
+            Ben keeps 6+3+1 and re-rolls his 2. He gets a 4: kickers{' '}
+            {ben.text.split('kickers ')[1]}. He stops.
+          </p>
+          <p>
+            Now look at the table: your kickers (10) <strong>tie</strong> Ben's
+            for the weakest hand. Tied players would replay the game. You've
+            used 1 roll and have 2 left, so improve your kickers.
+          </p>
+        </>
+      ),
+      action: <Button onClick={() => setStep('yourRoll')}>Your turn</Button>,
+    },
+    yourRoll: {
+      title: 'Re-roll a kicker',
+      body: (
+        <p>
+          Tap one or both of your 5s to pick them up, then roll. Keep your 1, 3
+          and 6: they make your 10, and without them you'd be chasing the game
+          again.
+        </p>
+      ),
+      action: (
+        <Button onClick={rollMine} disabled={!selected.length}>
+          Roll {selected.length || ''} {selected.length === 1 ? 'die' : 'dice'}
+        </Button>
+      ),
+    },
+    afterRoll: {
+      title: mine.made ? `Kickers ${mine.total}: you beat Ben` : 'Your roll',
+      body: (
+        <p>
+          {mine.text}. Ben's 10 is now the weakest hand at the table. You could
+          roll once more, but you're already safe, so <strong>stand</strong> to
+          keep what you have.
+        </p>
+      ),
+      action: (
+        <Button
+          onClick={() => {
+            act({ type: 'stand', player: 'you' })
+            setStep('done')
+          }}
+        >
+          Stand
+        </Button>
+      ),
+    },
+    done: {
+      title: 'Ben takes a pencil',
+      body: (
+        <>
+          <p>
+            Ben has the weakest hand, so he takes a pencil, and he's the Hammer
+            next round. Three pencils and you're out; the last player standing
+            wins the pot.
+          </p>
+          <p>That's a whole round. Real rounds add a few twists:</p>
+          <ul className="list-disc pl-5 space-y-1">
+            <li>
+              If exactly one player <strong>misses</strong> the game, they lose,
+              however good everyone's kickers are.
+            </li>
+            <li>
+              The Hammer can <T to="bark">bark</T> instead of calling: the
+              Hammer passes left and everyone re-rolls.
+            </li>
+            <li>Tres Away, Boss and Razzle each play a little differently.</li>
+          </ul>
+        </>
+      ),
+      action: (
+        <div className="flex flex-wrap gap-2">
+          <Link to="/rules" className={buttonVariants()}>
+            Read the full rules
+          </Link>
+          <Link to="/games" className={buttonVariants({ variant: 'outline' })}>
+            Explore the 10 games
+          </Link>
+          <Button variant="ghost" onClick={restart}>
+            Play the round again
+          </Button>
+        </div>
+      ),
+    },
+  }
+
+  const current = steps[step]
+  const seats = refusalSeats(game)
+  const role =
+    game.phase.kind === 'roundOver'
+      ? { [game.hammer]: '🔨 Next Hammer' }
+      : {
+          [game.hammer]: '🔨 Hammer',
+          [seats.first]: '1st refusal',
+          [seats.second]: '2nd refusal',
+        }
+  const decisions = {}
+  game.log.forEach((e) => {
+    if (e.type === 'refused') decisions[e.player] = 'Refused'
+    if (e.type === 'accepted') decisions[e.player] = 'Accepted'
+    if (e.type === 'stood') decisions[e.player] = 'Standing'
+  })
+
+  return (
+    <div className="space-y-6">
+      {/* The table */}
+      <div className="grid gap-3 sm:grid-cols-3">
+        {PLAYERS.map((p) => {
+          const seat = game.seats.find((s) => s.id === p.id)
+          const dice =
+            step === 'welcome' && p.id === 'you'
+              ? [null, null, null, null, null]
+              : view.dice[p.id]
+          const status = inPlay ? describeHand(game.dice[p.id]) : null
+          const isLoser =
+            game.phase.kind === 'roundOver' && game.phase.loser === p.id
+          const pickable = p.id === 'you' && step === 'yourRoll'
+          return (
+            <div
+              key={p.id}
+              className={cn(
+                'rounded-lg border bg-card p-3',
+                p.id === 'you' && 'border-primary/60',
+                isLoser && 'border-destructive'
+              )}
+            >
+              <div className="mb-2 flex flex-wrap items-center gap-2">
+                <span className="font-semibold">{p.name}</span>
+                {role[p.id] && <Badge variant="secondary">{role[p.id]}</Badge>}
+                {decisions[p.id] && (
+                  <Badge variant="outline">{decisions[p.id]}</Badge>
+                )}
+                <span
+                  className="ml-auto text-xs text-muted-foreground"
+                  aria-label={`${seat.pencils} pencils`}
+                >
+                  {seat.pencils ? '✏️'.repeat(seat.pencils) : 'No pencils'}
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {(dice || [null, null, null, null, null]).map((d, i) => (
+                  <Die
+                    key={i}
+                    value={d}
+                    size={40}
+                    rollId={rollIds[p.id][i]}
+                    tone={
+                      status?.made
+                        ? status.hand.gameDice.includes(i)
+                          ? 'game'
+                          : 'kicker'
+                        : undefined
+                    }
+                    selected={pickable && selected.includes(i)}
+                    onClick={pickable ? () => toggleDie(i) : undefined}
+                  />
+                ))}
+              </div>
+              {status && (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {status.text}
+                </p>
+              )}
+              {isLoser && (
+                <p className="mt-1 text-xs font-semibold text-destructive">
+                  Weakest hand: takes a pencil
+                </p>
+              )}
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Narration */}
+      <div
+        className="rounded-lg border bg-muted/30 p-4 sm:p-5"
+        aria-live="polite"
+      >
+        <h2 className="mb-2 text-lg font-semibold">{current.title}</h2>
+        <div className="space-y-2 text-sm leading-relaxed text-muted-foreground">
+          {current.body}
+        </div>
+        {feedback && (
+          <p className="mt-3 rounded-md border border-destructive/40 bg-destructive/10 p-2 text-sm text-foreground">
+            {feedback}
+          </p>
+        )}
+        <div className="mt-4">{current.action}</div>
+      </div>
+
+      <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
+        <DiceSettings />
+        {step !== 'welcome' && (
+          <button
+            type="button"
+            onClick={restart}
+            className="underline-offset-2 hover:underline"
+          >
+            Start over
+          </button>
+        )}
+      </div>
+    </div>
+  )
+}
+
+export default Tutorial

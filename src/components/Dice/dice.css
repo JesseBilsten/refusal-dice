@@ -1,0 +1,47 @@
+/* 3D dice (opt-in) */
+.dice-scene {
+  display: inline-block;
+}
+
+.dice-cube {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.9s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+
+.dice-cube-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+}
+
+/* Flat dice: a short wobble when rolled */
+@keyframes dice-wobble {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  30% {
+    transform: rotate(-14deg) scale(1.08);
+  }
+  60% {
+    transform: rotate(10deg) scale(0.96);
+  }
+  100% {
+    transform: rotate(0deg) scale(1);
+  }
+}
+
+.dice-wobble {
+  animation: dice-wobble 0.45s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dice-cube {
+    transition: none;
+  }
+  .dice-wobble {
+    animation: none;
+  }
+}

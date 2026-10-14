@@ -36,6 +36,8 @@ src/
   pages/            Gatsby file-based routes (one file = one URL)
   templates/        game-detail.js → /games/<id> (created in gatsby-node.js)
   components/       App components; ui/ = shadcn primitives; nav-items.js = site navigation
+                    Dice/ = SVG die faces, opt-in 3D dice and sound (useDicePrefs; both off by default)
+                    Tutorial/ = the /learn guided round (script.ts holds its scripted dice)
   lib/
     games-config.js     SINGLE SOURCE OF TRUTH for the game list and metadata (CommonJS; also used by gatsby-node.js and generators)
     game-validation.js  Rules + heuristic strategy (being split up, see below)
@@ -77,7 +79,7 @@ Simulated odds mean "against (and as) solid bots". Show the sample size and that
 
 - **Prettier:** no semicolons, single quotes, ES5 trailing commas (`.prettierrc`). Some older files (`game-validation.js`, `gatsby-node.js`) still use semicolons. Follow the file you're in, and format files you substantially rewrite.
 - **Components:** function components + hooks; `.jsx` for components, `.js` for pages (existing convention). PascalCase component files or `Component/index.js` folders.
-- **Imports:** the `@/` alias maps to `src/` (`jsconfig.json`); prefer it for new code.
+- **Imports:** use relative imports. `jsconfig.json` declares an `@/` alias for editors, but Gatsby's webpack isn't configured for it, so `@/` imports fail the build.
 - **Styling:**
   - Tailwind utilities only.
   - Use the semantic color tokens (`bg-background`, `text-foreground`, `text-muted-foreground`, `bg-primary`, `border-border`, …) from `tailwind.config.js`/`global.css`, never raw hex values.
