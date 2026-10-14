@@ -233,6 +233,24 @@ describe('playing and scoring (§3.1, §4)', () => {
     expect(g.seats.every((s) => s.pencils === 0)).toBe(true)
   })
 
+  test('with two players left, both missing takes no pencil and the Hammer passes', () => {
+    const g = play(
+      createGame({
+        players: players('a', 'b'),
+        hammer: 'a',
+        source: scripted([1, 1, 1, 1, 1, 2, 2, 2, 2, 2]),
+      }),
+      { type: 'call', player: 'a', call: { game: '10-2', variant: 'high' } },
+      { type: 'accept', player: 'b' },
+      { type: 'stand', player: 'a' },
+      { type: 'stand', player: 'b' }
+    )
+    expect(g.phase).toMatchObject({ kind: 'roundOver', loser: null })
+    expect(g.log.at(-1)).toEqual({ type: 'noPencil', reason: 'two-player-miss' })
+    expect(g.hammer).toBe('b')
+    expect(g.seats.every((s) => s.pencils === 0)).toBe(true)
+  })
+
   test('out after the last pencil; the Hammer skips them; last player standing wins', () => {
     let g = createGame({
       players: players('a', 'b', 'c'),

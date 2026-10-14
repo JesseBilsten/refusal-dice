@@ -233,12 +233,13 @@ const RulesPage = () => (
                 <Link to="/games/boss" className="font-medium text-primary hover:underline">Boss</Link>: poker
                 hands without straights. The best first roll is the Boss, who rolls once more in secret (keeping the
                 hand that made them Boss). Then the Boss says <em>"come up"</em> (everyone else gets one last roll,
-                and the worst hand loses, even if that's the Boss) or <em>"don't come up"</em> (no loser).
+                and the worst hand loses, even if that's the Boss) or <em>"don't come up"</em> (no loser). A tie
+                for the best first roll means no Boss: no loser, and the Hammer passes left.
               </li>
               <li>
                 <Link to="/games/razzle" className="font-medium text-primary hover:underline">Razzle</Link>: most
-                of any one number, with 1s wild. Three 1s and a 4 make four 4s. Re-rolling everything to chase
-                1s and 6s is common.
+                of any one number, with 1s wild. Three 1s and a 4 make four 4s. Equal counts go to the higher
+                face, so four 6s beat four 4s. Re-rolling everything to chase 1s and 6s is common.
               </li>
             </ul>
           </Collapse>
@@ -266,7 +267,8 @@ const RulesPage = () => (
               <span className="shrink-0 mt-0.5">🤝</span>
               <p>
                 <strong>Tied for worst?</strong> The tied players replay the same game (same High/Low) with fresh
-                rolls. With only 2 players left in the game, a tie means no pencil and the Hammer passes.
+                rolls. With only 2 players left in the game, a tie (or both missing) means no pencil and the
+                Hammer passes.
               </p>
             </div>
             <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/50 rounded p-2">

@@ -532,7 +532,7 @@ const GamesPage = () => {
               </Badge>
             )}
           </div>
-          <p className="mb-2">Most amount of any one number with aces being wild.</p>
+          <p className="mb-2">Most amount of any one number with aces being wild. Equal counts go to the higher face: four 6s beat four 4s.</p>
           <div className="mb-3 p-3 bg-primary/10 dark:bg-primary/20 border border-primary/20 dark:border-primary/40 rounded-lg">
             <strong className="text-primary dark:text-primary">When to Call:</strong> <span className="text-foreground">Call with 3+ wild 6s (1s + 6s), or 5 of any other number. About 21% of rolls meet this competitive threshold. 4+ wild sixes (~4.5%) is a strong call. Over 3 rolls keeping 1s and 6s, players average 3.5 wild sixes.</span>
           </div>
@@ -604,7 +604,7 @@ const GamesPage = () => {
             <li>High Card (e.g., 6-5-4-3-1)</li>
           </ul>
           <p className="mb-2">
-            <strong>Boss Mechanics:</strong> If there's a Boss, they can pick up and re-roll any dice that won't break their winning hand. After re-rolling, the Boss can either call up the other players (everyone re-rolls once to avoid losing) or say "Pick them up" (no loser, play passes left).
+            <strong>Boss Mechanics:</strong> If two players tie for the best first roll, there's no Boss: no loser, and the Hammer passes left. If there's a Boss, they can pick up and re-roll any dice that won't break their winning hand. After re-rolling, the Boss can either call up the other players (everyone re-rolls once to avoid losing) or say "Pick them up" (no loser, play passes left).
           </p>
           <p className="text-sm text-muted-foreground mb-3">
             Note: Hands use poker tie-breaking rules. Two pairs with 6s over 2s beats two pairs with 5s over 4s.

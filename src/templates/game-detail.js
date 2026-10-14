@@ -60,11 +60,11 @@ const GAME_CONTENT = {
     partialKeep: 'If you don\'t have 2 pairs yet but have 1 pair, keep that pair and re-roll the remaining 3 dice to find a second pair. With 2 remaining rolls, this partial-keep strategy significantly increases your chances of getting the game compared to re-rolling all 5 dice.',
   },
   razzle: {
-    description: 'Most amount of any one number with aces being wild.',
+    description: 'Most amount of any one number with aces being wild. Equal counts go to the higher face: four 6s beat four 4s.',
     strategy: 'Call with 3 or more 1s/6s (wild sixes), or 5 of any other number. About 21% of rolls meet this competitive threshold. Over 3 rolls keeping 1s and 6s, players average 3.5 wild sixes.',
   },
   boss: {
-    description: 'Poker-style hands without straights or flushes. All players reveal their dice, and the highest hand becomes the "Boss."',
+    description: 'Poker-style hands without straights or flushes. All players reveal their dice, and the highest hand becomes the "Boss." A tie for the best hand means no Boss: no loser, and the Hammer passes left.',
     strategy: 'Call with Two Pair or better (competitive threshold, ~44% of rolls). Trips or better (~21%) is a strong call. You can keep matching dice and re-roll the others twice to improve your hand.',
     partialKeep: 'You can keep any dice that help your poker hand and re-roll the rest. For example, with Three of a Kind, keep those three dice and re-roll the other two to try for Four/Five of a Kind or a Full House.',
   },

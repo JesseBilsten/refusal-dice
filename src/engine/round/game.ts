@@ -60,7 +60,7 @@ export type GameEvent =
   | { type: 'stood'; player: PlayerId }
   | { type: 'cycle'; players: PlayerId[]; reason: 'missed' | 'tie' }
   | { type: 'pencil'; player: PlayerId; pencils: number; out: boolean }
-  | { type: 'noPencil'; reason: 'two-player-tie' }
+  | { type: 'noPencil'; reason: 'two-player-tie' | 'two-player-miss' }
   | { type: 'gameOver'; winner: PlayerId }
 
 export interface GameState {
@@ -248,15 +248,15 @@ function maybeResolve(state: GameState): GameState {
   const result = resolveKickerCycle(hands, call.game, call.variant)
 
   if (result.kind === 'loser') return scorePencil(state, call, result.loser)
-  if (result.kind === 'cycle') return startCycle(state, call, phase.cycle, result.players, 'missed')
 
-  // Tie for worst kicker. With only two players left in the game: no pencil.
+  // With only two players left in the game, a tie or both missing: no pencil, the Hammer passes.
   if (activeSeats(state).length === 2) {
     return log(
       { ...state, hammer: nextActive(state, state.hammer), phase: { kind: 'roundOver', call, loser: null } },
-      { type: 'noPencil', reason: 'two-player-tie' }
+      { type: 'noPencil', reason: result.kind === 'cycle' ? 'two-player-miss' : 'two-player-tie' }
     )
   }
+  if (result.kind === 'cycle') return startCycle(state, call, phase.cycle, result.players, 'missed')
   return startCycle(state, call, phase.cycle, result.players, 'tie')
 }
 

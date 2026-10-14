@@ -75,7 +75,7 @@ Each rule is tagged by where it came from:
 
 - **Hands** (high to low), poker-style without straights or flushes: five of a kind, four of a kind, full house, three of a kind, two pair, pair, high card. Ties use poker tie-breaks (e.g. 6s-over-2s beats 5s-over-4s). [site]
 - **Flow:** [confirmed] [site]
-  1. Everyone reveals their initial roll. The best hand is the **Boss**.
+  1. Everyone reveals their initial roll. The best hand is the **Boss**. If two or more players tie for the best hand, there's **no Boss**: the game ends with no loser, the Hammer passes left, and a new game starts. [confirmed]
   2. The Boss rolls **once more**, **hidden** from the table, and **must keep the dice that made them the Boss** (e.g. no dice from a full house may be picked up). Breaking the hand would mean they're no longer the Boss.
   3. Then the Boss chooses:
      - **"Come up":** every other player gets **one last roll** to avoid losing. They may keep any dice or re-roll all five, and each result is shown as soon as it's rolled. Then **the worst hand at the table loses, and that can be the Boss.** For example, a Boss who calls everyone up on two pair loses if everyone else rolls three of a kind.
@@ -88,7 +88,8 @@ Each rule is tagged by where it came from:
 
 - **3 rolls**, everyone at once, dice visible (same as the default). [confirmed]
 - **Score:** the most of any one number, with **1s wild for any number**. Example: 1-1-1-4-x is four 4s. [confirmed]
-- **Lowest score loses.** Equal scores tie (e.g. two players each with three 1s and a 4 both have four 4s), and the tied lowest hands play Razzle again until one loses. [confirmed]
+- **Lowest score loses.** A higher count beats a lower count; **equal counts are broken by face value** (four 6s beat four 4s). Only identical hands tie (e.g. two players each with three 1s and a 4 both have four 4s), and the tied lowest hands play Razzle again until one loses. [confirmed]
+- Example: holding 1-1-1-4 (four 4s) against 6-6-6-1 (four 6s) with a roll left, the first player may pick up the 4 and the other dice and roll for 1s and 6s to tie or beat four 6s. [confirmed]
 - Re-rolling everything is common and allowed. For example, a player holding three 2s may pick them all up to chase 1s and 6s once someone else shows three 6s. [confirmed]
 
 ## 4. Finding the loser
@@ -100,7 +101,7 @@ Each rule is tagged by where it came from:
   - **Everyone** made it: the **weakest hand** loses. The call (game + High/Low) defines what's weakest, so no separate kicker comparison is needed: in 10-3 High, a player with kickers 2+1 = 3 loses to everyone with higher kickers. [confirmed]
 - **Ties for the loser:**
   - The tied players **replay the same called game, variant included**, starting over with fresh rolls, until one loser remains. [confirmed]
-  - **Exception, 2-player table:** when only 2 players are left in the whole game and they tie, no pencil is taken and the Hammer passes to the other player. [site]
+  - **Exception, 2-player table:** when only 2 players are left in the whole game and they tie, or **both miss the game**, no pencil is taken and the Hammer passes to the other player. [confirmed]
 
 ## 5. House rules (configurable)
 
@@ -115,11 +116,8 @@ Known variations to support:
 
 ## 6. Open questions
 
-1. **Boss: tie for the best initial hand.** If two players tie for the best initial hand, who's the Boss?
-2. **Razzle: face value.** Does a higher face break a tie between equal counts (four 6s vs four 4s), or is it count only?
-3. **Two players left: refusal.** With only 2 players, there's no second refusal seat. [inferred: the one refuser decides; if they refuse, the Hammer makes a second call]
-4. **2-player tie vs. missing.** At a 2-player table, if both players miss the game, is that a "tie" (no pencil, Hammer passes) or a new cycle? [inferred: a new cycle, since missing isn't a kicker tie]
+1. **Two players left: refusal.** With only 2 players, there's no second refusal seat. [inferred: the one refuser decides; if they refuse, the Hammer makes a second call]
 
 ## Resolved questions (2026-10-14)
 
-Players who miss the game cycle until there's one loser; dice are visible during play (except Tres Away/Boss); the initial roll counts after a second call; re-rolling is unrestricted except in Tres Away; Boss re-rolls once keeping their hand, others keep anything, and the Boss can lose; Razzle 1s are wild for any number; only kickers break ties.
+Players who miss the game cycle until there's one loser; dice are visible during play (except Tres Away/Boss); the initial roll counts after a second call; re-rolling is unrestricted except in Tres Away; Boss re-rolls once keeping their hand, others keep anything, and the Boss can lose; Razzle 1s are wild for any number; only kickers break ties. Boss: a tie for the best initial hand means no Boss and a new game; Razzle: face value breaks equal counts; 2-player table: both missing is a tie (no pencil, Hammer passes).

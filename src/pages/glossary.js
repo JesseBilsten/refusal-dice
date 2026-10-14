@@ -251,7 +251,7 @@ const GLOSSARY_TERMS = [
           <strong>With 3+ players:</strong> Tied players (for lowest score) replay the same game until there's a single loser.
         </p>
         <p className="text-sm mb-2">
-          <strong>With 2 players:</strong> Ties result in the <Link to="#hammer" className="text-primary hover:underline">Hammer</Link> passing
+          <strong>With 2 players:</strong> Ties, or both players missing the game, result in the <Link to="#hammer" className="text-primary hover:underline">Hammer</Link> passing
           to the other player. No pencil is awarded.
         </p>
         <p className="text-sm text-muted-foreground">
