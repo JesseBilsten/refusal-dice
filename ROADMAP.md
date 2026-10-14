@@ -45,7 +45,7 @@ Build it once and every later phase gets cheaper.
 - **The Strategy Assistant is fixed at 3 players.**
 - **No full-game model.** We can evaluate a single roll, but nothing models a round: piddle → Hammer → call/bark → 1st and 2nd refusal → second call → reveal → ties → pencils → elimination.
 - **Broken or duplicate navigation.** The mobile nav links to `/strategies` (doesn't exist) and lists "Odds" twice.
-- **Old content visible to users.** `games.js` renders an "OLD Tres away" section.
+- **Old content left in the page.** `games.js` contains a hidden (`display: none`) "OLD Tres away" section.
 - **Full page reloads.** Some buttons use `window.location.href` instead of Gatsby `<Link>`/`navigate`.
 - **Dead code.** `rolls-explorer`, `rolls-hybrid` and `rolls-original` are three parallel pages; `src/ideas/` holds about 12 abandoned prototypes; `src/pages/rolls.js.archive` is unused.
 - **Starter leftovers.** The manifest is still named "gatsby-starter-default" and the README is Gatsby boilerplate.
@@ -60,7 +60,7 @@ Build it once and every later phase gets cheaper.
 
 **Goal:** a clean base and a reusable engine.
 
-1. **Cleanup**
+1. **Cleanup** ✅ _done 2026-10-14. The roll-explorer variants were all deleted because Odds + Odds Lab supersede them; they're recoverable from git history (before commit `3ad9409`)._
    - Delete `src/ideas/`, `rolls.js.archive` and the roll-explorer variants we don't keep (pick one; fold anything good into `/odds`).
    - Remove the "OLD Tres away" section.
    - Fix the mobile nav (`/strategies`, duplicate Odds entry).

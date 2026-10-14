@@ -2,6 +2,7 @@ import React from 'react'
 import { Link } from 'gatsby'
 import DarkModeToggle from './DarkModeToggle'
 import MobileNav from './MobileNav'
+import { PRIMARY_NAV } from './nav-items'
 
 const Header = ({ siteTitle }) => (
   <nav className="border-b border-border bg-background" role="navigation">
@@ -11,60 +12,17 @@ const Header = ({ siteTitle }) => (
       </Link>
       <div className="flex items-center gap-4">
         <ul className="hidden md:flex flex-row gap-6">
-          <li>
-            <Link 
-              to="/rules" 
-              className="text-sm font-medium text-foreground/70 hover:text-primary transition-colors"
-              activeClassName="text-primary"
-            >
-              Rules
-            </Link>
-          </li>
-          <li>
-            <Link 
-              to="/games" 
-              className="text-sm font-medium text-foreground/70 hover:text-primary transition-colors"
-              activeClassName="text-primary"
-            >
-              Games
-            </Link>
-          </li>
-          <li>
-            <Link 
-              to="/strategy-assistant" 
-              className="text-sm font-medium text-foreground/70 hover:text-primary transition-colors"
-              activeClassName="text-primary"
-            >
-              Strategy
-            </Link>
-          </li>
-          <li>
-            <Link 
-              to="/odds" 
-              className="text-sm font-medium text-foreground/70 hover:text-primary transition-colors"
-              activeClassName="text-primary"
-            >
-              Odds
-            </Link>
-          </li>
-          <li>
-            <Link 
-              to="/odds-lab" 
-              className="text-sm font-medium text-foreground/70 hover:text-primary transition-colors"
-              activeClassName="text-primary"
-            >
-              Odds Lab
-            </Link>
-          </li>
-          <li>
-            <Link 
-              to="/glossary" 
-              className="text-sm font-medium text-foreground/70 hover:text-primary transition-colors"
-              activeClassName="text-primary"
-            >
-              Glossary
-            </Link>
-          </li>
+          {PRIMARY_NAV.map((item) => (
+            <li key={item.to}>
+              <Link
+                to={item.to}
+                className="text-sm font-medium text-foreground/70 hover:text-primary transition-colors"
+                activeClassName="text-primary"
+              >
+                {item.label}
+              </Link>
+            </li>
+          ))}
         </ul>
         <div className="hidden md:block">
           <DarkModeToggle />

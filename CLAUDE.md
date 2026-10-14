@@ -33,7 +33,7 @@ Run `npm test` and `npm run build` before calling work done. A change isn't veri
 src/
   pages/            Gatsby file-based routes (one file = one URL)
   templates/        game-detail.js → /games/<id> (created in gatsby-node.js)
-  components/       App components; ui/ = shadcn primitives
+  components/       App components; ui/ = shadcn primitives; nav-items.js = site navigation
   lib/
     games-config.js     SINGLE SOURCE OF TRUTH for the game list and metadata
     game-validation.js  Rules + heuristic strategy (being split up, see below)
@@ -43,7 +43,6 @@ src/
   data/             Generated JSON + the generator scripts
   __tests__/        Jest tests
   styles/global.css Tailwind layers + CSS color tokens (light/dark)
-  ideas/            Abandoned prototypes. Don't build on these; scheduled for deletion.
 ```
 
 ### Target layout (Phase 0, see ROADMAP)
@@ -66,7 +65,7 @@ src/strategy/   Recommendation and odds logic (consumes engine/)
   - Dark mode is class-based (`darkMode: 'class'`); check that every new UI works in both themes.
   - Merge classes with `cn()` from `src/lib/utils.js`.
 - **UI primitives:** reuse `src/components/ui/*` before writing new ones; add new shadcn components with the shadcn CLI (JS, not TSX) so they match.
-- **Navigation:** always use Gatsby `<Link>` or `navigate()`. Never `window.location.href` for internal routes.
+- **Navigation:** always use Gatsby `<Link>` or `navigate()`. Never `window.location.href` for internal routes. For a link that looks like a button, use `<Link className={buttonVariants({ variant, size })}>`. Add new pages to `src/components/nav-items.js`, which feeds both the header and the mobile menu.
 - **Game metadata:** import from `src/lib/games-config.js` (`GAMES`, `GAMES_MAP`, `getGameName`, `formatCallLabel`, `fmtPct`). Never redefine a local `GAMES` array.
 - **SSR safety:** Gatsby renders pages in Node at build time. Guard `window`, `document` and `localStorage` access (`typeof window !== 'undefined'` or inside `useEffect`), and wrap storage access in try/catch.
 - **Accessibility:**

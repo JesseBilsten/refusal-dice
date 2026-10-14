@@ -3,7 +3,8 @@ import Layout from '../components/layout'
 import Die from '../components/Die'
 import Game from '../components/Game'
 import DiceRollInput from '../components/DiceRollInput'
-import { Button } from '../components/ui/button'
+import { Link } from 'gatsby'
+import { buttonVariants } from '../components/ui/button'
 import { Badge } from '../components/ui/badge'
 import { analyzeRoll } from '../lib/game-validation'
 import rollGameMatrix from '../data/roll-game-matrix.json'
@@ -161,12 +162,12 @@ const GamesPage = () => {
             2 dice add up to 10 and the remaining 3 dice are either high or low.
           </p>
           <div className="mt-3 flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => typeof window !== 'undefined' && (window.location.href = '/games/10-2')}>
+            <Link to="/games/10-2" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
               Learn more →
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => typeof window !== 'undefined' && (window.location.href = '/odds?game=10-2&view=table')}>
+            </Link>
+            <Link to="/odds?game=10-2&view=table" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
               Explore rolls →
-            </Button>
+            </Link>
           </div>
         </div>
         <div className="">
@@ -214,12 +215,12 @@ const GamesPage = () => {
           </p>
           <p>AKA "Frankie"</p>
           <div className="mt-3 flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => typeof window !== 'undefined' && (window.location.href = '/games/10-3')}>
+            <Link to="/games/10-3" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
               Learn more →
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => typeof window !== 'undefined' && (window.location.href = '/odds?game=10-3&view=table')}>
+            </Link>
+            <Link to="/odds?game=10-3&view=table" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
               Explore rolls →
-            </Button>
+            </Link>
           </div>
         </div>
         <div className="">
@@ -267,12 +268,12 @@ const GamesPage = () => {
           </p>
           <p>AKA "Shotgun"</p>
           <div className="mt-3 flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => typeof window !== 'undefined' && (window.location.href = '/games/10-4')}>
+            <Link to="/games/10-4" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
               Learn more →
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => typeof window !== 'undefined' && (window.location.href = '/odds?game=10-4&view=table')}>
+            </Link>
+            <Link to="/odds?game=10-4&view=table" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
               Explore rolls →
-            </Button>
+            </Link>
           </div>
         </div>
         <div className="">
@@ -321,12 +322,12 @@ const GamesPage = () => {
           </p>
           <p>AKA "Outside straight", "Crew"</p>
           <div className="mt-3 flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => typeof window !== 'undefined' && (window.location.href = '/games/ship-captain-crew')}>
+            <Link to="/games/ship-captain-crew" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
               Learn more →
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => typeof window !== 'undefined' && (window.location.href = '/odds?game=ship-captain-crew&view=table')}>
+            </Link>
+            <Link to="/odds?game=ship-captain-crew&view=table" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
               Explore rolls →
-            </Button>
+            </Link>
           </div>
         </div>
         <div className="">
@@ -375,12 +376,12 @@ const GamesPage = () => {
           </p>
           <p>AKA "Inside straight"</p>
           <div className="mt-3 flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => typeof window !== 'undefined' && (window.location.href = '/games/monterey')}>
+            <Link to="/games/monterey" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
               Learn more →
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => typeof window !== 'undefined' && (window.location.href = '/odds?game=monterey&view=table')}>
+            </Link>
+            <Link to="/odds?game=monterey&view=table" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
               Explore rolls →
-            </Button>
+            </Link>
           </div>
         </div>
         <div className="">
@@ -429,12 +430,12 @@ const GamesPage = () => {
           </p>
           <p>AKA "7-11", "7 and/or 11's", "Vegas"</p>
           <div className="mt-3 flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => typeof window !== 'undefined' && (window.location.href = '/games/vegas')}>
+            <Link to="/games/vegas" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
               Learn more →
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => typeof window !== 'undefined' && (window.location.href = '/odds?game=vegas&view=table')}>
+            </Link>
+            <Link to="/odds?game=vegas&view=table" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
               Explore rolls →
-            </Button>
+            </Link>
           </div>
         </div>
         <div className="">
@@ -486,12 +487,12 @@ const GamesPage = () => {
             high or low
           </p>
           <div className="mt-3 flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => typeof window !== 'undefined' && (window.location.href = '/games/pairs')}>
+            <Link to="/games/pairs" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
               Learn more →
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => typeof window !== 'undefined' && (window.location.href = '/odds?game=pairs&view=table')}>
+            </Link>
+            <Link to="/odds?game=pairs&view=table" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
               Explore rolls →
-            </Button>
+            </Link>
           </div>
         </div>
         <div className="">
@@ -537,12 +538,12 @@ const GamesPage = () => {
             <strong className="text-primary dark:text-primary">When to Call:</strong> <span className="text-foreground">Call with 3+ wild 6s (1s + 6s), or 5 of any other number. About 21% of rolls meet this competitive threshold. 4+ wild sixes (~4.5%) is a strong call. Over 3 rolls keeping 1s and 6s, players average 3.5 wild sixes.</span>
           </div>
           <div className="mt-3 flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => typeof window !== 'undefined' && (window.location.href = '/games/razzle')}>
+            <Link to="/games/razzle" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
               Learn more →
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => typeof window !== 'undefined' && (window.location.href = '/odds?game=razzle&view=table')}>
+            </Link>
+            <Link to="/odds?game=razzle&view=table" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
               Explore rolls →
-            </Button>
+            </Link>
           </div>
         </div>
         <div className="">
@@ -610,12 +611,12 @@ const GamesPage = () => {
             Note: Hands use poker tie-breaking rules. Two pairs with 6s over 2s beats two pairs with 5s over 4s.
           </p>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => typeof window !== 'undefined' && (window.location.href = '/games/boss')}>
+            <Link to="/games/boss" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
               Learn more →
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => typeof window !== 'undefined' && (window.location.href = '/odds?game=boss&view=table')}>
+            </Link>
+            <Link to="/odds?game=boss&view=table" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
               Explore rolls →
-            </Button>
+            </Link>
           </div>
         </div>
         <div className="">
@@ -706,12 +707,12 @@ const GamesPage = () => {
             Perfect score: Five 3s = 0 points. Worst score: Five 6s = 30 points.
           </p>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => typeof window !== 'undefined' && (window.location.href = '/games/tres-away')}>
+            <Link to="/games/tres-away" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
               Learn more →
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => typeof window !== 'undefined' && (window.location.href = '/odds?game=tres-away&view=table')}>
+            </Link>
+            <Link to="/odds?game=tres-away&view=table" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
               Explore rolls →
-            </Button>
+            </Link>
           </div>
         </div>
         <div className="">
@@ -779,9 +780,9 @@ const GamesPage = () => {
             and weak hand strength. See the detailed page for specific thresholds.
           </p>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => typeof window !== 'undefined' && (window.location.href = '/games/barking')}>
+            <Link to="/games/barking" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
               Learn when to bark →
-            </Button>
+            </Link>
           </div>
         </div>
         <div className="">
@@ -800,66 +801,6 @@ const GamesPage = () => {
               <Die number="3" />
               <Die number="3" />
               <Die number="5" />
-              <Die number="6" />
-            </Game>
-          </div>
-        </div>
-      </div>
-      <hr className="my-8 border-border" />
-      {/* Removed old Tres Away section - replaced with enhanced version above */}
-      <div style={{display: 'none'}} className="pb-8 px-6 py-6 rounded-lg bg-muted/20 grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="">
-          <h2 className="text-3xl font-semibold mb-3 text-foreground">OLD Tres away</h2>
-          <p>
-            Just like golf, highest score loses with each dice being its face
-            value except for 3's which are worth 0. Each player must put out at
-            least 1 die per roll.
-          </p>
-          <p>AKA "Man's game", "Road game"</p>
-        </div>
-        <div className="">
-          <div className="flex justify-end gap-2 mb-2">
-            <Game type="0" className="mr-1">
-              <Die number="3" />
-              <Die number="3" />
-              <Die number="3" />
-              <Die number="3" />
-              <Die number="3" />
-            </Game>
-          </div>
-          <div className="flex justify-end gap-2 mb-2">
-            <Game type="1" className="mr-1">
-              <Die number="3" />
-              <Die number="1" />
-              <Die number="3" />
-              <Die number="3" />
-              <Die number="3" />
-            </Game>
-          </div>
-          <div className="flex justify-end gap-2 mb-2">
-            <Game type="2" className="mr-1">
-              <Die number="3" />
-              <Die number="1" />
-              <Die number="3" />
-              <Die number="1" />
-              <Die number="3" />
-            </Game>
-          </div>
-          <div className="flex justify-end gap-2 mb-2">
-            <Game type="4" className="mr-1">
-              <Die number="3" />
-              <Die number="3" />
-              <Die number="3" />
-              <Die number="4" />
-              <Die number="3" />
-            </Game>
-          </div>
-          <div className="flex justify-end gap-2 mb-2">
-            <Game type="30" className="mr-1">
-              <Die number="6" />
-              <Die number="6" />
-              <Die number="6" />
-              <Die number="6" />
               <Die number="6" />
             </Game>
           </div>
