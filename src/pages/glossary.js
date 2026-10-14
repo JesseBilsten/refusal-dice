@@ -102,11 +102,11 @@ const GLOSSARY_TERMS = [
           The dice that don't count toward making the called game. Kickers determine the winner when multiple players make the same game.
         </p>
         <p className="text-sm mb-2">
-          <strong>Example:</strong> In <Link to="/games/10-2" className="text-primary hover:underline">10-2</Link>,
-          if you roll [1,2,3,5,6], the 1+3+6=10, so your kickers are [2,5].
+          <strong>Example:</strong> In <Link to="/games/10-3" className="text-primary hover:underline">10-3</Link>,
+          if you roll [1,2,3,5,6], the 1+3+6=10, so your kickers are [2,5], a kicker total of 7.
         </p>
         <p className="text-sm text-muted-foreground">
-          <strong>High vs Low:</strong> In "High" games, higher kickers win. In "Low" games, lower kickers win.<br/>
+          <strong>High vs Low:</strong> Kickers are added up. In "High" games the higher total wins; in "Low" games the lower total wins.<br/>
           <strong>See also:</strong> <Link to="/games" className="text-primary hover:underline">Games</Link>,{' '}
           <Link to="/strategy-assistant" className="text-primary hover:underline">Strategy Assistant</Link>
         </p>
@@ -227,7 +227,7 @@ const GLOSSARY_TERMS = [
           <Link to="#first-refusal" className="text-primary hover:underline">First Refusal</Link>). They can accept or refuse only if First Refusal refused.
         </p>
         <p className="text-sm text-muted-foreground mb-2">
-          <strong>Key decision:</strong> Accepting means you play against First Refusal. Refusing forces the Hammer's{' '}
+          <strong>Key decision:</strong> Accepting means everyone plays the Hammer's call. Refusing forces the Hammer's{' '}
           <Link to="#second-call" className="text-primary hover:underline">Second Call</Link> where everyone plays.
         </p>
         <p className="text-sm text-muted-foreground">

@@ -60,7 +60,7 @@ const RulesPage = () => (
       {/* One-line summary */}
       <div className="bg-muted/50 rounded-lg p-4 mb-8 text-center">
         <p className="text-sm sm:text-base">
-          Roll dice → call a game → others accept or refuse → worst hand takes a{' '}
+          Roll → call a game → others accept or refuse → everyone gets up to 3 rolls to make it → worst hand takes a{' '}
           <Link to="/glossary#pencil" className="text-primary hover:underline">pencil</Link>.
           <br className="hidden sm:block" /> 3 pencils = out. Last player standing wins.
         </p>
@@ -181,6 +181,9 @@ const RulesPage = () => (
           <p className="text-xs text-amber-700 dark:text-amber-400">
             ⚠️ If you refuse but the other player accepts, you still play!
           </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Refusing doesn't mean re-rolling: everyone keeps the dice they have.
+          </p>
 
           {/* Second Call aside */}
           <div className="mt-3 bg-amber-500/5 border border-amber-500/20 rounded-lg p-3 dark:bg-amber-500/5">
@@ -189,31 +192,90 @@ const RulesPage = () => (
             </p>
             <p className="text-sm text-muted-foreground">
               Must be a <strong>completely different game</strong> (not just a different variant).
-              No refusals — everyone plays.
+              No refusals — everyone plays. Your first roll still counts as roll 1.
             </p>
           </div>
         </StepCard>
 
-        {/* Step 4: Play & score */}
-        <StepCard number={4} title="Play & score" icon="✏️" id="play">
+        {/* Step 4: Play the game */}
+        <StepCard number={4} title="Play the game" icon="🔄" id="play">
           <p className="text-sm text-muted-foreground mb-3">
-            Everyone reveals their dice. The player with the <strong>worst{' '}
-            <Link to="/glossary#kicker" className="text-primary hover:underline">kickers</Link></strong> loses
-            and takes a pencil. The loser gets the Hammer next.
+            Everyone plays at once, and everyone can now see each other's dice. You get{' '}
+            <strong>up to 3 rolls</strong>, and the roll you already have counts as the first.
           </p>
+          <ul className="text-sm text-muted-foreground space-y-1.5 mb-3 list-disc pl-5">
+            <li>After each roll, <strong>keep any dice</strong> you like and re-roll the rest, or stop.</li>
+            <li>
+              Try to <strong>make the game</strong>, then improve your{' '}
+              <Link to="/glossary#kicker" className="text-primary hover:underline">kickers</Link>: the dice
+              that aren't part of the game.
+            </li>
+            <li>Watch the table: you only need to beat the worst hand.</li>
+          </ul>
 
+          <div className="rounded-lg bg-muted/40 p-3 text-xs text-muted-foreground mb-3">
+            <p className="font-semibold text-foreground mb-1">Example: 10-3 High</p>
+            <p>
+              You roll 1 · 3 · 6 · 2 · 4. The 1+3+6 make 10, so you have the game, with kickers 2+4 = 6.
+              Keep the 1, 3 and 6 and re-roll the 2 and 4 to try for a higher kicker total.
+            </p>
+          </div>
+
+          <Collapse title="Three games play differently">
+            <ul className="space-y-3">
+              <li>
+                <Link to="/games/tres-away" className="font-medium text-primary hover:underline">Tres Away</Link>:
+                lowest total wins (3s count 0). After every roll you must put out at least one die, and put-out dice
+                are final. The caller sets the pace: everyone matches how many dice the caller has out, taking turns
+                from the caller's left. Your dice stay hidden until you put them out.
+              </li>
+              <li>
+                <Link to="/games/boss" className="font-medium text-primary hover:underline">Boss</Link>: poker
+                hands without straights. The best first roll is the Boss, who rolls once more in secret (keeping the
+                hand that made them Boss). Then the Boss says <em>"come up"</em> (everyone else gets one last roll,
+                and the worst hand loses, even if that's the Boss) or <em>"don't come up"</em> (no loser).
+              </li>
+              <li>
+                <Link to="/games/razzle" className="font-medium text-primary hover:underline">Razzle</Link>: most
+                of any one number, with 1s wild. Three 1s and a 4 make four 4s. Re-rolling everything to chase
+                1s and 6s is common.
+              </li>
+            </ul>
+          </Collapse>
+        </StepCard>
+
+        {/* Step 5: Find the loser */}
+        <StepCard number={5} title="Find the loser" icon="✏️" id="score">
           <div className="space-y-2">
             <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/50 rounded p-2">
+              <span className="shrink-0 mt-0.5">❌</span>
+              <p>
+                <strong>Missed the game?</strong> If you're the only one who missed, you lose. If two or more
+                missed, everyone who made it is safe and the players who missed play the same game again with
+                3 fresh rolls, until one loses.
+              </p>
+            </div>
+            <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/50 rounded p-2">
+              <span className="shrink-0 mt-0.5">➕</span>
+              <p>
+                <strong>Everyone made it?</strong> Add up each player's kickers. In <em>High</em> the lowest total
+                loses; in <em>Low</em> the highest loses. Only kickers count: 5+6 = 11 beats 5+5 = 10.
+              </p>
+            </div>
+            <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/50 rounded p-2">
               <span className="shrink-0 mt-0.5">🤝</span>
-              <p><strong>Ties (3+ players):</strong> Tied losers replay until one loser emerges.</p>
+              <p>
+                <strong>Tied for worst?</strong> The tied players replay the same game (same High/Low) with fresh
+                rolls. With only 2 players left in the game, a tie means no pencil and the Hammer passes.
+              </p>
             </div>
             <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/50 rounded p-2">
-              <span className="shrink-0 mt-0.5">👥</span>
-              <p><strong>Ties (2 players):</strong> No pencil. Hammer passes to the other player.</p>
-            </div>
-            <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/50 rounded p-2">
-              <span className="shrink-0 mt-0.5">💀</span>
-              <p><strong>3 pencils = out.</strong> You stop playing. Hammer passes to the next player to your left who's still in.</p>
+              <span className="shrink-0 mt-0.5">✏️</span>
+              <p>
+                The loser takes a{' '}
+                <Link to="/glossary#pencil" className="text-primary hover:underline">pencil</Link> and becomes
+                the next Hammer. <strong>3 pencils = out</strong>, and the Hammer skips you.
+              </p>
             </div>
           </div>
         </StepCard>

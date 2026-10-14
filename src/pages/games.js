@@ -697,7 +697,7 @@ const GamesPage = () => {
             <strong className="text-primary dark:text-primary">When to Call:</strong> <span className="text-foreground">Call with a score of 10 or less (~18% of rolls). Score ≤ 7 is a strong call (~6%). Lower is better — 3s are worth 0, so multiple 3s are premium.</span>
           </div>
           <p className="mb-2">
-            <strong>Reveal Cycle Mechanics:</strong> Play happens in cycles. On each cycle, players must reveal at least one die but can reveal more. The optimal strategy (based on Monte Carlo simulation) is to reveal dice with expected value below 2.33 (i.e., 1s, 2s, and 3s always). With remaining dice, re-roll and repeat until all dice are revealed.
+            <strong>Reveal Cycle Mechanics:</strong> Play happens in cycles. On each cycle, players must put out (reveal) at least one die but can put out more; put-out dice are final and the rest stay hidden. The caller sets the pace: after the caller puts dice out, everyone else, starting on the caller's left, rolls until they have as many dice out as the caller. The optimal strategy (based on Monte Carlo simulation) is to reveal dice with expected value below 2.33 (i.e., 1s, 2s, and 3s always). With remaining dice, re-roll and repeat until all dice are revealed.
           </p>
           <p className="mb-2">
             Once all players have revealed all five dice, calculate total scores. The player with the highest total score loses.

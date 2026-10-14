@@ -90,7 +90,7 @@ Build it once and every later phase gets cheaper.
 
 **Goal:** someone who has never played can play a round with friends after ~5 minutes on the site.
 
-0. **Teach re-rolling (highest priority).** The Rules page currently goes from the call straight to "everyone reveals their dice" and never explains the up-to-3 rolls with keepers, or the different procedures for Tres Away and Boss (see `docs/RULES.md` section 3). New players can't learn the game from it as written.
+0. ✅ _Done 2026-10-14: the Rules page now has "Play the game" (3 rolls, keepers, visible dice, the three games with their own procedures) and "Find the loser" steps; glossary and Games-page errors fixed._ **Teach re-rolling (highest priority).** The Rules page currently goes from the call straight to "everyone reveals their dice" and never explains the up-to-3 rolls with keepers, or the different procedures for Tres Away and Boss (see `docs/RULES.md` section 3). New players can't learn the game from it as written.
 1. **Interactive first round.** A guided tutorial on the engine with scripted dice, explaining each step in context instead of asking people to read the rules first.
 2. **"What can I call?" as the centerpiece.** Tap your five dice and see the playable games and hand strength. The logic exists in `games.js` and the Strategy Assistant; give it a fast, mobile-first screen and make it prominent on the homepage.
 3. **Inline jargon.** Use the existing `Term` component everywhere: Hammer, kicker, pencil, bark, piddle, parity, refusal.
