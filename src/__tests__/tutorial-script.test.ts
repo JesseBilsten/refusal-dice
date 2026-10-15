@@ -2,7 +2,7 @@
  * The tutorial's scripted round plays out as the lesson says, on both paths.
  */
 import { Action, GameState, applyAction, evaluateKickerHand } from '../engine'
-import { rollOrTakeTie } from '../strategy'
+import { freshMakeChance, rollOrTakeTie } from '../strategy'
 import {
   AVA_ROLLS,
   BEN_REPLAY_ROLLS,
@@ -65,6 +65,10 @@ test('the odds say take the tie with 5+5, even counting both rolls', () => {
   )
   expect(odds.loseIfRoll).toBeCloseTo(0.7708, 4)
   expect(odds.choice).toBe('tie')
+  // Missing 10 on both rolls
+  expect(odds.worse ** 2).toBeCloseTo(0.6944, 4)
+  // The replay: making 10-3 again from a fresh roll with all three rolls
+  expect(freshMakeChance('10-3')).toBeCloseTo(0.9805, 4)
 })
 
 test('taking the tie: you and Ben replay, and Ben loses the replay', () => {

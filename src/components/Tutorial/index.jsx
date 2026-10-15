@@ -17,7 +17,7 @@ import {
   newTutorialGame,
   withDice,
 } from './script'
-import { rollOrTakeTie } from '../../strategy'
+import { freshMakeChance, rollOrTakeTie } from '../../strategy'
 import { Button, buttonVariants } from '../ui/button'
 import { Badge } from '../ui/badge'
 import { Die, DiceSettings, playRollSound, useDicePrefs } from '../Dice'
@@ -58,6 +58,9 @@ const TIE_ODDS = rollOrTakeTie({
   total: 10,
   tied: 2,
 })
+
+// Chance of making 10-3 again in the replay, with all three rolls
+const REPLAY_MAKE = freshMakeChance('10-3')
 
 const T = ({ to, children }) => (
   <Link
@@ -360,41 +363,25 @@ const Tutorial = () => {
             replay 10-3 High from scratch while Ava is safe. Or you can roll
             your kicker, both 5s together, hoping to beat 10.
           </p>
-          <p>Rolling two fresh dice for your kicker:</p>
-          <ul className="list-disc space-y-1 pl-5">
-            <li>
-              10 or better:{' '}
-              <strong>{pct1(TIE_ODDS.better + TIE_ODDS.equal)}</strong>, and
-              only half of that gets you clear:
-              <ul className="list-[circle] space-y-1 pl-5">
-                <li>
-                  Beat 10 (5+6, 6+5, 6+6): {pct1(TIE_ODDS.better)}. You're safe.
-                </li>
-                <li>
-                  Exactly 10 (4+6, 5+5, 6+4): {pct1(TIE_ODDS.equal)}. You're
-                  still tied with Ben, back where you started with a roll fewer,
-                  so you take the tie then.
-                </li>
-              </ul>
-            </li>
-            <li>
-              Below 10: {pct1(TIE_ODDS.worse)}. You're alone at the bottom, so
-              you roll your last roll. It reaches 10 or better only{' '}
-              {pct1(TIE_ODDS.better + TIE_ODDS.equal)} of the time, and half of
-              those are another tie (a coin-flip replay), so it ends with you
-              taking the pencil {pct1(TIE_ODDS.loseIfLastRoll)} of the time.
-            </li>
-          </ul>
           <p>
-            Counting ties as the coin flips they lead to, rolling ends with you
-            taking the pencil about <strong>{pct(TIE_ODDS.loseIfRoll)}</strong>{' '}
-            of the time. A replay against Ben is a coin flip:{' '}
-            <strong>{pct(TIE_ODDS.loseIfTie)}</strong>.
+            Rolling two fresh dice for your kicker, you have only an{' '}
+            <strong>{pct1(TIE_ODDS.better)}</strong> chance of improving (5+6,
+            6+5, 6+6) and a{' '}
+            <strong>{pct1(TIE_ODDS.better + TIE_ODDS.equal)}</strong> chance of
+            getting the same value or better (adding 4+6, 5+5, 6+4).
           </p>
           <p>
-            With 5+5, nobody rolls: take the tie. The weaker your tied kicker,
-            the better rolling looks, and sometimes your last roll beats a
-            replay.
+            If you only had 1 roll left, you'd lose outright{' '}
+            {pct1(TIE_ODDS.worse)} of the time. With your 2 rolls, you'd miss 10
+            both times {pct1(TIE_ODDS.worse ** 2)} of the time, and counting the
+            coin-flip replays you'd land in along the way, you take the pencil
+            about <strong>{pct(TIE_ODDS.loseIfRoll)}</strong> of the time.
+          </p>
+          <p>
+            You should <strong>take the tie</strong>. The replay against Ben is
+            a coin flip ({pct(TIE_ODDS.loseIfTie)}), and you get three fresh
+            rolls to make 10-3 again, which you'll do{' '}
+            <strong>{pct(REPLAY_MAKE)}</strong> of the time.
           </p>
         </>
       ),
