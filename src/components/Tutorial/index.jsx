@@ -50,9 +50,10 @@ const newGame = newTutorialGame
 const pct = (p) => `${Math.round(p * 100)}%`
 const pct1 = (p) => `${(p * 100).toFixed(1)}%`
 
-// Tied with Ben at 5+5 = 10 in 10-3 High, with a roll left
+// Tied with Ben at 5+5 = 10 in 10-3 High, with 2 rolls left
 const TIE_ODDS = rollOrTakeTie({
-  kickers: 2,
+  kickerDice: 2,
+  rolls: 2,
   variant: 'high',
   total: 10,
   tied: 2,
@@ -359,12 +360,25 @@ const Tutorial = () => {
             replay 10-3 High from scratch while Ava is safe. Or you can roll
             your kicker, both 5s together, hoping to beat 10.
           </p>
+          <p>Rolling two fresh dice for your kicker:</p>
+          <ul className="list-disc space-y-1 pl-5">
+            <li>
+              Beat 10 (5+6, 6+5, 6+6): {pct1(TIE_ODDS.better)}. You're safe.
+            </li>
+            <li>
+              Exactly 10 (4+6, 5+5, 6+4): {pct1(TIE_ODDS.equal)}. You're tied
+              again and can take the tie then.
+            </li>
+            <li>
+              Below 10: {pct1(TIE_ODDS.worse)}. You're alone at the bottom, so
+              you roll your last roll, which loses{' '}
+              {pct1(TIE_ODDS.loseIfLastRoll)} of the time.
+            </li>
+          </ul>
           <p>
-            Two fresh dice beat 10 only {pct1(TIE_ODDS.better)} of the time and
-            tie it {pct1(TIE_ODDS.equal)}. The other {pct1(TIE_ODDS.worse)},
-            you'd drop below Ben and take the pencil. Rolling loses about{' '}
-            <strong>{pct(TIE_ODDS.loseIfRoll)}</strong> of the time; a replay
-            against Ben is closer to a coin flip,{' '}
+            Even using both rolls, rolling loses about{' '}
+            <strong>{pct(TIE_ODDS.loseIfRoll)}</strong> of the time. A replay
+            against Ben is a coin flip:{' '}
             <strong>{pct(TIE_ODDS.loseIfTie)}</strong>.
           </p>
           <p>
@@ -453,7 +467,7 @@ const Tutorial = () => {
       body: (
         <p>
           {mine.text}. You beat Ben's 10, but it was a long shot: only{' '}
-          {pct(TIE_ODDS.better)} of rolls do that. Next time, take the tie. You
+          {pct1(TIE_ODDS.better)} of rolls do that. Next time, take the tie. You
           still have a roll, but you're safe now, so stop rolling.
         </p>
       ),

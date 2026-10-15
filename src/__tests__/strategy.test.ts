@@ -179,15 +179,28 @@ describe('take the tie or roll', () => {
   test('weak tied kickers favor rolling; strong ones favor the tie', () => {
     // 10-2 High tied at 5 with three kickers: almost any roll beats it
     expect(
-      rollOrTakeTie({ kickers: 3, variant: 'high', total: 5, tied: 2 }).choice
+      rollOrTakeTie({
+        kickerDice: 3,
+        rolls: 1,
+        variant: 'high',
+        total: 5,
+        tied: 2,
+      }).choice
     ).toBe('roll')
     // 10-3 Low tied at 3 (1+2): hard to beat
     expect(
-      rollOrTakeTie({ kickers: 2, variant: 'low', total: 3, tied: 2 }).choice
+      rollOrTakeTie({
+        kickerDice: 2,
+        rolls: 1,
+        variant: 'low',
+        total: 3,
+        tied: 2,
+      }).choice
     ).toBe('tie')
     // a three-way tie loses only a third of the time, so rolling must be better than that
     const three = rollOrTakeTie({
-      kickers: 2,
+      kickerDice: 2,
+      rolls: 1,
       variant: 'high',
       total: 7,
       tied: 3,
@@ -195,9 +208,31 @@ describe('take the tie or roll', () => {
     expect(three.loseIfTie).toBeCloseTo(1 / 3, 12)
   })
 
+  test('more rolls never make rolling worse', () => {
+    for (const total of [4, 7, 10]) {
+      const one = rollOrTakeTie({
+        kickerDice: 2,
+        rolls: 1,
+        variant: 'high',
+        total,
+        tied: 2,
+      })
+      const two = rollOrTakeTie({
+        kickerDice: 2,
+        rolls: 2,
+        variant: 'high',
+        total,
+        tied: 2,
+      })
+      expect(two.loseIfRoll).toBeLessThanOrEqual(one.loseIfRoll)
+      expect(two.loseIfLastRoll).toBeCloseTo(one.loseIfRoll, 12)
+    }
+  })
+
   test('with two players left a tie costs nothing, so take it', () => {
     const odds = rollOrTakeTie({
-      kickers: 3,
+      kickerDice: 3,
+      rolls: 1,
       variant: 'high',
       total: 5,
       tied: 2,

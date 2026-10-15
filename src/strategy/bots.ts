@@ -174,7 +174,8 @@ function playAction(state: GameState, player: PlayerId): Action {
     })
     if (!tiedWith.length) return { type: 'reroll', player, keep: hand.gameDice }
     const odds = rollOrTakeTie({
-      kickers: hand.kickerDice.length,
+      kickerDice: hand.kickerDice.length,
+      rolls: 3 - phase.rolling[player].rollsUsed,
       variant,
       total: hand.kickerTotal,
       tied: tiedWith.length + 1,

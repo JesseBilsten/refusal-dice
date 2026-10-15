@@ -44,15 +44,26 @@ function toDecision() {
   return g
 }
 
-test('the odds say take the tie with 5+5', () => {
+test('the odds say take the tie with 5+5, even counting both rolls', () => {
   const odds = rollOrTakeTie({
-    kickers: 2,
+    kickerDice: 2,
+    rolls: 2,
     variant: 'high',
     total: 10,
     tied: 2,
   })
-  expect(odds.better).toBeCloseTo(3 / 36, 10)
-  expect(odds.equal).toBeCloseTo(3 / 36, 10)
+  // 5+6, 6+5, 6+6 beat it; 4+6, 5+5, 6+4 tie it; 30 of 36 fall short
+  expect(odds.better).toBeCloseTo(3 / 36, 12)
+  expect(odds.equal).toBeCloseTo(3 / 36, 12)
+  expect(odds.worse).toBeCloseTo(30 / 36, 12)
+  // A last roll: fall short and lose, or tie and lose the replay half the time
+  expect(odds.loseIfLastRoll).toBeCloseTo(30 / 36 + (3 / 36) * 0.5, 12)
+  // Two rolls: tie → take it (½); short → last roll (87.5%)
+  expect(odds.loseIfRoll).toBeCloseTo(
+    (3 / 36) * 0.5 + (30 / 36) * (30 / 36 + (3 / 36) * 0.5),
+    12
+  )
+  expect(odds.loseIfRoll).toBeCloseTo(0.7708, 4)
   expect(odds.choice).toBe('tie')
 })
 
