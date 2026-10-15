@@ -16,6 +16,7 @@ import {
   razzleScore,
   refusalSeats,
   tresAwayScore,
+  wouldLoseIfStopped,
 } from '../engine'
 import { rollOrTakeTie } from './kicker-odds'
 import { bestKeepToMake, makeChance } from './make-odds'
@@ -196,6 +197,31 @@ function playAction(state: GameState, player: PlayerId): Action {
   return { type: 'stand', player }
 }
 
+/** Forced to roll from the bottom: keep the game dice (or 1s and 6s in Razzle) and roll the rest */
+function lastDitchRoll(state: GameState, player: PlayerId): Action {
+  const phase = state.phase
+  if (phase.kind !== 'play') throw new Error('not in play')
+  const dice = state.dice[player]
+  const call = phase.call
+  if (call.game === 'razzle') {
+    return {
+      type: 'reroll',
+      player,
+      keep: dice
+        .map((d, i) => (d === 1 || d === 6 ? i : -1))
+        .filter((i) => i >= 0),
+    }
+  }
+  const game = call.game as KickerGameId
+  const hand = evaluateKickerHand(dice, game, call.variant!)
+  const rerolls = 3 - phase.rolling[player].rollsUsed
+  return {
+    type: 'reroll',
+    player,
+    keep: hand.made ? hand.gameDice : bestKeepToMake(dice, game, rerolls),
+  }
+}
+
 /** Is `player`'s made hand the worst (or tied worst) among players who made the game? */
 function worstMadeHand(state: GameState, player: PlayerId): boolean {
   const phase = state.phase
@@ -248,7 +274,11 @@ export function botAction(state: GameState): Action {
       const player = ids.reduce((a, b) =>
         phase.rolling[b].rollsUsed < phase.rolling[a].rollsUsed ? b : a
       )
-      return playAction(state, player)
+      const action = playAction(state, player)
+      // No standing at the bottom: the lowest hand rolls while it can
+      if (action.type === 'stand' && wouldLoseIfStopped(state, player))
+        return lastDitchRoll(state, player)
+      return action
     }
     case 'tresAway': {
       const player = phase.turn

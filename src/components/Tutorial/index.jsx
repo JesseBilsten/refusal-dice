@@ -355,9 +355,9 @@ const Tutorial = () => {
       body: (
         <>
           <p>
-            You can <strong>take the tie</strong>: stand, and you and Ben replay
-            10-3 High from scratch while Ava is safe. Or you can roll your
-            kickers, both 5s together, hoping to beat 10.
+            You can <strong>take the tie</strong>: stop here, and you and Ben
+            replay 10-3 High from scratch while Ava is safe. Or you can roll
+            your kickers, both 5s together, hoping to beat 10.
           </p>
           <p>
             Two fresh dice beat 10 only {pct1(TIE_ODDS.better)} of the time and
@@ -434,7 +434,7 @@ const Tutorial = () => {
         <p>
           Ben keeps his 10 and re-rolls both kickers, twice. He ends on{' '}
           {ben.text.split('· ')[1]} and he's out of rolls. Nothing can beat your
-          12, so stand.
+          12, so you're done rolling.
         </p>
       ),
       action: (
@@ -444,7 +444,7 @@ const Tutorial = () => {
             setStep('done')
           }}
         >
-          Stand
+          Stop rolling
         </Button>
       ),
     },
@@ -454,7 +454,7 @@ const Tutorial = () => {
         <p>
           {mine.text}. You beat Ben's 10, but it was a long shot: only{' '}
           {pct(TIE_ODDS.better)} of rolls do that. Next time, take the tie. You
-          still have a roll, but you're safe now, so <strong>stand</strong>.
+          still have a roll, but you're safe now, so stop rolling.
         </p>
       ),
       action: (
@@ -464,7 +464,7 @@ const Tutorial = () => {
             setStep('done')
           }}
         >
-          Stand
+          Stop rolling
         </Button>
       ),
     },
@@ -527,7 +527,7 @@ const Tutorial = () => {
   game.log.forEach((e) => {
     if (e.type === 'refused') decisions[e.player] = 'Refused'
     if (e.type === 'accepted') decisions[e.player] = 'Accepted'
-    if (e.type === 'stood') decisions[e.player] = 'Standing'
+    if (e.type === 'stood') decisions[e.player] = 'Done rolling'
     if (e.type === 'cycle') {
       replaying = e.players
       e.players.forEach((id) => (decisions[id] = 'Replaying'))

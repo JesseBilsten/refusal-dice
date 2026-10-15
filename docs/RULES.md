@@ -104,6 +104,7 @@ Each rule is tagged by where it came from:
   - **Everyone** made it: the **weakest hand** loses. The call (game + High/Low) defines what's weakest, so no separate kicker comparison is needed: in 10-3 High, a player with kickers 2+1 = 3 loses to everyone with higher kickers. [confirmed]
 - **Ties for the loser:**
   - The tied players **replay the same called game, variant included**, starting over with fresh rolls, until one loser remains. [confirmed]
+  - **No standing at the bottom:** once everyone else has finished, a player whose hand would lose outright has no choice: they roll while they have rolls, and lose when they're out. The engine rejects `stand` there (`wouldLoseIfStopped`). [confirmed] While others are still rolling, the bottom isn't settled, so stopping is allowed. [inferred]
   - **Taking a tie:** a player tied for the weakest hand who still has a roll left, when the player(s) they're tied with have finished, may stand and **take the tie** (go to the replay) or roll in hope of beating it. [confirmed] Tables usually take the tie when the tied kickers are strong; when the chance of losing on a last roll is lower than the chance of losing the replay, rolling is right. `rollOrTakeTie` in `src/strategy/kicker-odds.ts` computes both exactly (e.g. tied at 5+5 in 10-3 High: rolling loses ~87.5%, the replay ~50%).
   - **Exception, 2-player table:** when only 2 players are left in the whole game and they tie, or **both miss the game**, no pencil is taken and the Hammer passes to the other player. [confirmed]
 
@@ -127,7 +128,6 @@ Engine choices made without a ruling yet (the engine does the [inferred] thing u
 3. **Boss on high card: which dice must the Boss keep?** [inferred: the single highest die. For other hands, the dice of the pairs/sets]
 4. **Boss: may the Boss skip the extra roll?** [inferred: yes, standing is allowed]
 5. **Boss "come up": strict order?** [inferred: the engine enforces order from the Boss's left, since in online play waiting can be an advantage]
-6. **Standing while strictly the weakest hand.** "There's no stand if you're the lowest hand": is that a rule (a player who is alone at the bottom with a roll left *must* roll), or just that standing there means taking the pencil? [inferred: allowed but pointless; the engine allows it, and bots always roll]
 
 ## Resolved questions (2026-10-14)
 

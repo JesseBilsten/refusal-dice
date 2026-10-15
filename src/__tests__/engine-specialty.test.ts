@@ -83,12 +83,24 @@ describe('scoring', () => {
 describe('Razzle', () => {
   test('everyone rolls at once; the lowest score loses', () => {
     const g = play(
-      called('razzle', [6, 6, 6, 1, 2, 1, 1, 1, 4, 2, 5, 5, 2, 3, 4]),
+      // c can't stand at the bottom, so re-rolls twice and stays on two of a kind
+      called(
+        'razzle',
+        [6, 6, 6, 1, 2, 1, 1, 1, 4, 2, 5, 5, 2, 3, 4],
+        [2, 3, 4, 2, 3, 4]
+      ),
       { type: 'stand', player: 'a' },
-      { type: 'stand', player: 'b' },
-      { type: 'stand', player: 'c' }
+      { type: 'stand', player: 'b' }
     )
-    expect(g.phase).toMatchObject({ kind: 'roundOver', loser: 'c' })
+    expect(() => applyAction(g, { type: 'stand', player: 'c' })).toThrow(
+      /lowest hand/
+    )
+    const end = play(
+      g,
+      { type: 'reroll', player: 'c', keep: [0, 1] },
+      { type: 'reroll', player: 'c', keep: [0, 1] }
+    )
+    expect(end.phase).toMatchObject({ kind: 'roundOver', loser: 'c' })
   })
 
   test('identical lowest scores replay', () => {

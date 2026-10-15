@@ -272,7 +272,9 @@ const RulesPage = () => (
               <p>
                 <strong>Tied for worst?</strong> The tied players replay the same game (same High/Low) with fresh
                 rolls. With only 2 players left in the game, a tie (or both missing) means no pencil and the
-                Hammer passes.
+                Hammer passes. If you're level with the lowest hand, they're done rolling and you have a roll
+                left, you can <strong>take the tie</strong> or roll to beat them. Alone at the bottom, there's
+                no choice: you roll until you're out of rolls.
               </p>
             </div>
             <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/50 rounded p-2">

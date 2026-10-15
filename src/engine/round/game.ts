@@ -384,6 +384,27 @@ function scorePencil(state: GameState, call: Call, loser: PlayerId): GameState {
   return { ...next, hammer, phase: { kind: 'roundOver', call, loser } }
 }
 
+/**
+ * Would `player` be the only loser if they stopped now? Only decidable once
+ * everyone else in the cycle has finished rolling.
+ */
+export function wouldLoseIfStopped(state: GameState, player: PlayerId): boolean {
+  const { phase } = state
+  if (phase.kind !== 'play' || !phase.rolling[player]) return false
+  const players = Object.keys(phase.rolling)
+  if (players.some((id) => id !== player && !phase.rolling[id].done)) return false
+  const call = phase.call
+  if (call.game === 'razzle') {
+    const worst = worstHands(players, (id) => state.dice[id], compareRazzle)
+    return worst.length === 1 && worst[0] === player
+  }
+  if (!isKickerGame(call.game) || !call.variant) return false
+  const hands: Record<PlayerId, Dice> = {}
+  players.forEach((id) => (hands[id] = state.dice[id]))
+  const result = resolveKickerCycle(hands, call.game, call.variant)
+  return result.kind === 'loser' && result.loser === player
+}
+
 /** When everyone in the cycle is done rolling, decide what happens next. */
 function maybeResolve(state: GameState): GameState {
   const { phase } = state
@@ -578,6 +599,12 @@ export function applyAction(state: GameState, action: Action): GameState {
         if (rolls.done) throw new EngineError(`${action.player} is already done rolling`)
 
         if (action.type === 'stand') {
+          // No standing at the bottom (§4): with everyone else finished, the
+          // lowest hand rolls while it has rolls. Standing level with the
+          // lowest hand is "taking the tie", and that's allowed.
+          if (wouldLoseIfStopped(state, action.player)) {
+            throw new EngineError('You have the lowest hand: roll while you have rolls left')
+          }
           return maybeResolve(
             log(
               { ...state, phase: { ...phase, rolling: { ...phase.rolling, [action.player]: { ...rolls, done: true } } } },
