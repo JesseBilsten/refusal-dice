@@ -41,18 +41,19 @@ Each rule is tagged by where it came from:
   - **No rule forces a player to keep dice.** A player may re-roll any dice, including all five, even dice that already made the game. New players sometimes do this by accident. In practice nobody breaks up a made game, and the table might object, but there's no hard rule against it. The engine allows it. Strategy tools should flag it as almost always a mistake (to be checked case by case with the owner). [confirmed]
 - **Everyone rolls at the same time** (not in turn order). [confirmed]
 - **Dice are visible to everyone** from the start of play onward; only the initial roll is hidden (until play starts). [confirmed]
-- A player tries to **make the game** and then get kickers that beat the worst kicker at the table (e.g. in 10-3, roll until you have the game and a better kicker than the worst player). [confirmed]
-- **Kickers are rolled together.** Once the dice a player keeps make the game, only those dice stay on the table: the player re-rolls **all** the kickers or stands. They can't keep one kicker and re-roll another (e.g. with 10-3 made by 2+4+4 and kickers 6+1, they re-roll both the 6 and the 1). This is what makes 10-2 interesting: its three kickers are re-rolled as a block, so a total near the top or bottom of the range is very hard to beat. [confirmed]
+- A player tries to **make the game** and then get a kicker that beats the worst kicker at the table (e.g. in 10-3, roll until you have the game and a better kicker than the worst player). [confirmed]
+- **Terminology: "the kicker" is all the remaining dice together** (one die in 10-4, three in 10-2), not each die. Say "a kicker of 6+1", never "kickers 6 and 1" or "a good kicker and a bad one". [confirmed]
+- **The kicker is rolled whole.** Once the dice a player keeps make the game, only those dice stay on the table: the player re-rolls the **whole** kicker or stops. They can't keep part of the kicker (e.g. with 10-3 made by 2+4+4 and a kicker of 6+1, they re-roll both the 6 and the 1). This is what makes 10-2 interesting: its three-dice kicker is re-rolled as a block, so a total near the top or bottom of the range is very hard to beat. [confirmed]
   - The engine rejects a keep that holds a set making the game plus extra dice. Breaking up a made game, or keeping dice toward a game not yet made, is still allowed.
-- **Kickers** are the dice not used to make the game, scored as an **additive total**:
+- **The kicker** is the dice not used to make the game, scored as an **additive total**:
   - **High:** higher total wins; **Low:** lower total wins.
-  - Example: kickers 5+6 = 11 beat 5+5 = 10 in High. [confirmed]
+  - Example: a kicker of 5+6 = 11 beats 5+5 = 10 in High. [confirmed]
   - When several dice combinations make the game, the player uses the combination that gives the best kicker total for the called variant. [inferred]
-- **Only kickers** decide between players who made the game. The dice that made the game never matter (e.g. in Pairs, 6-6-5-5 and 2-2-3-3 are equal before kickers; in SCC, 1-2-3 and 4-5-6 are equal). A player only has a kicker once they've made the game. [confirmed]
+- **Only the kicker** decides between players who made the game. The dice that made the game never matter (e.g. in Pairs, 6-6-5-5 and 2-2-3-3 are equal before the kicker; in SCC, 1-2-3 and 4-5-6 are equal). A player only has a kicker once they've made the game. [confirmed]
 
 **Making each game** (any dice order): [site] (matches `checkGame` in `game-validation.js`)
 
-| Game | Made with | Kickers |
+| Game | Made with | Kicker |
 |---|---|---|
 | 10-2 | 2 dice summing to 10 | other 3 |
 | 10-3 ("Frankie") | 3 dice summing to 10 | other 2 |
@@ -101,11 +102,11 @@ Each rule is tagged by where it came from:
   - Anyone who made the game beats anyone who didn't.
   - **Exactly one** player misses: they lose.
   - **Two or more** miss: everyone who made it is **safe**. The players who missed start a new **cycle**: the same called game (variant included) with 3 fresh rolls each. This repeats with whoever still misses until a single loser emerges. If everyone in a cycle makes it, the worst kicker among them loses.
-  - **Everyone** made it: the **weakest hand** loses. The call (game + High/Low) defines what's weakest, so no separate kicker comparison is needed: in 10-3 High, a player with kickers 2+1 = 3 loses to everyone with higher kickers. [confirmed]
+  - **Everyone** made it: the **weakest hand** loses. The call (game + High/Low) defines what's weakest, so no separate kicker comparison is needed: in 10-3 High, a player with a kicker of 2+1 = 3 loses to everyone with a higher kicker. [confirmed]
 - **Ties for the loser:**
   - The tied players **replay the same called game, variant included**, starting over with fresh rolls, until one loser remains. [confirmed]
   - **No standing at the bottom:** once everyone else has finished, a player whose hand would lose outright has no choice: they roll while they have rolls, and lose when they're out. The engine rejects `stand` there (`wouldLoseIfStopped`). [confirmed] While others are still rolling, the bottom isn't settled, so stopping is allowed. [inferred]
-  - **Taking a tie:** a player tied for the weakest hand who still has a roll left, when the player(s) they're tied with have finished, may stand and **take the tie** (go to the replay) or roll in hope of beating it. [confirmed] Tables usually take the tie when the tied kickers are strong; when the chance of losing on a last roll is lower than the chance of losing the replay, rolling is right. `rollOrTakeTie` in `src/strategy/kicker-odds.ts` computes both exactly (e.g. tied at 5+5 in 10-3 High: rolling loses ~87.5%, the replay ~50%).
+  - **Taking a tie:** a player tied for the weakest hand who still has a roll left, when the player(s) they're tied with have finished, may stand and **take the tie** (go to the replay) or roll in hope of beating it. [confirmed] Tables usually take the tie when the tied kicker is strong; when the chance of losing on a last roll is lower than the chance of losing the replay, rolling is right. `rollOrTakeTie` in `src/strategy/kicker-odds.ts` computes both exactly (e.g. tied at 5+5 in 10-3 High: rolling loses ~87.5%, the replay ~50%).
   - **Exception, 2-player table:** when only 2 players are left in the whole game and they tie, or **both miss the game**, no pencil is taken and the Hammer passes to the other player. [confirmed]
 
 ## 5. House rules (configurable)
@@ -131,4 +132,4 @@ Engine choices made without a ruling yet (the engine does the [inferred] thing u
 
 ## Resolved questions (2026-10-14)
 
-Players who miss the game cycle until there's one loser; dice are visible during play (except Tres Away/Boss); the initial roll counts after a second call; re-rolling is unrestricted except in Tres Away; Boss re-rolls once keeping their hand, others keep anything, and the Boss can lose; Razzle 1s are wild for any number; only kickers break ties. Boss: a tie for the best initial hand means no Boss and a new game; Razzle: face value breaks equal counts; 2-player table: both missing is a tie (no pencil, Hammer passes); with 2 players there's only a 1st refusal, and a refusal goes straight to the second call.
+Players who miss the game cycle until there's one loser; dice are visible during play (except Tres Away/Boss); the initial roll counts after a second call; re-rolling is unrestricted except in Tres Away; Boss re-rolls once keeping their hand, others keep anything, and the Boss can lose; Razzle 1s are wild for any number; only the kicker breaks ties. Boss: a tie for the best initial hand means no Boss and a new game; Razzle: face value breaks equal counts; 2-player table: both missing is a tie (no pencil, Hammer passes); with 2 players there's only a 1st refusal, and a refusal goes straight to the second call.

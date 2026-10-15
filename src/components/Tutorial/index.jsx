@@ -38,9 +38,9 @@ const CALL_OPTIONS = [
 
 const WRONG_CALL = {
   '10-3 Low':
-    'In Low, the lowest kickers win. Your kickers would be 5+5 = 10, almost the highest possible, so Low is a bad fit.',
+    'In Low, the lowest kicker wins. Your kicker would be 5+5 = 10, almost the highest possible, so Low is a bad fit.',
   '10-2 High':
-    'You do make 10-2 with 5+5, but then your kickers are 1+3+6 = 10 out of a possible 18. Only middling.',
+    'You do make 10-2 with 5+5, but then your kicker is 1+3+6 = 10 out of a possible 18. Only middling.',
   'Pairs High':
     'Pairs needs two pairs. You only have one (5-5), so you’d be rolling to make the game.',
 }
@@ -77,7 +77,7 @@ function describeHand(dice) {
     made: true,
     hand,
     total: hand.kickerTotal,
-    text: `${game} = 10 · kickers ${kick} = ${hand.kickerTotal}`,
+    text: `${game} = 10 · kicker ${kick} = ${hand.kickerTotal}`,
   }
 }
 
@@ -206,18 +206,18 @@ const Tutorial = () => {
           <p>
             As the Hammer, you name a game, and for most games whether{' '}
             <strong>High</strong> or <strong>Low</strong>{' '}
-            <T to="kicker">kickers</T> win. Kickers are the dice left over after
-            you make the game.
+            <T to="kicker">kicker</T> wins. The kicker is all the dice left over
+            after you make the game.
           </p>
           <p>Your dice already make two games:</p>
           <ul className="list-disc pl-5 space-y-1">
             <li>
-              <strong>10-3</strong>: three dice adding to 10 (1+3+6), leaving
-              kickers 5+5 = 10
+              <strong>10-3</strong>: three dice adding to 10 (1+3+6), leaving a
+              kicker of 5+5 = 10
             </li>
             <li>
-              <strong>10-2</strong>: two dice adding to 10 (5+5), leaving
-              kickers 1+3+6 = 10
+              <strong>10-2</strong>: two dice adding to 10 (5+5), leaving a
+              kicker of 1+3+6 = 10
             </li>
           </ul>
           <p>Which call gives you the strongest hand?</p>
@@ -241,8 +241,8 @@ const Tutorial = () => {
       title: 'You called 10-3 High',
       body: (
         <p>
-          Two kickers can total at most 12, so your 5+5 = 10 is strong. Now the
-          players to your left get a say: first the{' '}
+          A two-dice kicker totals at most 12, so your 5+5 = 10 is strong. Now
+          the players to your left get a say: first the{' '}
           <T to="first-refusal">1st refusal</T>, then the{' '}
           <T to="second-refusal">2nd refusal</T>.
         </p>
@@ -290,8 +290,8 @@ const Tutorial = () => {
           <p>
             Play starts and all dice are turned face up. Each player gets up to
             3 rolls in total, and the first one has already happened. Everyone's
-            best 10 is outlined; the rest are kickers. You have the best kickers
-            right now.
+            best 10 is outlined; the rest is their kicker. You have the best
+            kicker right now.
           </p>
         </>
       ),
@@ -307,17 +307,17 @@ const Tutorial = () => {
       ),
     },
     ava: {
-      title: 'Ava keeps her 10 and re-rolls her kickers',
+      title: 'Ava keeps her 10 and re-rolls her kicker',
       body: (
         <>
           <p>
             After each roll you <strong>keep</strong> dice and re-roll the rest.
             Once the dice you keep make the game, only those stay on the table:
-            your <strong>kickers are always re-rolled together</strong>. You
-            can't keep a good kicker and re-roll a bad one.
+            your <strong>kicker is always re-rolled whole</strong>. You can't
+            keep part of your kicker and re-roll the rest.
           </p>
           <p>
-            Ava keeps 2+4+4 and re-rolls both kickers, the 6 and the 1. She gets
+            Ava keeps 2+4+4 and re-rolls her kicker, the 6 and the 1. She gets
             6+6 = 12, the best possible, and stops rolling.
           </p>
         </>
@@ -338,11 +338,11 @@ const Tutorial = () => {
       body: (
         <>
           <p>
-            Ben keeps 6+3+1 and re-rolls both kickers, the 6 and the 2. He gets
-            kickers {ben.text.split('kickers ')[1]}, and stops.
+            Ben keeps 6+3+1 and re-rolls his kicker, the 6 and the 2. He gets a
+            kicker of {ben.text.split('kicker ')[1]}, and stops.
           </p>
           <p>
-            Now look at the table: your kickers (10) <strong>tie</strong> Ben's
+            Now look at the table: your kicker (10) <strong>ties</strong> Ben's
             for the weakest hand, and Ben has stopped rolling. You've used 1
             roll and have 2 left.
           </p>
@@ -357,7 +357,7 @@ const Tutorial = () => {
           <p>
             You can <strong>take the tie</strong>: stop here, and you and Ben
             replay 10-3 High from scratch while Ava is safe. Or you can roll
-            your kickers, both 5s together, hoping to beat 10.
+            your kicker, both 5s together, hoping to beat 10.
           </p>
           <p>
             Two fresh dice beat 10 only {pct1(TIE_ODDS.better)} of the time and
@@ -368,7 +368,7 @@ const Tutorial = () => {
             <strong>{pct(TIE_ODDS.loseIfTie)}</strong>.
           </p>
           <p>
-            With 5+5, nobody rolls: take the tie. The weaker your tied kickers,
+            With 5+5, nobody rolls: take the tie. The weaker your tied kicker,
             the better rolling looks, and sometimes your last roll beats a
             replay.
           </p>
@@ -398,7 +398,7 @@ const Tutorial = () => {
               setStep('lucky')
             }}
           >
-            Roll my kickers
+            Roll my kicker
           </Button>
         </div>
       ),
@@ -412,8 +412,8 @@ const Tutorial = () => {
             and three rolls. Everyone else is safe, so Ava is out of this one.
           </p>
           <p>
-            You roll {mine.text}: the best kickers possible. Ben rolls{' '}
-            {ben.text}.
+            You roll {mine.text}: the best kicker possible. Ben rolls {ben.text}
+            .
           </p>
         </>
       ),
@@ -432,9 +432,9 @@ const Tutorial = () => {
       title: 'Ben chases your 12',
       body: (
         <p>
-          Ben keeps his 10 and re-rolls both kickers, twice. He ends on{' '}
-          {ben.text.split('· ')[1]} and he's out of rolls. Nothing can beat your
-          12, so you're done rolling.
+          Ben keeps his 10 and re-rolls his kicker, twice. He ends on a kicker
+          of {ben.text.split('kicker ')[1]} and he's out of rolls. Nothing can
+          beat your 12, so you're done rolling.
         </p>
       ),
       action: (
@@ -449,7 +449,7 @@ const Tutorial = () => {
       ),
     },
     lucky: {
-      title: mine.made ? `Kickers ${mine.total}: that paid off` : 'Your roll',
+      title: mine.made ? `Kicker ${mine.total}: that paid off` : 'Your roll',
       body: (
         <p>
           {mine.text}. You beat Ben's 10, but it was a long shot: only{' '}
@@ -481,16 +481,16 @@ const Tutorial = () => {
           <ul className="list-disc pl-5 space-y-1">
             <li>
               If exactly one player <strong>misses</strong> the game, they lose,
-              however good everyone's kickers are.
+              however good everyone else's kicker is.
             </li>
             <li>
               The Hammer can <T to="bark">bark</T> instead of calling: the
               Hammer passes left and everyone re-rolls.
             </li>
             <li>
-              10-2 leaves <strong>three</strong> kickers, all re-rolled
-              together, so a total near the top or bottom of the range is very
-              hard to beat.
+              10-2 leaves a <strong>three-dice</strong> kicker, re-rolled whole,
+              so a total near the top or bottom of the range is very hard to
+              beat.
             </li>
             <li>Tres Away, Boss and Razzle each play a little differently.</li>
           </ul>

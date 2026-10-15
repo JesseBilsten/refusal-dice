@@ -93,21 +93,21 @@ const GLOSSARY_TERMS = [
   },
   {
     id: 'kicker',
-    term: 'Kicker / Kickers',
+    term: 'Kicker',
     emoji: '🎯',
     keywords: ['kicker', 'kickers', 'remaining dice', 'score', 'strength'],
     body: (
       <>
         <p className="mb-2">
-          The dice that don't count toward making the called game. Kickers determine the winner when multiple players make the same game.
+          All the dice that don't count toward making the called game, taken together as one total. The kicker decides the loser when multiple players make the same game.
         </p>
         <p className="text-sm mb-2">
           <strong>Example:</strong> In <Link to="/games/10-3" className="text-primary hover:underline">10-3</Link>,
-          if you roll [1,2,3,5,6], the 1+3+6=10, so your kickers are [2,5], a kicker total of 7.
+          if you roll [1,2,3,5,6], the 1+3+6=10, so your kicker is [2,5], a total of 7.
         </p>
         <p className="text-sm text-muted-foreground">
-          <strong>High vs Low:</strong> Kickers are added up. In "High" games the higher total wins; in "Low" games the lower total wins.<br/>
-          <strong>Rolled together:</strong> Once the dice you keep make the game, all your kickers are re-rolled at once. You can't keep one kicker and re-roll another.<br/>
+          <strong>High vs Low:</strong> The kicker's dice are added up. In "High" games the higher total wins; in "Low" games the lower total wins.<br/>
+          <strong>Rolled whole:</strong> Once the dice you keep make the game, the whole kicker is re-rolled at once. You can't keep part of your kicker.<br/>
           <strong>See also:</strong> <Link to="/games" className="text-primary hover:underline">Games</Link>,{' '}
           <Link to="/strategy-assistant" className="text-primary hover:underline">Strategy Assistant</Link>
         </p>
@@ -245,7 +245,7 @@ const GLOSSARY_TERMS = [
     body: (
       <>
         <p className="mb-2">
-          When multiple players have the same <Link to="#kicker" className="text-primary hover:underline">kickers</Link> after playing a game.
+          When multiple players have the same <Link to="#kicker" className="text-primary hover:underline">kicker</Link> total after playing a game.
           The goal is to find ONE loser per round.
         </p>
         <p className="text-sm mb-2">
@@ -270,11 +270,11 @@ const GLOSSARY_TERMS = [
       <>
         <p className="mb-2">
           Most games have "High" and "Low" variants that determine whether higher or lower{' '}
-          <Link to="#kicker" className="text-primary hover:underline">kickers</Link> win.
+          <Link to="#kicker" className="text-primary hover:underline">kicker</Link> wins.
         </p>
         <p className="text-sm mb-2">
-          <strong>High:</strong> Higher kickers win (e.g., [6,6] beats [5,5])<br/>
-          <strong>Low:</strong> Lower kickers win (e.g., [1,1] beats [2,2])
+          <strong>High:</strong> The higher kicker wins (e.g., [6,6] beats [5,5])<br/>
+          <strong>Low:</strong> The lower kicker wins (e.g., [1,1] beats [2,2])
         </p>
         <p className="text-sm text-muted-foreground">
           <strong>Important:</strong> Always specify which variant you're calling!<br/>

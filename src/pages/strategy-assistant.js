@@ -287,7 +287,7 @@ const StrategyAssistantPage = () => {
                 {testPosition !== 'hammer' && testGame && GAMES.find(g => g.id === testGame)?.hasVariants &&
                   selectedVariant !== 'high' && selectedVariant !== 'low' && rollIsComplete && (
                   <p className="text-sm text-destructive font-medium">
-                    Select High or Low: the call decides which kickers win.
+                    Select High or Low: the call decides which kicker wins.
                   </p>
                 )}
 

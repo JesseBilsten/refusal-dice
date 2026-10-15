@@ -383,7 +383,7 @@ const OddsLabPage = () => {
                 <span className="inline-block h-3 w-3 rounded-sm ring-2 ring-epic-border" /> Differs from the site
               </span>
             )}
-            {view === 'unique' && <span>Dimmed dice inside a match weren't needed by any requirement (kickers). ×N is how many ordered outcomes give that roll.</span>}
+            {view === 'unique' && <span>Dimmed dice inside a match weren't needed by any requirement (the kicker). ×N is how many ordered outcomes give that roll.</span>}
           </div>
 
           <div className={cn(view !== 'unique' && 'hidden')}>
@@ -408,7 +408,7 @@ const OddsLabPage = () => {
               Requirements that name a number of dice each use their <strong>own</strong> dice, so "2 dice add up to 7"
               twice needs two separate pairs, just like 7's.
             </li>
-            <li>"Remaining dice" means the dice no other requirement used (the kickers). "All dice" looks at the whole roll.</li>
+            <li>"Remaining dice" means the dice no other requirement used (the kicker). "All dice" looks at the whole roll.</li>
             <li>Odds are exact: every one of the {result.total.toLocaleString()} outcomes is counted, not sampled.</li>
           </ul>
         </div>

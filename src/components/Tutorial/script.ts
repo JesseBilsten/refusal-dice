@@ -14,7 +14,7 @@ export const PLAYERS = [
 
 // Deal (seat order): you 1-3-6-5-5 · Ava 2-4-4-6-1 · Ben 6-6-2-3-1
 const DEAL = [1, 3, 6, 5, 5, 2, 4, 4, 6, 1, 6, 6, 2, 3, 1]
-// Then Ava and Ben re-roll both kickers (kickers are rolled together):
+// Then Ava and Ben re-roll their whole kicker (a kicker is rolled whole):
 // Ava 6+6 = 12, Ben 6+4 = 10, tying your 5+5
 const LATER = [6, 6, 6, 4]
 
@@ -40,8 +40,8 @@ export const BEN_ROLLS: Action[] = [
 /**
  * Tied with Ben at 10, you choose. Each choice gets its own dice:
  * - Take the tie: you and Ben replay with fresh dice (you 2-3-5-6-6 = 12
- *   kickers; Ben 4-4-2-1-1 = 2), and Ben re-rolls his kickers twice (3+2, then 4+1)
- * - Roll anyway: your kickers come up 6+5 = 11 (a long shot that pays off)
+ *   kicker; Ben 4-4-2-1-1 = 2), and Ben re-rolls his kicker twice (3+2, then 4+1)
+ * - Roll anyway: your kicker comes up 6+5 = 11 (a long shot that pays off)
  */
 export const TIE_PATH_DICE = [2, 3, 5, 6, 6, 4, 4, 2, 1, 1, 3, 2, 4, 1]
 export const ROLL_PATH_DICE = [6, 5, 6, 6, 6]

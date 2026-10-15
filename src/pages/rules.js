@@ -207,12 +207,13 @@ const RulesPage = () => (
             <li>After each roll, <strong>keep any dice</strong> you like and re-roll the rest, or stop.</li>
             <li>
               Try to <strong>make the game</strong>, then improve your{' '}
-              <Link to="/glossary#kicker" className="text-primary hover:underline">kickers</Link>: the dice
-              that aren't part of the game.
+              <Link to="/glossary#kicker" className="text-primary hover:underline">kicker</Link>: all the
+              dice that aren't part of the game.
             </li>
             <li>
-              <strong>Kickers are rolled together.</strong> Once the dice you keep make the game, only those
-              stay on the table: re-roll every kicker or none. You can't keep a 6 and re-roll a 1.
+              <strong>The kicker is rolled whole.</strong> Once the dice you keep make the game, only those
+              stay on the table: re-roll your whole kicker or none of it. You can't keep part of your kicker,
+              like keeping the 6 of a 6+1 and re-rolling the 1.
             </li>
             <li>Watch the table: you only need to beat the worst hand.</li>
           </ul>
@@ -220,7 +221,7 @@ const RulesPage = () => (
           <div className="rounded-lg bg-muted/40 p-3 text-xs text-muted-foreground mb-3">
             <p className="font-semibold text-foreground mb-1">Example: 10-3 High</p>
             <p>
-              You roll 1 · 3 · 6 · 2 · 4. The 1+3+6 make 10, so you have the game, with kickers 2+4 = 6.
+              You roll 1 · 3 · 6 · 2 · 4. The 1+3+6 make 10, so you have the game, with a kicker of 2+4 = 6.
               Keep the 1, 3 and 6 and re-roll the 2 and 4 to try for a higher kicker total.
             </p>
           </div>
@@ -264,7 +265,7 @@ const RulesPage = () => (
               <span className="shrink-0 mt-0.5">➕</span>
               <p>
                 <strong>Everyone made it?</strong> The weakest hand loses. The call already says what's weakest:
-                in <em>10-3 High</em>, a player whose kickers are 2+1 = 3 loses to everyone with higher kickers.
+                in <em>10-3 High</em>, a player whose kicker is 2+1 = 3 loses to everyone with a higher kicker.
               </p>
             </div>
             <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/50 rounded p-2">

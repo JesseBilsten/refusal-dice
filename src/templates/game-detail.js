@@ -22,13 +22,13 @@ const GAME_CONTENT = {
   '10-2': {
     subtitle: 'high or low',
     description: '2 dice add up to 10 and the remaining 3 dice are either high or low.',
-    partialKeep: 'Keep the two dice that make 10. Kickers are rolled together, so to improve them you re-roll all three at once. With three kickers, totals near the top or bottom of the range are very hard to beat.',
+    partialKeep: 'Keep the two dice that make 10. The kicker is rolled whole, so to improve it you re-roll all three dice at once. With a three-dice kicker, totals near the top or bottom of the range are very hard to beat.',
   },
   '10-3': {
     subtitle: 'high or low',
     description: '3 dice add up to 10 and the remaining 2 dice are either high or low.',
     aka: 'Frankie',
-    partialKeep: 'Keep the three dice that make 10. Kickers are rolled together, so to improve them you re-roll both at once.',
+    partialKeep: 'Keep the three dice that make 10. The kicker is rolled whole, so to improve it you re-roll both dice at once.',
   },
   '10-4': {
     subtitle: 'high or low',
@@ -40,7 +40,7 @@ const GAME_CONTENT = {
     subtitle: 'high or low',
     description: '3 dice make up an outside straight (4-5-6 or 1-2-3) and the remaining 2 dice are either high or low.',
     aka: 'Outside straight, Crew',
-    partialKeep: 'You can keep portions of the straight and re-roll for the missing values: (1) Keep [6,5] and roll for [4], (2) Keep [1,2] and roll for [3]. With 2 remaining rolls and 3 dice to re-roll, you have much better odds than re-rolling all 5 dice. Once complete, the remaining 2 dice are your kickers. If you don\'t complete the straight after 3 rolls and you\'re the only player without the game, you get a pencil.',
+    partialKeep: 'You can keep portions of the straight and re-roll for the missing values: (1) Keep [6,5] and roll for [4], (2) Keep [1,2] and roll for [3]. With 2 remaining rolls and 3 dice to re-roll, you have much better odds than re-rolling all 5 dice. Once complete, the remaining 2 dice are your kicker. If you don\'t complete the straight after 3 rolls and you\'re the only player without the game, you get a pencil.',
   },
   monterey: {
     subtitle: 'high or low',

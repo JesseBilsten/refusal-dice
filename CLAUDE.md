@@ -126,6 +126,7 @@ Simulated odds mean "against (and as) solid bots". Show the sample size and that
   3. The **1st refusal** (Hammer's left) accepts or refuses. If they refuse, the **2nd refusal** (two seats left) accepts or refuses.
   4. If either accepts, everyone plays the call. If both refuse, the Hammer makes a **second call**: a *different game* (not just another variant), with no refusals.
   5. Reveal. The worst hand/**kickers** takes a **pencil** and gets the Hammer next.
+- **Kicker** (singular): all the dice left after making the game, as one total. It's re-rolled whole, never in part. Write "a kicker of 6+1", not "kickers".
 - **Ties:** with 3+ players, the tied losers replay; with 2 players, no pencil is taken and the Hammer passes.
 - **End:** 3 pencils = out; last player standing wins the pot.
 - **Games** (ids from `games-config.js`):
