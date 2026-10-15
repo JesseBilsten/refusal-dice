@@ -24,6 +24,7 @@ test('inWords gives a simple natural frequency', () => {
   expect(inWords(1 / 6)).toBe('1 in 6')
   expect(inWords(0.7708)).toBe('about 3 in 4')
   expect(inWords(25 / 36)).toBe('about 2 in 3')
+  expect(inWords(0.53)).toBe('about 1 in 2')
   expect(inWords(0)).toBe('never')
   expect(inWords(1)).toBe('always')
 })

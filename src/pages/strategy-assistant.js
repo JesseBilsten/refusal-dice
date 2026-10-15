@@ -11,6 +11,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../com
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '../components/ui/dialog'
 import { Info } from 'lucide-react'
 import DiceRollInput from '../components/DiceRollInput'
+import RefusalDecision from '../components/RefusalDecision'
 import GameLink from '../components/GameLink'
 import { 
   checkGame, 
@@ -57,6 +58,7 @@ const StrategyAssistantPage = () => {
 
     let strategy = null
     let pencilOdds = null
+    let call = null
     if (testPosition === 'hammer') {
       const numOpponents = playerCount - 1
       strategy = generateHammerStrategy(parsedRoll, numOpponents, gameOddsMap)
@@ -68,16 +70,17 @@ const StrategyAssistantPage = () => {
         setDebugInfo(null)
         return
       }
+      call = gameHasVariants ? { game: testGame, variant: selectedVariant } : { game: testGame }
       strategy = simulateRefusal({
         dice: parsedRoll,
-        call: gameHasVariants ? { game: testGame, variant: selectedVariant } : { game: testGame },
+        call,
         position: testPosition === 'first-refusal' ? 1 : 2,
         players: playerCount,
         samples: 800,
       })
     }
 
-    setDebugInfo({ roll: parsedRoll, results, strategy, pencilOdds, position: testPosition })
+    setDebugInfo({ roll: parsedRoll, results, strategy, pencilOdds, call, position: testPosition })
     setValidationMsg(null)
   }, [parsedRoll, testPosition, testGame, selectedVariant, playerCount])
 
@@ -322,7 +325,13 @@ const StrategyAssistantPage = () => {
                   <HammerResults strategy={debugInfo.strategy} playerCount={playerCount} />
                 )}
                 {debugInfo.strategy && debugInfo.position !== 'hammer' && (
-                  <RefuserResults strategy={debugInfo.strategy} calledGameId={testGame} calledVariant={selectedVariant} playerCount={playerCount} />
+                  <RefusalDecision
+                    estimate={debugInfo.strategy}
+                    dice={debugInfo.roll}
+                    call={debugInfo.call}
+                    position={debugInfo.position === 'first-refusal' ? 1 : 2}
+                    players={playerCount}
+                  />
                 )}
               </CardContent>
             </Card>
@@ -618,86 +627,6 @@ const SimulationNote = ({ samples, players }) => (
     these are odds against good, not perfect, play.
   </p>
 )
-
-const RefuserResults = ({ strategy, calledGameId, calledVariant, playerCount }) => {
-  const { accept, refuse, secondCalls } = strategy
-  const calledGameObj = GAMES_MAP[calledGameId]
-  const calledLabel = calledGameObj
-    ? <>{calledGameObj.emoji} <GameLink id={calledGameId}>{calledGameObj.name}</GameLink>{calledVariant ? ` ${calledVariant.charAt(0).toUpperCase() + calledVariant.slice(1)}` : ''}</>
-    : calledGameId
-  const decision = accept.pencil <= refuse.pencil ? 'ACCEPT' : 'REFUSE'
-  const gap = Math.abs(accept.pencil - refuse.pencil)
-  // Both options use the same deals, so the noise in the gap is smaller than either error; 2× the larger error is conservative
-  const close = gap < 2 * Math.max(accept.error, refuse.error)
-
-  return (
-    <div className="space-y-4">
-      <div className={`p-5 rounded-lg border-2 text-center ${
-        decision === 'ACCEPT'
-          ? 'bg-green-50 dark:bg-green-950/30 border-green-500/60'
-          : 'bg-red-50 dark:bg-red-950/30 border-red-500/60'
-      }`}>
-        <p className="text-3xl font-black mb-1">{decision === 'ACCEPT' ? '✅ ACCEPT' : '❌ REFUSE'}</p>
-        <p className="text-sm text-muted-foreground">
-          {close ? 'Close call: the difference is within the simulation’s margin.' : `Lowers your chance of the pencil by ${(gap * 100).toFixed(1)} points.`}
-        </p>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        {[
-          { label: <>Accept {calledLabel}</>, est: accept, best: decision === 'ACCEPT' },
-          { label: 'Refuse', est: refuse, best: decision === 'REFUSE' },
-        ].map((o, i) => (
-          <div key={i} className={`rounded-lg border p-3 ${o.best ? 'border-primary' : ''}`}>
-            <p className="text-xs text-muted-foreground mb-1">{o.label}</p>
-            <p className="text-2xl font-bold tabular-nums">{pct(o.est.pencil)}</p>
-            <p className="text-xs text-muted-foreground">chance you take the pencil (±{(o.est.error * 100).toFixed(1)})</p>
-          </div>
-        ))}
-      </div>
-
-      <p className="text-sm text-muted-foreground">
-        Refusing doesn't give you new dice: you keep this roll whatever is played. It only wins you a
-        second call that may suit your dice better, or a refusal by the next player.
-        {' '}A random player at a {playerCount}-player table takes the pencil {pct(1 / playerCount)} of the time.
-      </p>
-
-      {secondCalls.length > 0 && (
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">If you refuse: the Hammer's second call</CardTitle>
-            <CardDescription className="text-xs">
-              What a Hammer who called {calledGameObj?.name || calledGameId} went on to call when the refusal stood,
-              and your chance of the pencil when they did. Rounds where the next refuser accepted aren't included here.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Second call</TableHead>
-                  <TableHead className="text-right">How often</TableHead>
-                  <TableHead className="text-right">Your pencil chance</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {secondCalls.slice(0, 8).map((sc, i) => (
-                  <TableRow key={i}>
-                    <TableCell><GameLink id={sc.call.game}>{callLabel(sc.call)}</GameLink></TableCell>
-                    <TableCell className="text-right tabular-nums">{pct(sc.share)}</TableCell>
-                    <TableCell className="text-right tabular-nums">{pct(sc.pencil)}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      )}
-
-      <SimulationNote samples={accept.samples} players={playerCount} />
-    </div>
-  )
-}
 
 /* ───────────────────── Hammer: simulated pencil odds ──────────── */
 

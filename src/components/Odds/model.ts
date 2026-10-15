@@ -14,13 +14,13 @@ export function fmtPct(p: number, digits = 0): string {
   return `${v.toFixed(digits)}%`
 }
 
-const DENOMINATORS = [2, 3, 4, 5, 6, 8, 10, 12, 20, 36, 100]
+const DENOMINATORS = [2, 3, 4, 5, 6, 8, 10, 12, 36, 100]
 
 /**
  * A natural frequency for `p`: 0.5 → "1 in 2", 0.7708 → "about 3 in 4",
  * 1/12 → "1 in 12". People judge "3 in 4" faster than "77%". An exact
  * fraction wins; otherwise the smallest denominator that's close (within
- * 3 points and 10% of the chance itself), said with "about".
+ * 3.5 points and 10% of the chance itself), said with "about".
  */
 export function inWords(p: number): string {
   if (p <= 0) return 'never'
@@ -32,7 +32,7 @@ export function inWords(p: number): string {
       // Exact fractions only read easily with small denominators (1 in 12, not 25 in 36)
       return exact
         ? err < 1e-9 && d <= 12
-        : err < 0.03 && err < 0.1 * Math.min(p, 1 - p)
+        : err < 0.035 && err < 0.1 * Math.min(p, 1 - p)
     })
   const exact = fits(true)
   if (exact) return `${exact.n} in ${exact.d}`
@@ -54,6 +54,8 @@ export interface Option {
   label: string
   /** The slices that make up this option's total (usually the ways you lose) */
   segments: Segment[]
+  /** Standard error of the total, when it's simulated rather than exact */
+  error?: number
 }
 
 export interface Ranked extends Option {

@@ -166,6 +166,32 @@ describe('simulations', () => {
     const share = r.secondCalls.reduce((s, sc) => s + sc.share, 0)
     expect(share).toBeCloseTo(1, 10)
   })
+
+  test("refusing splits into the next refuser's choice and the second call", () => {
+    const first = simulateRefusal({
+      dice: [1, 2, 4, 5, 6],
+      call: { game: '10-3', variant: 'high' },
+      position: 1,
+      players: 4,
+      samples: 120,
+    })
+    // The paths cover every sample and add up to the refuse estimate
+    expect(first.refusePaths.reduce((s, p) => s + p.share, 0)).toBeCloseTo(
+      1,
+      10
+    )
+    expect(
+      first.refusePaths.reduce((s, p) => s + p.share * p.pencil, 0)
+    ).toBeCloseTo(first.refuse.pencil, 10)
+    // As 2nd refusal (or with 2 players) there's no one left to accept
+    const second = simulateRefusal({
+      dice: [1, 2, 4, 5, 6],
+      call: { game: '10-3', variant: 'high' },
+      position: 2,
+      samples: 60,
+    })
+    expect(second.refusePaths.map((p) => p.path)).toEqual(['secondCall'])
+  })
 })
 
 describe('take the tie or roll', () => {

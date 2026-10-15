@@ -138,6 +138,17 @@ export interface RefusalEstimate {
   refuse: Estimate
   /** When you refuse: how often each second call happened, and your chance of the pencil when it did */
   secondCalls: { call: Call; share: number; pencil: number }[]
+  /**
+   * When you refuse, what happened next: the next refuser accepted the call
+   * (only as 1st refusal with 3+ players), or the Hammer made a second call.
+   * `share` is out of all samples, so share × pencil over both adds up to
+   * `refuse.pencil`.
+   */
+  refusePaths: {
+    path: 'nextAccepts' | 'secondCall'
+    share: number
+    pencil: number
+  }[]
   /** The Hammer's dice were drawn so that a bot Hammer would make this call */
   conditioned: boolean
 }
@@ -162,6 +173,10 @@ export function simulateRefusal(options: {
   const players = Math.max(options.players ?? 3, position === 2 ? 3 : 2)
   let accepted = 0
   let refused = 0
+  const paths = {
+    nextAccepts: { count: 0, losses: 0 },
+    secondCall: { count: 0, losses: 0 },
+  }
   const second = new Map<
     string,
     { call: Call; count: number; losses: number }
@@ -200,6 +215,15 @@ export function simulateRefusal(options: {
     const out = playOutRound(applyAction(g, { type: 'refuse', player: ME }))
     const lost = out.loser === ME
     if (lost) refused++
+    // You refused, so an acceptance in the log is the next refuser's
+    const path =
+      paths[
+        out.state.log.some((e) => e.type === 'accepted')
+          ? 'nextAccepts'
+          : 'secondCall'
+      ]
+    path.count++
+    if (lost) path.losses++
     const called = out.state.log.find((e) => e.type === 'called' && e.second)
     if (called && called.type === 'called') {
       const k = `${called.call.game}:${called.call.variant ?? ''}`
@@ -221,6 +245,13 @@ export function simulateRefusal(options: {
         pencil: e.losses / e.count,
       }))
       .sort((a, b) => b.share - a.share),
+    refusePaths: (['nextAccepts', 'secondCall'] as const)
+      .filter((k) => paths[k].count > 0)
+      .map((k) => ({
+        path: k,
+        share: paths[k].count / samples,
+        pencil: paths[k].losses / paths[k].count,
+      })),
     conditioned: true,
   }
 }

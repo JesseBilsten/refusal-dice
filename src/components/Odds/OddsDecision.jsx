@@ -8,8 +8,11 @@ import { fmtPct, inWords, rankOptions } from './model'
  * chance as a bar, split into the ways it happens. See
  * .claude/skills/explain-odds/SKILL.md.
  *
- * options: [{ id, label: 'Take the tie', segments: [{ p, label, kind }] }]
+ * options: [{ id, label: 'Take the tie', segments: [{ p, label, kind }], error? }]
+ *   error: standard error of a simulated total, shown as ± points
  * outcome: what the bars measure, as a verb phrase ('take the pencil')
+ * tieMargin: totals this close to the best are a toss-up (default 0.5 pts;
+ *   pass about 2 × the error for simulated odds)
  */
 
 export const FILL = {
@@ -40,13 +43,25 @@ export function Swatch({ kind, className }) {
 
 const lower = (s) => s.charAt(0).toLowerCase() + s.slice(1)
 
+const label = (o) => (
+  <>
+    <strong>{fmtPct(o.total)}</strong> if you {lower(o.label)}
+  </>
+)
+
 function Verdict({ ranked, outcome, lowerIsBetter }) {
   const best = ranked.filter((o) => o.best)
   if (best.length !== 1)
     return (
       <p className="text-base">
-        <strong>It's a toss-up.</strong> Every option comes to about{' '}
-        {fmtPct(best[0].total)}.
+        <strong>It's a toss-up.</strong> You {outcome}{' '}
+        {ranked.map((o, i) => (
+          <React.Fragment key={o.id}>
+            {i > 0 && (i === ranked.length - 1 ? ', or ' : ', ')}
+            {label(o)}
+          </React.Fragment>
+        ))}
+        : too close to call.
       </p>
     )
   const [pick] = best
@@ -59,7 +74,7 @@ function Verdict({ ranked, outcome, lowerIsBetter }) {
       {others.map((o, i) => (
         <React.Fragment key={o.id}>
           {i > 0 && ', or '}
-          <strong>{fmtPct(o.total)}</strong> if you {lower(o.label)}
+          {label(o)}
         </React.Fragment>
       ))}
       .
@@ -71,8 +86,9 @@ export default function OddsDecision({
   outcome,
   options,
   lowerIsBetter = true,
+  tieMargin,
 }) {
-  const ranked = rankOptions(options, lowerIsBetter)
+  const ranked = rankOptions(options, lowerIsBetter, tieMargin)
   return (
     <div className="space-y-3">
       <Verdict
@@ -102,6 +118,9 @@ export default function OddsDecision({
                   </span>
                   <span className="block text-xs text-muted-foreground">
                     {inWords(o.total)}
+                    {o.error != null && o.total > 0 && o.total < 1 && (
+                      <> · ±{(o.error * 100).toFixed(1)} pts</>
+                    )}
                   </span>
                 </span>
               </div>
@@ -110,7 +129,7 @@ export default function OddsDecision({
                 aria-label={`${fmtPct(o.total)} chance you ${outcome}: ${o.segments
                   .map((s) => `${s.label} ${fmtPct(s.p, 1)}`)
                   .join(', ')}`}
-                className="mt-2 flex h-3 overflow-hidden rounded-full bg-muted"
+                className="mt-2 flex h-3 gap-px overflow-hidden rounded-full bg-muted"
               >
                 {o.segments.map((s) => (
                   <div
