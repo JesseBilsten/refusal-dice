@@ -9,6 +9,8 @@ Every probability decision on the site uses the same pattern, so players learn
 to read it once and improving it improves every screen. The reference
 implementation is the tutorial's "Take the tie, or roll?" step
 (`src/components/Tutorial/index.jsx`, numbers in `tie-odds.ts`).
+For simulated odds, the reference is the Strategy Assistant's accept-or-refuse
+screen (`src/components/RefusalDecision`, numbers in `odds.ts`).
 
 ## Anatomy (in this order)
 
@@ -19,7 +21,10 @@ implementation is the tutorial's "Take the tie, or roll?" step
 3. **Comparison bars** (`OddsDecision`): one row per option with its total,
    a natural frequency ("about 3 in 4"), and a 0–100% bar split into the ways
    it happens. The best option gets a highlighted border and a **Best** badge.
-4. **Outcome visual**: show the dice concretely. `OutcomeGrid` draws all 36
+4. **Outcome visual**: show the dice concretely, or, when other players'
+   choices drive the odds, use `Branches` to show what happens next
+   ("If you refuse: what happens next"). Each row gives how often a branch
+   happens and your chance in it. For dice, `OutcomeGrid` draws all 36
    ways two dice land and counts each kind ("3 of 36: beats 10").
 5. **How the math works** (`Disclosure` + `MathSteps`, closed): one line per
    step, in the form *label* / `expression = result`. Add up to the totals in
@@ -79,6 +84,12 @@ import { OddsDecision, OutcomeGrid, Disclosure, MathSteps, Questions, fmtPct } f
 - `OutcomeGrid` takes `classify(a, b)` and `kinds: { key: { label, kind, mark } }`.
   For three or more dice, build a sum histogram on the same tokens
   (not built yet).
+- `Branches` takes `rows: [{ id, label, share, p }]`. The shares cover
+  every case, and share × p summed equals the option's total. Test that.
+- **Simulated odds:** pass `error` on each option (shown as ± points) and
+  `tieMargin` of about 2 × the larger error. Close totals then read as a
+  toss-up instead of a false recommendation. Say how many rounds were played
+  and that it was against solid bots, not perfect ones.
 - `OddsLabLink` takes `query` (`roll-query.js` shape) and an optional
   `compare`. Its path comes from `oddsLabPath()` in `roll-query.js`, which
   the Lab's own share links also use.
