@@ -37,7 +37,7 @@ The only way dice are drawn. Never render a roll as text like
 |---|---|
 | `Die` | One die. Sizes `xs` 16, `sm` 28, `md` 40, `lg` 52 (`DIE_SIZES`). Flat SVG, or a 3D cube when the player turns 3D on (`md` and up). Bump `rollId` to animate a roll. |
 | `DieFace` | The flat SVG face on its own (used by `Die`). |
-| `Hand` | A roll **for a game**. The dice that make it get a blue outline and the game's name; the kicker gets a dashed outline and its total. Misses show "No 10-3". `xs`/`sm` are compact (outlines, no labels) for tables. |
+| `Hand` | A roll **for a game**. The dice that make it get a blue outline and the game's name; the kicker gets a dashed outline and its total. Misses show "No 10-3". Specialty games outline the dice that make the hand: Boss the poker hand (just the high die for a high die), Razzle the chosen number plus wild 1s, Tres Away the dice put out (`putOut`). `xs`/`sm` are compact (outlines, no labels) for tables. |
 | `DiceGroup` | A hand-picked group with an outline and a label, when the grouping is authored rather than computed (e.g. the examples on the Games page). `tone`: `game`, `kicker` or `plain`. |
 | `RollInput` | Anywhere a player **enters or edits** a roll. |
 | `DiceSettings` | The 3D and sound switches (both start off). |

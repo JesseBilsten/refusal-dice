@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import Layout from '../components/layout'
-import { DiceGroup, RollInput } from '../components/Dice'
+import { DiceGroup, Hand, RollInput } from '../components/Dice'
 import { Link } from 'gatsby'
 import { buttonVariants } from '../components/ui/button'
 import { Badge } from '../components/ui/badge'
@@ -445,13 +445,13 @@ const GamesPage = () => {
         </div>
         <div className="">
           <div className="flex justify-end gap-2 mb-2">
-            <DiceGroup label="razzle: (3) 6's" dice={[1, 6, 6]} size="sm" />
+            <Hand game="razzle" dice={[1, 6, 6, 2, 4]} size="sm" labels />
           </div>
           <div className="flex justify-end gap-2 mb-2">
-            <DiceGroup label="razzle: (4) 5's" dice={[1, 5, 1, 1]} size="sm" />
+            <Hand game="razzle" dice={[1, 5, 1, 1, 3]} size="sm" labels />
           </div>
           <div className="flex justify-end gap-2 mb-2">
-            <DiceGroup label="razzle: (5) 6's" dice={[1, 1, 1, 1]} size="sm" />
+            <Hand game="razzle" dice={[1, 1, 1, 1, 6]} size="sm" labels />
           </div>
         </div>
       </div>
@@ -504,22 +504,22 @@ const GamesPage = () => {
         </div>
         <div className="">
           <div className="flex justify-end gap-2 mb-2">
-            <DiceGroup label="5 of a kind" dice={[6, 6, 6, 6, 6]} size="sm" />
+            <Hand game="boss" dice={[6, 6, 6, 6, 6]} size="sm" labels />
           </div>
           <div className="flex justify-end gap-2 mb-2">
-            <DiceGroup label="4 of a kind" dice={[5, 5, 5, 5, 2]} size="sm" />
+            <Hand game="boss" dice={[5, 5, 5, 5, 2]} size="sm" labels />
           </div>
           <div className="flex justify-end gap-2 mb-2">
-            <DiceGroup label="Full House" dice={[4, 4, 4, 3, 3]} size="sm" />
+            <Hand game="boss" dice={[4, 4, 4, 3, 3]} size="sm" labels />
           </div>
           <div className="flex justify-end gap-2 mb-2">
-            <DiceGroup label="3 of a kind" dice={[6, 6, 6, 4, 2]} size="sm" />
+            <Hand game="boss" dice={[6, 6, 6, 4, 2]} size="sm" labels />
           </div>
           <div className="flex justify-end gap-2 mb-2">
-            <DiceGroup label="Two Pair" dice={[6, 6, 4, 4, 1]} size="sm" />
+            <Hand game="boss" dice={[6, 6, 4, 4, 1]} size="sm" labels />
           </div>
           <div className="flex justify-end gap-2 mb-2">
-            <DiceGroup label="Pair" dice={[5, 5, 6, 3, 1]} size="sm" />
+            <Hand game="boss" dice={[5, 5, 6, 3, 1]} size="sm" labels />
           </div>
         </div>
       </div>

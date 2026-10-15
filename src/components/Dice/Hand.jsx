@@ -13,6 +13,10 @@ import { handGroups } from './hand-groups'
  *   (outlines, no labels) for tables
  * - `rollIds`: per-die roll counters, by position, to animate re-rolls
  * - `kept` / `onToggleKeep(i)`: tap a die to keep it (modeled games)
+ * - `putOut`: Tres Away, the positions put out so far (default: all five)
+ *
+ * Boss outlines the dice that make the poker hand (the high die for a high
+ * die), Razzle the chosen number plus wild 1s, Tres Away the dice put out.
  */
 export default function Hand({
   dice,
@@ -22,11 +26,13 @@ export default function Hand({
   rollIds,
   kept,
   onToggleKeep,
-  labels = true,
+  labels,
+  putOut,
   className,
 }) {
-  const compact = size === 'xs' || size === 'sm' || !labels
-  const groups = handGroups(dice, game, variant)
+  // Small sizes are compact (outlines, no labels) unless `labels` says otherwise
+  const compact = !(labels ?? !(size === 'xs' || size === 'sm'))
+  const groups = handGroups(dice, game, variant, { putOut })
   const name = game ? getGameName(game) : null
   const variantName = variant
     ? `${variant[0].toUpperCase()}${variant.slice(1)} `
@@ -44,7 +50,9 @@ export default function Hand({
           compact={compact}
           label={
             g.label === 'game'
-              ? name
+              ? g.detail
+                ? `${name} · ${g.detail}`
+                : name
               : g.label === 'kicker'
                 ? `${variantName}kicker ${g.kickerTotal}`
                 : g.label === 'miss'

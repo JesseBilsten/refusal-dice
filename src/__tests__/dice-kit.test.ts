@@ -26,13 +26,51 @@ test('a miss, a specialty game, no game, or dice not rolled yet', () => {
   expect(handGroups([1, 1, 2, 2, 4], '10-3', 'high')).toEqual([
     { tone: 'plain', label: 'miss', indices: all },
   ])
-  expect(handGroups([3, 3, 1, 2, 6], 'tres-away')).toEqual([
-    { tone: 'game', label: 'game', indices: all },
-  ])
   expect(handGroups([3, 3, 1, 2, 6])).toEqual([
     { tone: 'plain', label: null, indices: all },
   ])
   expect(handGroups([null, null, null, null, null] as never, '10-3')).toEqual([
     { tone: 'plain', label: null, indices: all },
   ])
+})
+
+test('Boss: the dice that make the poker hand', () => {
+  // Two pair: the four dice of the pairs; the 1 is left out
+  expect(handGroups([6, 4, 6, 1, 4], 'boss')).toEqual([
+    { tone: 'game', label: 'game', indices: [0, 1, 2, 4], detail: 'two pair' },
+    { tone: 'plain', label: null, indices: [3] },
+  ])
+  // High die: just the highest die
+  expect(handGroups([2, 6, 4, 1, 5], 'boss')[0]).toMatchObject({
+    indices: [1],
+    detail: 'high die',
+  })
+  expect(handGroups([5, 5, 5, 2, 2], 'boss')).toEqual([
+    { tone: 'game', label: 'game', indices: all, detail: 'full house' },
+  ])
+})
+
+test('Razzle: the chosen number and the wild 1s', () => {
+  expect(handGroups([1, 4, 4, 2, 6], 'razzle')).toEqual([
+    { tone: 'game', label: 'game', indices: [0, 1, 2], detail: 'three 4s' },
+    { tone: 'plain', label: null, indices: [3, 4] },
+  ])
+})
+
+test('Tres Away: the dice put out, scored with 3s as 0', () => {
+  expect(
+    handGroups([3, 2, 6, 3, 1], 'tres-away', null, { putOut: [0, 3, 4] })
+  ).toEqual([
+    { tone: 'game', label: 'game', indices: [0, 3, 4], detail: '1' },
+    { tone: 'plain', label: null, indices: [1, 2] },
+  ])
+  // Nothing put out yet: no group
+  expect(
+    handGroups([3, 2, 6, 3, 1], 'tres-away', null, { putOut: [] })
+  ).toEqual([{ tone: 'plain', label: null, indices: all }])
+  // A finished hand (no put-out order known): all five
+  expect(handGroups([3, 2, 6, 3, 1], 'tres-away')[0]).toMatchObject({
+    indices: all,
+    detail: '9',
+  })
 })

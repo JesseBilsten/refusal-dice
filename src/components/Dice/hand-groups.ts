@@ -1,9 +1,13 @@
 import {
+  BossCategory,
   Dice,
   GameId,
   Variant,
+  bossHand,
   evaluateKickerHand,
   isKickerGame,
+  razzleScore,
+  tresAwayScore,
 } from '../../engine'
 
 /**
@@ -18,20 +22,71 @@ export interface HandGroup {
   /** Positions in the original roll, so animations and keeps follow the die */
   indices: number[]
   kickerTotal?: number
+  /** What the game dice make, shown after the game's name: "two pair", "four 6s", "7" */
+  detail?: string
+}
+
+const BOSS_NAMES: Record<BossCategory, string> = {
+  'high-card': 'high die',
+  pair: 'pair',
+  'two-pair': 'two pair',
+  'three-of-a-kind': 'three of a kind',
+  'full-house': 'full house',
+  'four-of-a-kind': 'four of a kind',
+  'five-of-a-kind': 'five of a kind',
+}
+const COUNT = ['', 'one', 'two', 'three', 'four', 'five']
+
+/** The game dice first, then the rest of the roll (unlabeled) */
+const split = (
+  all: number[],
+  indices: number[],
+  detail: string
+): HandGroup[] => {
+  const rest = all.filter((i) => !indices.includes(i))
+  return [
+    { tone: 'game', label: 'game', indices, detail },
+    ...(rest.length
+      ? [{ tone: 'plain' as const, label: null, indices: rest }]
+      : []),
+  ]
+}
+
+/** The specialty games: which dice make the hand */
+function specialtyGroups(
+  dice: Dice,
+  game: string,
+  putOut?: number[]
+): HandGroup[] {
+  const all = dice.map((_, i) => i)
+  if (game === 'boss') {
+    const hand = bossHand(dice)
+    return split(all, hand.handDice, BOSS_NAMES[hand.category])
+  }
+  if (game === 'razzle') {
+    // The chosen number plus the wild 1s
+    const { count, face } = razzleScore(dice)
+    const indices = all.filter((i) => dice[i] === face || dice[i] === 1)
+    return split(all, indices, `${COUNT[count]} ${face}s`)
+  }
+  // Tres Away: the dice put out so far (all five for a finished hand)
+  const out = putOut ?? all
+  if (!out.length) return [{ tone: 'plain', label: null, indices: all }]
+  return split(all, out, `${tresAwayScore(out.map((i) => dice[i]))}`)
 }
 
 export function handGroups(
   dice: Dice,
   game?: string | null,
-  variant?: Variant | null
+  variant?: Variant | null,
+  options: { putOut?: number[] } = {}
 ): HandGroup[] {
   const all = dice.map((_, i) => i)
   // No game, or dice not rolled yet: just the dice
   if (!game || dice.some((d) => !d))
     return [{ tone: 'plain', label: null, indices: all }]
-  // Specialty games (Razzle, Boss, Tres Away) use the whole roll
   if (!isKickerGame(game as GameId))
-    return [{ tone: 'game', label: 'game', indices: all }]
+    return specialtyGroups(dice, game, options.putOut)
   const hand = evaluateKickerHand(dice, game as never, variant || 'high')
   if (!hand.made) return [{ tone: 'plain', label: 'miss', indices: all }]
   return [
