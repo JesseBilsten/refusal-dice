@@ -382,6 +382,49 @@ function describePattern(pattern) {
 
 // Game presets mirror checkGame() in game-validation.js exactly; the test
 // suite verifies every one against it across all 7,776 rolls.
+/* ── Shareable links: /odds-lab/?q=<base64url JSON>&compare=<gameId> ── */
+
+/** A query as a URL-safe string (UI-only `id` fields dropped) */
+function encodeQuery(query) {
+  const json = JSON.stringify(query, (k, v) => (k === 'id' ? undefined : v))
+  return btoa(json).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+}
+
+const isNum = (v) => typeof v === 'number' && Number.isFinite(v)
+
+/** The query in a `q` parameter, with anything unknown dropped; null if invalid */
+function decodeQueryParam(param) {
+  try {
+    const q = JSON.parse(atob(param.replace(/-/g, '+').replace(/_/g, '/')))
+    if (!Number.isInteger(q.diceCount) || q.diceCount < 1 || q.diceCount > MAX_DICE) return null
+    if (!Array.isArray(q.patterns)) return null
+    const patterns = q.patterns.map((p) => ({
+      rules: (Array.isArray(p.rules) ? p.rules : []).filter(
+        (r) =>
+          r &&
+          RULE_TYPES[r.type] &&
+          (r.op == null || r.op === 'any' || OPS[r.op]) &&
+          (r.values == null || (Array.isArray(r.values) && r.values.every(isNum)))
+      ),
+    }))
+    return { diceCount: q.diceCount, invert: !!q.invert, patterns }
+  } catch (e) {
+    return null
+  }
+}
+
+/**
+ * The Odds Lab path that opens with `query` loaded, for linking from any
+ * odds explanation. `compare` (a kicker game id) checks it against the
+ * site's definition of that game.
+ */
+function oddsLabPath(query, { compare, view } = {}) {
+  const params = new URLSearchParams({ q: encodeQuery(query) })
+  if (compare) params.set('compare', compare)
+  if (view) params.set('view', view)
+  return `/odds-lab/?${params}`
+}
+
 const faces = (...values) => ({ type: 'faces', values })
 const sumOf = (dice, op, value, values) => ({ type: 'sum', dice, op, value, values })
 
@@ -482,6 +525,9 @@ const api = {
   atLeastOneOf,
   describeRule,
   describePattern,
+  encodeQuery,
+  decodeQueryParam,
+  oddsLabPath,
 }
 
 module.exports = api

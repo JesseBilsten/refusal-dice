@@ -43,7 +43,7 @@ src/
     games-config.js     SINGLE SOURCE OF TRUTH for the game list and metadata (CommonJS; also used by gatsby-node.js and generators)
     game-validation.js  Rules + heuristic strategy (being split up, see below)
     roll-strength.js    Rarity/strength classification
-    roll-query.js       Odds Lab query engine: exact odds for any dice requirement (pure, CommonJS)
+    roll-query.js       Odds Lab query engine: exact odds for any dice requirement, plus share-link encoding/oddsLabPath (pure, CommonJS)
     utils.js            cn() class merger
   data/             Generated JSON + the generator scripts
   __tests__/        Jest tests
@@ -102,7 +102,7 @@ Simulated odds mean "against (and as) solid bots". Show the sample size and that
 - **The engine is TypeScript** (`.ts`, `strict`). Gatsby compiles it natively. Jest compiles it with `babel-jest` using an **inline** config in `jest.config.js`. Don't add a project-level `babel.config.js` or `.babelrc`, because Gatsby would pick it up and change how the site builds. Engine tests are `src/__tests__/engine-*.test.ts`.
 - **Model the game as an explicit state machine:** `(state, action) → state`, with per-player views that hide other players' dice. UI, bots and the server all go through the same action interface.
 - **Rules changes need tests.** Any change to game matching, kicker comparison, tie handling or round flow gets a Jest test with concrete dice. Add the test first if you can.
-- **Present decision odds with the odds-decision pattern** (`src/components/Odds`). Follow the `explain-odds` skill (`.claude/skills/explain-odds/SKILL.md`). Improve the pattern there rather than building a one-off.
+- **Present decision odds with the odds-decision pattern** (`src/components/Odds`). Follow the `explain-odds` skill (`.claude/skills/explain-odds/SKILL.md`). Improve the pattern there rather than building a one-off. Link to the Odds Lab (`OddsLabLink`, prefilled through `oddsLabPath` in `roll-query.js`) wherever the odds are more involved than the screen shows.
 - **Odds shown to users must be computed, not guessed.** Prefer exact enumeration (252 sorted rolls / 7,776 ordered) or seeded Monte Carlo with stated sample size. Label anything heuristic as such in the UI.
 - `roll-query.js` is CommonJS (`module.exports`) so Jest can load it without a Babel config; Gatsby/webpack imports it fine with named imports. Its game presets must keep matching `checkGame`; the Jest suite enforces this on all 7,776 rolls.
 - **Game odds are computed, never typed in.** `SINGLE_ROLL_ODDS` in `game-validation.js` counts each kicker game with `checkGame` over all 7,776 rolls. A hardcoded copy once left 10-3 at 53.43% instead of 63.85%.

@@ -12,11 +12,10 @@ import QueryBuilder, { newPattern, withIds } from '../components/OddsLab/QueryBu
 import RollGrid from '../components/OddsLab/RollGrid'
 import OutcomeMap from '../components/OddsLab/OutcomeMap'
 import {
-  MAX_DICE,
   PRESETS,
-  RULE_TYPES,
-  OPS,
   atLeastOneOf,
+  decodeQueryParam,
+  encodeQuery,
   evaluateQuery,
   validateQuery,
 } from '../lib/roll-query'
@@ -39,33 +38,11 @@ const emptyQuery = (diceCount = 5) => ({
   patterns: [newPattern()],
 })
 
-/* ── URL state: ?q=<base64url JSON>&compare=<gameId> ── */
-
-const encodeQuery = (query) => {
-  const json = JSON.stringify(query, (k, v) => (k === 'id' ? undefined : v))
-  return btoa(json).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
-}
-
-const isNum = (v) => typeof v === 'number' && Number.isFinite(v)
+/* ── URL state: ?q=<base64url JSON>&compare=<gameId> (encoding in roll-query.js) ── */
 
 const decodeQuery = (param) => {
-  try {
-    const q = JSON.parse(atob(param.replace(/-/g, '+').replace(/_/g, '/')))
-    if (!Number.isInteger(q.diceCount) || q.diceCount < 1 || q.diceCount > MAX_DICE) return null
-    if (!Array.isArray(q.patterns)) return null
-    const patterns = q.patterns.map((p) => ({
-      rules: (Array.isArray(p.rules) ? p.rules : []).filter(
-        (r) =>
-          r &&
-          RULE_TYPES[r.type] &&
-          (r.op == null || r.op === 'any' || OPS[r.op]) &&
-          (r.values == null || (Array.isArray(r.values) && r.values.every(isNum)))
-      ),
-    }))
-    return withIds({ diceCount: q.diceCount, invert: !!q.invert, patterns })
-  } catch (e) {
-    return null
-  }
+  const q = decodeQueryParam(param)
+  return q && withIds(q)
 }
 
 const formatPct = (p) => {

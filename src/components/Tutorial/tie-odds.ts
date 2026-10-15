@@ -64,3 +64,26 @@ export const AT_THE_LINE = [ROLL_UP_TO, ROLL_UP_TO + 1].map((total) => ({
     tied: 2,
   }),
 }))
+
+/**
+ * Odds Lab queries (src/lib/roll-query.js shape) linked from the screen:
+ * one roll of your two-dice kicker, and one roll of five dice for 10-3
+ */
+export const LAB = {
+  kickerBeats: {
+    diceCount: 2,
+    patterns: [
+      { rules: [{ type: 'sum', dice: 'all', op: 'gt', value: TIED_AT }] },
+    ],
+  },
+  kickerReaches: {
+    diceCount: 2,
+    patterns: [
+      { rules: [{ type: 'sum', dice: 'all', op: 'gte', value: TIED_AT }] },
+    ],
+  },
+  make103: {
+    diceCount: 5,
+    patterns: [{ rules: [{ type: 'sum', dice: 3, op: 'eq', value: 10 }] }],
+  },
+}

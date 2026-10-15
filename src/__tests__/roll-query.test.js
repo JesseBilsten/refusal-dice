@@ -213,3 +213,47 @@ describe('helpers', () => {
     )
   })
 })
+
+describe('Odds Lab links', () => {
+  const { encodeQuery, decodeQueryParam, oddsLabPath } = require('../lib/roll-query')
+
+  test('a query survives the round trip through a link', () => {
+    for (const preset of PRESETS) {
+      expect(decodeQueryParam(encodeQuery(preset.query))).toEqual({
+        invert: false,
+        ...preset.query,
+      })
+    }
+  })
+
+  test('UI ids are dropped and bad input is rejected', () => {
+    const q = {
+      diceCount: 2,
+      patterns: [{ id: 'x', rules: [{ id: 'y', type: 'sum', dice: 'all', op: 'gt', value: 10 }] }],
+    }
+    expect(atob(encodeQuery(q).replace(/-/g, '+').replace(/_/g, '/'))).not.toContain('"id"')
+    expect(decodeQueryParam(encodeQuery(q)).patterns[0]).toEqual({
+      rules: [{ type: 'sum', dice: 'all', op: 'gt', value: 10 }],
+    })
+    expect(decodeQueryParam('not base64!')).toBeNull()
+    expect(decodeQueryParam(encodeQuery({ diceCount: 9, patterns: [] }))).toBeNull()
+  })
+
+  test('oddsLabPath carries the query and the game to compare', () => {
+    const path = oddsLabPath(PRESETS[0].query, { compare: 'ship-captain-crew' })
+    const params = new URLSearchParams(path.split('?')[1])
+    expect(path.startsWith('/odds-lab/?')).toBe(true)
+    expect(params.get('compare')).toBe('ship-captain-crew')
+    expect(decodeQueryParam(params.get('q')).patterns).toEqual(PRESETS[0].query.patterns)
+  })
+
+  test("the tutorial's Odds Lab links show the odds its screen states", () => {
+    const { LAB, TIE_ODDS, MAKE } = require('../components/Tutorial/tie-odds')
+    expect(evaluateQuery(LAB.kickerBeats).probability).toBeCloseTo(TIE_ODDS.better, 12)
+    expect(evaluateQuery(LAB.kickerReaches).probability).toBeCloseTo(
+      TIE_ODDS.better + TIE_ODDS.equal,
+      12
+    )
+    expect(evaluateQuery(LAB.make103).probability).toBeCloseTo(MAKE[1], 12)
+  })
+})

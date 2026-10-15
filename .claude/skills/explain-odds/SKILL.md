@@ -27,6 +27,37 @@ implementation is the tutorial's "Take the tie, or roll?" step
 6. **Questions** (`Disclosure` + `Questions`, closed): the questions a
    surprising number raises, each answered in one or two sentences.
 7. **Actions**: the recommended option is the primary button, listed first.
+8. **See every roll in the Odds Lab** (`OddsLabLink`, at the end of the
+   math): links that open the Lab with the query already loaded, so players
+   can see and change it.
+
+## When to link to the Odds Lab
+
+The screen should answer the decision on its own. The Lab is for going
+deeper. Link to it whenever the odds are more involved than the screen can
+show in full:
+
+- **More than two dice:** e.g. a three-dice kicker. `OutcomeGrid` only draws
+  two, so link to the Lab rather than leave the roll unseen.
+- **Several patterns or requirements:** e.g. ship, captain and crew, or a
+  game with alternative ways to make it.
+- **Several outcomes to compare:** e.g. which game to call, or what to keep.
+  Give one link per option so they can be compared side by side.
+- **A number a player may doubt:** a link to the exact count settles it.
+
+How to link:
+
+- **One link per roll that matters.** The Lab covers *one roll* of 1–5
+  dice, so the link text says which roll it is: "Your kicker beating 10",
+  "Making 10-3 on one roll of five dice". Never imply the Lab shows the
+  multi-roll answer.
+- **Build the query** in the screen's pure `.ts` module (the same shape as
+  `src/lib/roll-query.js`), and pass `compare="<game id>"` when it's a
+  kicker game, so the Lab checks it against the site's own rules.
+- **Add a test** that `evaluateQuery(query).probability` equals the figure
+  the screen states (see `roll-query.test.js`).
+- **Open in a new tab.** `OddsLabLink` does this, because decision screens
+  hold state that leaving the page would lose.
 
 ## Components (`src/components/Odds`)
 
@@ -48,6 +79,9 @@ import { OddsDecision, OutcomeGrid, Disclosure, MathSteps, Questions, fmtPct } f
 - `OutcomeGrid` takes `classify(a, b)` and `kinds: { key: { label, kind, mark } }`.
   For three or more dice, build a sum histogram on the same tokens
   (not built yet).
+- `OddsLabLink` takes `query` (`roll-query.js` shape) and an optional
+  `compare`. Its path comes from `oddsLabPath()` in `roll-query.js`, which
+  the Lab's own share links also use.
 - `model.ts` is pure and tested: `fmtPct`, `inWords`, `rankOptions` and
   `twoDiceGrid`.
 
@@ -103,6 +137,8 @@ Answer the ones that apply in the Questions block:
       to the totals.
 - [ ] If an odds figure comes from simulation, state the sample size and
       that it assumes solid bots.
+- [ ] For odds the screen can't show in full, add Odds Lab links with a
+      test that each one matches its stated figure.
 - [ ] Check at 390px wide in light and dark, with no horizontal scroll.
 - [ ] When you improve this pattern, update this skill and the reference
       screen together.

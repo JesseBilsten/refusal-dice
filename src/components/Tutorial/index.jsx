@@ -21,12 +21,14 @@ import {
   Disclosure,
   MathSteps,
   OddsDecision,
+  OddsLabLink,
   OutcomeGrid,
   Questions,
   fmtPct,
 } from '../Odds'
 import {
   AT_THE_LINE,
+  LAB,
   LOSE_VIA_TIE,
   MAKE,
   MISS_TWICE,
@@ -458,6 +460,26 @@ const Tutorial = () => {
               "And" multiplies (miss, and miss again). "Or" adds (miss twice, or
               tie and lose the replay).
             </p>
+            <div className="space-y-1">
+              <p className="font-medium">See every roll in the Odds Lab</p>
+              <ul className="space-y-1">
+                <li>
+                  <OddsLabLink query={LAB.kickerBeats}>
+                    Your kicker beating {TIED_AT}
+                  </OddsLabLink>
+                </li>
+                <li>
+                  <OddsLabLink query={LAB.kickerReaches}>
+                    Your kicker reaching {TIED_AT} or better
+                  </OddsLabLink>
+                </li>
+                <li>
+                  <OddsLabLink query={LAB.make103} compare="10-3">
+                    Making 10-3 on one roll of five dice
+                  </OddsLabLink>
+                </li>
+              </ul>
+            </div>
           </Disclosure>
           <Disclosure title="Questions">
             <Questions
