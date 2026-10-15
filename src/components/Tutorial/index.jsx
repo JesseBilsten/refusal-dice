@@ -17,7 +17,25 @@ import {
   newTutorialGame,
   withDice,
 } from './script'
-import { freshMakeChance, rollOrTakeTie } from '../../strategy'
+import {
+  Disclosure,
+  MathSteps,
+  OddsDecision,
+  OutcomeGrid,
+  Questions,
+  fmtPct,
+} from '../Odds'
+import {
+  AT_THE_LINE,
+  LOSE_VIA_TIE,
+  MAKE,
+  MISS_TWICE,
+  ROLL_UP_TO,
+  TIED_AT,
+  TIE_ALONG_THE_WAY,
+  TIE_ODDS,
+  WAYS,
+} from './tie-odds'
 import { Button, buttonVariants } from '../ui/button'
 import { Badge } from '../ui/badge'
 import { Die, DiceSettings, playRollSound, useDicePrefs } from '../Dice'
@@ -46,31 +64,6 @@ const WRONG_CALL = {
 }
 
 const newGame = newTutorialGame
-
-const pct = (p) => `${Math.round(p * 100)}%`
-const pct1 = (p) => `${(p * 100).toFixed(1)}%`
-
-// Tied with Ben at 5+5 = 10 in 10-3 High, with 2 rolls left
-const TIE_ODDS = rollOrTakeTie({
-  kickerDice: 2,
-  rolls: 2,
-  variant: 'high',
-  total: 10,
-  tied: 2,
-})
-
-// The worked math behind those odds (shown under "How the math works")
-const MISS_TWICE = TIE_ODDS.worse ** 2
-const TIE_LATER = TIE_ODDS.worse * TIE_ODDS.equal
-const LOSE_VIA_TIE = TIE_ODDS.loseIfTie * (TIE_ODDS.equal + TIE_LATER)
-
-// Chance of making 10-3 in the replay within 1, 2 and 3 rolls
-const MAKE = {
-  1: freshMakeChance('10-3', 1),
-  2: freshMakeChance('10-3', 2),
-  3: freshMakeChance('10-3', 3),
-}
-const ONE_MISSES = MAKE[3] * (1 - MAKE[3])
 
 const T = ({ to, children }) => (
   <Link
@@ -369,86 +362,133 @@ const Tutorial = () => {
       body: (
         <>
           <p>
-            You can <strong>take the tie</strong>: stop here, and you and Ben
-            replay 10-3 High from scratch while Ava is safe. Or you can roll
-            your kicker, both 5s together, hoping to beat 10.
+            You're tied with Ben at {TIED_AT}, and he's done rolling. You can{' '}
+            <strong>take the tie</strong> (you and Ben replay 10-3 High; Ava is
+            safe) or <strong>roll your kicker</strong> with your 2 rolls left.
           </p>
-          <p>
-            Rolling two fresh dice for your kicker, you have only an{' '}
-            <strong>{pct1(TIE_ODDS.better)}</strong> chance of improving (5+6,
-            6+5, 6+6) and a{' '}
-            <strong>{pct1(TIE_ODDS.better + TIE_ODDS.equal)}</strong> chance of
-            getting the same value or better (adding 4+6, 5+5, 6+4).
-          </p>
-          <p>
-            If you only had 1 roll left, you'd lose outright{' '}
-            {pct1(TIE_ODDS.worse)} of the time. With your 2 rolls, you take the
-            pencil about <strong>{pct(TIE_ODDS.loseIfRoll)}</strong> of the
-            time.
-          </p>
-          <p>
-            Take the tie, and the replay is an even contest: you and Ben each
-            make 10-3 {pct(MAKE[3])} of the time over three rolls, so you take
-            the pencil <strong>{pct(TIE_ODDS.loseIfTie)}</strong> of the time.{' '}
-            {pct(TIE_ODDS.loseIfTie)} beats {pct(TIE_ODDS.loseIfRoll)}:{' '}
-            <strong>take the tie</strong>.
-          </p>
-          <details className="rounded-md border border-border p-3">
-            <summary className="cursor-pointer font-medium">
-              How the math works
-            </summary>
-            <div className="mt-2 space-y-2">
-              <p className="font-medium">Rolling your kicker</p>
-              <ul className="list-disc space-y-1 pl-5">
-                <li>
-                  Two dice have 36 equally likely results: 3 beat 10 (3/36 ={' '}
-                  {pct1(TIE_ODDS.better)}), 3 tie it ({pct1(TIE_ODDS.equal)})
-                  and 30 fall short ({pct1(TIE_ODDS.worse)}).
-                </li>
-                <li>
-                  Miss both rolls: multiply the chances, 30/36 × 30/36 ={' '}
-                  {pct1(MISS_TWICE)}. You lose outright.
-                </li>
-                <li>
-                  Tie along the way, on the first roll ({pct1(TIE_ODDS.equal)})
-                  or on the second after missing the first (
-                  {pct1(TIE_ODDS.worse)} × {pct1(TIE_ODDS.equal)} ={' '}
-                  {pct1(TIE_LATER)}): you take the tie then and lose half of
-                  those replays, ½ × ({pct1(TIE_ODDS.equal)} + {pct1(TIE_LATER)}
-                  ) = {pct1(LOSE_VIA_TIE)}.
-                </li>
-                <li>
-                  Add them up: {pct1(MISS_TWICE)} + {pct1(LOSE_VIA_TIE)} ={' '}
-                  <strong>{pct1(TIE_ODDS.loseIfRoll)}</strong> that you take the
-                  pencil.
-                </li>
-              </ul>
-              <p className="font-medium">The replay against Ben</p>
-              <ul className="list-disc space-y-1 pl-5">
-                <li>
-                  Making 10-3 from fresh dice: {pct1(MAKE[1])} on the first
-                  roll, {pct1(MAKE[2])} within two and {pct1(MAKE[3])} within
-                  all three. Ben has the same chances.
-                </li>
-                <li>
-                  You make it and Ben misses: {pct1(MAKE[3])} ×{' '}
-                  {pct1(1 - MAKE[3])} = {pct1(ONE_MISSES)}, a win. Ben makes it
-                  and you miss: also {pct1(ONE_MISSES)}, a loss. Both miss (
-                  {((1 - MAKE[3]) ** 2 * 100).toFixed(2)}%): you replay again.
-                </li>
-                <li>
-                  Both make it ({pct1(MAKE[3] ** 2)}): the higher kicker wins.
-                  You're both rolling the same dice with the same choices, so
-                  each of you comes out ahead half the time (a tied kicker means
-                  another replay).
-                </li>
-                <li>
-                  Every step is the same for both of you, so the replay is{' '}
-                  <strong>{pct(TIE_ODDS.loseIfTie)}</strong> either way.
-                </li>
-              </ul>
-            </div>
-          </details>
+          <OddsDecision
+            outcome="take the pencil"
+            options={[
+              {
+                id: 'tie',
+                label: 'Take the tie',
+                segments: [
+                  {
+                    p: TIE_ODDS.loseIfTie,
+                    label: 'lose the replay (a coin flip)',
+                    kind: 'coin',
+                  },
+                ],
+              },
+              {
+                id: 'roll',
+                label: 'Roll your kicker',
+                segments: [
+                  {
+                    p: MISS_TWICE,
+                    label: 'miss 10 on both rolls',
+                    kind: 'lose',
+                  },
+                  {
+                    p: LOSE_VIA_TIE,
+                    label: 'roll exactly 10, then lose the replay',
+                    kind: 'coin',
+                  },
+                ],
+              },
+            ]}
+          />
+          <OutcomeGrid
+            title="Each roll of your kicker: all 36 ways"
+            classify={(a, b) =>
+              a + b > TIED_AT ? 'better' : a + b === TIED_AT ? 'equal' : 'worse'
+            }
+            kinds={{
+              better: {
+                label: `Beats ${TIED_AT}: you're safe`,
+                kind: 'safe',
+                mark: '✓',
+              },
+              equal: { label: 'Ties again: a replay', kind: 'coin', mark: '=' },
+              worse: {
+                label: 'Falls short: roll again, or lose on your last roll',
+                kind: 'lose',
+              },
+            }}
+          />
+          <Disclosure title="How the math works">
+            <MathSteps
+              title="Roll your kicker"
+              steps={[
+                {
+                  label: 'Miss 10 on both rolls',
+                  expr: `${WAYS.worse}/36 × ${WAYS.worse}/36`,
+                  result: fmtPct(MISS_TWICE, 1),
+                },
+                {
+                  label: 'Roll exactly 10 (first roll, or second after a miss)',
+                  expr: `${WAYS.equal}/36 + ${WAYS.worse}/36 × ${WAYS.equal}/36`,
+                  result: fmtPct(TIE_ALONG_THE_WAY, 1),
+                },
+                {
+                  label: '…then lose that replay',
+                  expr: `½ × ${fmtPct(TIE_ALONG_THE_WAY, 1)}`,
+                  result: fmtPct(LOSE_VIA_TIE, 1),
+                },
+                {
+                  label: 'Chance you take the pencil',
+                  expr: `${fmtPct(MISS_TWICE, 1)} + ${fmtPct(LOSE_VIA_TIE, 1)}`,
+                  result: fmtPct(TIE_ODDS.loseIfRoll, 1),
+                  total: true,
+                },
+              ]}
+            />
+            <MathSteps
+              title="Take the tie"
+              steps={[
+                {
+                  label: 'Chance you take the pencil',
+                  expr: '1 of 2 players loses the replay',
+                  result: fmtPct(TIE_ODDS.loseIfTie, 1),
+                  total: true,
+                },
+              ]}
+            />
+            <p className="text-muted-foreground">
+              "And" multiplies (miss, and miss again). "Or" adds (miss twice, or
+              tie and lose the replay).
+            </p>
+          </Disclosure>
+          <Disclosure title="Questions">
+            <Questions
+              items={[
+                {
+                  q: "Isn't a tie safe?",
+                  a: 'No. A tie means you and Ben replay the round, and you lose half of replays.',
+                },
+                {
+                  q: `${WAYS.better + WAYS.equal} of 36 rolls reach ${TIED_AT}. Why does rolling still lose so often?`,
+                  a: `Only ${WAYS.better} of them beat ${TIED_AT}. The other ${WAYS.equal} tie again, which leaves you facing the same replay.`,
+                },
+                {
+                  q: `One roll misses ${fmtPct(TIE_ODDS.worse)} of the time. Why is rolling only ${fmtPct(TIE_ODDS.loseIfRoll)}?`,
+                  a: `You have two rolls, so you only lose outright if both miss (${fmtPct(MISS_TWICE)}). The rest is ties you go on to lose.`,
+                },
+                {
+                  q: 'Why is the replay 50/50?',
+                  a: `You and Ben start over with the same dice and three rolls each. Each of you makes 10-3 ${fmtPct(MAKE[3])} of the time (${fmtPct(MAKE[1])} on the first roll), then the higher kicker wins. Neither of you has an edge.`,
+                },
+                {
+                  q: 'Can I keep one 5 and roll the other?',
+                  a: 'No. Your kicker is rolled whole: both dice or neither.',
+                },
+                {
+                  q: 'When should I roll instead?',
+                  a: `With 2 rolls left, roll when you're tied at ${ROLL_UP_TO} or lower. At ${AT_THE_LINE[0].total}, rolling loses ${fmtPct(AT_THE_LINE[0].loseIfRoll)} of the time; at ${AT_THE_LINE[1].total}, ${fmtPct(AT_THE_LINE[1].loseIfRoll)}. The replay is always 50%.`,
+                },
+              ]}
+            />
+          </Disclosure>
         </>
       ),
       action: (
@@ -530,8 +570,8 @@ const Tutorial = () => {
       body: (
         <p>
           {mine.text}. You beat Ben's 10, but it was a long shot: only{' '}
-          {pct1(TIE_ODDS.better)} of rolls do that. Next time, take the tie. You
-          still have a roll, but you're safe now, so stop rolling.
+          {fmtPct(TIE_ODDS.better, 1)} of rolls do that. Next time, take the
+          tie. You still have a roll, but you're safe now, so stop rolling.
         </p>
       ),
       action: (

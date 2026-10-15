@@ -4,6 +4,15 @@
 import { Action, GameState, applyAction, evaluateKickerHand } from '../engine'
 import { freshMakeChance, rollOrTakeTie } from '../strategy'
 import {
+  AT_THE_LINE,
+  LOSE_VIA_TIE,
+  MAKE,
+  MISS_TWICE,
+  ROLL_UP_TO,
+  TIE_ODDS,
+  WAYS,
+} from '../components/Tutorial/tie-odds'
+import {
   AVA_ROLLS,
   BEN_REPLAY_ROLLS,
   BEN_ROLLS,
@@ -104,4 +113,19 @@ test('rolling anyway: 6+5 beats Ben, who takes the pencil', () => {
   expect(kickers(g, 'you')).toBe(11)
   g = applyAction(g, { type: 'stand', player: 'you' })
   expect(g.phase).toMatchObject({ kind: 'roundOver', loser: 'ben' })
+})
+
+test('the take-the-tie screen: every figure it shows', () => {
+  expect(WAYS).toEqual({ better: 3, equal: 3, worse: 30 })
+  expect(MISS_TWICE).toBeCloseTo(25 / 36, 12)
+  expect(LOSE_VIA_TIE).toBeCloseTo(0.5 * (3 / 36 + (30 / 36) * (3 / 36)), 12)
+  // The bar's slices add up to the total it shows
+  expect(MISS_TWICE + LOSE_VIA_TIE).toBeCloseTo(TIE_ODDS.loseIfRoll, 12)
+  expect(TIE_ODDS.loseIfTie).toBe(0.5)
+  expect(MAKE[1]).toBeCloseTo(0.6385, 4)
+  expect(MAKE[3]).toBeCloseTo(0.9805, 4)
+  // Roll when tied at 8 or lower: 45% at 8, 62% at 9, vs the replay's 50%
+  expect(ROLL_UP_TO).toBe(8)
+  expect(AT_THE_LINE[0].loseIfRoll).toBeLessThan(0.5)
+  expect(AT_THE_LINE[1].loseIfRoll).toBeGreaterThan(0.5)
 })

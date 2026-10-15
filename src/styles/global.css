@@ -47,6 +47,11 @@
     --color-common: 220 15% 94%;  /* Muted gray background */
     --color-common-foreground: 220 20% 25%;  /* Dark gray text */
     --color-common-border: 220 20% 60%;  /* Medium gray border */
+
+    /* Odds pattern (src/components/Odds): what an outcome means for you */
+    --color-odds-lose: 0 72% 51%;    /* You take the pencil */
+    --color-odds-coin: 38 92% 50%;   /* A replay or another roll: it could go either way */
+    --color-odds-safe: 142 64% 36%;  /* You're safe */
   }
 
   .dark {
@@ -90,6 +95,10 @@
     --color-common: 220 15% 20%;  /* Muted gray background */
     --color-common-foreground: 220 20% 80%;  /* Light gray text */
     --color-common-border: 220 20% 50%;  /* Medium gray border */
+
+    --color-odds-lose: 0 75% 60%;
+    --color-odds-coin: 40 92% 56%;
+    --color-odds-safe: 142 55% 48%;
   }
 }
 
