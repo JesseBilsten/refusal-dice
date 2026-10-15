@@ -323,10 +323,10 @@ const StrategyAssistantPage = () => {
               </CardHeader>
               <CardContent className="space-y-6">
                 {debugInfo.pencilOdds && debugInfo.position === 'hammer' && (
-                  <HammerPencilOdds options={debugInfo.pencilOdds} playerCount={playerCount} />
+                  <HammerPencilOdds options={debugInfo.pencilOdds} dice={debugInfo.roll} playerCount={playerCount} />
                 )}
                 {debugInfo.strategy && debugInfo.position === 'hammer' && (
-                  <HammerResults strategy={debugInfo.strategy} playerCount={playerCount} />
+                  <HammerResults strategy={debugInfo.strategy} dice={debugInfo.roll} playerCount={playerCount} />
                 )}
                 {debugInfo.strategy && debugInfo.position !== 'hammer' && (
                   <RefusalDecision
@@ -445,7 +445,7 @@ const FormulaDialog = ({ rec, playerCount, trigger }) => {
 
 /* ───────────────────── Hammer Results ────────────────────────── */
 
-const HammerResults = ({ strategy, playerCount }) => (
+const HammerResults = ({ strategy, dice, playerCount }) => (
   <div className="space-y-4">
     <h3 className="text-lg font-semibold">🔨 Hand strength (heuristic)</h3>
     <p className="text-xs text-muted-foreground -mt-2">
@@ -469,21 +469,9 @@ const HammerResults = ({ strategy, playerCount }) => (
       <p className="text-muted-foreground mb-4">
         {strategy.bestCall?.explanation || strategy.summary}
       </p>
-      {/* Kicker details */}
-      {strategy.bestCall?.kicker?.length > 0 && (
-        <div className="flex items-center gap-2 mb-4 text-sm">
-          <span className="text-muted-foreground">Kicker:</span>
-          <div className="flex gap-1">
-            {strategy.bestCall.kicker.map((d, i) => (
-              <span key={i} className="inline-flex items-center justify-center w-7 h-7 rounded bg-primary/20 font-bold text-sm border border-primary/30">
-                {d}
-              </span>
-            ))}
-          </div>
-          <span className="text-xs text-muted-foreground">
-            ({strategy.bestCall.kicker.length}-die kicker)
-          </span>
-        </div>
+      {/* How the dice make the call */}
+      {strategy.bestCall && (
+        <Hand dice={dice} game={strategy.bestCall.game} variant={strategy.bestCall.variant} className="mb-4" />
       )}
       <div className="grid grid-cols-3 gap-4">
         <div className="p-3 bg-background rounded-md">
@@ -585,8 +573,8 @@ const HammerResults = ({ strategy, playerCount }) => (
                       <div className="flex items-center gap-2">
                         {idx === 0 && <Badge variant="default" className="text-xs">★ Best</Badge>}
                         <span><GameLink id={rec.game} />{rec.variant ? ` ${rec.variant}` : ''}</span>
-                        {rec.kicker?.length > 0 && <span className="text-xs text-muted-foreground">({rec.kicker.join(',')})</span>}
                       </div>
+                      <Hand dice={dice} game={rec.game} variant={rec.variant} size="xs" className="mt-1" />
                     </TableCell>
                     <TableCell className="text-right font-mono font-bold">{rec.globalStrength.toFixed(1)}%</TableCell>
                     <TableCell className="text-right font-mono text-muted-foreground">{rec.rawStrength.toFixed(1)}%</TableCell>
@@ -634,7 +622,7 @@ const SimulationNote = ({ samples, players }) => (
 
 /* ───────────────────── Hammer: simulated pencil odds ──────────── */
 
-const HammerPencilOdds = ({ options, playerCount }) => (
+const HammerPencilOdds = ({ options, dice, playerCount }) => (
   <Card>
     <CardHeader className="pb-2">
       <CardTitle className="text-base">Chance you take the pencil, by call</CardTitle>
@@ -656,6 +644,7 @@ const HammerPencilOdds = ({ options, playerCount }) => (
               <TableCell>
                 <GameLink id={o.call.game}>{callLabel(o.call)}</GameLink>
                 {i === 0 && <Badge className="ml-2">Best</Badge>}
+                <Hand dice={dice} game={o.call.game} variant={o.call.variant} size="sm" className="mt-1 block" />
               </TableCell>
               <TableCell className="text-right tabular-nums">
                 {pct(o.pencil)} <span className="text-xs text-muted-foreground">±{(o.error * 100).toFixed(1)}</span>
