@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import Layout from '../components/layout'
-import Die from '../components/Die'
-import Game from '../components/Game'
-import DiceRollInput from '../components/DiceRollInput'
+import { DiceGroup, RollInput } from '../components/Dice'
 import { Link } from 'gatsby'
 import { buttonVariants } from '../components/ui/button'
 import { Badge } from '../components/ui/badge'
@@ -102,7 +100,7 @@ const GamesPage = () => {
         <p className="text-center text-muted-foreground mb-4">Enter your roll to see which games you can play</p>
         
         <div className="flex flex-col items-center gap-4">
-          <DiceRollInput
+          <RollInput
             diceValues={diceValues}
             onDiceChange={handleDiceChange}
             onClear={handleClear}
@@ -171,26 +169,12 @@ const GamesPage = () => {
         </div>
         <div className="">
           <div className="flex justify-end gap-2 mb-2">
-            <Game type="10-2" className="mr-1">
-              <Die number="4" />
-              <Die number="6" />
-            </Game>
-            <Game type="low">
-              <Die number="1" />
-              <Die number="1" />
-              <Die number="1" />
-            </Game>
+            <DiceGroup label="10-2" dice={[4, 6]} size="sm" />
+            <DiceGroup tone="kicker" label="Low kicker" dice={[1, 1, 1]} size="sm" />
           </div>
           <div className="flex justify-end gap-2 mb-2">
-            <Game type="10-2" className="mr-1">
-              <Die number="5" />
-              <Die number="5" />
-            </Game>
-            <Game type="high">
-              <Die number="6" />
-              <Die number="6" />
-              <Die number="6" />
-            </Game>
+            <DiceGroup label="10-2" dice={[5, 5]} size="sm" />
+            <DiceGroup tone="kicker" label="High kicker" dice={[6, 6, 6]} size="sm" />
           </div>
         </div>
       </div>
@@ -224,26 +208,12 @@ const GamesPage = () => {
         </div>
         <div className="">
           <div className="flex justify-end gap-2 mb-2">
-            <Game type="10-3" className="mr-1">
-              <Die number="1" />
-              <Die number="3" />
-              <Die number="6" />
-            </Game>
-            <Game type="low">
-              <Die number="1" />
-              <Die number="1" />
-            </Game>
+            <DiceGroup label="10-3" dice={[1, 3, 6]} size="sm" />
+            <DiceGroup tone="kicker" label="Low kicker" dice={[1, 1]} size="sm" />
           </div>
           <div className="flex justify-end gap-2 mb-2">
-            <Game type="10-3" className="mr-1">
-              <Die number="2" />
-              <Die number="3" />
-              <Die number="5" />
-            </Game>
-            <Game type="high">
-              <Die number="6" />
-              <Die number="6" />
-            </Game>
+            <DiceGroup label="10-3" dice={[2, 3, 5]} size="sm" />
+            <DiceGroup tone="kicker" label="High kicker" dice={[6, 6]} size="sm" />
           </div>
         </div>
       </div>
@@ -277,26 +247,12 @@ const GamesPage = () => {
         </div>
         <div className="">
           <div className="flex justify-end gap-2 mb-2">
-            <Game type="10-4" className="mr-1">
-              <Die number="1" />
-              <Die number="2" />
-              <Die number="6" />
-              <Die number="1" />
-            </Game>
-            <Game type="low">
-              <Die number="1" />
-            </Game>
+            <DiceGroup label="10-4" dice={[1, 2, 6, 1]} size="sm" />
+            <DiceGroup tone="kicker" label="Low kicker" dice={[1]} size="sm" />
           </div>
           <div className="flex justify-end gap-2 mb-2">
-            <Game type="10-4" className="mr-1">
-              <Die number="1" />
-              <Die number="2" />
-              <Die number="3" />
-              <Die number="4" />
-            </Game>
-            <Game type="high">
-              <Die number="6" />
-            </Game>
+            <DiceGroup label="10-4" dice={[1, 2, 3, 4]} size="sm" />
+            <DiceGroup tone="kicker" label="High kicker" dice={[6]} size="sm" />
           </div>
         </div>
       </div>
@@ -331,26 +287,12 @@ const GamesPage = () => {
         </div>
         <div className="">
           <div className="flex justify-end gap-2 mb-2">
-            <Game type="ship, captain, crew" className="mr-1">
-              <Die number="4" />
-              <Die number="5" />
-              <Die number="6" />
-            </Game>
-            <Game type="low">
-              <Die number="1" />
-              <Die number="1" />
-            </Game>
+            <DiceGroup label="ship, captain, crew" dice={[4, 5, 6]} size="sm" />
+            <DiceGroup tone="kicker" label="Low kicker" dice={[1, 1]} size="sm" />
           </div>
           <div className="flex justify-end gap-2 mb-2">
-            <Game type="ship, captain, crew" className="mr-1">
-              <Die number="1" />
-              <Die number="2" />
-              <Die number="3" />
-            </Game>
-            <Game type="high">
-              <Die number="6" />
-              <Die number="6" />
-            </Game>
+            <DiceGroup label="ship, captain, crew" dice={[1, 2, 3]} size="sm" />
+            <DiceGroup tone="kicker" label="High kicker" dice={[6, 6]} size="sm" />
           </div>
         </div>
       </div>
@@ -385,26 +327,12 @@ const GamesPage = () => {
         </div>
         <div className="">
           <div className="flex justify-end gap-2 mb-2">
-            <Game type="monterey" className="mr-1">
-              <Die number="2" />
-              <Die number="3" />
-              <Die number="4" />
-            </Game>
-            <Game type="low">
-              <Die number="1" />
-              <Die number="1" />
-            </Game>
+            <DiceGroup label="monterey" dice={[2, 3, 4]} size="sm" />
+            <DiceGroup tone="kicker" label="Low kicker" dice={[1, 1]} size="sm" />
           </div>
           <div className="flex justify-end gap-2 mb-2">
-            <Game type="monterey" className="mr-1">
-              <Die number="3" />
-              <Die number="4" />
-              <Die number="5" />
-            </Game>
-            <Game type="high">
-              <Die number="6" />
-              <Die number="6" />
-            </Game>
+            <DiceGroup label="monterey" dice={[3, 4, 5]} size="sm" />
+            <DiceGroup tone="kicker" label="High kicker" dice={[6, 6]} size="sm" />
           </div>
         </div>
       </div>
@@ -439,30 +367,14 @@ const GamesPage = () => {
         </div>
         <div className="">
           <div className="flex justify-end gap-2 mb-2">
-            <Game type="vegas" className="mr-1">
-              <Die number="5" />
-              <Die number="6" />
-            </Game>
-            <Game type="vegas" className="mr-1">
-              <Die number="1" />
-              <Die number="6" />
-            </Game>
-            <Game type="low">
-              <Die number="1" />
-            </Game>
+            <DiceGroup label="vegas" dice={[5, 6]} size="sm" />
+            <DiceGroup label="vegas" dice={[1, 6]} size="sm" />
+            <DiceGroup tone="kicker" label="Low kicker" dice={[1]} size="sm" />
           </div>
           <div className="flex justify-end gap-2 mb-2">
-            <Game type="vegas" className="mr-1">
-              <Die number="2" />
-              <Die number="5" />
-            </Game>
-            <Game type="vegas" className="mr-1">
-              <Die number="3" />
-              <Die number="4" />
-            </Game>
-            <Game type="high">
-              <Die number="6" />
-            </Game>
+            <DiceGroup label="vegas" dice={[2, 5]} size="sm" />
+            <DiceGroup label="vegas" dice={[3, 4]} size="sm" />
+            <DiceGroup tone="kicker" label="High kicker" dice={[6]} size="sm" />
           </div>
         </div>
       </div>
@@ -496,26 +408,12 @@ const GamesPage = () => {
         </div>
         <div className="">
           <div className="flex justify-end gap-2 mb-2">
-            <Game type="pairs" className="mr-1">
-              <Die number="2" />
-              <Die number="2" />
-              <Die number="4" />
-              <Die number="4" />
-            </Game>
-            <Game type="low">
-              <Die number="1" />
-            </Game>
+            <DiceGroup label="pairs" dice={[2, 2, 4, 4]} size="sm" />
+            <DiceGroup tone="kicker" label="Low kicker" dice={[1]} size="sm" />
           </div>
           <div className="flex justify-end gap-2 mb-2">
-            <Game type="pairs" className="mr-1">
-              <Die number="6" />
-              <Die number="6" />
-              <Die number="6" />
-              <Die number="6" />
-            </Game>
-            <Game type="high">
-              <Die number="6" />
-            </Game>
+            <DiceGroup label="pairs" dice={[6, 6, 6, 6]} size="sm" />
+            <DiceGroup tone="kicker" label="High kicker" dice={[6]} size="sm" />
           </div>
         </div>
       </div>
@@ -547,27 +445,13 @@ const GamesPage = () => {
         </div>
         <div className="">
           <div className="flex justify-end gap-2 mb-2">
-            <Game type="razzle: (3) 6's" className="mr-1">
-              <Die number="1" />
-              <Die number="6" />
-              <Die number="6" />
-            </Game>
+            <DiceGroup label="razzle: (3) 6's" dice={[1, 6, 6]} size="sm" />
           </div>
           <div className="flex justify-end gap-2 mb-2">
-            <Game type="razzle: (4) 5's" className="mr-1">
-              <Die number="1" />
-              <Die number="5" />
-              <Die number="1" />
-              <Die number="1" />
-            </Game>
+            <DiceGroup label="razzle: (4) 5's" dice={[1, 5, 1, 1]} size="sm" />
           </div>
           <div className="flex justify-end gap-2 mb-2">
-            <Game type="razzle: (5) 6's" className="mr-1">
-              <Die number="1" />
-              <Die number="1" />
-              <Die number="1" />
-              <Die number="1" />
-            </Game>
+            <DiceGroup label="razzle: (5) 6's" dice={[1, 1, 1, 1]} size="sm" />
           </div>
         </div>
       </div>
@@ -620,58 +504,22 @@ const GamesPage = () => {
         </div>
         <div className="">
           <div className="flex justify-end gap-2 mb-2">
-            <Game type="5 of a kind" className="mr-1">
-              <Die number="6" />
-              <Die number="6" />
-              <Die number="6" />
-              <Die number="6" />
-              <Die number="6" />
-            </Game>
+            <DiceGroup label="5 of a kind" dice={[6, 6, 6, 6, 6]} size="sm" />
           </div>
           <div className="flex justify-end gap-2 mb-2">
-            <Game type="4 of a kind" className="mr-1">
-              <Die number="5" />
-              <Die number="5" />
-              <Die number="5" />
-              <Die number="5" />
-              <Die number="2" />
-            </Game>
+            <DiceGroup label="4 of a kind" dice={[5, 5, 5, 5, 2]} size="sm" />
           </div>
           <div className="flex justify-end gap-2 mb-2">
-            <Game type="Full House" className="mr-1">
-              <Die number="4" />
-              <Die number="4" />
-              <Die number="4" />
-              <Die number="3" />
-              <Die number="3" />
-            </Game>
+            <DiceGroup label="Full House" dice={[4, 4, 4, 3, 3]} size="sm" />
           </div>
           <div className="flex justify-end gap-2 mb-2">
-            <Game type="3 of a kind" className="mr-1">
-              <Die number="6" />
-              <Die number="6" />
-              <Die number="6" />
-              <Die number="4" />
-              <Die number="2" />
-            </Game>
+            <DiceGroup label="3 of a kind" dice={[6, 6, 6, 4, 2]} size="sm" />
           </div>
           <div className="flex justify-end gap-2 mb-2">
-            <Game type="Two Pair" className="mr-1">
-              <Die number="6" />
-              <Die number="6" />
-              <Die number="4" />
-              <Die number="4" />
-              <Die number="1" />
-            </Game>
+            <DiceGroup label="Two Pair" dice={[6, 6, 4, 4, 1]} size="sm" />
           </div>
           <div className="flex justify-end gap-2 mb-2">
-            <Game type="Pair" className="mr-1">
-              <Die number="5" />
-              <Die number="5" />
-              <Die number="6" />
-              <Die number="3" />
-              <Die number="1" />
-            </Game>
+            <DiceGroup label="Pair" dice={[5, 5, 6, 3, 1]} size="sm" />
           </div>
         </div>
       </div>
@@ -716,49 +564,19 @@ const GamesPage = () => {
         </div>
         <div className="">
           <div className="flex justify-end gap-2 mb-2">
-            <Game type="0 (Best)" className="mr-1">
-              <Die number="3" />
-              <Die number="3" />
-              <Die number="3" />
-              <Die number="3" />
-              <Die number="3" />
-            </Game>
+            <DiceGroup label="0 (Best)" dice={[3, 3, 3, 3, 3]} size="sm" />
           </div>
           <div className="flex justify-end gap-2 mb-2">
-            <Game type="2 (Strong)" className="mr-1">
-              <Die number="3" />
-              <Die number="1" />
-              <Die number="1" />
-              <Die number="3" />
-              <Die number="3" />
-            </Game>
+            <DiceGroup label="2 (Strong)" dice={[3, 1, 1, 3, 3]} size="sm" />
           </div>
           <div className="flex justify-end gap-2 mb-2">
-            <Game type="7 (Average)" className="mr-1">
-              <Die number="3" />
-              <Die number="1" />
-              <Die number="2" />
-              <Die number="4" />
-              <Die number="3" />
-            </Game>
+            <DiceGroup label="7 (Average)" dice={[3, 1, 2, 4, 3]} size="sm" />
           </div>
           <div className="flex justify-end gap-2 mb-2">
-            <Game type="15 (Weak)" className="mr-1">
-              <Die number="3" />
-              <Die number="5" />
-              <Die number="3" />
-              <Die number="4" />
-              <Die number="3" />
-            </Game>
+            <DiceGroup label="15 (Weak)" dice={[3, 5, 3, 4, 3]} size="sm" />
           </div>
           <div className="flex justify-end gap-2 mb-2">
-            <Game type="30 (Worst)" className="mr-1">
-              <Die number="6" />
-              <Die number="6" />
-              <Die number="6" />
-              <Die number="6" />
-              <Die number="6" />
-            </Game>
+            <DiceGroup label="30 (Worst)" dice={[6, 6, 6, 6, 6]} size="sm" />
           </div>
         </div>
       </div>
@@ -786,22 +604,10 @@ const GamesPage = () => {
         </div>
         <div className="">
           <div className="flex justify-end gap-2 mb-2">
-            <Game type="bark" className="mr-1">
-              <Die number="2" />
-              <Die number="2" />
-              <Die number="2" />
-              <Die number="5" />
-              <Die number="6" />
-            </Game>
+            <DiceGroup label="bark" dice={[2, 2, 2, 5, 6]} size="sm" />
           </div>
           <div className="flex justify-end gap-2 mb-2">
-            <Game type="bark" className="mr-1">
-              <Die number="3" />
-              <Die number="3" />
-              <Die number="3" />
-              <Die number="5" />
-              <Die number="6" />
-            </Game>
+            <DiceGroup label="bark" dice={[3, 3, 3, 5, 6]} size="sm" />
           </div>
         </div>
       </div>

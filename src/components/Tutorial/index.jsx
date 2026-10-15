@@ -40,7 +40,7 @@ import {
 } from './tie-odds'
 import { Button, buttonVariants } from '../ui/button'
 import { Badge } from '../ui/badge'
-import { Die, DiceSettings, playRollSound, useDicePrefs } from '../Dice'
+import { DiceSettings, Hand, playRollSound, useDicePrefs } from '../Dice'
 import { cn } from '../../lib/utils'
 
 /**
@@ -713,23 +713,12 @@ const Tutorial = () => {
                   {seat.pencils ? '✏️'.repeat(seat.pencils) : 'No pencils'}
                 </span>
               </div>
-              <div className="flex flex-wrap gap-1.5">
-                {(dice || [null, null, null, null, null]).map((d, i) => (
-                  <Die
-                    key={i}
-                    value={d}
-                    size={40}
-                    rollId={rollIds[p.id][i]}
-                    tone={
-                      status?.made
-                        ? status.hand.gameDice.includes(i)
-                          ? 'game'
-                          : 'kicker'
-                        : undefined
-                    }
-                  />
-                ))}
-              </div>
+              <Hand
+                dice={dice || [null, null, null, null, null]}
+                game={inPlay ? CALL.game : null}
+                variant={CALL.variant}
+                rollIds={rollIds[p.id]}
+              />
               {status && (
                 <p className="mt-2 text-xs text-muted-foreground">
                   {status.text}

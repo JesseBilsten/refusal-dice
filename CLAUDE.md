@@ -36,7 +36,7 @@ src/
   pages/            Gatsby file-based routes (one file = one URL)
   templates/        game-detail.js → /games/<id> (created in gatsby-node.js)
   components/       App components; ui/ = shadcn primitives; nav-items.js = site navigation
-                    Dice/ = SVG die faces, opt-in 3D dice and sound (useDicePrefs; both off by default)
+                    Dice/ = the dice kit: Die, Hand (game + kicker groups), DiceGroup, RollInput; opt-in 3D and sound
                     Tutorial/ = the /learn guided round (script.ts holds its scripted dice)
                     Odds/ = the odds-decision pattern (verdict, comparison bars, outcome grid, math, questions)
   lib/
@@ -75,6 +75,15 @@ src/strategy/
 ```
 
 Simulated odds mean "against (and as) solid bots". Show the sample size and that assumption wherever they appear. Strategy code may only read what its player could see.
+
+## Design system
+
+Build UI from the shared kits in **[docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md)** (the `design-system` skill), so updating a component updates it everywhere:
+- dice: `Hand`, `RollInput` and `Die`; never render a roll as text;
+- odds: the `explain-odds` skill;
+- `ui/` primitives and color tokens.
+
+When a pattern repeats, extract it into a kit instead of copying it.
 
 ## Code style
 

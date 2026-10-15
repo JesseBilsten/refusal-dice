@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../components/ui/tooltip'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '../components/ui/dialog'
 import { Info } from 'lucide-react'
-import DiceRollInput from '../components/DiceRollInput'
+import { Hand, RollInput } from '../components/Dice'
 import RefusalDecision from '../components/RefusalDecision'
 import GameLink from '../components/GameLink'
 import { 
@@ -110,13 +110,13 @@ const StrategyAssistantPage = () => {
     setValidationMsg(null)
   }, [])
 
-  /** Dice change from DiceRollInput */
+  /** Dice change from RollInput */
   const handleDiceChange = useCallback((newValues) => {
     setDiceValues(newValues)
     setValidationMsg(null)
   }, [])
 
-  /** Clear handler from DiceRollInput */
+  /** Clear handler from RollInput */
   const handleClear = useCallback(() => {
     setDebugInfo(null)
     setValidationMsg(null)
@@ -234,7 +234,7 @@ const StrategyAssistantPage = () => {
               <div className="lg:order-1 flex-1 space-y-4">
                 <div>
                   <Label className="text-sm font-medium mb-2 block">Your Dice Roll</Label>
-                  <DiceRollInput
+                  <RollInput
                     diceValues={diceValues}
                     onDiceChange={handleDiceChange}
                     onClear={handleClear}
@@ -310,7 +310,11 @@ const StrategyAssistantPage = () => {
           <div className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Analysis: {debugInfo.roll.join('')}</CardTitle>
+                <CardTitle className="flex flex-wrap items-center gap-3">
+                  Analysis
+                  {/* A refuser's hand is shown grouped for the call below */}
+                  {debugInfo.position === 'hammer' && <Hand dice={debugInfo.roll} size="sm" />}
+                </CardTitle>
                 <CardDescription>
                   {debugInfo.position === 'hammer' ? 'Recommended calls for your roll' : 
                    debugInfo.position === 'first-refusal' ? 'First refusal analysis' : 

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { Lock } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import DieFace from './DieFace'
 import { useDicePrefs, usePrefersReducedMotion } from './preferences'
@@ -71,29 +72,35 @@ const Cube = ({ value, size, rollId, bouncing }) => {
   )
 }
 
+/** Die sizes in px. Use these names rather than numbers so dice stay consistent */
+export const DIE_SIZES = { xs: 16, sm: 28, md: 40, lg: 52 }
+const px = (size) => (typeof size === 'number' ? size : DIE_SIZES[size] || 40)
+
 /**
- * A die for game tables and the tutorial: flat by default, a tumbling 3D
- * cube when the player turned 3D dice on (and hasn't asked for reduced
- * motion). Bump `rollId` whenever this die is rolled to animate it.
+ * The one die used everywhere (see docs/DESIGN_SYSTEM.md): flat by
+ * default, a tumbling 3D cube when the player turned 3D dice on (and hasn't
+ * asked for reduced motion). Bump `rollId` whenever this die is rolled to
+ * animate it.
  *
- * - `onClick` makes it a toggle button (for picking dice to re-roll)
- * - `selected`: picked to re-roll; `locked`: can't be picked
- * - `tone`: 'game' (dice that make the game) or 'kicker'
+ * - `onClick` makes it a button: in a modeled game, tapping keeps the die
+ *   (pass `kept`); in a roll input, tapping edits it
+ * - `kept`: set aside, not re-rolled (shown with a lock badge)
+ * - `locked`: can't be tapped right now
  */
 const Die = ({
   value,
-  size = 48,
+  size = 'md',
   rollId = 0,
   onClick,
-  selected,
+  kept,
   locked,
-  tone,
   label,
   className,
 }) => {
   const [prefs] = useDicePrefs()
   const reduced = usePrefersReducedMotion()
   const [rolling, setRolling] = useState(false)
+  const n = px(size)
 
   // Flat dice wobble; 3D dice bounce while they tumble
   useEffect(() => {
@@ -103,41 +110,46 @@ const Die = ({
     return () => clearTimeout(t)
   }, [rollId, reduced])
 
-  const show3d = prefs.dice3d && !reduced && value
+  // Tiny dice (in tables and text) stay flat and still
+  const show3d = prefs.dice3d && !reduced && value && n >= 32
   const face = show3d ? (
-    <Cube value={value} size={size} rollId={rollId} bouncing={rolling} />
+    <Cube value={value} size={n} rollId={rollId} bouncing={rolling} />
   ) : (
     <DieFace
       value={value}
-      size={size}
-      className={rolling ? 'dice-wobble' : undefined}
+      size={n}
+      className={rolling && n >= 32 ? 'dice-wobble' : undefined}
     />
-  )
-
-  const frame = cn(
-    'relative inline-flex rounded-[22%] transition-transform',
-    tone === 'game' &&
-      'ring-2 ring-primary ring-offset-2 ring-offset-background',
-    tone === 'kicker' &&
-      'ring-1 ring-muted-foreground/50 ring-offset-2 ring-offset-background',
-    selected &&
-      '-translate-y-2 ring-2 ring-destructive ring-offset-2 ring-offset-background',
-    className
   )
 
   // The face always sits in the same wrapper, so becoming clickable (or not) never remounts it mid-roll
   return (
-    <span className={frame}>
+    <span
+      className={cn(
+        'relative inline-flex shrink-0 rounded-[22%] transition-transform',
+        kept && '-translate-y-1',
+        className
+      )}
+    >
       {face}
+      {kept && (
+        <span
+          aria-hidden
+          className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-foreground text-background"
+        >
+          <Lock className="h-2.5 w-2.5" />
+        </span>
+      )}
       {onClick && (
         <button
           type="button"
           onClick={onClick}
-          aria-pressed={!!selected}
+          disabled={locked}
+          aria-pressed={kept === undefined ? undefined : !!kept}
           aria-label={label || (value ? `Die showing ${value}` : 'Hidden die')}
           className={cn(
-            'absolute inset-0 rounded-[22%] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-            locked && 'cursor-not-allowed'
+            'absolute inset-0 rounded-[22%] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+            locked ? 'cursor-not-allowed' : 'cursor-pointer'
           )}
         />
       )}

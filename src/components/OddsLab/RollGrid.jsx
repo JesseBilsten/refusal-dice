@@ -1,5 +1,5 @@
 import React from 'react'
-import Die from '../Die'
+import { Die } from '../Dice'
 import { cn } from '../../lib/utils'
 
 const pct = (count, total) => `${((count / total) * 100).toFixed(2)}%`
@@ -45,7 +45,7 @@ const RollGrid = ({ rolls, total, diffKeys, matchesFirst }) => {
                   key={i}
                   className={cn('transition-opacity', showKickers && r.owner[i] === -1 && 'opacity-40')}
                 >
-                  <Die inline number={d} />
+                  <Die value={Number(d)} size="xs" />
                 </span>
               ))}
             </span>

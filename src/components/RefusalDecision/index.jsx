@@ -10,6 +10,7 @@ import {
   Questions,
   fmtPct,
 } from '../Odds'
+import { Hand } from '../Dice'
 import { refusalView } from './odds'
 
 /**
@@ -49,12 +50,13 @@ export default function RefusalDecision({
     <div className="space-y-4">
       <p>
         The Hammer called <strong>{callName}</strong>, and you're the{' '}
-        {position === 1 ? '1st' : '2nd'} refusal holding{' '}
-        <strong>{dice.join('-')}</strong>.{' '}
+        {position === 1 ? '1st' : '2nd'} refusal.{' '}
         {view.nextCanAccept
           ? 'If you refuse, the 2nd refusal decides next.'
           : 'If you refuse, the Hammer makes a second call.'}
       </p>
+
+      <Hand dice={dice} game={call.game} variant={call.variant} />
 
       <OddsDecision
         outcome="take the pencil"

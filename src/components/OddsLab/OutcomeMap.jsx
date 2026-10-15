@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import Die from '../Die'
+import { Die } from '../Dice'
 import { cn } from '../../lib/utils'
 
 const CELL = 8 // internal pixels per outcome; the canvas is scaled with CSS
@@ -99,7 +99,7 @@ const OutcomeMap = ({ diceCount, matchByKey, diffKeys }) => {
         {[1, 2, 3, 4, 5, 6].map((first, i) => (
           <figure key={first} className="min-w-0">
             <figcaption className="mb-1 flex items-center gap-1 text-xs text-muted-foreground">
-              1st die <Die inline number={first} />
+              1st die <Die value={Number(first)} size="xs" />
             </figcaption>
             <canvas
               ref={(el) => (canvases.current[i] = el)}
@@ -119,7 +119,7 @@ const OutcomeMap = ({ diceCount, matchByKey, diffKeys }) => {
         {hover ? (
           <span className="inline-flex items-center gap-1">
             {hover.roll.map((d, i) => (
-              <Die key={i} inline number={d} />
+              <Die key={i} value={Number(d)} size="xs" />
             ))}
             <span className={cn('ml-1 font-medium', hover.match ? 'text-uncommon-foreground' : 'text-muted-foreground')}>
               {hover.match ? 'matches' : 'no match'}

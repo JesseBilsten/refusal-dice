@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Plus, X } from 'lucide-react'
-import Die from '../Die'
+import { Die } from '../Dice'
 import { Button } from '../ui/button'
 import { Card, CardContent } from '../ui/card'
 import { cn } from '../../lib/utils'
@@ -106,7 +106,7 @@ const FaceSet = ({ values, onChange, label }) => (
             on ? 'ring-2 ring-primary' : 'opacity-40 hover:opacity-80'
           )}
         >
-          <Die inline number={f} />
+          <Die value={Number(f)} size="xs" />
         </button>
       )
     })}
@@ -220,7 +220,7 @@ const RuleFields = ({ rule, diceCount, onChange }) => {
                 onClick={() => onChange({ values: rule.values.filter((_, j) => j !== i) })}
                 className="rounded p-0.5 text-lg ring-2 ring-primary hover:opacity-60 focus:outline-none focus:ring-ring"
               >
-                <Die inline number={v} />
+                <Die value={Number(v)} size="xs" />
               </button>
             ))}
             {rule.values.length === 0 && (
@@ -237,7 +237,7 @@ const RuleFields = ({ rule, diceCount, onChange }) => {
                   onClick={() => onChange({ values: [...rule.values, f] })}
                   className="rounded p-0.5 text-base opacity-60 hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring"
                 >
-                  <Die inline number={f} />
+                  <Die value={Number(f)} size="xs" />
                 </button>
               ))}
             </div>

@@ -23,6 +23,7 @@ import {
   analyzeRoll,
 } from '../lib/game-validation'
 import { ToggleGroup, ToggleGroupItem } from '../components/ui/toggle-group'
+import { Hand } from '../components/Dice'
 
 /* ─────────────────────────── helpers ─────────────────────────── */
 
@@ -441,7 +442,7 @@ const ProofGrid = ({ allRolls, matchSet, matchCount, totalInstances }) => {
               }`}
             >
               {isMatch && <Check className="w-3 h-3 mr-0.5 text-green-600 dark:text-green-400" />}
-              {r.roll.join('')}
+              <Hand dice={r.roll} size="xs" />
               {!showAll && (
                 <span className={`ml-1 ${isMatch ? 'text-green-600/70 dark:text-green-400/70' : 'text-muted-foreground/30'}`}>
                   ×{r.count}
@@ -713,7 +714,7 @@ const OddsDashboard = ({ data }) => {
                       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 max-h-80 overflow-y-auto">
                         {barkingWeakHands.slice(0, 50).map((hand, idx) => (
                           <div key={idx} className="p-2 border rounded bg-muted/30 text-xs">
-                            <div className="font-mono mb-1">[{hand.roll.join(',')}]</div>
+                            <Hand dice={hand.roll} size="xs" className="mb-1" />
                             <div className="text-xs text-muted-foreground">
                               {hand.count} rolls
                             </div>

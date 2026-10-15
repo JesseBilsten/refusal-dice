@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { Link } from 'gatsby'
 import Layout from '../components/layout'
-import Die from '../components/Die'
+import { Die } from '../components/Dice'
 import { CallList } from '../components/RollAnalysis'
 import {
   generateHammerStrategy,
@@ -239,7 +239,7 @@ const IndexPage = () => {
                     }`}
                     style={{ animationDelay: `${i * 40}ms` }}
                   >
-                    <Die number={d} />
+                    <Die value={d} size="lg" />
                   </div>
                 ))}
               </div>

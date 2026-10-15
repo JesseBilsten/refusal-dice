@@ -14,6 +14,7 @@ import GameLink from '../components/GameLink'
 import { StrengthBar } from '../components/RollAnalysis'
 import SecondCallDistribution from '../components/SecondCallDistribution'
 import rollGameMatrix from '../data/roll-game-matrix.json'
+import { Hand } from '../components/Dice'
 
 /* ────────────────────────────────────────────────────────────── */
 /*  Game metadata — enriches shared GAMES_MAP with page content  */
@@ -235,7 +236,7 @@ const SampleRollsTable = ({ rolls, gameId, variant, hasVariants }) => {
         <TableBody>
           {display.map((r, i) => (
             <TableRow key={i}>
-              <TableCell className="font-mono text-sm">[{r.roll.join(', ')}]</TableCell>
+              <TableCell><Hand dice={r.roll} game={gameId} variant={r.info.variant} size="xs" /></TableCell>
               {hasVariants && (
                 <TableCell>
                   <Badge variant={r.info.variant === 'high' ? 'default' : 'secondary'} className="text-xs">
@@ -457,7 +458,7 @@ const GameDetailTemplate = ({ pageContext }) => {
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-96 overflow-y-auto">
                     {weakHands.map((hand, idx) => (
                       <div key={idx} className="p-3 border rounded-lg bg-muted/20">
-                        <div className="font-mono text-lg mb-1">[{hand.roll.join(', ')}]</div>
+                        <Hand dice={hand.roll} size="sm" game={hand.bestCall?.game} variant={hand.bestCall?.variant} className="mb-1" />
                         <div className="text-sm text-muted-foreground">
                           Flexibility: {hand.flexibility} ·{' '}
                           {hand.bestCall ? (
