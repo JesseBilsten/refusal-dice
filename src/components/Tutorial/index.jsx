@@ -363,17 +363,25 @@ const Tutorial = () => {
           <p>Rolling two fresh dice for your kicker:</p>
           <ul className="list-disc space-y-1 pl-5">
             <li>
-              Beat 10 (5+6, 6+5, 6+6): {pct1(TIE_ODDS.better)}. You're safe.
-            </li>
-            <li>
-              Exactly 10 (4+6, 5+5, 6+4): {pct1(TIE_ODDS.equal)}. You're tied
-              again and can take the tie then.
+              10 or better:{' '}
+              <strong>{pct1(TIE_ODDS.better + TIE_ODDS.equal)}</strong>, and
+              only half of that gets you clear:
+              <ul className="list-[circle] space-y-1 pl-5">
+                <li>
+                  Beat 10 (5+6, 6+5, 6+6): {pct1(TIE_ODDS.better)}. You're safe.
+                </li>
+                <li>
+                  Exactly 10 (4+6, 5+5, 6+4): {pct1(TIE_ODDS.equal)}. You're
+                  still tied with Ben, back where you started with a roll fewer,
+                  so you take the tie then.
+                </li>
+              </ul>
             </li>
             <li>
               Below 10: {pct1(TIE_ODDS.worse)}. You're alone at the bottom, so
-              you roll your last roll. That one falls short{' '}
-              {pct1(TIE_ODDS.worse)} of the time (a loss) and ties{' '}
-              {pct1(TIE_ODDS.equal)} (a coin-flip replay), so it ends with you
+              you roll your last roll. It reaches 10 or better only{' '}
+              {pct1(TIE_ODDS.better + TIE_ODDS.equal)} of the time, and half of
+              those are another tie (a coin-flip replay), so it ends with you
               taking the pencil {pct1(TIE_ODDS.loseIfLastRoll)} of the time.
             </li>
           </ul>
