@@ -59,8 +59,18 @@ const TIE_ODDS = rollOrTakeTie({
   tied: 2,
 })
 
-// Chance of making 10-3 again in the replay, with all three rolls
-const REPLAY_MAKE = freshMakeChance('10-3')
+// The worked math behind those odds (shown under "How the math works")
+const MISS_TWICE = TIE_ODDS.worse ** 2
+const TIE_LATER = TIE_ODDS.worse * TIE_ODDS.equal
+const LOSE_VIA_TIE = TIE_ODDS.loseIfTie * (TIE_ODDS.equal + TIE_LATER)
+
+// Chance of making 10-3 in the replay within 1, 2 and 3 rolls
+const MAKE = {
+  1: freshMakeChance('10-3', 1),
+  2: freshMakeChance('10-3', 2),
+  3: freshMakeChance('10-3', 3),
+}
+const ONE_MISSES = MAKE[3] * (1 - MAKE[3])
 
 const T = ({ to, children }) => (
   <Link
@@ -372,17 +382,73 @@ const Tutorial = () => {
           </p>
           <p>
             If you only had 1 roll left, you'd lose outright{' '}
-            {pct1(TIE_ODDS.worse)} of the time. With your 2 rolls, you'd miss 10
-            both times {pct1(TIE_ODDS.worse ** 2)} of the time, and counting the
-            coin-flip replays you'd land in along the way, you take the pencil
-            about <strong>{pct(TIE_ODDS.loseIfRoll)}</strong> of the time.
+            {pct1(TIE_ODDS.worse)} of the time. With your 2 rolls, you take the
+            pencil about <strong>{pct(TIE_ODDS.loseIfRoll)}</strong> of the
+            time.
           </p>
           <p>
-            You should <strong>take the tie</strong>. The replay against Ben is
-            a coin flip ({pct(TIE_ODDS.loseIfTie)}), and you get three fresh
-            rolls to make 10-3 again, which you'll do{' '}
-            <strong>{pct(REPLAY_MAKE)}</strong> of the time.
+            Take the tie, and the replay is an even contest: you and Ben each
+            make 10-3 {pct(MAKE[3])} of the time over three rolls, so you take
+            the pencil <strong>{pct(TIE_ODDS.loseIfTie)}</strong> of the time.{' '}
+            {pct(TIE_ODDS.loseIfTie)} beats {pct(TIE_ODDS.loseIfRoll)}:{' '}
+            <strong>take the tie</strong>.
           </p>
+          <details className="rounded-md border border-border p-3">
+            <summary className="cursor-pointer font-medium">
+              How the math works
+            </summary>
+            <div className="mt-2 space-y-2">
+              <p className="font-medium">Rolling your kicker</p>
+              <ul className="list-disc space-y-1 pl-5">
+                <li>
+                  Two dice have 36 equally likely results: 3 beat 10 (3/36 ={' '}
+                  {pct1(TIE_ODDS.better)}), 3 tie it ({pct1(TIE_ODDS.equal)})
+                  and 30 fall short ({pct1(TIE_ODDS.worse)}).
+                </li>
+                <li>
+                  Miss both rolls: multiply the chances, 30/36 × 30/36 ={' '}
+                  {pct1(MISS_TWICE)}. You lose outright.
+                </li>
+                <li>
+                  Tie along the way, on the first roll ({pct1(TIE_ODDS.equal)})
+                  or on the second after missing the first (
+                  {pct1(TIE_ODDS.worse)} × {pct1(TIE_ODDS.equal)} ={' '}
+                  {pct1(TIE_LATER)}): you take the tie then and lose half of
+                  those replays, ½ × ({pct1(TIE_ODDS.equal)} + {pct1(TIE_LATER)}
+                  ) = {pct1(LOSE_VIA_TIE)}.
+                </li>
+                <li>
+                  Add them up: {pct1(MISS_TWICE)} + {pct1(LOSE_VIA_TIE)} ={' '}
+                  <strong>{pct1(TIE_ODDS.loseIfRoll)}</strong> that you take the
+                  pencil.
+                </li>
+              </ul>
+              <p className="font-medium">The replay against Ben</p>
+              <ul className="list-disc space-y-1 pl-5">
+                <li>
+                  Making 10-3 from fresh dice: {pct1(MAKE[1])} on the first
+                  roll, {pct1(MAKE[2])} within two and {pct1(MAKE[3])} within
+                  all three. Ben has the same chances.
+                </li>
+                <li>
+                  You make it and Ben misses: {pct1(MAKE[3])} ×{' '}
+                  {pct1(1 - MAKE[3])} = {pct1(ONE_MISSES)}, a win. Ben makes it
+                  and you miss: also {pct1(ONE_MISSES)}, a loss. Both miss (
+                  {((1 - MAKE[3]) ** 2 * 100).toFixed(2)}%): you replay again.
+                </li>
+                <li>
+                  Both make it ({pct1(MAKE[3] ** 2)}): the higher kicker wins.
+                  You're both rolling the same dice with the same choices, so
+                  each of you comes out ahead half the time (a tied kicker means
+                  another replay).
+                </li>
+                <li>
+                  Every step is the same for both of you, so the replay is{' '}
+                  <strong>{pct(TIE_ODDS.loseIfTie)}</strong> either way.
+                </li>
+              </ul>
+            </div>
+          </details>
         </>
       ),
       action: (

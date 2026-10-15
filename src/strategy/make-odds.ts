@@ -155,6 +155,9 @@ export function bestKeepToMake(
   return keep
 }
 
-/** Chance of making each kicker game from a fresh roll of five, with all three rolls */
-export const freshMakeChance = (game: KickerGameId): number =>
-  OUTCOMES[5].reduce((p, o) => p + o.p * solver(game).prob(o.counts, 2), 0)
+/** Chance of making a kicker game from a fresh roll of five within `rolls` rolls (1–3) */
+export const freshMakeChance = (game: KickerGameId, rolls = 3): number =>
+  OUTCOMES[5].reduce(
+    (p, o) => p + o.p * solver(game).prob(o.counts, rolls - 1),
+    0
+  )

@@ -67,8 +67,15 @@ test('the odds say take the tie with 5+5, even counting both rolls', () => {
   expect(odds.choice).toBe('tie')
   // Missing 10 on both rolls
   expect(odds.worse ** 2).toBeCloseTo(0.6944, 4)
-  // The replay: making 10-3 again from a fresh roll with all three rolls
+  // How the math works: miss twice, plus half the ties met along the way
+  expect(
+    odds.worse ** 2 + 0.5 * (odds.equal + odds.worse * odds.equal)
+  ).toBeCloseTo(odds.loseIfRoll, 12)
+  // The replay: making 10-3 from fresh dice within 1, 2 and 3 rolls
+  expect(freshMakeChance('10-3', 1)).toBeCloseTo(0.6385, 4)
+  expect(freshMakeChance('10-3', 2)).toBeGreaterThan(freshMakeChance('10-3', 1))
   expect(freshMakeChance('10-3')).toBeCloseTo(0.9805, 4)
+  expect(freshMakeChance('10-3', 3)).toBe(freshMakeChance('10-3'))
 })
 
 test('taking the tie: you and Ben replay, and Ben loses the replay', () => {
