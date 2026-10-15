@@ -371,14 +371,16 @@ const Tutorial = () => {
             </li>
             <li>
               Below 10: {pct1(TIE_ODDS.worse)}. You're alone at the bottom, so
-              you roll your last roll, which loses{' '}
-              {pct1(TIE_ODDS.loseIfLastRoll)} of the time.
+              you roll your last roll. That one falls short{' '}
+              {pct1(TIE_ODDS.worse)} of the time (a loss) and ties{' '}
+              {pct1(TIE_ODDS.equal)} (a coin-flip replay), so it ends with you
+              taking the pencil {pct1(TIE_ODDS.loseIfLastRoll)} of the time.
             </li>
           </ul>
           <p>
-            Even using both rolls, rolling loses about{' '}
-            <strong>{pct(TIE_ODDS.loseIfRoll)}</strong> of the time. A replay
-            against Ben is a coin flip:{' '}
+            Counting ties as the coin flips they lead to, rolling ends with you
+            taking the pencil about <strong>{pct(TIE_ODDS.loseIfRoll)}</strong>{' '}
+            of the time. A replay against Ben is a coin flip:{' '}
             <strong>{pct(TIE_ODDS.loseIfTie)}</strong>.
           </p>
           <p>

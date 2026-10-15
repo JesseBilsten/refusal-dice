@@ -32,7 +32,10 @@ export interface TieDecision {
    * (or roll on if that's safer), and roll again when you fall short
    */
   loseIfRoll: number
-  /** The same, if you had only this one roll (a last roll) */
+  /**
+   * The same, if you had only this one roll (a last roll): falling short
+   * loses, and a tie counts as the replay's chance of losing (1 / tied)
+   */
   loseIfLastRoll: number
   /** Chance you take the pencil if you take the tie and the tied players replay */
   loseIfTie: number
