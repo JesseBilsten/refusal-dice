@@ -101,6 +101,12 @@ site.
 - `Seat`: one player at the table (name, role badges, decision, pencils,
   their dice, a status line). The tutorial and Play both use it.
 
+- `SeatRing`: **the table seen from above** (SVG). Each seat shows a
+  chance (of the pencil), tinted better or worse than an even share; your
+  seat is at the bottom, seats run clockwise to your left, the Hammer gets
+  🔨, and `passTo` draws the Hammer passing. Use it for anything that
+  depends on where people sit.
+
 ## Settings: `src/components/Settings/`
 
 Every site-wide setting, saved per browser: theme (`useTheme`), 3D dice and
@@ -167,6 +173,9 @@ links. Components:
 - `OddsLabLink`
 - `ProbabilityBar`: one chance as a labeled bar (for a single figure;
   compare options with `OddsDecision`)
+- `BarkOdds`: what a bark is worth, as two `SeatRing`s (you call vs. you
+  bark) with a player-count picker, from the generated `seat-odds.ts`. On
+  the Games page's Bark card and the Barking page.
 - formatting: `fmtPct`, `inWords`
 
 **Every roll:** `EveryPossibility` (`src/components/OddsLab/`) is the one

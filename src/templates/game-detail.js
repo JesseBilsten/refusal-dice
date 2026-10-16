@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react'
 import { Link } from 'gatsby'
 import Layout from '../components/layout'
 import Page, { NextStep, PageHeader, Panel, Stat } from '../components/Page'
-import { ProbabilityBar } from '../components/Odds'
+import { BarkOdds, ProbabilityBar } from '../components/Odds'
 import SituationCard from '../components/OddsLab/SituationCard'
 import { SITUATIONS, situationPath } from '../components/OddsLab/situations-catalog'
 import { freshMakeChance } from '../strategy'
@@ -411,10 +411,15 @@ const GameDetailTemplate = ({ pageContext }) => {
         {/*  Barking-specific content        */}
         {/* ──────────────────────────────── */}
         {gameId === 'barking' && (
+          <Panel className="mb-8" title="What a bark is worth">
+            <BarkOdds />
+          </Panel>
+        )}
+        {gameId === 'barking' && (
           <Panel
             className="mb-8"
-            title="When should you bark?"
-            description="Move the thresholds to see which hands are worth barking on. A rule of thumb."
+            title="Weak hands by rule of thumb"
+            description="Move the thresholds to see which hands score as weak. A rule of thumb from hand strength alone; the simulation above says even these usually do better calling."
           >
               <div className="space-y-6">
                 <div>

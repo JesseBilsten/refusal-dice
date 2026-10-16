@@ -12,6 +12,7 @@ import {
   RollInput,
 } from '../components/Dice'
 import {
+  BarkOdds,
   Disclosure,
   OddsDecision,
   OddsLabLink,
@@ -21,8 +22,10 @@ import {
 } from '../components/Odds'
 import { Settings } from '../components/Settings'
 import Seat from '../components/Table/Seat'
+import SeatRing from '../components/Table/SeatRing'
 import Standings from '../components/Table/Standings'
 import { PRESETS } from '../lib/roll-query'
+import { seatOdds } from '../strategy'
 import { Badge } from '../components/ui/badge'
 import { Button } from '../components/ui/button'
 
@@ -186,6 +189,19 @@ const DesignPage = () => {
           </Section>
 
           <Section title="Table">
+            <div className="grid max-w-md grid-cols-2 gap-3">
+              <SeatRing
+                label="Example: five seats, you hold the Hammer"
+                even={1 / 5}
+                seats={seatOdds(5).map((value, i) => ({ value, hammer: i === 0, you: i === 0 }))}
+              />
+              <SeatRing
+                label="Example: the Hammer passes to your left"
+                even={1 / 5}
+                passTo={1}
+                seats={seatOdds(5).map((_, i, o) => ({ value: o[(i + 4) % 5], hammer: i === 1, you: i === 0 }))}
+              />
+            </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <Seat name="You" you active badges={['🔨 Hammer']} pencils={1}>
                 <Hand dice={[1, 3, 6, 5, 5]} game="10-3" variant="high" />
@@ -215,6 +231,9 @@ const DesignPage = () => {
           </Section>
 
           <Section title="Odds kit">
+            <Panel title="BarkOdds" className="max-w-2xl">
+              <BarkOdds />
+            </Panel>
             <div className="max-w-xl space-y-3">
               <ProbabilityBar label="1 roll" p={0.639} />
               <ProbabilityBar label="Safe" p={0.42} tone="safe" />

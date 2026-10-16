@@ -36,7 +36,8 @@
     "format": "prettier --write '**/*.js'",
     "test": "jest --verbose",
     "typecheck": "tsc",
-    "generate:call-odds": "sucrase-node src/data/generate-call-odds.ts"
+    "generate:call-odds": "sucrase-node src/data/generate-call-odds.ts",
+    "generate:seat-odds": "sucrase-node src/data/generate-seat-odds.ts"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.29.7",

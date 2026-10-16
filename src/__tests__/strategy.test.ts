@@ -18,7 +18,9 @@ import {
   diceSumDistribution,
   rollOrTakeTie,
   makeChance,
-  simulateBark,
+  SEAT_ODDS,
+  barkOdds,
+  simulateSeats,
   simulateHammer,
   simulateRefusal,
   CALL_ODDS,
@@ -167,13 +169,22 @@ describe('simulations', () => {
     ).toBeLessThan(0.1)
   })
 
-  test('barking leaves you in the worst seat: worse than an even share', () => {
-    // You sit last, on the new Hammer's right, with random dice
-    const bark = simulateBark({ players: 3, samples: 600 })
-    expect(bark).toEqual(simulateBark({ players: 3, samples: 600 }))
-    expect(bark.pencil).toBeGreaterThan(1 / 3)
+  test('barking leaves you in a seat worse than an even share', () => {
+    // A bark makes you the last seat, with random dice; the Hammer's seat is the best
+    const seats = simulateSeats({ players: 3, samples: 600 })
+    expect(seats).toEqual(simulateSeats({ players: 3, samples: 600 }))
+    expect(seats[0].pencil).toBeLessThan(seats[2].pencil)
+    expect(barkOdds(3)).toBeGreaterThan(1 / 3)
     // Even a poor hand is better called than barked (22563: only a mediocre 10-3)
-    expect(simulateHammer({ dice: [2, 2, 5, 6, 3], samples: 300 })[0].pencil).toBeLessThan(bark.pencil)
+    expect(simulateHammer({ dice: [2, 2, 5, 6, 3], samples: 300 })[0].pencil).toBeLessThan(barkOdds(3))
+  })
+
+  test('the seat odds table covers 2–8 players, a seat each', () => {
+    for (let n = 2; n <= 8; n++) {
+      expect(SEAT_ODDS[n]).toHaveLength(n)
+      // At most one pencil a round
+      expect(SEAT_ODDS[n].reduce((a, b) => a + b, 0)).toBeLessThanOrEqual(1001)
+    }
   })
 
   test('a refuser holding a great hand for the call should accept', () => {

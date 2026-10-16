@@ -17,7 +17,7 @@ import {
   generateHammerStrategy,
   gameOddsMap
 } from '../lib/game-validation'
-import { simulateBark, simulateHammer, simulateRefusal } from '../strategy'
+import { SEAT_ODDS_SAMPLES, barkOdds, simulateHammer, simulateRefusal } from '../strategy'
 import { GAMES, GAMES_MAP } from '../lib/games-config'
 
 const TABS = [
@@ -46,13 +46,13 @@ const StrategyAssistantPage = () => {
   const rollIsComplete = diceValues.every(v => v >= '1' && v <= '6')
   const parsedRoll = rollIsComplete ? diceValues.map(Number) : null
 
-  // Barking doesn't depend on your dice, only the table: simulate it once
-  const [barkOdds, setBarkOdds] = useState(null)
-  useEffect(() => {
-    if (testPosition === 'hammer' && rollIsComplete && !barkOdds) {
-      setBarkOdds(simulateBark({ players: playerCount, samples: 2000 }))
-    }
-  }, [testPosition, rollIsComplete, barkOdds])
+  // Barking doesn't depend on your dice, only the table (seat-odds.ts)
+  const barkPencil = barkOdds(playerCount)
+  const bark = {
+    pencil: barkPencil,
+    error: Math.sqrt((barkPencil * (1 - barkPencil)) / SEAT_ODDS_SAMPLES),
+    samples: SEAT_ODDS_SAMPLES,
+  }
 
   // ── Helpers to check whether we can analyze ──
   const canAnalyze = () => {
@@ -263,7 +263,7 @@ const StrategyAssistantPage = () => {
                 {debugInfo.pencilOdds && (
                   <HammerPencilOdds
                     options={debugInfo.pencilOdds}
-                    bark={barkOdds}
+                    bark={bark}
                     dice={debugInfo.roll}
                     playerCount={playerCount}
                   />

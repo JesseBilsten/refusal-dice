@@ -4,7 +4,7 @@ import { ArrowRight } from 'lucide-react'
 import Layout from '../components/layout'
 import Page, { PageHeader, Panel, NextStep } from '../components/Page'
 import { Hand, RollInput } from '../components/Dice'
-import { fmtPct } from '../components/Odds'
+import { BarkOdds, fmtPct } from '../components/Odds'
 import { Badge } from '../components/ui/badge'
 import { buttonVariants } from '../components/ui/button'
 import { analyzeRoll } from '../lib/game-validation'
@@ -241,7 +241,7 @@ const GamesPage = () => {
               {!roll && <p className="text-muted-foreground">Enter your five dice, or tap Roll. Games your roll plays light up below.</p>}
               {roll && playableIds.length === 0 && (
                 <p>
-                  <strong>No game fits well.</strong> Consider <Link to="/games/barking" className="text-primary hover:underline">barking</Link>: pass the Hammer and everyone rolls again.
+                  <strong>No game fits well.</strong> Calling is still usually better than <a href="#barking" className="text-primary hover:underline">barking</a>: see below, or check your hand in the <Link to="/strategy-assistant" className="text-primary hover:underline">Strategy Assistant</Link>.
                 </p>
               )}
               {roll && playableIds.length > 0 && (
@@ -287,19 +287,15 @@ const GamesPage = () => {
             />
           ))}
 
-          <Panel tone="note" title="🐕 None of these? Bark." as="section" id="barking">
-            <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
-              <div>
-                <p className="mb-3 text-sm">
-                  The Hammer can say “bark” instead of calling: the Hammer passes left, everyone picks up their dice,
-                  and a new round starts. Bark when your dice make no kicker game and the specialty games look weak.
-                </p>
-                <Link to="/games/barking" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
-                  When to bark
-                </Link>
-              </div>
-              <Hand dice={[3, 3, 3, 5, 6]} size="sm" />
-            </div>
+          <Panel tone="note" title="🐕 None of these? Think twice before barking." as="section" id="barking">
+            <p className="mb-4 text-sm">
+              The Hammer can say “bark” instead of calling: the Hammer passes left, everyone picks up their dice, and a
+              new round starts. It feels safe, but it gives away the best seat at the table.
+            </p>
+            <BarkOdds />
+            <Link to="/games/barking" className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'mt-4')}>
+              More on barking
+            </Link>
           </Panel>
         </div>
         <NextStep to="/odds-lab/" title="Settle the arguments in the Odds Lab" text="Hold the 6 or roll all five? Keep 2-3 or just the 3? Exact answers for any roll." />
