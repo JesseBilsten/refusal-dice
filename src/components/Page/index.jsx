@@ -4,12 +4,14 @@ import { ChevronRight } from 'lucide-react'
 import { cn } from '../../lib/utils'
 
 /**
- * The page frame. Every page sets its width here, never with its own
- * max-w-*, so content edges line up across the site.
+ * The page frame. Every page sits in the header's frame (1280px), so titles
+ * line up under the logo on every page and nothing jumps as you move
+ * between pages. `width` caps the content column, left-aligned; never set
+ * a page's width with its own max-w-*.
  *
- *  - reading (768px): text you read top to bottom: Rules, Glossary, Learn
- *  - tool (1024px):   things you use: Strategy, Odds Lab, game pages
- *  - wide (1280px):   grids of cards: Games, Odds; matches the header
+ *  - reading (768px): text you read top to bottom: Rules, Glossary
+ *  - tool (1024px):   things you use: Strategy, Odds Lab, Play, game pages
+ *  - wide (1280px):   grids of cards: Games, the home page
  */
 export const PAGE_WIDTHS = {
   reading: 'max-w-3xl',
@@ -39,12 +41,8 @@ export function Container({
 
 export default function Page({ width = 'tool', className, children }) {
   return (
-    <Container
-      as="section"
-      width={width}
-      className={cn('py-8 sm:py-10', className)}
-    >
-      {children}
+    <Container as="section" width="wide" className={cn('py-8 sm:py-10', className)}>
+      <div className={PAGE_WIDTHS[width]}>{children}</div>
     </Container>
   )
 }
