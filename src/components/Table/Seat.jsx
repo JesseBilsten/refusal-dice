@@ -49,6 +49,7 @@ export default function Seat({
         {decision && <Badge variant="outline">{decision}</Badge>}
         <span
           className="ml-auto flex items-center gap-0.5 text-muted-foreground"
+          role="img"
           aria-label={out ? 'Out of the game' : `${pencils} of ${maxPencils} pencils`}
           title={`${pencils} of ${maxPencils} pencils`}
         >

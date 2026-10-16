@@ -719,7 +719,7 @@ const Tutorial = () => {
             >
               {unrolled ? (
                 // Your dice before the first roll: empty slots, as in RollInput
-                <span className="flex gap-2" aria-label="Not rolled yet">
+                <span className="flex gap-2" role="img" aria-label="Not rolled yet">
                   {dice.map((_, i) => (
                     <DieSlot key={i} />
                   ))}

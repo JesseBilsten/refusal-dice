@@ -199,7 +199,7 @@ const StrategyAssistantPage = () => {
               {/* Help Section — position-specific tips */}
               <div className="lg:order-2 lg:w-80 flex-shrink-0">
                 <div className="bg-muted/50 rounded-lg p-4 space-y-3">
-                  <h3 className="font-semibold text-sm">How to Use</h3>
+                  <h2 className="font-semibold text-sm">How to use</h2>
                   <div className="flex gap-2">
                     <span className="text-lg">1️⃣</span>
                     <div>
@@ -454,7 +454,7 @@ const FormulaDialog = ({ rec, playerCount, trigger }) => {
 
 const HammerResults = ({ strategy, dice, playerCount }) => (
   <div className="space-y-4">
-    <h3 className="text-lg font-semibold">🔨 Hand strength (heuristic)</h3>
+    <h2 className="text-lg font-semibold">🔨 Hand strength (heuristic)</h2>
     <p className="text-xs text-muted-foreground -mt-2">
       A quick score of your dice for each game. The simulated pencil chances above account for the refusals,
       the other players and the play itself, so trust those when the two disagree.
@@ -534,7 +534,7 @@ const HammerResults = ({ strategy, dice, playerCount }) => (
     {/* All Playable Games Table */}
     {strategy.allRecommendations?.length > 0 && (
       <div>
-        <h3 className="text-lg font-semibold mb-3">All Playable Games</h3>
+        <h2 className="text-lg font-semibold mb-3">All playable games</h2>
         <div className="rounded-md border">
           <TooltipProvider>
             <Table>

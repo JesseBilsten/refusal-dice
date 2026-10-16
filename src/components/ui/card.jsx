@@ -22,9 +22,10 @@ const CardHeader = React.forwardRef(({ className, ...props }, ref) => (
 ))
 CardHeader.displayName = "CardHeader"
 
-const CardTitle = React.forwardRef(({ className, ...props }, ref) => (
+// Cards sit directly under a page's h1, so their titles are h2 by default; pass `as` to change it
+const CardTitle = React.forwardRef(({ className, as: Heading = "h2", ...props }, ref) => (
   // eslint-disable-next-line jsx-a11y/heading-has-content
-  <h3
+  <Heading
     ref={ref}
     className={cn(
       "text-2xl font-semibold leading-none tracking-tight",

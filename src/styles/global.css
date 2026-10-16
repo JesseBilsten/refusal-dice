@@ -14,7 +14,7 @@
     --color-card-foreground: 24 14% 10%;
     --color-popover: 0 0% 100%;
     --color-popover-foreground: 24 14% 10%;
-    --color-primary: 221 83% 53%;
+    --color-primary: 221 83% 48%;
     --color-primary-foreground: 210 40% 98%;
     --color-secondary: 38 30% 93%;
     --color-secondary-foreground: 24 14% 14%;
@@ -26,7 +26,7 @@
     --color-destructive-foreground: 210 40% 98%;
     --color-border: 35 20% 87%;
     --color-input: 35 20% 82%;
-    --color-ring: 221 83% 53%;
+    --color-ring: 221 83% 48%;
 
     /* Brand */
     --color-felt: 158 52% 24%;            /* the table */
@@ -137,6 +137,14 @@
     font-family: theme('fontFamily.display');
     letter-spacing: -0.01em;
     text-wrap: balance;
+  }
+
+  /* Links inside running text are underlined, so color isn't the only cue */
+  :where(p, dd, td, figcaption, .list-disc li, .list-decimal li) a:not([role='button']) {
+    text-decoration-line: underline;
+    text-decoration-thickness: from-font;
+    text-underline-offset: 0.18em;
+    text-decoration-color: hsl(var(--color-primary) / 0.45);
   }
 
   /* Comfortable reading: running text never runs past ~70 characters */

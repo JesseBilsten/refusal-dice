@@ -390,7 +390,7 @@ const GameDetailTemplate = ({ pageContext }) => {
         )}
 
         {(content.strategy || content.partialKeep) && (
-          <div className="mb-8 grid gap-3 sm:grid-cols-2 sm:gap-4">
+          <div className={`mb-8 grid gap-3 sm:gap-4 ${content.strategy && content.partialKeep ? 'sm:grid-cols-2' : ''}`}>
             {content.strategy && (
               <Panel tone="note" title="When to call it">
                 <p className="text-sm">{content.strategy}</p>

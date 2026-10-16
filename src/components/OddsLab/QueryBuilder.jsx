@@ -348,12 +348,12 @@ const PatternCard = ({ pattern, index, diceCount, canRemove, onChange, onRemove 
     <Card>
       <CardContent className="p-4 space-y-3">
         <div className="flex items-center justify-between gap-2">
-          <h3 className="text-sm font-semibold">
+          <h2 className="text-sm font-semibold">
             Pattern {letter}
             <span className="ml-2 font-normal text-muted-foreground">
               {claimed > 0 && `uses ${claimed} of ${diceCount} dice`}
             </span>
-          </h3>
+          </h2>
           {canRemove && (
             <Button variant="ghost" size="sm" className="h-7 px-2" onClick={onRemove} aria-label={`Remove pattern ${letter}`}>
               <X className="h-4 w-4" />

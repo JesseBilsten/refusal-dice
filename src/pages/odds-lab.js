@@ -292,8 +292,8 @@ const RollBuilder = () => {
                       The site counts <strong>{compareName}</strong> as{' '}
                       <strong className="tabular-nums">{comparison.siteCount.toLocaleString()}</strong> of 7,776 outcomes (
                       {formatPct(comparison.siteCount / 7776)}).{' '}
-                      <Link to={`/odds?game=${compareGame}`} className="text-primary hover:underline">
-                        View on the Odds page
+                      <Link to={`/odds-lab/?tab=games&game=${compareGame}`} className="text-primary hover:underline">
+                        See it in Every game’s odds
                       </Link>
                     </p>
                     {comparison.diffUnique === 0 ? (

@@ -3,7 +3,9 @@ import * as React from "react"
 import { cn } from "../../lib/utils"
 
 const Table = React.forwardRef(({ className, ...props }, ref) => (
-  <div className="relative w-full overflow-x-auto max-h-[70vh]">
+  // Focusable so keyboard users can scroll a wide table
+  // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
+  <div tabIndex={0} className="relative w-full overflow-x-auto max-h-[70vh] rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-ring">
     <table
       ref={ref}
       className={cn("w-full caption-bottom text-sm", className)}
