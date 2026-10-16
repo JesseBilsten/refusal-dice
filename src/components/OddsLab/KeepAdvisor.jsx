@@ -6,6 +6,8 @@ import { cn } from '../../lib/utils'
 import { DiceGroup, Hand, RollInput } from '../Dice'
 import { Disclosure, OddsDecision, Questions, fmtPct } from '../Odds'
 import { Panel } from '../Page'
+import { SITUATIONS } from './situations-catalog'
+import { goalFor, optionLabel, rerollsFor } from './keep-model'
 
 /**
  * "What should I keep?": pick a game, enter your dice and what you need,
@@ -35,32 +37,7 @@ const toValues = (digits) =>
   /^[1-6]{5}$/.test(digits || '') ? digits.split('') : [...EMPTY]
 
 /** Questions people actually ask at the table, one click away */
-const EXAMPLES = [
-  {
-    label: 'Monterey: hold 2-3, or just the 3?',
-    s: { game: 'monterey', roll: '23661', rolls: 2, goal: 'make', ask: ['23', '3'] },
-  },
-  {
-    label: 'Boss: hold the 6, or roll all five?',
-    s: { game: 'boss', roll: '64215', beat: '33125', ask: ['6', ''] },
-  },
-  {
-    label: '10-3 High: re-roll a kicker of 2+2?',
-    s: { game: '10-3', roll: '13622', rolls: 1, goal: 'kicker', variant: 'high', total: 7 },
-  },
-  {
-    label: 'Ship, Captain, Crew: hold 1-2 and 5-6?',
-    s: { game: 'ship-captain-crew', roll: '12566', rolls: 2, goal: 'make' },
-  },
-  {
-    label: 'Razzle: four 6s showing, can you beat them?',
-    s: { game: 'razzle', roll: '11653', rolls: 2, count: 4, face: 6 },
-  },
-  {
-    label: 'Tres Away: put out the 1 too?',
-    s: { game: 'tres-away', roll: '33152' },
-  },
-]
+const EXAMPLES = Object.values(SITUATIONS)
 
 const DEFAULT = { game: 'monterey', roll: '', rolls: 2, goal: 'make', variant: 'high', total: 7, count: 3, face: 5, beat: '', ask: [] }
 
@@ -78,6 +55,7 @@ function readUrl() {
     count: num('count', DEFAULT.count),
     face: num('face', DEFAULT.face),
     beat: p.get('beat') || '',
+    ask: p.get('ask') !== null ? p.get('ask').split(',') : [],
   }
 }
 
@@ -119,13 +97,6 @@ const NumberSelect = ({ value, onChange, options, label }) => (
     ))}
   </select>
 )
-
-/** "Keep 2-3, roll 3" */
-function optionLabel(o) {
-  if (o.stand) return 'Stand: keep all five'
-  if (!o.dice.length) return 'Roll all five'
-  return `Keep ${o.dice.join('-')}, roll ${5 - o.dice.length}`
-}
 
 export default function KeepAdvisor() {
   const [s, setS] = useState(DEFAULT)
@@ -177,15 +148,8 @@ export default function KeepAdvisor() {
   const kickerDice = { '10-2': 3, '10-3': 2, '10-4': 1 }[s.game] ?? (s.game === 'vegas' || s.game === 'pairs' ? 1 : 2)
 
   // What you need, as a goal for the solver and in words
-  const goal = useMemo(() => {
-    if (kicker)
-      return s.goal === 'kicker'
-        ? { kind: 'kicker', game: s.game, variant: s.variant, total: s.total }
-        : { kind: 'make', game: s.game }
-    if (s.game === 'razzle') return { kind: 'razzle', count: s.count, face: s.face }
-    if (s.game === 'boss' && hand) return { kind: 'boss', hand }
-    return null
-  }, [kicker, s, hand])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const goal = useMemo(() => goalFor(s, hand), [s, hand && hand.join('')])
 
   const target = !goal
     ? null
@@ -197,7 +161,7 @@ export default function KeepAdvisor() {
           ? { outcome: `beat ${COUNT[goal.count]} ${goal.face}s`, win: 'beat it', tie: 'tie: replay' }
           : { outcome: `beat ${bossName(goal.hand)}`, win: 'beat it', tie: 'tie: replay' }
 
-  const rerolls = s.game === 'boss' ? 1 : s.rolls
+  const rerolls = rerollsFor(s)
   const options = useMemo(
     () => (roll && goal ? keepOptions(roll, rerolls, goal) : null),
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -3,6 +3,7 @@ import { Link } from 'gatsby'
 import Layout from '../components/layout'
 import Page, { PageHeader, Panel, Stat } from '../components/Page'
 import { ProbabilityBar } from '../components/Odds'
+import SituationCard from '../components/OddsLab/SituationCard'
 import { freshMakeChance } from '../strategy'
 import { isKickerGame } from '../engine'
 import { Badge } from '../components/ui/badge'
@@ -462,6 +463,8 @@ const GameDetailTemplate = ({ pageContext }) => {
             {/* ─────────────────────────────────────── */}
             {/*  Layer 2: Probability Table (always open) */}
             {/* ─────────────────────────────────────── */}
+            <SituationCard gameId={gameId} className="mb-6" />
+
             {isKickerGame(gameId) ? (
               <Panel
                 className="mb-6"
