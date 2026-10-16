@@ -119,3 +119,4 @@ export function PageHeader({
 export { default as Panel, Stat } from './Panel'
 export { default as PageTabs, tabFromUrl } from './PageTabs'
 export { default as Chip } from './Chip'
+export { default as NextStep } from './NextStep'

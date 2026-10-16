@@ -643,7 +643,10 @@ const Tutorial = () => {
       ),
       action: (
         <div className="flex flex-wrap gap-2">
-          <Link to="/rules" className={buttonVariants()}>
+          <Link to="/play" className={buttonVariants()}>
+            Play a full game against bots
+          </Link>
+          <Link to="/rules" className={buttonVariants({ variant: 'outline' })}>
             Read the full rules
           </Link>
           <Link to="/games" className={buttonVariants({ variant: 'outline' })}>

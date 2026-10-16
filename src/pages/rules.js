@@ -1,7 +1,8 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { Link } from 'gatsby'
 import Layout from '../components/layout'
-import Page, { PageHeader } from '../components/Page'
+import Page, { PageHeader, NextStep } from '../components/Page'
+import { Disclosure } from '../components/Odds'
 import { Card, CardContent } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
 
@@ -15,22 +16,6 @@ import { Badge } from '../components/ui/badge'
  * The sub-steps (1st Refusal, 2nd Refusal) are shown as parts of one step.
  */
 
-const Collapse = ({ title, children, defaultOpen = false }) => {
-  const [open, setOpen] = useState(defaultOpen)
-  return (
-    <div className="border border-border rounded-lg overflow-hidden">
-      <button
-        type="button"
-        onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between px-4 py-3 bg-muted/40 hover:bg-muted transition-colors text-left"
-      >
-        <span className="font-medium text-sm text-foreground">{title}</span>
-        <span className="text-muted-foreground">{open ? '−' : '+'}</span>
-      </button>
-      {open && <div className="px-4 py-3 border-t border-border text-sm">{children}</div>}
-    </div>
-  )
-}
 
 const StepCard = ({ number, title, icon, children, id }) => (
   <Card id={id} className="scroll-mt-20 shadow-sm overflow-hidden">
@@ -67,7 +52,7 @@ const RulesPage = () => (
 
       {/* Collapsed setup sections */}
       <div className="space-y-2 mb-10">
-        <Collapse title="🎲 Equipment — what you need">
+        <Disclosure title="🎲 Equipment — what you need">
           <ul className="space-y-3">
             <li>
               <strong>5 dice per player</strong> — We like{' '}
@@ -83,9 +68,9 @@ const RulesPage = () => (
               <strong>Pencils or tokens</strong> — Sugar packets, coins, chips — anything to track losses.
             </li>
           </ul>
-        </Collapse>
+        </Disclosure>
 
-        <Collapse title="💵 Ante & setup">
+        <Disclosure title="💵 Ante & setup">
           <p className="mb-3">
             Typical ante: <strong>$5 per player</strong> into the pot. (Playing for money is optional.)
           </p>
@@ -99,7 +84,7 @@ const RulesPage = () => (
             <Link to="/glossary#parity" className="text-primary hover:underline">parity</Link>{' '}
             (when all remaining players have 2 pencils).
           </p>
-        </Collapse>
+        </Disclosure>
       </div>
 
       {/* Gameplay steps */}
@@ -225,7 +210,7 @@ const RulesPage = () => (
             </p>
           </div>
 
-          <Collapse title="Three games play differently">
+          <Disclosure title="Three games play differently">
             <ul className="space-y-3">
               <li>
                 <Link to="/games/tres-away" className="font-medium text-primary hover:underline">Tres Away</Link>:
@@ -246,7 +231,7 @@ const RulesPage = () => (
                 face, so four 6s beat four 4s. Re-rolling everything to chase 1s and 6s is common.
               </li>
             </ul>
-          </Collapse>
+          </Disclosure>
         </StepCard>
 
         {/* Step 5: Find the loser */}
@@ -304,6 +289,7 @@ const RulesPage = () => (
         <span className="text-border">·</span>
         <Link to="/glossary" className="text-primary hover:underline">Glossary →</Link>
       </div>
+      <NextStep to="/games" title="Meet the ten games" text="What makes each one, what it looks like, and its quirks." />
     </Page>
   </Layout>
 )

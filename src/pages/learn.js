@@ -1,7 +1,7 @@
 import React from 'react'
 import { Link } from 'gatsby'
 import Layout from '../components/layout'
-import Page, { PageHeader } from '../components/Page'
+import Page, { PageHeader, NextStep } from '../components/Page'
 import Tutorial from '../components/Tutorial'
 
 const LearnPage = () => (
@@ -21,6 +21,7 @@ const LearnPage = () => (
         }
       />
       <Tutorial />
+      <NextStep to="/rules" title="The rules, in one page" text="Everything the round covered, plus barking, second calls and the specialty games." />
     </Page>
   </Layout>
 )

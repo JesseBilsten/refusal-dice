@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'gatsby'
 import { ArrowRight } from 'lucide-react'
 import Layout from '../components/layout'
-import Page, { PageHeader, Panel } from '../components/Page'
+import Page, { PageHeader, Panel, NextStep } from '../components/Page'
 import { Hand, RollInput } from '../components/Dice'
 import { fmtPct } from '../components/Odds'
 import { Badge } from '../components/ui/badge'
@@ -302,6 +302,7 @@ const GamesPage = () => {
             </div>
           </Panel>
         </div>
+        <NextStep to="/odds-lab/" title="Settle the arguments in the Odds Lab" text="Hold the 6 or roll all five? Keep 2-3 or just the 3? Exact answers for any roll." />
       </Page>
     </Layout>
   )

@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'gatsby'
 import { Check, Link2, RotateCcw } from 'lucide-react'
 import Layout from '../components/layout'
-import Page, { PageHeader, PageTabs } from '../components/Page'
+import Page, { PageHeader, PageTabs, NextStep } from '../components/Page'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button'
 import { Switch } from '../components/ui/switch'
@@ -377,6 +377,7 @@ const OddsLabPage = () => {
         {tab === 'keep' && <KeepAdvisor />}
         {tab === 'games' && <GameOdds />}
         {tab === 'build' && <RollBuilder />}
+        <NextStep to="/play" title="Put it to the test: play the bots" text="Full games against 1 to 7 solid bots, with hints when you want them." />
       </Page>
     </Layout>
   )

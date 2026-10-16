@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react'
 import Layout from '../components/layout'
-import Page, { PageHeader, PageTabs, tabFromUrl } from '../components/Page'
+import Page, { PageHeader, PageTabs, tabFromUrl, NextStep } from '../components/Page'
 import SecondCallPredictor from '../components/SecondCallPredictor'
 import { Badge } from '../components/ui/badge'
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '../components/ui/card'
@@ -348,6 +348,7 @@ const StrategyAssistantPage = () => {
           </div>
         )}
         </>)}
+        <NextStep to="/play" title="Play the bots" text="Try your calls and refusals in full games." />
       </Page>
     </Layout>
   )

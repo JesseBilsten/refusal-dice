@@ -1,9 +1,10 @@
 import React, { useState, useMemo } from 'react'
 import { Link } from 'gatsby'
 import Layout from '../components/layout'
-import Page, { PageHeader, Panel, Stat } from '../components/Page'
+import Page, { NextStep, PageHeader, Panel, Stat } from '../components/Page'
 import { ProbabilityBar } from '../components/Odds'
 import SituationCard from '../components/OddsLab/SituationCard'
+import { SITUATIONS, situationPath } from '../components/OddsLab/situations-catalog'
 import { freshMakeChance } from '../strategy'
 import { isKickerGame } from '../engine'
 import { Badge } from '../components/ui/badge'
@@ -579,6 +580,13 @@ const GameDetailTemplate = ({ pageContext }) => {
               </Link>
             </div>
           </>
+        )}
+        {SITUATIONS[gameId] && (
+          <NextStep
+            to={situationPath(SITUATIONS[gameId].s)}
+            title="Work out your own situations"
+            text={`Enter any ${gameMeta.name} roll in the Odds Lab and see exactly what to keep.`}
+          />
         )}
       </Page>
     </Layout>
