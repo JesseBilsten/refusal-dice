@@ -181,5 +181,5 @@ you work on that page:
 - **Duplicate strength meter:** `StrengthBar` and `CallList` in
   `RollAnalysis.jsx` are a separate strength meter. Decide whether it
   belongs in the Odds kit.
-- **Cards:** Rules, Glossary and the Strategy Assistant's rule-of-thumb
-  detail still use `ui/card` directly. Move them to `Panel`.
+- **Cards:** the Strategy Assistant's rule-of-thumb detail still uses `ui/card`
+  directly. Move it to `Panel`. (Rules and Glossary moved 2026-10-16.)

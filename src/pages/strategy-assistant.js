@@ -243,7 +243,7 @@ const StrategyAssistantPage = () => {
               )}
             </div>
 
-            <aside className="space-y-1 rounded-lg bg-background/70 p-4 text-sm">{positionTips[testPosition]}</aside>
+            <div className="space-y-1 rounded-lg bg-background/70 p-4 text-sm">{positionTips[testPosition]}</div>
           </div>
         </Panel>
 

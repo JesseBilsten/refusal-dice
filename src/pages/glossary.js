@@ -1,8 +1,7 @@
 import React, { useState } from 'react'
 import { Link } from 'gatsby'
 import Layout from '../components/layout'
-import Page, { PageHeader } from '../components/Page'
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
+import Page, { PageHeader, Panel } from '../components/Page'
 import { Input } from '../components/ui/input'
 import GameLink from '../components/GameLink'
 
@@ -21,7 +20,7 @@ const GLOSSARY_TERMS = [
         <p className="text-sm text-muted-foreground">
           <strong>Usage:</strong> "I'll accept" or "I'll play"<br/>
           <strong>See also:</strong> <Link to="#refuse" className="text-primary hover:underline">Refuse</Link>,{' '}
-          <Link to="/rules#first-refusal" className="text-primary hover:underline">Rules: First Refusal</Link>
+          <Link to="/rules#refusal" className="text-primary hover:underline">Rules: First Refusal</Link>
         </p>
       </>
     ),
@@ -65,7 +64,7 @@ const GLOSSARY_TERMS = [
         </p>
         <p className="text-sm text-muted-foreground">
           <strong>See also:</strong> <Link to="#second-refusal" className="text-primary hover:underline">Second Refusal</Link>,{' '}
-          <Link to="/rules#first-refusal" className="text-primary hover:underline">Rules: First Refusal</Link>
+          <Link to="/rules#refusal" className="text-primary hover:underline">Rules: First Refusal</Link>
         </p>
       </>
     ),
@@ -86,7 +85,7 @@ const GLOSSARY_TERMS = [
         </p>
         <p className="text-sm text-muted-foreground">
           <strong>See also:</strong> <Link to="#bark" className="text-primary hover:underline">Bark</Link>,{' '}
-          <Link to="/rules#first-call" className="text-primary hover:underline">Rules: First Call</Link>,{' '}
+          <Link to="/rules#call" className="text-primary hover:underline">Rules: First Call</Link>,{' '}
           <Link to="/strategy-assistant" className="text-primary hover:underline">Hammer Strategy</Link>
         </p>
       </>
@@ -128,7 +127,7 @@ const GLOSSARY_TERMS = [
         </p>
         <p className="text-sm text-muted-foreground">
           <strong>House rules vary:</strong> Check with your group about parity rules before playing.<br/>
-          <strong>See also:</strong> <Link to="/rules#ante" className="text-primary hover:underline">Rules: Ante Variations</Link>
+          <strong>See also:</strong> <Link to="/rules#setup" className="text-primary hover:underline">Rules: Ante Variations</Link>
         </p>
       </>
     ),
@@ -149,7 +148,7 @@ const GLOSSARY_TERMS = [
         </p>
         <p className="text-sm text-muted-foreground">
           <strong>See also:</strong> <Link to="#parity" className="text-primary hover:underline">Parity</Link>,{' '}
-          <Link to="/rules#object" className="text-primary hover:underline">Rules: Object of the Game</Link>
+          <Link to="/rules" className="text-primary hover:underline">Rules: Object of the Game</Link>
         </p>
       </>
     ),
@@ -211,7 +210,7 @@ const GLOSSARY_TERMS = [
           <strong>Important:</strong> Second call must be a different game, not just a different variant (e.g., can't call "<GameLink id="monterey">Monterey</GameLink> High" if first call was "<GameLink id="monterey">Monterey</GameLink> Low").
         </p>
         <p className="text-sm text-muted-foreground">
-          <strong>See also:</strong> <Link to="/rules#second-call" className="text-primary hover:underline">Rules: Second Call</Link>,{' '}
+          <strong>See also:</strong> <Link to="/rules#refusal" className="text-primary hover:underline">Rules: Second Call</Link>,{' '}
           <Link to="/strategy-assistant/?tab=second" className="text-primary hover:underline">predict the second call</Link>
         </p>
       </>
@@ -233,7 +232,7 @@ const GLOSSARY_TERMS = [
           <Link to="#second-call" className="text-primary hover:underline">Second Call</Link> where everyone plays.
         </p>
         <p className="text-sm text-muted-foreground">
-          <strong>See also:</strong> <Link to="/rules#second-refusal" className="text-primary hover:underline">Rules: Second Refusal</Link>
+          <strong>See also:</strong> <Link to="/rules#refusal" className="text-primary hover:underline">Rules: Second Refusal</Link>
         </p>
       </>
     ),
@@ -250,14 +249,54 @@ const GLOSSARY_TERMS = [
           The goal is to find ONE loser per round.
         </p>
         <p className="text-sm mb-2">
-          <strong>With 3+ players:</strong> Tied players (for lowest score) replay the same game until there's a single loser.
+          <strong>With 3+ players:</strong> Players tied for the worst hand replay the same game until there's a single loser.
+          Once the others you're tied with are out of rolls, you can <Link to="#take-the-tie" className="text-primary hover:underline">take the tie</Link> or roll to beat them.
         </p>
         <p className="text-sm mb-2">
           <strong>With 2 players:</strong> Ties, or both players missing the game, result in the <Link to="#hammer" className="text-primary hover:underline">Hammer</Link> passing
           to the other player. No pencil is awarded.
         </p>
         <p className="text-sm text-muted-foreground">
-          <strong>See also:</strong> <Link to="/rules#play-game" className="text-primary hover:underline">Rules: Playing the Game</Link>
+          <strong>See also:</strong> <Link to="/rules#score" className="text-primary hover:underline">Rules: Playing the Game</Link>
+        </p>
+      </>
+    ),
+  },
+  {
+    id: 'worst-hand',
+    term: 'Worst Hand (the bottom)',
+    emoji: '⬇️',
+    keywords: ['worst hand', 'bottom', 'lowest', 'who rolls', 'order', 'turn', 'loser'],
+    body: (
+      <>
+        <p className="mb-2">
+          The hand that would lose if play stopped now. Missing the game is worst; then the weakest{' '}
+          <Link to="#kicker" className="text-primary hover:underline">kicker</Link> for the call.
+          <strong> The worst hand rolls first</strong>, until it climbs off the bottom or runs out of rolls. If it never
+          gets off the bottom, nobody else has to roll, and it takes the <Link to="#pencil" className="text-primary hover:underline">pencil</Link>.
+        </p>
+        <p className="text-sm text-muted-foreground">
+          <strong>Applies to:</strong> the kicker games and <GameLink id="razzle">Razzle</GameLink>. Tres Away and Boss have their own order.<br/>
+          <strong>See also:</strong> <Link to="/rules#play" className="text-primary hover:underline">Rules: Play the game</Link>
+        </p>
+      </>
+    ),
+  },
+  {
+    id: 'take-the-tie',
+    term: 'Take the Tie',
+    emoji: '🤝',
+    keywords: ['take the tie', 'tie', 'stand', 'replay'],
+    body: (
+      <>
+        <p className="mb-2">
+          Tied for the worst hand, with the others you're tied with out of rolls, you can stop rolling and go to a replay
+          instead of rolling to beat them.
+        </p>
+        <p className="text-sm text-muted-foreground">
+          <strong>Rule of thumb:</strong> take the tie when the tied hand is hard to beat. The{' '}
+          <Link to="/learn" className="text-primary hover:underline">guided round</Link> works one out exactly.<br/>
+          <strong>See also:</strong> <Link to="#tie" className="text-primary hover:underline">Tie</Link>
         </p>
       </>
     ),
@@ -303,12 +342,15 @@ const GLOSSARY_TERMS = [
   },
 ]
 
+/** A to Z, however the list above is ordered */
+const TERMS = [...GLOSSARY_TERMS].sort((a, b) => a.term.localeCompare(b.term))
+
 const GlossaryPage = () => {
   const [search, setSearch] = useState('')
 
   const filtered = search.trim() === ''
-    ? GLOSSARY_TERMS
-    : GLOSSARY_TERMS.filter(entry => {
+    ? TERMS
+    : TERMS.filter(entry => {
         const q = search.toLowerCase()
         return (
           entry.term.toLowerCase().includes(q) ||
@@ -326,14 +368,15 @@ const GlossaryPage = () => {
 
         <div className="mb-8">
           <Input
-            type="text"
+            type="search"
+            aria-label="Search the glossary"
             placeholder="Search terms…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="text-lg py-3"
           />
           {search.trim() !== '' && (
-            <p className="text-sm text-muted-foreground mt-2">
+            <p className="text-sm text-muted-foreground mt-2" aria-live="polite">
               {filtered.length === 0
                 ? 'No matching terms found.'
                 : `Showing ${filtered.length} of ${GLOSSARY_TERMS.length} terms`}
@@ -343,15 +386,19 @@ const GlossaryPage = () => {
 
         <div className="space-y-6">
           {filtered.map(entry => (
-            <Card key={entry.id} id={entry.id}>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <span className="text-2xl">{entry.emoji}</span>
+            <Panel
+              key={entry.id}
+              id={entry.id}
+              className="scroll-mt-20"
+              title={
+                <span className="flex items-center gap-2">
+                  <span aria-hidden className="text-2xl">{entry.emoji}</span>
                   {entry.term}
-                </CardTitle>
-              </CardHeader>
-              <CardContent>{entry.body}</CardContent>
-            </Card>
+                </span>
+              }
+            >
+              {entry.body}
+            </Panel>
           ))}
         </div>
       </Page>
