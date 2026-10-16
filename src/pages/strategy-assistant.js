@@ -455,16 +455,18 @@ const HammerResults = ({ strategy, dice, playerCount }) => (
     
     {/* Best Call */}
     <div className="p-4 bg-primary/10 rounded-lg border-2 border-primary">
-      <div className="flex items-center gap-3 mb-3">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 mb-3">
         <span className="text-lg font-bold">Strongest hand:</span>
-        <Badge variant="default" className="text-lg px-4 py-1">
-          {strategy.bestCall 
-            ? <><GameLink id={strategy.bestCall.game} className="text-inherit hover:text-inherit" />{strategy.bestCall.variant ? ` ${strategy.bestCall.variant}` : ''}</>
-            : 'None'}
-        </Badge>
-        {strategy.bestCall && (
-          <FormulaDialog rec={strategy.bestCall} playerCount={playerCount} />
-        )}
+        <span className="flex items-center gap-2">
+          <Badge variant="default" className="gap-1 whitespace-nowrap px-3 py-1 text-base sm:px-4 sm:text-lg">
+            {strategy.bestCall
+              ? <><GameLink id={strategy.bestCall.game} className="text-inherit hover:text-inherit" />{strategy.bestCall.variant && <span>{strategy.bestCall.variant}</span>}</>
+              : 'None'}
+          </Badge>
+          {strategy.bestCall && (
+            <FormulaDialog rec={strategy.bestCall} playerCount={playerCount} />
+          )}
+        </span>
       </div>
       <p className="text-muted-foreground mb-4">
         {strategy.bestCall?.explanation || strategy.summary}
