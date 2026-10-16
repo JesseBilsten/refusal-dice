@@ -133,6 +133,32 @@ export function simulateHammer(options: {
   })).sort((a, b) => a.pencil - b.pencil)
 }
 
+/**
+ * You're the Hammer and bark: the Hammer passes left and everyone rolls
+ * again, so you play the round from the seat on the new Hammer's right
+ * (last to act) with fresh dice. Your dice don't matter, only the table size.
+ * The bots never bark, so the new Hammer always calls.
+ */
+export function simulateBark(options: {
+  players?: number
+  samples?: number
+  seed?: number
+}): Estimate {
+  const { players = 3, samples = 2000, seed = 1 } = options
+  const ids = seatIds(players, players - 1)
+  let losses = 0
+  for (let i = 0; i < samples; i++) {
+    const g = createGame({
+      players: ids.map((id) => ({ id, name: id })),
+      hammer: ids[0],
+      source: seeded(sampleSeed(seed, i)),
+      rules: { pencilsToLose: 1000 },
+    })
+    if (playOutRound(g).loser === ME) losses++
+  }
+  return estimate(losses, samples)
+}
+
 export interface RefusalEstimate {
   accept: Estimate
   refuse: Estimate

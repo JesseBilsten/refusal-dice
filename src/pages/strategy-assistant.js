@@ -17,7 +17,7 @@ import {
   generateHammerStrategy,
   gameOddsMap
 } from '../lib/game-validation'
-import { simulateHammer, simulateRefusal } from '../strategy'
+import { simulateBark, simulateHammer, simulateRefusal } from '../strategy'
 import { GAMES, GAMES_MAP } from '../lib/games-config'
 
 const TABS = [
@@ -45,6 +45,14 @@ const StrategyAssistantPage = () => {
   // ── Derived: is the roll complete? ──
   const rollIsComplete = diceValues.every(v => v >= '1' && v <= '6')
   const parsedRoll = rollIsComplete ? diceValues.map(Number) : null
+
+  // Barking doesn't depend on your dice, only the table: simulate it once
+  const [barkOdds, setBarkOdds] = useState(null)
+  useEffect(() => {
+    if (testPosition === 'hammer' && rollIsComplete && !barkOdds) {
+      setBarkOdds(simulateBark({ players: playerCount, samples: 2000 }))
+    }
+  }, [testPosition, rollIsComplete, barkOdds])
 
   // ── Helpers to check whether we can analyze ──
   const canAnalyze = () => {
@@ -253,7 +261,12 @@ const StrategyAssistantPage = () => {
             {debugInfo.position === 'hammer' ? (
               <>
                 {debugInfo.pencilOdds && (
-                  <HammerPencilOdds options={debugInfo.pencilOdds} dice={debugInfo.roll} playerCount={playerCount} />
+                  <HammerPencilOdds
+                    options={debugInfo.pencilOdds}
+                    bark={barkOdds}
+                    dice={debugInfo.roll}
+                    playerCount={playerCount}
+                  />
                 )}
                 {debugInfo.strategy && (
                   <Panel tone="note" title="Hand strength by rule of thumb">
@@ -521,37 +534,80 @@ const SimulationNote = ({ samples, players }) => (
 
 /* ───────────────────── Hammer: simulated pencil odds ──────────── */
 
-const HammerPencilOdds = ({ options, dice, playerCount }) => (
-  <Panel
-    title="Chance you take the pencil, by call"
-    description={`Lower is better. A random player at a ${playerCount}-player table takes the pencil ${pct(1 / playerCount)} of the time.`}
-  >
-    <div className="space-y-3">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Call</TableHead>
-            <TableHead className="text-right">Your pencil chance</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {options.slice(0, 6).map((o, i) => (
-            <TableRow key={i}>
-              <TableCell>
-                <GameLink id={o.call.game}>{callLabel(o.call)}</GameLink>
-                {i === 0 && <Badge className="ml-2">Best</Badge>}
-                <Hand dice={dice} game={o.call.game} variant={o.call.variant} size="sm" className="mt-1 block" />
-              </TableCell>
-              <TableCell className="text-right tabular-nums">
-                {pct(o.pencil)} <span className="text-xs text-muted-foreground">±{(o.error * 100).toFixed(1)}</span>
-              </TableCell>
+const HammerPencilOdds = ({ options, bark, dice, playerCount }) => {
+  // Bark ranks with the calls; its odds don't depend on your dice
+  const rows = options.slice(0, 6).map((o) => ({ ...o, bark: false }))
+  if (bark) rows.push({ ...bark, bark: true })
+  rows.sort((a, b) => a.pencil - b.pencil)
+  const best = options[0]
+  const barkBest = bark && bark.pencil < best.pencil
+  return (
+    <Panel
+      title="Chance you take the pencil, by call"
+      description={`Lower is better. A random player at a ${playerCount}-player table takes the pencil ${pct(1 / playerCount)} of the time.`}
+    >
+      <div className="space-y-3">
+        {bark && (
+          <p className="text-sm">
+            {barkBest ? (
+              <>
+                <strong>Bark.</strong> Your best call, {callLabel(best.call)}, gives you a {pct(best.pencil)} chance of
+                the pencil; barking gives you {pct(bark.pencil)}.
+              </>
+            ) : (
+              <>
+                <strong>Call {callLabel(best.call)}, don’t bark.</strong> Barking gives you a {pct(bark.pencil)} chance
+                of the pencil, {((bark.pencil - best.pencil) * 100).toFixed(1)} points higher than this call.
+              </>
+            )}{' '}
+            <span className="text-muted-foreground">
+              A bark passes the Hammer left and deals everyone new dice, which puts you in the worst seat: last to
+              act, with no say in the game.
+            </span>
+          </p>
+        )}
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Call</TableHead>
+              <TableHead className="text-right">Your pencil chance</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-      <SimulationNote samples={options[0].samples} players={playerCount} />
-    </div>
-  </Panel>
-)
+          </TableHeader>
+          <TableBody>
+            {rows.map((o, i) => (
+              <TableRow key={o.bark ? 'bark' : `${o.call.game}-${o.call.variant}`}>
+                <TableCell>
+                  {o.bark ? (
+                    <>
+                      <GameLink id="barking">🐶 Bark</GameLink>
+                      {i === 0 && <Badge className="ml-2">Best</Badge>}
+                      <span className="mt-1 block text-xs text-muted-foreground">New dice for everyone, any hand</span>
+                    </>
+                  ) : (
+                    <>
+                      <GameLink id={o.call.game}>{callLabel(o.call)}</GameLink>
+                      {i === 0 && <Badge className="ml-2">Best</Badge>}
+                      <Hand dice={dice} game={o.call.game} variant={o.call.variant} size="sm" className="mt-1 block" />
+                    </>
+                  )}
+                </TableCell>
+                <TableCell className="text-right tabular-nums">
+                  {pct(o.pencil)} <span className="text-xs text-muted-foreground">±{(o.error * 100).toFixed(1)}</span>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+        <SimulationNote samples={options[0].samples} players={playerCount} />
+        {bark && (
+          <p className="text-xs text-muted-foreground">
+            Bark: {bark.samples.toLocaleString()} simulated rounds after a bark. The bots never bark back, so the new
+            Hammer always calls.
+          </p>
+        )}
+      </div>
+    </Panel>
+  )
+}
 
 export default StrategyAssistantPage

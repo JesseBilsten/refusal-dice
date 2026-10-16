@@ -18,6 +18,7 @@ import {
   diceSumDistribution,
   rollOrTakeTie,
   makeChance,
+  simulateBark,
   simulateHammer,
   simulateRefusal,
 } from '../strategy'
@@ -141,6 +142,15 @@ describe('simulations', () => {
     expect(
       simulateHammer({ dice: [6, 6, 6, 6, 6], samples: 60 })[0].pencil
     ).toBeLessThan(0.1)
+  })
+
+  test('barking leaves you in the worst seat: worse than an even share', () => {
+    // You sit last, on the new Hammer's right, with random dice
+    const bark = simulateBark({ players: 3, samples: 600 })
+    expect(bark).toEqual(simulateBark({ players: 3, samples: 600 }))
+    expect(bark.pencil).toBeGreaterThan(1 / 3)
+    // Even a poor hand is better called than barked (22563: only a mediocre 10-3)
+    expect(simulateHammer({ dice: [2, 2, 5, 6, 3], samples: 300 })[0].pencil).toBeLessThan(bark.pencil)
   })
 
   test('a refuser holding a great hand for the call should accept', () => {
