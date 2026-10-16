@@ -146,6 +146,8 @@ export default function Play() {
         return
       }
       setError(null)
+      // Your selection is spent once you act (Tres Away keeps it your turn across put-out and roll)
+      if (action.player === YOU) setKeep([])
       const rolled = rolledPositions(next.log.slice(g.log.length))
       // A new deal (next round, or a bark) re-rolls everyone
       if (next.round !== g.round) {
@@ -219,6 +221,8 @@ export default function Play() {
 
   const toggleKeep = (i) => {
     if (phase.kind === 'boss' && phase.stage === 'bossRoll' && phase.mustKeep.includes(i)) return
+    // Dice already put out in Tres Away are final
+    if (phase.kind === 'tresAway' && phase.hands[YOU].out.includes(i)) return
     setKeep((k) => (k.includes(i) ? k.filter((x) => x !== i) : [...k, i]))
   }
 
@@ -430,6 +434,13 @@ export default function Play() {
                   rollIds={rollIds[s.id]}
                   putOut={tres ? tres.out : undefined}
                   kept={isYou && canKeep ? keep : undefined}
+                  locked={
+                    isYou && tres
+                      ? tres.out
+                      : isYou && phase.kind === 'boss' && phase.stage === 'bossRoll' && phase.boss === YOU
+                        ? phase.mustKeep
+                        : undefined
+                  }
                   onToggleKeep={isYou && canKeep ? toggleKeep : undefined}
                 />
               )}

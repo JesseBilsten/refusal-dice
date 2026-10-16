@@ -13,6 +13,7 @@ import { handGroups } from './hand-groups'
  *   (outlines, no labels) for tables
  * - `rollIds`: per-die roll counters, by position, to animate re-rolls
  * - `kept` / `onToggleKeep(i)`: tap a die to keep it (modeled games)
+ * - `locked`: positions that can't be tapped (dice put out, or a Boss's hand)
  * - `dimension`: '3d' or 'flat', overriding the player's 3D setting
  * - `putOut`: Tres Away, the positions put out so far (default: the best
  *   first put-out from this roll, labeled "put out first")
@@ -31,6 +32,7 @@ export default function Hand({
   labels,
   putOut,
   dimension,
+  locked,
   className,
 }) {
   // Small sizes are compact (outlines, no labels) unless `labels` says otherwise
@@ -71,12 +73,15 @@ export default function Hand({
               rollId={rollIds?.[i] || 0}
               dimension={dimension}
               kept={kept ? kept.includes(i) : undefined}
+              locked={locked?.includes(i)}
               onClick={
                 onToggleKeep && dice[i] ? () => onToggleKeep(i) : undefined
               }
               label={
                 onToggleKeep
-                  ? `${kept?.includes(i) ? 'Kept' : 'Keep'} die showing ${dice[i]}`
+                  ? locked?.includes(i)
+                    ? `Die showing ${dice[i]} (locked)`
+                    : `${kept?.includes(i) ? 'Kept' : 'Keep'} die showing ${dice[i]}`
                   : undefined
               }
             />
