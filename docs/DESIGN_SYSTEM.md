@@ -52,7 +52,9 @@ The home page tells a round as an animated story and lays out this path.
   cards `rounded-xl`, home cards `rounded-2xl`. Dice use `rounded-[22%]`.
 - **Motion:** short and purposeful (dice tumbles, a pop-in). Everything
   honors `prefers-reduced-motion`.
-- **Dark mode:** class-based. Check both themes for every change.
+- **Dark mode:** class-based (`dark` on `<html>`). The theme is Light, Dark
+  or System (follow the device), chosen in Settings; `gatsby-ssr.js` sets it
+  before first paint. Check both themes for every change.
 - **Mobile first:** every screen works at 390px wide with no horizontal
   scroll.
 
@@ -99,10 +101,21 @@ site.
 - `Seat`: one player at the table (name, role badges, decision, pencils,
   their dice, a status line). The tutorial and Play both use it.
 
+## Settings: `src/components/Settings/`
+
+Every site-wide setting, saved per browser: theme (`useTheme`), 3D dice and
+sound (`useDicePrefs`). Each setting is one hook, so every place that shows
+it stays in sync.
+
+| Component | Use it for |
+|---|---|
+| `Settings` | All the settings as one block. Add a new site-wide setting here and it appears everywhere. |
+| `SettingsMenu` | The header's gear button: `Settings` in a popover (desktop). The mobile menu shows `Settings` directly. |
+
 ## Primitives: `src/components/ui/`
 
 These are shadcn/ui components (JS): Button (and `buttonVariants` for
-links), Badge, Card (kept for shadcn; use `Panel`), Table, Dialog, Sheet, Tooltip, Tabs, ToggleGroup,
+links), Badge, Card (kept for shadcn; use `Panel`), Table, Dialog, Sheet, Popover, Tooltip, Tabs, ToggleGroup,
 Switch, Slider, Select, Input, Label, Alert. Add new primitives with the
 shadcn CLI.
 
@@ -120,7 +133,7 @@ The only way dice are drawn. Never render a roll as text like
 | `RollInput` | Anywhere a player **enters or edits** a roll. Set the dice through `diceValues`; `initialRoll` only applies on first render. |
 | `RollButton` | The one Roll button (dice icon + "Roll"), for entered and scripted rolls alike. |
 | `DieSlot` | An empty dashed slot for a die not rolled or entered yet (RollInput's blank boxes share `SLOT_CLASS`). A die someone rolled and hid is a `Die` with no value instead. |
-| `DiceSettings` | The 3D and sound switches (both start off). |
+| `DiceSettings` | The 3D and sound switches (both start off). `stacked` puts each on its own line (Settings). Play and the tutorial keep a row of them by the table. |
 
 The grouping logic is `handGroups()` in `hand-groups.ts`, a pure function
 covered by tests.

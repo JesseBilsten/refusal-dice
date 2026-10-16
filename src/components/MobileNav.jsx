@@ -8,8 +8,8 @@ import {
   SheetTitle,
   SheetTrigger,
 } from './ui/sheet'
-import DarkModeToggle from './DarkModeToggle'
 import { PRIMARY_NAV, MORE_NAV } from './nav-items'
+import { Settings } from './Settings'
 
 const MobileNav = () => {
   const [open, setOpen] = useState(false)
@@ -25,7 +25,7 @@ const MobileNav = () => {
           <Menu className="h-5 w-5" />
         </button>
       </SheetTrigger>
-      <SheetContent side="right" aria-label="Mobile navigation menu">
+      <SheetContent side="right" aria-label="Mobile navigation menu" className="overflow-y-auto">
         <SheetHeader>
           <SheetTitle>Navigation</SheetTitle>
         </SheetHeader>
@@ -50,11 +50,9 @@ const MobileNav = () => {
             </div>
           ))}
 
-          <div className="mt-4 pt-4 border-t border-border">
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted-foreground">Theme:</span>
-              <DarkModeToggle />
-            </div>
+          <div className="pt-2 border-t border-border">
+            <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">Settings</div>
+            <Settings />
           </div>
         </nav>
       </SheetContent>

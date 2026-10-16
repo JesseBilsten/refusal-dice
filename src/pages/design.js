@@ -19,6 +19,7 @@ import {
   ProbabilityBar,
   Questions,
 } from '../components/Odds'
+import { Settings } from '../components/Settings'
 import Seat from '../components/Table/Seat'
 import Standings from '../components/Table/Standings'
 import { PRESETS } from '../lib/roll-query'
@@ -176,6 +177,12 @@ const DesignPage = () => {
                 onToggleKeep={(i) => setKept((k) => (k.includes(i) ? k.filter((x) => x !== i) : [...k, i]))}
               />
             </div>
+          </Section>
+
+          <Section title="Settings">
+            <Panel title="Settings" className="max-w-sm">
+              <Settings />
+            </Panel>
           </Section>
 
           <Section title="Table">

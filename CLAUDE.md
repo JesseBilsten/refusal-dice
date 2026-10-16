@@ -38,6 +38,7 @@ src/
   components/       App components; ui/ = shadcn primitives; nav-items.js = site navigation
                     Page/ = the page kit: Page (reading | tool | wide), PageHeader, Panel, Stat, PageTabs, Chip
                     Table/ = Seat, one player at the table (tutorial and Play); Standings, the ranking pattern
+                    Settings/ = site-wide settings (theme, 3D dice, sound): Settings block, SettingsMenu (header gear)
                     Play/ = full games against bots (play-model.ts is the pure side)
                     Home/ = the home page's animated round (RoundStory)
                     OddsLab/ = the Odds Lab tools: KeepAdvisor, GameOdds, EveryPossibility, the roll builder; situations-catalog.js
