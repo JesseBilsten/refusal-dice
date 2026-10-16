@@ -128,12 +128,30 @@ export function simulateHammer(options: {
   players?: number
   samples?: number
   seed?: number
+  /** Called with the estimate so far every `every` samples (a worker reports progress with it) */
+  onProgress?: (partial: HammerOption[], samples: number) => void
+  every?: number
 }): HammerOption[] {
-  const { dice, players = 3, samples = 400, seed = 1 } = options
+  const { dice, players = 3, samples = 400, seed = 1, onProgress, every = 250 } = options
   const tally = ALL_CALLS.map(() => ({
     accepted: { n: 0, lost: 0 },
     secondCall: { n: 0, lost: 0, call: undefined as Call | undefined },
   }))
+  const result = (n: number): HammerOption[] =>
+    ALL_CALLS.map((call, c) => {
+      const { accepted, secondCall } = tally[c]
+      const paths: HammerOption['paths'] = []
+      if (accepted.n)
+        paths.push({ path: 'accepted', share: accepted.n / n, pencil: accepted.lost / accepted.n })
+      if (secondCall.n)
+        paths.push({
+          path: 'secondCall',
+          share: secondCall.n / n,
+          pencil: secondCall.lost / secondCall.n,
+          call: secondCall.call,
+        })
+      return { call, ...estimate(accepted.lost + secondCall.lost, n), paths }
+    }).sort((a, b) => a.pencil - b.pencil)
   for (let i = 0; i < samples; i++) {
     const g = deal(players, 0, dice, sampleSeed(seed, i))
     ALL_CALLS.forEach((call, c) => {
@@ -146,20 +164,45 @@ export function simulateHammer(options: {
       t.n++
       if (loser === ME) t.lost++
     })
+    if (onProgress && (i + 1) % every === 0 && i + 1 < samples) onProgress(result(i + 1), i + 1)
   }
-  return ALL_CALLS.map((call, c) => {
-    const { accepted, secondCall } = tally[c]
+  return result(samples)
+}
+
+/**
+ * Combine Hammer estimates from separate runs (different seeds, e.g. one per
+ * worker) into one, weighting each by its samples.
+ */
+export function mergeHammerOptions(parts: { options: HammerOption[]; samples: number }[]): HammerOption[] {
+  const total = parts.reduce((s, p) => s + p.samples, 0)
+  const key = (c: Call) => `${c.game}:${c.variant ?? ''}`
+  return ALL_CALLS.map((call) => {
+    const mine = parts.map((p) => ({ o: p.options.find((x) => key(x.call) === key(call))!, n: p.samples }))
+    const count = (path: 'accepted' | 'secondCall') => {
+      let n = 0
+      let lost = 0
+      let second: Call | undefined
+      mine.forEach(({ o, n: samples }) => {
+        const x = o.paths.find((q) => q.path === path)
+        if (!x) return
+        n += x.share * samples
+        lost += x.share * samples * x.pencil
+        second = second ?? x.call
+      })
+      return { n: Math.round(n), lost: Math.round(lost), call: second }
+    }
+    const accepted = count('accepted')
+    const secondCall = count('secondCall')
     const paths: HammerOption['paths'] = []
-    if (accepted.n)
-      paths.push({ path: 'accepted', share: accepted.n / samples, pencil: accepted.lost / accepted.n })
+    if (accepted.n) paths.push({ path: 'accepted', share: accepted.n / total, pencil: accepted.lost / accepted.n })
     if (secondCall.n)
       paths.push({
         path: 'secondCall',
-        share: secondCall.n / samples,
+        share: secondCall.n / total,
         pencil: secondCall.lost / secondCall.n,
         call: secondCall.call,
       })
-    return { call, ...estimate(accepted.lost + secondCall.lost, samples), paths }
+    return { call, ...estimate(accepted.lost + secondCall.lost, total), paths }
   }).sort((a, b) => a.pencil - b.pencil)
 }
 
