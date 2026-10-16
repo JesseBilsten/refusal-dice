@@ -5,19 +5,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import VariantSelector from './VariantSelector'
 import { analyzeSecondCallDistribution, checkGame, getKickerStrength } from '../lib/game-validation'
 import uniqueRollsData from '../data/unique-rolls.json'
+import { GAMES_MAP, formatCallLabel } from '../lib/games-config'
+import { Hand } from './Dice'
 
-const GAMES = [
-  { id: '10-2', name: '10-2', emoji: '✌️' },
-  { id: '10-3', name: '10-3', emoji: '👌' },
-  { id: '10-4', name: '10-4', emoji: '🔫' },
-  { id: 'ship-captain-crew', name: 'Ship, Captain, Crew', emoji: '⚓️' },
-  { id: 'monterey', name: 'Monterey', emoji: '🔄' },
-  { id: 'vegas', name: "7's", emoji: '🎰' },
-  { id: 'pairs', name: 'Pairs', emoji: '🍐' },
-  { id: 'razzle', name: 'Razzle', emoji: '✨' },
-  { id: 'boss', name: 'Boss', emoji: '👑' },
-  { id: 'tres-away', name: 'Tres Away', emoji: '⛳' },
-]
 
 /**
  * SecondCallDistribution Component
@@ -134,8 +124,8 @@ const SecondCallDistribution = ({
               </TableCell>
               <TableCell className="font-medium">
                 <span className="flex items-center gap-2">
-                  {GAMES.find(g => g.id === call.game)?.emoji || '🎲'}
-                  {call.displayName}
+                  <span aria-hidden>{GAMES_MAP[call.game]?.emoji}</span>
+                  {formatCallLabel({ game: call.game, variant: call.variant })}
                 </span>
               </TableCell>
               <TableCell className="text-right">
@@ -159,16 +149,16 @@ const SecondCallDistribution = ({
                 {call.avgOffensiveStrength}%
               </TableCell>
               <TableCell>
-                <div className="flex flex-wrap gap-1">
+                <div className="flex flex-wrap items-center gap-2">
                   {call.examples.slice(0, 3).map((ex, i) => (
-                    <Badge 
-                      key={i} 
-                      variant="secondary" 
-                      className="font-mono text-xs"
-                      title={`Strength: ${ex.strength}%`}
-                    >
-                      {ex.roll}
-                    </Badge>
+                    <span key={i} title={`Strength: ${ex.strength}%`}>
+                      <Hand
+                        dice={ex.roll.split('').map(Number)}
+                        game={call.game}
+                        variant={call.variant}
+                        size="xs"
+                      />
+                    </span>
                   ))}
                   {call.examples.length > 3 && (
                     <Badge variant="outline" className="text-xs">

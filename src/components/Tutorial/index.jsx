@@ -40,7 +40,14 @@ import {
 } from './tie-odds'
 import { Button, buttonVariants } from '../ui/button'
 import { Badge } from '../ui/badge'
-import { DiceSettings, Hand, playRollSound, useDicePrefs } from '../Dice'
+import {
+  DiceSettings,
+  DieSlot,
+  Hand,
+  RollButton,
+  playRollSound,
+  useDicePrefs,
+} from '../Dice'
 import { cn } from '../../lib/utils'
 
 /**
@@ -189,7 +196,7 @@ const Tutorial = () => {
           </p>
         </>
       ),
-      action: <Button onClick={firstRoll}>Roll the dice</Button>,
+      action: <RollButton onClick={firstRoll}>Roll the dice</RollButton>,
     },
     roll: {
       title: 'Everyone rolls, and hides their dice',
@@ -684,10 +691,10 @@ const Tutorial = () => {
       <div className="grid gap-3 sm:grid-cols-3">
         {PLAYERS.map((p) => {
           const seat = game.seats.find((s) => s.id === p.id)
-          const dice =
-            step === 'welcome' && p.id === 'you'
-              ? [null, null, null, null, null]
-              : view.dice[p.id]
+          const unrolled = step === 'welcome' && p.id === 'you'
+          const dice = unrolled
+            ? [null, null, null, null, null]
+            : view.dice[p.id]
           const status = inPlay ? describeHand(game.dice[p.id]) : null
           const isLoser =
             game.phase.kind === 'roundOver' && game.phase.loser === p.id
@@ -713,12 +720,21 @@ const Tutorial = () => {
                   {seat.pencils ? '✏️'.repeat(seat.pencils) : 'No pencils'}
                 </span>
               </div>
-              <Hand
-                dice={dice || [null, null, null, null, null]}
-                game={inPlay ? CALL.game : null}
-                variant={CALL.variant}
-                rollIds={rollIds[p.id]}
-              />
+              {unrolled ? (
+                // Your dice before the first roll: empty slots, as in RollInput
+                <span className="flex gap-2" aria-label="Not rolled yet">
+                  {dice.map((_, i) => (
+                    <DieSlot key={i} />
+                  ))}
+                </span>
+              ) : (
+                <Hand
+                  dice={dice || [null, null, null, null, null]}
+                  game={inPlay ? CALL.game : null}
+                  variant={CALL.variant}
+                  rollIds={rollIds[p.id]}
+                />
+              )}
               {status && (
                 <p className="mt-2 text-xs text-muted-foreground">
                   {status.text}

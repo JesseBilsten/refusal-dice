@@ -188,7 +188,7 @@ const StrategyAssistantPage = () => {
                     <span className="text-lg">1️⃣</span>
                     <div>
                       <p className="font-medium text-sm">Enter Your Roll</p>
-                      <p className="text-xs text-muted-foreground">Tap each die or use 🎲 Roll Random</p>
+                      <p className="text-xs text-muted-foreground">Type each die, or tap Roll to roll all five</p>
                     </div>
                   </div>
                   <div className="flex gap-2">

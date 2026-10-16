@@ -7,12 +7,12 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '../co
 import { Button } from '../components/ui/button'
 import VariantSelector from '../components/VariantSelector'
 import { Slider } from '../components/ui/slider'
-import { Info, X, Check } from 'lucide-react'
+import { Info, X } from 'lucide-react'
 import GameLink from '../components/GameLink'
 import uniqueRollsData from '../data/unique-rolls.json'
 import rollGameMatrix from '../data/roll-game-matrix.json'
 import {
-  GAMES, GAMES_MAP,
+  GAMES, GAMES_MAP, getGameName,
   isSpecialtyGame, SPECIALTY_GAME_IDS,
   SPECIALTY_THRESHOLDS, SPECIALTY_FILTERS,
 } from '../lib/games-config'
@@ -25,6 +25,9 @@ import {
 } from '../lib/game-validation'
 import { ToggleGroup, ToggleGroupItem } from '../components/ui/toggle-group'
 import { Hand } from '../components/Dice'
+import EveryPossibility from '../components/OddsLab/EveryPossibility'
+import { OddsLabLink } from '../components/Odds'
+import { PRESETS } from '../lib/roll-query'
 
 /* ─────────────────────────── helpers ─────────────────────────── */
 
@@ -338,130 +341,6 @@ const CoPlayableGames = ({ matchingRolls, currentGameId, variant }) => {
   )
 }
 
-/** All matching rolls badge grid (verification) */
-/** All rolls grid — matching rolls highlighted, non-matching muted */
-const ProofGrid = ({ allRolls, matchSet, matchCount, totalInstances }) => {
-  const [expanded, setExpanded] = useState(false)
-  const [showAll, setShowAll] = useState(false)
-  const [showInfo, setShowInfo] = useState(false)
-
-  const displayRolls = useMemo(() => {
-    if (!showAll) return allRolls
-    const all = []
-    allRolls.forEach(r => {
-      const perms = new Set()
-      const permute = (arr, l = 0) => {
-        if (l === arr.length - 1) { perms.add(arr.join(',')); return }
-        for (let i = l; i < arr.length; i++) {
-          [arr[l], arr[i]] = [arr[i], arr[l]]
-          permute([...arr], l + 1)
-          ;[arr[l], arr[i]] = [arr[i], arr[l]]
-        }
-      }
-      permute([...r.roll])
-      perms.forEach(p => all.push({ roll: p.split(',').map(Number), count: 1 }))
-    })
-    return all
-  }, [allRolls, showAll])
-
-  const show = expanded ? displayRolls : displayRolls.slice(0, 252)
-  const more = displayRolls.length > 252 && !expanded
-  const totalPerms = allRolls.reduce((s, r) => s + r.count, 0)
-
-  return (
-    <div>
-      <div className="flex flex-wrap items-center gap-3 mb-3">
-        <div className="flex items-center gap-2">
-          <ToggleGroup
-            type="single"
-            value={showAll ? 'all' : 'unique'}
-            onValueChange={v => { if (v) { setShowAll(v === 'all'); setExpanded(false) } }}
-          >
-            <ToggleGroupItem value="unique" className="text-xs h-7 px-2.5">
-              Unique ({allRolls.length})
-            </ToggleGroupItem>
-            <ToggleGroupItem value="all" className="text-xs h-7 px-2.5">
-              All Permutations ({totalPerms.toLocaleString()})
-            </ToggleGroupItem>
-          </ToggleGroup>
-          <span className="relative inline-flex">
-            <button
-              onClick={() => setShowInfo(o => !o)}
-              className="inline-flex items-center justify-center w-5 h-5 rounded-full
-                text-muted-foreground hover:text-foreground hover:bg-muted
-                transition-colors focus:outline-none focus:ring-2 focus:ring-primary"
-              aria-label="View mode explanation"
-            >
-              <Info className="w-3.5 h-3.5" />
-            </button>
-            {showInfo && (
-              <div
-                className="absolute z-50 top-7 left-0 w-72 rounded-lg border bg-popover
-                  text-popover-foreground shadow-lg p-3 text-xs space-y-2 animate-in fade-in-0 zoom-in-95"
-              >
-                <div className="flex items-center justify-between mb-1">
-                  <span className="font-semibold text-[11px]">View Modes</span>
-                  <button
-                    onClick={() => setShowInfo(false)}
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </div>
-                <p className="text-muted-foreground leading-snug">
-                  <strong>Unique (252):</strong> Distinct combinations where order doesn't matter. 
-                  "11234 ×30" means this combination occurs in 30 different arrangements.
-                </p>
-                <p className="text-muted-foreground leading-snug">
-                  <strong>All Permutations (7,776):</strong> Every possible arrangement where order matters. 
-                  "11234" and "43211" are counted separately—the complete sample space.
-                </p>
-              </div>
-            )}
-          </span>
-        </div>
-        <span className="text-xs text-muted-foreground">
-          <span className="text-green-600 dark:text-green-400 font-semibold">
-            {showAll ? totalInstances.toLocaleString() : matchCount} match
-          </span>
-          {' / '}
-          <span>{showAll ? totalPerms.toLocaleString() : allRolls.length} total</span>
-        </span>
-      </div>
-      <div className="flex flex-wrap gap-1 font-mono text-xs">
-        {show.map((r, i) => {
-          const key = [...r.roll].sort((a, b) => a - b).join(',')
-          const isMatch = matchSet.has(key)
-          return (
-            <Badge
-              key={i}
-              variant="secondary"
-              className={`px-1.5 py-0.5 tabular-nums transition-colors ${
-                isMatch
-                  ? 'bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-200 border border-green-300 dark:border-green-700'
-                  : 'bg-muted/40 text-muted-foreground/50 border border-transparent'
-              }`}
-            >
-              {isMatch && <Check className="w-3 h-3 mr-0.5 text-green-600 dark:text-green-400" />}
-              <Hand dice={r.roll} size="xs" />
-              {!showAll && (
-                <span className={`ml-1 ${isMatch ? 'text-green-600/70 dark:text-green-400/70' : 'text-muted-foreground/30'}`}>
-                  ×{r.count}
-                </span>
-              )}
-            </Badge>
-          )
-        })}
-      </div>
-      {more && (
-        <Button variant="ghost" size="sm" className="mt-2 text-xs" onClick={() => setExpanded(true)}>
-          Show all {displayRolls.length.toLocaleString()} rolls…
-        </Button>
-      )}
-    </div>
-  )
-}
-
 /* ═══════════════════════════ MAIN PAGE ═══════════════════════════ */
 
 const OddsDashboard = ({ data }) => {
@@ -569,11 +448,14 @@ const OddsDashboard = ({ data }) => {
     })
     return hands.sort((a, b) => b.count - a.count)
   }, [selectedId, barkingFlexThreshold, barkingStrengthThreshold])
-  const matchSet = useMemo(() => {
-    const s = new Set()
-    matchingRolls.forEach(r => s.add([...r.roll].sort((a, b) => a - b).join(',')))
-    return s
+  const proofRolls = useMemo(() => {
+    const matches = new Set(matchingRolls.map(r => [...r.roll].sort((a, b) => a - b).join('')))
+    return uniqueRollsData.uniqueRolls.map(r => {
+      const key = [...r.roll].sort((a, b) => a - b).join('')
+      return { key, roll: r.roll, count: r.count, match: matches.has(key) }
+    })
   }, [matchingRolls])
+  const labPreset = PRESETS.find(p => p.gameId === selectedId && !variant)
 
   return (
     <Layout>
@@ -736,34 +618,21 @@ const OddsDashboard = ({ data }) => {
               variant={variant}
             />
 
-            {/* Verification */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Verify: All Rolls</CardTitle>
-                <CardDescription className="text-xs">
-                  <Badge variant="secondary" className="bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-200 border border-green-300 dark:border-green-700 mr-1">
-                    Green
-                  </Badge>
-                  {selectedId === 'barking' 
-                    ? ' = bark-worthy hands. '
-                    : ' = matches this game. '}
-                  <Badge variant="secondary" className="bg-muted/40 text-muted-foreground/50 border border-transparent mr-1">
-                    Grey
-                  </Badge>
-                  {selectedId === 'barking'
-                    ? ' = other hands.'
-                    : ' = doesn\'t match.'}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ProofGrid
-                  allRolls={uniqueRollsData.uniqueRolls}
-                  matchSet={matchSet}
-                  matchCount={matchingRolls.length}
-                  totalInstances={totalInstances}
-                />
-              </CardContent>
-            </Card>
+            {/* Verification: every roll, the same view as the Odds Lab */}
+            <EveryPossibility
+              title="Every roll"
+              rolls={proofRolls}
+              total={7776}
+              matchLabel={selectedId === 'barking' ? 'Bark-worthy hand' : `Makes ${getGameName(selectedId)}`}
+              missLabel={selectedId === 'barking' ? 'Other hands' : "Doesn't make it"}
+              actions={
+                labPreset && (
+                  <OddsLabLink query={labPreset.query} compare={selectedId}>
+                    Check it in the Odds Lab
+                  </OddsLabLink>
+                )
+              }
+            />
           </div>
         )}
       </Page>

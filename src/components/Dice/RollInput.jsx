@@ -2,6 +2,8 @@ import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { Button } from '../ui/button'
 import { cn } from '../../lib/utils'
 import Die, { DIE_SIZES } from './Die'
+import RollButton from './RollButton'
+import { SLOT_CLASS } from './DieSlot'
 import { useDicePrefs } from './preferences'
 import { playRollSound } from './sound'
 
@@ -145,7 +147,10 @@ export default function RollInput({
               onPaste={(e) => handlePaste(i, e)}
               onBlur={() => setEditing((cur) => (cur === i ? null : cur))}
               style={{ width: px, height: px }}
-              className="rounded-[22%] border-2 border-dashed border-input bg-background p-0 text-center text-2xl font-bold caret-primary placeholder:text-muted-foreground/60 focus:border-solid focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30"
+              className={cn(
+                SLOT_CLASS,
+                'p-0 text-center text-2xl font-bold caret-primary placeholder:text-muted-foreground/60 focus:border-solid focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/30'
+              )}
             />
           ) : (
             <Die
@@ -163,9 +168,7 @@ export default function RollInput({
         )}
       </div>
       <div className="flex gap-2">
-        <Button onClick={roll} style={{ height: px }} className="px-4 text-sm">
-          🎲 Roll
-        </Button>
+        <RollButton onClick={roll} style={{ height: px }} className="px-4" />
         <Button
           onClick={clear}
           variant="outline"

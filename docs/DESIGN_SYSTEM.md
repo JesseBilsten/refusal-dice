@@ -58,6 +58,8 @@ The only way dice are drawn. Never render a roll as text like
 | `Hand` | A roll **for a game**. The dice that make it get a blue outline and the game's name; the kicker gets a dashed outline and its total. Misses show "No 10-3". Specialty games outline the dice that make the hand: Boss the poker hand (just the high die for a high die), Razzle the chosen number plus wild 1s, Tres Away the dice put out (`putOut`), or for a fresh roll the best first put-out (`tresAwayPutOut`, exact). `xs`/`sm` are compact (outlines, no labels) for tables. |
 | `DiceGroup` | A hand-picked group with an outline and a label, when the grouping is authored rather than computed (e.g. the examples on the Games page). `tone`: `game`, `kicker` or `plain`. |
 | `RollInput` | Anywhere a player **enters or edits** a roll. |
+| `RollButton` | The one Roll button (dice icon + "Roll"), for entered and scripted rolls alike. |
+| `DieSlot` | An empty dashed slot for a die not rolled or entered yet (RollInput's blank boxes share `SLOT_CLASS`). A die someone rolled and hid is a `Die` with no value instead. |
 | `DiceSettings` | The 3D and sound switches (both start off). |
 
 The grouping logic is `handGroups()` in `hand-groups.ts`, a pure function
@@ -91,6 +93,11 @@ links. Components:
 - `Disclosure`, `MathSteps`, `Questions`
 - `OddsLabLink`
 - formatting: `fmtPct`, `inWords`
+
+**Every roll:** `EveryPossibility` (`src/components/OddsLab/`) is the one
+way to show "every roll this counts": the unique rolls as a dice grid
+(`RollGrid`) with matches lit, or a map of every ordered outcome
+(`OutcomeMap`). The Odds Lab and the Odds page both use it.
 
 The rules are in `.claude/skills/explain-odds/SKILL.md`. Reference screens:
 the tutorial's take-the-tie step, and the Strategy Assistant's

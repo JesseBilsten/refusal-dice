@@ -10,8 +10,7 @@ import { Label } from '../components/ui/label'
 import { Alert, AlertDescription } from '../components/ui/alert'
 import { ToggleGroup, ToggleGroupItem } from '../components/ui/toggle-group'
 import QueryBuilder, { newPattern, withIds } from '../components/OddsLab/QueryBuilder'
-import RollGrid from '../components/OddsLab/RollGrid'
-import OutcomeMap from '../components/OddsLab/OutcomeMap'
+import EveryPossibility from '../components/OddsLab/EveryPossibility'
 import {
   PRESETS,
   atLeastOneOf,
@@ -22,7 +21,6 @@ import {
 } from '../lib/roll-query'
 import { checkGame } from '../lib/game-validation'
 import { GAMES, isSpecialtyGame } from '../lib/games-config'
-import { cn } from '../lib/utils'
 
 /**
  * ODDS LAB
@@ -75,7 +73,6 @@ const OddsLabPage = () => {
   const [query, setQuery] = useState(() => withIds(PRESETS[0].query))
   const [compareGame, setCompareGame] = useState(PRESETS[0].gameId)
   const [view, setView] = useState('unique')
-  const [matchesFirst, setMatchesFirst] = useState(false)
   const [copied, setCopied] = useState(false)
   const hydrated = useRef(false)
 
@@ -104,7 +101,6 @@ const OddsLabPage = () => {
 
   const result = useMemo(() => evaluateQuery(query), [query])
   const issues = useMemo(() => validateQuery(query), [query])
-  const matchByKey = useMemo(() => new Map(result.rolls.map((r) => [r.key, r.match])), [result])
 
   // Compare against the site's own definition of a game (5 dice only)
   const comparison = useMemo(() => {
@@ -322,56 +318,15 @@ const OddsLabPage = () => {
         </div>
 
         {/* ── Visualization ── */}
-        <div className="mt-8">
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-xl font-semibold">Every possibility</h2>
-            <div className="flex flex-wrap items-center gap-4">
-              {view === 'unique' && (
-                <div className="flex items-center gap-2">
-                  <Switch id="matches-first" checked={matchesFirst} onCheckedChange={setMatchesFirst} />
-                  <Label htmlFor="matches-first" className="text-sm">
-                    Matches first
-                  </Label>
-                </div>
-              )}
-              <ToggleGroup type="single" value={view} onValueChange={(v) => v && setView(v)} aria-label="View">
-                <ToggleGroupItem value="unique" className="h-8 px-3 text-xs">
-                  Unique rolls ({result.rolls.length})
-                </ToggleGroupItem>
-                <ToggleGroupItem value="ordered" className="h-8 px-3 text-xs">
-                  Every outcome ({result.total.toLocaleString()})
-                </ToggleGroupItem>
-              </ToggleGroup>
-            </div>
-          </div>
-
-          <div className="mb-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-            <span className="flex items-center gap-1.5">
-              <span className="inline-block h-3 w-3 rounded-sm border border-uncommon-border bg-uncommon" /> Matches
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="inline-block h-3 w-3 rounded-sm bg-muted" /> Doesn't match
-            </span>
-            {comparison && comparison.diffUnique > 0 && (
-              <span className="flex items-center gap-1.5">
-                <span className="inline-block h-3 w-3 rounded-sm ring-2 ring-epic-border" /> Differs from the site
-              </span>
-            )}
-            {view === 'unique' && <span>Dimmed dice inside a match weren't needed by any requirement (the kicker). ×N is how many ordered outcomes give that roll.</span>}
-          </div>
-
-          <div className={cn(view !== 'unique' && 'hidden')}>
-            <RollGrid
-              rolls={result.rolls}
-              total={result.total}
-              diffKeys={comparison?.diffKeys}
-              matchesFirst={matchesFirst}
-            />
-          </div>
-          {view === 'ordered' && (
-            <OutcomeMap diceCount={query.diceCount} matchByKey={matchByKey} diffKeys={comparison?.diffKeys} />
-          )}
-        </div>
+        <EveryPossibility
+          className="mt-8"
+          rolls={result.rolls}
+          total={result.total}
+          diceCount={query.diceCount}
+          diffKeys={comparison?.diffKeys}
+          view={view}
+          onViewChange={setView}
+        />
 
         {/* ── How it works ── */}
         <div className="mt-10 rounded-lg bg-muted/40 p-4 text-sm text-muted-foreground">

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Plus, X } from 'lucide-react'
-import { Die } from '../Dice'
+import { DiceGroup, Die } from '../Dice'
 import { Button } from '../ui/button'
 import { Card, CardContent } from '../ui/card'
 import { cn } from '../../lib/utils'
@@ -210,35 +210,34 @@ const RuleFields = ({ rule, diceCount, onChange }) => {
       return (
         <>
           <Word>Dice showing</Word>
-          <div className="flex flex-wrap items-center gap-0.5">
-            {rule.values.map((v, i) => (
-              <button
-                key={i}
-                type="button"
-                aria-label={`Remove ${v}`}
-                title="Remove"
-                onClick={() => onChange({ values: rule.values.filter((_, j) => j !== i) })}
-                className="rounded p-0.5 text-lg ring-2 ring-primary hover:opacity-60 focus:outline-none focus:ring-ring"
-              >
-                <Die value={Number(v)} size="xs" />
-              </button>
-            ))}
-            {rule.values.length === 0 && (
-              <span className="text-xs italic text-muted-foreground">tap faces to add →</span>
-            )}
-          </div>
+          {rule.values.length ? (
+            // The dice this requirement needs, outlined like the dice that make a game
+            <DiceGroup compact>
+              {rule.values.map((v, i) => (
+                <Die
+                  key={i}
+                  value={Number(v)}
+                  size="sm"
+                  label={`Remove ${v}`}
+                  className="hover:opacity-60"
+                  onClick={() => onChange({ values: rule.values.filter((_, j) => j !== i) })}
+                />
+              ))}
+            </DiceGroup>
+          ) : (
+            <span className="text-xs italic text-muted-foreground">tap faces to add →</span>
+          )}
           {rule.values.length < diceCount && (
-            <div className="flex items-center gap-0.5 border-l border-border pl-2" role="group" aria-label="Add a die face">
+            <div className="flex items-center gap-1 border-l border-border pl-2" role="group" aria-label="Add a die face">
               {FACES.map((f) => (
-                <button
+                <Die
                   key={f}
-                  type="button"
-                  aria-label={`Add a ${f}`}
+                  value={Number(f)}
+                  size="sm"
+                  label={`Add a ${f}`}
+                  className="opacity-50 hover:opacity-100"
                   onClick={() => onChange({ values: [...rule.values, f] })}
-                  className="rounded p-0.5 text-base opacity-60 hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring"
-                >
-                  <Die value={Number(f)} size="xs" />
-                </button>
+                />
               ))}
             </div>
           )}
