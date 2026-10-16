@@ -1,12 +1,15 @@
 import React from 'react'
 import Layout from '../components/layout'
+import Page, { PageHeader } from '../components/Page'
 
 const NotFoundPage = () => (
   <Layout>
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center">
-      <h1 className="text-4xl font-bold mb-4">NOT FOUND</h1>
-      <p className="text-muted-foreground">You just hit a route that doesn&#39;t exist... the sadness.</p>
-    </div>
+    <Page width="reading">
+      <PageHeader
+        title="Page not found"
+        description="You just hit a route that doesn't exist... the sadness."
+      />
+    </Page>
   </Layout>
 )
 

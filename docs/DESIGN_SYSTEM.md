@@ -21,6 +21,24 @@ twice or more, add it to the right kit and list it here.
 - **Mobile first:** every screen works at 390px wide with no horizontal
   scroll.
 
+## Page frame: `src/components/Page/`
+
+Every page is `<Layout><Page width="…"><PageHeader … />…</Page></Layout>`.
+Pages never set their own `max-w-*`, so content edges line up across the
+site.
+
+| Width | Max | Use it for |
+|---|---|---|
+| `reading` | 768px | Text read top to bottom: Rules, Glossary, Learn, Practice |
+| `tool` | 1024px | Things you use: Strategy Assistant, Odds Lab, game pages |
+| `wide` | 1280px | Grids of cards: Games, Odds (matches the header) |
+
+- `PageHeader`: left-aligned title, a one- or two-sentence description,
+  then optional `breadcrumbs`, `badge`, `eyebrow` and links (children).
+  No emoji in titles, except a game's own emoji on its page.
+- `Container`: width and gutters only, for full-bleed sections such as the
+  home hero.
+
 ## Primitives: `src/components/ui/`
 
 These are shadcn/ui components (JS): Button (and `buttonVariants` for

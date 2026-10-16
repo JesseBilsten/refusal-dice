@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { Link } from 'gatsby'
 import Layout from '../components/layout'
+import { Container } from '../components/Page'
 import { Die } from '../components/Dice'
 import { CallList } from '../components/RollAnalysis'
 import {
@@ -266,7 +267,7 @@ const IndexPage = () => {
       </section>
 
       {/* ─── Where do you want to start? ─── */}
-      <section className="max-w-4xl mx-auto px-4 sm:px-6 py-10">
+      <Container as="section" width="tool" className="py-10">
         <h2 className="text-center text-lg font-semibold text-foreground mb-6">
           Where do you want to start?
         </h2>
@@ -275,7 +276,7 @@ const IndexPage = () => {
             <TierCard key={tier.level} tier={tier} />
           ))}
         </div>
-      </section>
+      </Container>
 
       {/* ─── Footer links ─── */}
       <div className="pb-10 flex flex-wrap justify-center gap-4 text-sm text-muted-foreground">

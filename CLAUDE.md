@@ -36,6 +36,7 @@ src/
   pages/            Gatsby file-based routes (one file = one URL)
   templates/        game-detail.js → /games/<id> (created in gatsby-node.js)
   components/       App components; ui/ = shadcn primitives; nav-items.js = site navigation
+                    Page/ = the page frame: Page (reading | tool | wide width) and PageHeader
                     Dice/ = the dice kit: Die, Hand (game + kicker groups), DiceGroup, RollInput; opt-in 3D and sound
                     Tutorial/ = the /learn guided round (script.ts holds its scripted dice)
                     Odds/ = the odds-decision pattern (verdict, comparison bars, outcome grid, math, questions)

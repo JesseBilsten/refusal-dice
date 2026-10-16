@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { graphql } from 'gatsby'
 import Layout from '../components/layout'
+import Page, { PageHeader } from '../components/Page'
 import { Badge } from '../components/ui/badge'
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '../components/ui/card'
 import { Label } from '../components/ui/label'
@@ -19,15 +20,12 @@ const SecondCallPredictorPage = ({ data }) => {
 
   return (
     <Layout>
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="my-8 text-center">
-          <h1 className="flex items-center justify-center gap-2 text-4xl font-bold text-foreground">
-            Second Call Predictor <Badge variant="warning">beta</Badge>
-          </h1>
-          <p className="text-lg text-muted-foreground mt-2">
-            Predict the most likely second calls after a given first call
-          </p>
-        </div>
+      <Page width="tool">
+        <PageHeader
+          title="Second Call Predictor"
+          badge={<Badge variant="warning">beta</Badge>}
+          description="Predict the most likely second calls after a given first call."
+        />
 
         {/* Selection Controls */}
         <Card className="mb-6">
@@ -112,7 +110,7 @@ const SecondCallPredictorPage = ({ data }) => {
             </div>
           </CardContent>
         </Card>
-      </section>
+      </Page>
     </Layout>
   )
 }

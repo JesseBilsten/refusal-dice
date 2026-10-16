@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import { graphql, Link } from 'gatsby'
 import Layout from '../components/layout'
+import Page, { PageHeader } from '../components/Page'
 import { Badge } from '../components/ui/badge'
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '../components/ui/card'
 import { Button } from '../components/ui/button'
@@ -576,20 +577,16 @@ const OddsDashboard = ({ data }) => {
 
   return (
     <Layout>
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <Page width="wide">
         {/* ── Header ── */}
-        <div className="mb-6 text-center">
-          <h1 className="text-3xl sm:text-4xl font-bold">Game Odds</h1>
-          <p className="text-base text-muted-foreground mt-2 max-w-lg mx-auto">
-            Probability of rolling each game on a single throw of 5 dice.
-            Tap a game to drill into its data.
-          </p>
-          <p className="text-sm mt-2">
-            <Link to="/odds-lab" className="text-primary hover:underline">
-              Model your own roll in the Odds Lab →
-            </Link>
-          </p>
-        </div>
+        <PageHeader
+          title="Game Odds"
+          description="Probability of rolling each game on a single throw of 5 dice. Tap a game to drill into its data."
+        >
+          <Link to="/odds-lab" className="text-primary hover:underline">
+            Model your own roll in the Odds Lab →
+          </Link>
+        </PageHeader>
 
         {/* ── Odds Grid ── */}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 mb-8">
@@ -769,7 +766,7 @@ const OddsDashboard = ({ data }) => {
             </Card>
           </div>
         )}
-      </section>
+      </Page>
     </Layout>
   )
 }

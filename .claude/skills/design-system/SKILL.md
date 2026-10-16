@@ -1,12 +1,14 @@
 ---
 name: design-system
-description: Build or change any Refusal Dice UI from the shared design system (docs/DESIGN_SYSTEM.md): dice (Die, Hand, DiceGroup, RollInput), odds (OddsDecision and friends), ui primitives and color tokens. Use before adding UI, and whenever a pattern repeats.
+description: Build or change any Refusal Dice UI from the shared design system (docs/DESIGN_SYSTEM.md): page frame (Page, PageHeader), dice (Die, Hand, DiceGroup, RollInput), odds (OddsDecision and friends), ui primitives and color tokens. Use before adding UI, and whenever a pattern repeats.
 ---
 
 # Using the design system
 
 1. Read `docs/DESIGN_SYSTEM.md` before writing UI.
 2. Reach for the shared piece first:
+   - **Pages:** `Page` with a width (`reading`, `tool`, `wide`) and
+     `PageHeader`. Never set a page's own `max-w-*`.
    - **Dice:** `Hand` for any roll shown for a game, `RollInput` wherever
      the player edits a roll, and `Die` otherwise. Never write a roll as
      text.

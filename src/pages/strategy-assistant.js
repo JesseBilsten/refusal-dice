@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react'
 import Layout from '../components/layout'
+import Page, { PageHeader } from '../components/Page'
 import { Badge } from '../components/ui/badge'
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '../components/ui/card'
 import { Button } from '../components/ui/button'
@@ -170,25 +171,14 @@ const StrategyAssistantPage = () => {
 
   return (
     <Layout>
-      <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="my-8 text-center">
-          <h1 className="text-4xl font-bold text-foreground">
-            🎯 Strategy Assistant
-          </h1>
-          <p className="text-lg text-muted-foreground mt-2">
-            Get personalized hammer and refusal recommendations for your roll
-          </p>
-        </div>
+      <Page width="tool">
+        <PageHeader
+          title="Strategy Assistant"
+          description="Enter your roll and your seat to see what to call, or whether to accept or refuse."
+        />
 
         <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Strategy Assistant</CardTitle>
-            <CardDescription>
-              Enter your roll and position to get personalized recommendations
-            </CardDescription>
-          </CardHeader>
-          
-          <CardContent>
+          <CardContent className="pt-6">
             <div className="flex flex-col lg:flex-row gap-6">
               {/* Help Section — position-specific tips */}
               <div className="lg:order-2 lg:w-80 flex-shrink-0">
@@ -341,7 +331,7 @@ const StrategyAssistantPage = () => {
             </Card>
           </div>
         )}
-      </section>
+      </Page>
     </Layout>
   )
 }

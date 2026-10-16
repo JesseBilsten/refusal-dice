@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Link } from 'gatsby'
 import Layout from '../components/layout'
+import Page, { PageHeader } from '../components/Page'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
@@ -20,16 +21,12 @@ const PracticePage = () => {
   
   return (
     <Layout>
-      <section className="max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
-        <div className="text-center mb-8">
-          <div className="inline-block px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-semibold mb-4">
-            Coming Soon
-          </div>
-          <h1 className="text-4xl font-bold mb-3 text-foreground">Practice Mode</h1>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Learn Refusal Dice by playing against AI opponents in a simulated game environment
-          </p>
-        </div>
+      <Page width="reading">
+        <PageHeader
+          eyebrow="Coming soon"
+          title="Practice Mode"
+          description="Learn Refusal Dice by playing against AI opponents in a simulated game."
+        />
         
         {/* Feature Preview */}
         <Card className="mb-8">
@@ -176,7 +173,7 @@ const PracticePage = () => {
             ← Back to Home
           </Link>
         </div>
-      </section>
+      </Page>
     </Layout>
   )
 }

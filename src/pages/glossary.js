@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Link } from 'gatsby'
 import Layout from '../components/layout'
+import Page, { PageHeader } from '../components/Page'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Input } from '../components/ui/input'
 import GameLink from '../components/GameLink'
@@ -317,13 +318,11 @@ const GlossaryPage = () => {
 
   return (
     <Layout>
-      <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="my-8 text-center">
-          <h1 className="text-4xl font-bold text-foreground">Glossary</h1>
-          <p className="text-lg text-muted-foreground">
-            Common terms and phrases used in Refusal Dice
-          </p>
-        </div>
+      <Page width="reading">
+        <PageHeader
+          title="Glossary"
+          description="Common terms and phrases used in Refusal Dice."
+        />
 
         <div className="mb-8">
           <Input
@@ -355,7 +354,7 @@ const GlossaryPage = () => {
             </Card>
           ))}
         </div>
-      </section>
+      </Page>
     </Layout>
   )
 }

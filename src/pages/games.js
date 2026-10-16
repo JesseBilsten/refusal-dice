@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import Layout from '../components/layout'
+import Page, { PageHeader } from '../components/Page'
 import { DiceGroup, Hand, RollInput } from '../components/Dice'
 import { Link } from 'gatsby'
 import { buttonVariants } from '../components/ui/button'
@@ -88,11 +89,11 @@ const GamesPage = () => {
   return (
 
   <Layout>
-    <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div className="my-8 text-center">
-        <h1 className="text-4xl font-bold text-foreground">Games</h1>
-        <p className="text-lg text-muted-foreground">A list of the games you can call in Refusal Dice</p>
-      </div>
+    <Page width="wide">
+      <PageHeader
+        title="Games"
+        description="The games you can call in Refusal Dice."
+      />
       
       {/* Dice Roll Lookup Widget */}
       <div className="mb-8 p-6 rounded-lg bg-primary/5 border-2 border-primary/20">
@@ -611,7 +612,7 @@ const GamesPage = () => {
           </div>
         </div>
       </div>
-    </section>
+    </Page>
   </Layout>
   )
 }

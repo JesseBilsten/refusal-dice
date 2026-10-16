@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'gatsby'
 import { Check, Link2, RotateCcw } from 'lucide-react'
 import Layout from '../components/layout'
+import Page, { PageHeader } from '../components/Page'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button'
 import { Switch } from '../components/ui/switch'
@@ -142,16 +143,12 @@ const OddsLabPage = () => {
 
   return (
     <Layout>
-      <section className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+      <Page width="tool">
         {/* ── Header ── */}
-        <div className="mb-6 text-center">
-          <h1 className="text-3xl font-bold sm:text-4xl">Odds Lab</h1>
-          <p className="mx-auto mt-2 max-w-2xl text-base text-muted-foreground">
-            Describe any roll and see exactly how often it happens. Every possible outcome is shown
-            below; the ones that don't fit your requirements fade out. Use it to check the
-            site's odds against your own rules for a game or situation.
-          </p>
-        </div>
+        <PageHeader
+          title="Odds Lab"
+          description="Describe any roll and see exactly how often it happens. Every possible outcome is shown below; the ones that don't fit your requirements fade out. Use it to check the site's odds against your own rules for a game or situation."
+        />
 
         {/* ── Presets ── */}
         <div className="mb-6">
@@ -389,7 +386,7 @@ const OddsLabPage = () => {
             <li>Odds are exact: every one of the {result.total.toLocaleString()} outcomes is counted, not sampled.</li>
           </ul>
         </div>
-      </section>
+      </Page>
     </Layout>
   )
 }

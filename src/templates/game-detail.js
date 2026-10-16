@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react'
 import { Link } from 'gatsby'
 import Layout from '../components/layout'
+import Page, { PageHeader } from '../components/Page'
 import { Badge } from '../components/ui/badge'
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
@@ -347,9 +348,9 @@ const GameDetailTemplate = ({ pageContext }) => {
   if (!content) {
     return (
       <Layout>
-        <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <h1 className="text-3xl font-bold">Game Not Found</h1>
-        </section>
+        <Page>
+          <PageHeader title="Game not found" breadcrumbs={[{ to: '/games', label: 'Games' }, { label: 'Not found' }]} />
+        </Page>
       </Layout>
     )
   }
@@ -358,31 +359,24 @@ const GameDetailTemplate = ({ pageContext }) => {
 
   return (
     <Layout>
-      <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-
-        {/* ── Breadcrumb ── */}
-        <nav className="mb-6 text-sm text-muted-foreground">
-          <Link to="/games" className="hover:text-primary transition-colors">Games</Link>
-          <span className="mx-2">›</span>
-          <span className="text-foreground font-medium">{gameMeta.name}</span>
-        </nav>
-
-        {/* ── Header — matches site-wide pattern ── */}
-        <div className="text-center mb-10">
-          <h1 className="text-3xl sm:text-4xl font-bold text-foreground">
-            {gameMeta.emoji} {gameMeta.name}
-            {content.subtitle && (
-              <span className="text-xl text-muted-foreground ml-2 font-normal">{content.subtitle}</span>
-            )}
-          </h1>
-          {content.isStrategy && <Badge variant="secondary" className="mt-2">Strategy</Badge>}
+      <Page>
+        <PageHeader
+          breadcrumbs={[{ to: '/games', label: 'Games' }, { label: gameMeta.name }]}
+          title={
+            <>
+              <span aria-hidden>{gameMeta.emoji}</span> {gameMeta.name}
+              {content.subtitle && (
+                <span className="ml-2 text-xl font-normal text-muted-foreground">{content.subtitle}</span>
+              )}
+            </>
+          }
+          badge={content.isStrategy && <Badge variant="secondary">Strategy</Badge>}
+          description={content.description}
+        >
           {content.aka && (
-            <p className="text-sm text-muted-foreground mt-2">Also known as: {content.aka}</p>
+            <p className="text-muted-foreground">Also known as: {content.aka}</p>
           )}
-          <p className="text-base text-muted-foreground mt-3 max-w-xl mx-auto">
-            {content.description}
-          </p>
-        </div>
+        </PageHeader>
 
         {/* ────────────────────────────── */}
         {/*  Layer 1: At-a-Glance Stats   */}
@@ -601,7 +595,7 @@ const GameDetailTemplate = ({ pageContext }) => {
             </div>
           </>
         )}
-      </section>
+      </Page>
     </Layout>
   )
 }

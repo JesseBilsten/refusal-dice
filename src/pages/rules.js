@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Link } from 'gatsby'
 import Layout from '../components/layout'
+import Page, { PageHeader } from '../components/Page'
 import { Card, CardContent } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
 
@@ -48,14 +49,12 @@ const StepCard = ({ number, title, icon, children, id }) => (
 
 const RulesPage = () => (
   <Layout>
-    <section className="max-w-2xl mx-auto px-4 sm:px-6 py-10">
+    <Page width="reading">
       {/* Header */}
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-foreground mb-2">How to Play</h1>
-        <p className="text-muted-foreground">
-          2–8 players · 5 dice each · ~30 min
-        </p>
-      </div>
+      <PageHeader
+        title="How to Play"
+        description="2–8 players · 5 dice each · ~30 min"
+      />
 
       {/* One-line summary */}
       <div className="bg-muted/50 rounded-lg p-4 mb-8 text-center">
@@ -305,7 +304,7 @@ const RulesPage = () => (
         <span className="text-border">·</span>
         <Link to="/glossary" className="text-primary hover:underline">Glossary →</Link>
       </div>
-    </section>
+    </Page>
   </Layout>
 )
 
