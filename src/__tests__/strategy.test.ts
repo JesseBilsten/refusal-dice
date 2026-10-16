@@ -138,6 +138,23 @@ describe('simulations', () => {
     a.slice(1).forEach((o, i) =>
       expect(o.pencil).toBeGreaterThanOrEqual(a[i].pencil)
     )
+    // The paths split every round: shares add to 1 and share × pencil to the total
+    a.forEach((o) => {
+      expect(o.paths.reduce((s, p) => s + p.share, 0)).toBeCloseTo(1)
+      expect(o.paths.reduce((s, p) => s + p.share * p.pencil, 0)).toBeCloseTo(o.pencil)
+      const second = o.paths.find((p) => p.path === 'secondCall')
+      if (second) expect(second.call!.game).not.toBe(o.call.game)
+    })
+  })
+
+  test('a weak hand can call a decoy: refused, it makes its real game second', () => {
+    // 12445 holds 10-3 Low; 10-4 Low is often refused, then 10-3 Low can't be
+    const o = simulateHammer({ dice: [1, 2, 4, 4, 5], samples: 300 }).find(
+      (x) => x.call.game === '10-4' && x.call.variant === 'low'
+    )!
+    const second = o.paths.find((p) => p.path === 'secondCall')!
+    expect(second.call).toEqual({ game: '10-3', variant: 'low' })
+    expect(second.share).toBeGreaterThan(0.25)
   })
 
   test('unbeatable hands make the safest call', () => {

@@ -104,6 +104,19 @@ function conditionedDice(
 
 export interface HammerOption extends Estimate {
   call: Call
+  /**
+   * What happened after the call: a refuser accepted it, or both refused
+   * and you made your second call (always the same one: it depends only on
+   * your dice). `share` is out of all samples, so share × pencil over the
+   * paths adds up to `pencil`. Paths that never happened are left out.
+   */
+  paths: {
+    path: 'accepted' | 'secondCall'
+    share: number
+    pencil: number
+    /** The second call, on the secondCall path */
+    call?: Call
+  }[]
 }
 
 /**
@@ -117,20 +130,37 @@ export function simulateHammer(options: {
   seed?: number
 }): HammerOption[] {
   const { dice, players = 3, samples = 400, seed = 1 } = options
-  const losses = ALL_CALLS.map(() => 0)
+  const tally = ALL_CALLS.map(() => ({
+    accepted: { n: 0, lost: 0 },
+    secondCall: { n: 0, lost: 0, call: undefined as Call | undefined },
+  }))
   for (let i = 0; i < samples; i++) {
     const g = deal(players, 0, dice, sampleSeed(seed, i))
     ALL_CALLS.forEach((call, c) => {
-      const { loser } = playOutRound(
+      const { loser, state } = playOutRound(
         applyAction(g, { type: 'call', player: ME, call })
       )
-      if (loser === ME) losses[c]++
+      const second = state.log.find((e) => e.type === 'called' && e.second)
+      const t = second ? tally[c].secondCall : tally[c].accepted
+      if (second?.type === 'called') tally[c].secondCall.call = second.call
+      t.n++
+      if (loser === ME) t.lost++
     })
   }
-  return ALL_CALLS.map((call, c) => ({
-    call,
-    ...estimate(losses[c], samples),
-  })).sort((a, b) => a.pencil - b.pencil)
+  return ALL_CALLS.map((call, c) => {
+    const { accepted, secondCall } = tally[c]
+    const paths: HammerOption['paths'] = []
+    if (accepted.n)
+      paths.push({ path: 'accepted', share: accepted.n / samples, pencil: accepted.lost / accepted.n })
+    if (secondCall.n)
+      paths.push({
+        path: 'secondCall',
+        share: secondCall.n / samples,
+        pencil: secondCall.lost / secondCall.n,
+        call: secondCall.call,
+      })
+    return { call, ...estimate(accepted.lost + secondCall.lost, samples), paths }
+  }).sort((a, b) => a.pencil - b.pencil)
 }
 
 /**

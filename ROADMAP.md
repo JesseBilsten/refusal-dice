@@ -94,7 +94,7 @@ Build it once and every later phase gets cheaper.
 1. ✅ _Done 2026-10-14: `/learn` (homepage "Learn to Play" and the first nav item). One scripted 3-player round on the engine: call, refusals, keepers, a tie to break, the pencil. Its script is tested against the engine (`tutorial-script.test.ts`). Next: a second lesson as a refuser, and one for a missed game._ **Interactive first round.** A guided tutorial on the engine with scripted dice, explaining each step in context instead of asking people to read the rules first.
 2. **"What can I call?" as the centerpiece.** Tap your five dice and see the playable games and hand strength. The logic exists in `games.js` and the Strategy Assistant; give it a fast, mobile-first screen and make it prominent on the homepage.
 3. **Inline jargon.** Use the existing `Term` component everywhere: Hammer, kicker, pencil, bark, piddle, parity, refusal.
-   - ✅ _Done 2026-10-14 (`src/components/Dice`: CSS 3D cube, Web Audio rattle, settings in the tutorial; add them to the header when the game table ships)._ **3D dice with sound (optional).** Rolling 3D dice and dice sounds for the tutorial and game table. Both start **off and muted**; players turn them on in preferences (remembered per browser). Respect `prefers-reduced-motion`, and keep the flat dice as the default and the fallback. Owner request, 2026-10-14.
+   - ✅ _Done 2026-10-14 (`src/components/Dice`: CSS 3D cube, Web Audio rattle, settings in the tutorial; in the header's Settings menu since 2026-10-16)._ **3D dice with sound (optional).** Rolling 3D dice and dice sounds for the tutorial and game table. Both start **off and muted**; players turn them on in preferences (remembered per browser). Respect `prefers-reduced-motion`, and keep the flat dice as the default and the fallback. Owner request, 2026-10-14.
 4. **Micro-drills.** Quick quizzes with instant feedback: "Which games does this roll make?", "Who takes the pencil?", "Is this second call legal?"
 5. ✅ _Done 2026-10-15: navigation follows the story (Learn, Rules, Games, Odds Lab, Strategy, Play, Glossary); Odds folded into the Odds Lab and the Second Call Predictor into the Strategy Assistant; one design system (`docs/DESIGN_SYSTEM.md`, `/design`, guarded by a test)._ **Simpler information architecture.**
 
@@ -137,6 +137,8 @@ Build it once and every later phase gets cheaper.
    - **Novice:** simple rules of thumb, some randomness.
    - **Solid:** today's heuristics.
    - **Expert:** the Phase 2 odds engine.
+   - **What "better" needs** (found 2026-10-16 while testing bark vs. call): bots that bark when it pays, refuse knowing the Hammer may be calling a decoy (a game they don't hold, to get their real game as an unrefusable second call), and read the table (who's all day, pencils, player count). Today's bots choose calls and refusals from `strategy/call-odds.ts` (each call's chance of losing when everyone plays it, 3 players) and never bark.
+   - **Then re-run the strategy findings** against the better bots: bark vs. call (today: never bark; a bark gives 41.5% at 3 players vs. 33.9% for the weakest hand's best call), decoy calls (12445: 10-4 Low, refused 45%, then 10-3 Low), and the owner's Tres Away rules of thumb (total under 6: ~10% to lose; one 3: 29.5%; a 1 and no 3: 38.2%). Owner request, 2026-10-16. Rewrite the bark copy (glossary, Rules, Barking page) once the results hold.
 
    Bots see only their own dice (the engine enforces information hiding through per-player views).
 3. **Post-game review.** Annotate each human decision, highlight the costliest mistakes, and deep-link into the Phase 2 trainer for that situation.
@@ -198,4 +200,6 @@ Build it once and every later phase gets cheaper.
 | 2026-10-14 | Decision advice = simulated chance of the pencil, through the engine with bot players | Accounts for refusals, second calls and play; labeled with sample size and the bot assumption |
 | 2026-10-15 | The site tells one story: Learn → Games → Odds Lab → Play; the home page shows a round as an animation | Owner direction: new players learn fast, experts answer their own questions |
 | 2026-10-15 | Keep-or-roll advice is exact (`strategy/situations.ts`), not simulated | Every keep can be enumerated; simulation is kept for decisions involving other players |
+| 2026-10-16 | Bots choose calls and refusals from a generated table of each call's chance of losing (`strategy/call-odds.ts`), not hand-tuned scores | The hand-tuned scores weren't comparable across games (33356 called Razzle over Boss) |
+| 2026-10-16 | Re-run the bark, decoy-call and Tres Away findings once the bots play like strong players | Owner request; today's findings are against "solid" bots |
 | 2026-10-14 | Odds Lab ships ahead of Phase 0 | Self-contained (`roll-query.js` is pure and tested), so it doesn't block or depend on the engine split |

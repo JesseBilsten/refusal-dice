@@ -534,6 +534,35 @@ const SimulationNote = ({ samples, players }) => (
 
 /* ───────────────────── Hammer: simulated pencil odds ──────────── */
 
+const pctRound = (p) => `${Math.round(p * 100)}%`
+
+/**
+ * A decoy call: refused often enough, and you lose less after the second
+ * call than when it's accepted. Returns the second-call path, or null.
+ */
+const decoy = (option) => {
+  const accepted = option.paths.find((p) => p.path === 'accepted')
+  const second = option.paths.find((p) => p.path === 'secondCall')
+  return second && second.share >= 0.3 && (!accepted || second.pencil < accepted.pencil) ? second : null
+}
+
+/** What happened after a call: accepted, or both refused and your second call */
+const CallPaths = ({ paths }) => (
+  <span className="mt-1.5 block space-y-0.5 text-xs text-muted-foreground">
+    {paths.map((p) => (
+      <span key={p.path} className="block">
+        {p.path === 'accepted' ? (
+          <>Accepted {pctRound(p.share)} of the time: you lose {pctRound(p.pencil)}</>
+        ) : (
+          <>
+            Both refuse {pctRound(p.share)}: you call {callLabel(p.call)}, lose {pctRound(p.pencil)}
+          </>
+        )}
+      </span>
+    ))}
+  </span>
+)
+
 const HammerPencilOdds = ({ options, bark, dice, playerCount }) => {
   // Bark ranks with the calls; its odds don't depend on your dice
   const rows = options.slice(0, 6).map((o) => ({ ...o, bark: false }))
@@ -560,6 +589,12 @@ const HammerPencilOdds = ({ options, bark, dice, playerCount }) => {
                 of the pencil, {((bark.pencil - best.pencil) * 100).toFixed(1)} points higher than this call.
               </>
             )}{' '}
+            {decoy(best) && (
+              <>
+                Its value is mostly the second call: when both refuse ({pctRound(decoy(best).share)} of the time), you
+                call {callLabel(decoy(best).call)}, and nobody can refuse that.{' '}
+              </>
+            )}
             <span className="text-muted-foreground">
               A bark passes the Hammer left and deals everyone new dice, which puts you in the worst seat: last to
               act, with no say in the game.
@@ -588,6 +623,7 @@ const HammerPencilOdds = ({ options, bark, dice, playerCount }) => {
                       <GameLink id={o.call.game}>{callLabel(o.call)}</GameLink>
                       {i === 0 && <Badge className="ml-2">Best</Badge>}
                       <Hand dice={dice} game={o.call.game} variant={o.call.variant} size="sm" className="mt-1 block" />
+                      <CallPaths paths={o.paths} />
                     </>
                   )}
                 </TableCell>
