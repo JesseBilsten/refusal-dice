@@ -1,619 +1,309 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
-import Layout from '../components/layout'
-import Page, { PageHeader } from '../components/Page'
-import { DiceGroup, Hand, RollInput } from '../components/Dice'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'gatsby'
-import { buttonVariants } from '../components/ui/button'
+import { ArrowRight } from 'lucide-react'
+import Layout from '../components/layout'
+import Page, { PageHeader, Panel } from '../components/Page'
+import { Hand, RollInput } from '../components/Dice'
+import { fmtPct } from '../components/Odds'
 import { Badge } from '../components/ui/badge'
+import { buttonVariants } from '../components/ui/button'
 import { analyzeRoll } from '../lib/game-validation'
+import { formatCallLabel, GAMES_MAP } from '../lib/games-config'
+import { cn } from '../lib/utils'
 import rollGameMatrix from '../data/roll-game-matrix.json'
-import { CALLABLE_GAMES } from '../lib/games-config'
+import { bossHand, razzleScore, tresAwayScore } from '../engine'
 
-// Calculate single-roll probability for each game
-const calculateGameProbabilities = () => {
-  const probabilities = {}
-  CALLABLE_GAMES.forEach(({ id: gameId }) => {
-    let totalCount = 0
-    Object.values(rollGameMatrix).forEach(rollData => {
-      if (rollData.games && rollData.games.includes(gameId)) {
-        totalCount += rollData.count || 0
-      }
+/**
+ * Every game in one place: what makes it, what it looks like, how often it
+ * comes up, and (with your roll entered) which ones your dice can play.
+ * Each section is data below; the dice are drawn by Hand, so the grouping
+ * is computed, never drawn by hand.
+ */
+
+/** Share of all 7,776 rolls where `test` holds, exact */
+const share = (test) => {
+  let n = 0
+  for (let i = 0; i < 7776; i++) {
+    const d = [0, 1, 2, 3, 4].map((k) => (Math.floor(i / 6 ** k) % 6) + 1)
+    if (test(d)) n++
+  }
+  return n / 7776
+}
+
+const STRONG_BOSS = ['two-pair', 'three-of-a-kind', 'full-house', 'four-of-a-kind', 'five-of-a-kind']
+
+const SECTIONS = [
+  {
+    id: '10-2',
+    made: 'Two dice add up to 10. The other three are the kicker, high or low.',
+    note: 'The three-dice kicker is re-rolled as a block, so a total near the top or bottom is very hard to beat.',
+    examples: [
+      { dice: [4, 6, 1, 1, 1], variant: 'low' },
+      { dice: [5, 5, 6, 6, 6], variant: 'high' },
+    ],
+  },
+  {
+    id: '10-3',
+    made: 'Three dice add up to 10. The other two are the kicker, high or low.',
+    note: 'The most common game: almost two rolls in three make it straight away.',
+    examples: [
+      { dice: [1, 3, 6, 1, 1], variant: 'low' },
+      { dice: [2, 3, 5, 6, 6], variant: 'high' },
+    ],
+  },
+  {
+    id: '10-4',
+    made: 'Four dice add up to 10. The last die is the kicker, high or low.',
+    note: 'Four dice summing to 10 means small dice: a 6 only fits as 6-1-1-2.',
+    examples: [
+      { dice: [1, 2, 6, 1, 1], variant: 'low' },
+      { dice: [1, 2, 3, 4, 6], variant: 'high' },
+    ],
+  },
+  {
+    id: 'ship-captain-crew',
+    made: '1-2-3 or 4-5-6 (an outside straight). The other two are the kicker.',
+    note: 'Both straights are worth the same: only the kicker counts.',
+    examples: [
+      { dice: [4, 5, 6, 1, 1], variant: 'low' },
+      { dice: [1, 2, 3, 6, 6], variant: 'high' },
+    ],
+  },
+  {
+    id: 'monterey',
+    made: '2-3-4 or 3-4-5 (an inside straight). The other two are the kicker.',
+    note: 'The 3 and 4 are in both straights, so a lone 3 can be worth more than 2-3.',
+    examples: [
+      { dice: [2, 3, 4, 1, 1], variant: 'low' },
+      { dice: [3, 4, 5, 6, 6], variant: 'high' },
+    ],
+  },
+  {
+    id: 'vegas',
+    made: 'Two separate pairs that each add up to 7 or 11. The last die is the kicker.',
+    note: '7 is 1+6, 2+5 or 3+4; 11 is 5+6.',
+    examples: [
+      { dice: [5, 6, 1, 6, 1], variant: 'low' },
+      { dice: [2, 5, 3, 4, 6], variant: 'high' },
+    ],
+  },
+  {
+    id: 'pairs',
+    made: 'Two pairs (four of a kind counts). The last die is the kicker.',
+    note: 'The pairs themselves never matter: 2-2-3-3 ties 6-6-5-5 before the kicker.',
+    examples: [
+      { dice: [2, 2, 4, 4, 1], variant: 'low' },
+      { dice: [6, 6, 5, 5, 6], variant: 'high' },
+    ],
+  },
+  {
+    id: 'razzle',
+    made: 'The most of any one number, with 1s wild. Equal counts go to the higher number.',
+    callLine: () =>
+      `Worth calling with three or more wild 6s (1s and 6s), or five of anything: ${fmtPct(
+        share((d) => {
+          const sixes = d.filter((x) => x === 1 || x === 6).length
+          return sixes >= 3 || razzleScore(d).count === 5
+        }),
+        1
+      )} of rolls.`,
+    examples: [{ dice: [1, 6, 6, 2, 4] }, { dice: [1, 5, 1, 1, 3] }, { dice: [1, 1, 1, 1, 6] }],
+  },
+  {
+    id: 'boss',
+    made: 'Poker hands without straights or flushes. The best first roll is the Boss.',
+    note: 'The Boss gets one more roll, in secret, then says “come up” (everyone else gets one last roll, and the worst hand loses: it can be the Boss) or “don’t come up” (no loser).',
+    callLine: () =>
+      `Worth calling with two pair or better: ${fmtPct(
+        share((d) => STRONG_BOSS.includes(bossHand(d).category)),
+        1
+      )} of rolls.`,
+    examples: [{ dice: [5, 5, 5, 5, 2] }, { dice: [4, 4, 4, 3, 3] }, { dice: [6, 6, 4, 4, 1] }],
+  },
+  {
+    id: 'tres-away',
+    made: 'Lowest total wins, like golf: each die counts its face, except 3s count 0.',
+    note: 'After every roll you put out at least one die, for good. Put out every 3 (a 1 joins them only beside three 3s); with no 3s, put out just your lowest die. That’s exact, not a rule of thumb.',
+    callLine: () =>
+      `Worth calling with a score of 10 or less: ${fmtPct(share((d) => tresAwayScore(d) <= 10), 1)} of rolls.`,
+    examples: [{ dice: [3, 3, 3, 3, 3] }, { dice: [3, 1, 1, 3, 3] }, { dice: [3, 1, 2, 4, 3] }],
+  },
+]
+
+/** Share of rolls that make each game on one roll (from the generated roll matrix) */
+const madeOnOneRoll = () => {
+  const out = {}
+  SECTIONS.forEach(({ id }) => {
+    let n = 0
+    Object.values(rollGameMatrix).forEach((r) => {
+      if (r.games && r.games.includes(id)) n += r.count || 0
     })
-    probabilities[gameId] = ((totalCount / 7776) * 100).toFixed(1)
+    out[id] = n / 7776
   })
-  
-  return probabilities
+  return out
+}
+
+function GameSection({ section, oneRoll, playable, dimmed }) {
+  const meta = GAMES_MAP[section.id]
+  const callLine = useMemo(() => section.callLine?.(), [section])
+  return (
+    <section
+      id={section.id}
+      className={cn(
+        'scroll-mt-24 rounded-2xl border bg-card p-5 shadow-sm transition-opacity sm:p-6',
+        playable && 'border-primary ring-1 ring-primary',
+        dimmed && 'opacity-50'
+      )}
+    >
+      <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_auto]">
+        <div>
+          <div className="mb-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <h2 className="text-2xl font-bold tracking-tight">
+              <span aria-hidden>{meta.emoji}</span> {meta.fullName || meta.name}
+            </h2>
+            {meta.hasVariants && <span className="text-sm text-muted-foreground">high or low</span>}
+            {playable && (
+              <Badge>
+                Your roll plays it{playable.variant ? `: ${formatCallLabel(playable)}` : ''}
+              </Badge>
+            )}
+          </div>
+          <p className="mb-2">{section.made}</p>
+          {section.note && <p className="mb-2 text-sm text-muted-foreground">{section.note}</p>}
+          <p className="mb-4 text-sm text-muted-foreground">
+            {callLine || `Made on one roll ${fmtPct(oneRoll, 1)} of the time.`}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <Link to={`/games/${section.id}`} className={buttonVariants({ size: 'sm' })}>
+              How to play it
+            </Link>
+            <Link to={`/odds-lab/?tab=games&game=${section.id}`} className={buttonVariants({ variant: 'outline', size: 'sm' })}>
+              Every roll that makes it
+            </Link>
+          </div>
+        </div>
+        <div className="flex flex-col gap-3 md:items-end">
+          {section.examples.map((e, i) => (
+            <Hand
+              key={i}
+              dice={e.dice}
+              game={section.id}
+              variant={e.variant}
+              // Tres Away examples are finished hands, labeled with their score
+              putOut={section.id === 'tres-away' ? [0, 1, 2, 3, 4] : undefined}
+              size="sm"
+              labels
+            />
+          ))}
+        </div>
+      </div>
+    </section>
+  )
 }
 
 const GamesPage = () => {
   const [diceValues, setDiceValues] = useState(['', '', '', '', ''])
-  const [analyzedRoll, setAnalyzedRoll] = useState(null)
-  const [initialRoll, setInitialRoll] = useState(null)
-  const gameProbabilities = useMemo(() => calculateGameProbabilities(), [])
-  
-  // Read roll from URL on mount
+  const oneRoll = useMemo(madeOnOneRoll, [])
+
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search)
-      const rollParam = params.get('roll')
-      if (rollParam && rollParam.length === 5) {
-        setInitialRoll(rollParam)
-      }
-    }
+    const roll = new URLSearchParams(window.location.search).get('roll')
+    if (roll && /^[1-6]{5}$/.test(roll)) setDiceValues(roll.split(''))
   }, [])
-  
-  const analyzeCurrentRoll = useCallback((values) => {
-    const roll = values.map(v => parseInt(v)).filter(v => v >= 1 && v <= 6)
-    if (roll.length === 5) {
-      const analysis = analyzeRoll(roll)
-      setAnalyzedRoll(analysis)
-      
-      // Update URL
-      if (typeof window !== 'undefined') {
-        const newUrl = `/games?roll=${values.join('')}`
-        window.history.replaceState({}, '', newUrl)
-      }
-    } else {
-      setAnalyzedRoll(null)
-    }
+
+  const roll = diceValues.every(Boolean) ? diceValues.map(Number) : null
+  const analysis = useMemo(() => (roll ? analyzeRoll(roll) : null), [roll && roll.join('')]) // eslint-disable-line react-hooks/exhaustive-deps
+  const playableCall = (id) => analysis?.variants?.find((v) => v.game === id) || null
+
+  const onDiceChange = useCallback((values) => {
+    setDiceValues(values)
+    const digits = values.join('')
+    window.history.replaceState({}, '', digits.length === 5 ? `/games?roll=${digits}` : '/games')
   }, [])
-  
-  const handleDiceChange = useCallback((newValues) => {
-    setDiceValues(newValues)
-    analyzeCurrentRoll(newValues)
-  }, [analyzeCurrentRoll])
-  
-  const handleClear = useCallback(() => {
-    setAnalyzedRoll(null)
-    // Clear URL
-    if (typeof window !== 'undefined') {
-      window.history.replaceState({}, '', '/games')
-    }
-  }, [])
-  
-  // Check if a specific game is playable
-  const isGamePlayable = (gameId) => {
-    if (!analyzedRoll || !analyzedRoll.variants) return null
-    return analyzedRoll.variants.find(v => v.game === gameId)
-  }
-  
-  const getGameInfo = (gameId) => {
-    const variant = isGamePlayable(gameId)
-    return {
-      isPlayable: !!variant,
-      variant: variant,
-      shouldDim: analyzedRoll && !variant
-    }
-  }
+
+  const playableIds = SECTIONS.filter((s) => playableCall(s.id)).map((s) => s.id)
 
   return (
+    <Layout>
+      <Page width="wide">
+        <PageHeader
+          title="Games"
+          description="Ten games the Hammer can call. Each one is made a different way, and only the kicker (or the hand) decides who loses."
+        />
 
-  <Layout>
-    <Page width="wide">
-      <PageHeader
-        title="Games"
-        description="The games you can call in Refusal Dice."
-      />
-      
-      {/* Dice Roll Lookup Widget */}
-      <div className="mb-8 p-6 rounded-lg bg-primary/5 border-2 border-primary/20">
-        <h2 className="text-2xl font-semibold mb-4 text-center">What Should I Call?</h2>
-        <p className="text-center text-muted-foreground mb-4">Enter your roll to see which games you can play</p>
-        
-        <div className="flex flex-col items-center gap-4">
-          <RollInput
-            diceValues={diceValues}
-            onDiceChange={handleDiceChange}
-            onClear={handleClear}
-            initialRoll={initialRoll}
-          />
-          
-          {/* Analysis Result */}
-          {analyzedRoll && analyzedRoll.variants && analyzedRoll.variants.length > 0 && (
-            <div className="mt-2 text-center">
-              <p className="text-sm text-muted-foreground">
-                <strong>{analyzedRoll.flexibility}</strong> playable game{analyzedRoll.flexibility !== 1 ? 's' : ''}
-              </p>
-              <p className="text-sm mt-1">
-                <span className="text-muted-foreground">Best call:</span>{' '}
-                <strong className="text-foreground">{analyzedRoll.bestCall?.game}{analyzedRoll.bestCall?.variant ? ` (${analyzedRoll.bestCall.variant})` : ''}</strong>
-                {analyzedRoll.bestCall?.rawStrength != null && (
-                  <span className="text-muted-foreground"> · Strength: <strong className="text-foreground">{Math.round(analyzedRoll.bestCall.rawStrength)}</strong></span>
-                )}
-              </p>
-              {analyzedRoll.secondBestCall && (
-                <p className="text-sm mt-1">
-                  <span className="text-muted-foreground">2nd best:</span>{' '}
-                  <strong className="text-foreground">{analyzedRoll.secondBestCall.game}{analyzedRoll.secondBestCall.variant ? ` (${analyzedRoll.secondBestCall.variant})` : ''}</strong>
-                  {analyzedRoll.secondBestCall.rawStrength != null && (
-                    <span className="text-muted-foreground"> · Strength: <strong className="text-foreground">{Math.round(analyzedRoll.secondBestCall.rawStrength)}</strong></span>
-                  )}
+        <Panel tone="tool" title="Which games does my roll play?" className="mb-8">
+          <div className="grid gap-6 lg:grid-cols-[auto_minmax(0,1fr)] lg:items-center">
+            <RollInput
+              diceValues={diceValues}
+              onDiceChange={onDiceChange}
+              onClear={() => window.history.replaceState({}, '', '/games')}
+            />
+            <div aria-live="polite">
+              {!roll && <p className="text-muted-foreground">Enter your five dice, or tap Roll. Games your roll plays light up below.</p>}
+              {roll && playableIds.length === 0 && (
+                <p>
+                  <strong>No game fits well.</strong> Consider <Link to="/games/barking" className="text-primary hover:underline">barking</Link>: pass the Hammer and everyone rolls again.
                 </p>
               )}
+              {roll && playableIds.length > 0 && (
+                <div className="space-y-2">
+                  <p>
+                    <strong>
+                      Your roll plays {playableIds.length} {playableIds.length === 1 ? 'game' : 'games'}
+                    </strong>
+                    {analysis.bestCall && (
+                      <>
+                        . Strongest: <strong>{formatCallLabel(analysis.bestCall)}</strong>
+                      </>
+                    )}
+                    .
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {playableIds.map((id) => (
+                      <a key={id} href={`#${id}`} className="rounded-full border bg-background px-3 py-1 text-sm hover:border-primary">
+                        <span aria-hidden>{GAMES_MAP[id].emoji}</span> {GAMES_MAP[id].name}
+                      </a>
+                    ))}
+                  </div>
+                  <Link
+                    to="/strategy-assistant"
+                    className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+                  >
+                    See the odds of each call in the Strategy Assistant <ArrowRight aria-hidden className="h-4 w-4" />
+                  </Link>
+                </div>
+              )}
             </div>
-          )}
-          
-          {analyzedRoll && (!analyzedRoll.variants || analyzedRoll.variants.length === 0) && (
-            <div className="mt-2 text-center">
-              <Badge variant="warning">Consider barking - no valid games!</Badge>
-            </div>
-          )}
-        </div>
-      </div>
-      
-      <hr className="my-8 border-border" />
-      <div className={`pb-8 px-6 py-6 rounded-lg grid grid-cols-1 md:grid-cols-2 gap-6 ${getGameInfo('10-2').isPlayable ? 'bg-primary/10 border-2 border-primary/30' : 'bg-muted/20'} ${getGameInfo('10-2').shouldDim ? 'opacity-40' : ''}`}>
-        <div>
-          <h2 id="10-2" className="text-3xl font-semibold mb-3 text-foreground">
-            ✌️ 10-2 <small className="text-muted-foreground text-base">high or low</small>
-          </h2>
-          <div className="mb-3">
-            <Badge variant="secondary">{gameProbabilities['10-2']}% single-roll</Badge>
-            {getGameInfo('10-2').isPlayable && (
-              <Badge variant="default" className="ml-2">
-                Playable ({getGameInfo('10-2').variant.variant})
-                {getGameInfo('10-2').variant.rawStrength != null && ` · ${Math.round(getGameInfo('10-2').variant.rawStrength)}`}
-              </Badge>
-            )}
           </div>
-          <p>
-            2 dice add up to 10 and the remaining 3 dice are either high or low.
-          </p>
-          <div className="mt-3 flex gap-2">
-            <Link to="/games/10-2" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
-              Learn more →
-            </Link>
-            <Link to="/odds-lab/?tab=games&game=10-2" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
-              Explore rolls →
-            </Link>
-          </div>
-        </div>
-        <div className="">
-          <div className="flex justify-end gap-2 mb-2">
-            <DiceGroup label="10-2" dice={[4, 6]} size="sm" />
-            <DiceGroup tone="kicker" label="Low kicker" dice={[1, 1, 1]} size="sm" />
-          </div>
-          <div className="flex justify-end gap-2 mb-2">
-            <DiceGroup label="10-2" dice={[5, 5]} size="sm" />
-            <DiceGroup tone="kicker" label="High kicker" dice={[6, 6, 6]} size="sm" />
-          </div>
-        </div>
-      </div>
-      <hr className="my-8 border-border" />
-      <div className={`pb-8 px-6 py-6 rounded-lg grid grid-cols-1 md:grid-cols-2 gap-6 ${getGameInfo('10-3').isPlayable ? 'bg-primary/10 border-2 border-primary/30' : 'bg-muted/20'} ${getGameInfo('10-3').shouldDim ? 'opacity-40' : ''}`}>
-        <div className="">
-          <h2 id="10-3" className="text-3xl font-semibold mb-3 text-foreground">
-            👌 10-3  <small className="text-muted-foreground">high or low</small>
-          </h2>
-          <div className="mb-3">
-            <Badge variant="secondary">{gameProbabilities['10-3']}% single-roll</Badge>
-            {getGameInfo('10-3').isPlayable && (
-              <Badge variant="default" className="ml-2">
-                Playable ({getGameInfo('10-3').variant.variant})
-                {getGameInfo('10-3').variant.rawStrength != null && ` · ${Math.round(getGameInfo('10-3').variant.rawStrength)}`}
-              </Badge>
-            )}
-          </div>
-          <p>
-            3 dice add up to 10 and the remaining 2 dice are either high or low.
-          </p>
-          <p>AKA "Frankie"</p>
-          <div className="mt-3 flex gap-2">
-            <Link to="/games/10-3" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
-              Learn more →
-            </Link>
-            <Link to="/odds-lab/?tab=games&game=10-3" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
-              Explore rolls →
-            </Link>
-          </div>
-        </div>
-        <div className="">
-          <div className="flex justify-end gap-2 mb-2">
-            <DiceGroup label="10-3" dice={[1, 3, 6]} size="sm" />
-            <DiceGroup tone="kicker" label="Low kicker" dice={[1, 1]} size="sm" />
-          </div>
-          <div className="flex justify-end gap-2 mb-2">
-            <DiceGroup label="10-3" dice={[2, 3, 5]} size="sm" />
-            <DiceGroup tone="kicker" label="High kicker" dice={[6, 6]} size="sm" />
-          </div>
-        </div>
-      </div>
-      <hr className="my-8 border-border" />
-      <div className={`pb-8 px-6 py-6 rounded-lg grid grid-cols-1 md:grid-cols-2 gap-6 ${getGameInfo('10-4').isPlayable ? 'bg-primary/10 border-2 border-primary/30' : 'bg-muted/20'} ${getGameInfo('10-4').shouldDim ? 'opacity-40' : ''}`}>
-        <div className="">
-          <h2 id="10-4" className="text-3xl font-semibold mb-3 text-foreground">
-            🔫 10-4 <small className="text-muted-foreground">high or low</small>
-          </h2>
-          <div className="mb-3">
-            <Badge variant="secondary">{gameProbabilities['10-4']}% single-roll</Badge>
-            {getGameInfo('10-4').isPlayable && (
-              <Badge variant="default" className="ml-2">
-                Playable ({getGameInfo('10-4').variant.variant})
-                {getGameInfo('10-4').variant.rawStrength != null && ` · ${Math.round(getGameInfo('10-4').variant.rawStrength)}`}
-              </Badge>
-            )}
-          </div>
-          <p>
-            4 dice add up to 10 and the remaining die is either high or low.
-          </p>
-          <p>AKA "Shotgun"</p>
-          <div className="mt-3 flex gap-2">
-            <Link to="/games/10-4" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
-              Learn more →
-            </Link>
-            <Link to="/odds-lab/?tab=games&game=10-4" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
-              Explore rolls →
-            </Link>
-          </div>
-        </div>
-        <div className="">
-          <div className="flex justify-end gap-2 mb-2">
-            <DiceGroup label="10-4" dice={[1, 2, 6, 1]} size="sm" />
-            <DiceGroup tone="kicker" label="Low kicker" dice={[1]} size="sm" />
-          </div>
-          <div className="flex justify-end gap-2 mb-2">
-            <DiceGroup label="10-4" dice={[1, 2, 3, 4]} size="sm" />
-            <DiceGroup tone="kicker" label="High kicker" dice={[6]} size="sm" />
-          </div>
-        </div>
-      </div>
-      <hr className="my-8 border-border" />
-      <div className={`pb-8 px-6 py-6 rounded-lg grid grid-cols-1 md:grid-cols-2 gap-6 ${getGameInfo('ship-captain-crew').isPlayable ? 'bg-primary/10 border-2 border-primary/30' : 'bg-muted/20'} ${getGameInfo('ship-captain-crew').shouldDim ? 'opacity-40' : ''}`}>
-        <div className="">
-          <h2 id="ship-captain-crew" className="text-3xl font-semibold mb-3 text-foreground">
-            ⚓️ Ship, Captain, Crew <small className="text-muted-foreground">high or low</small>
-          </h2>
-          <div className="mb-3">
-            <Badge variant="secondary">{gameProbabilities['ship-captain-crew']}% single-roll</Badge>
-            {getGameInfo('ship-captain-crew').isPlayable && (
-              <Badge variant="default" className="ml-2">
-                Playable ({getGameInfo('ship-captain-crew').variant.variant})
-                {getGameInfo('ship-captain-crew').variant.rawStrength != null && ` · ${Math.round(getGameInfo('ship-captain-crew').variant.rawStrength)}`}
-              </Badge>
-            )}
-          </div>
-          <p>
-            3 dice make up an outside straight and the remaining 2 dice are
-            either high or low.
-          </p>
-          <p>AKA "Outside straight", "Crew"</p>
-          <div className="mt-3 flex gap-2">
-            <Link to="/games/ship-captain-crew" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
-              Learn more →
-            </Link>
-            <Link to="/odds-lab/?tab=games&game=ship-captain-crew" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
-              Explore rolls →
-            </Link>
-          </div>
-        </div>
-        <div className="">
-          <div className="flex justify-end gap-2 mb-2">
-            <DiceGroup label="ship, captain, crew" dice={[4, 5, 6]} size="sm" />
-            <DiceGroup tone="kicker" label="Low kicker" dice={[1, 1]} size="sm" />
-          </div>
-          <div className="flex justify-end gap-2 mb-2">
-            <DiceGroup label="ship, captain, crew" dice={[1, 2, 3]} size="sm" />
-            <DiceGroup tone="kicker" label="High kicker" dice={[6, 6]} size="sm" />
-          </div>
-        </div>
-      </div>
-      <hr className="my-8 border-border" />
-      <div className={`pb-8 px-6 py-6 rounded-lg grid grid-cols-1 md:grid-cols-2 gap-6 ${getGameInfo('monterey').isPlayable ? 'bg-primary/10 border-2 border-primary/30' : 'bg-muted/20'} ${getGameInfo('monterey').shouldDim ? 'opacity-40' : ''}`}>
-        <div className="">
-          <h2 id="monterey" className="text-3xl font-semibold mb-3 text-foreground">
-            🔄 Monterey <small className="text-muted-foreground">high or low</small>
-          </h2>
-          <div className="mb-3">
-            <Badge variant="secondary">{gameProbabilities['monterey']}% single-roll</Badge>
-            {getGameInfo('monterey').isPlayable && (
-              <Badge variant="default" className="ml-2">
-                Playable ({getGameInfo('monterey').variant.variant})
-                {getGameInfo('monterey').variant.rawStrength != null && ` · ${Math.round(getGameInfo('monterey').variant.rawStrength)}`}
-              </Badge>
-            )}
-          </div>
-          <p>
-            3 dice make up an inside straight and the remaining 2 dice are
-            either high or low.
-          </p>
-          <p>AKA "Inside straight"</p>
-          <div className="mt-3 flex gap-2">
-            <Link to="/games/monterey" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
-              Learn more →
-            </Link>
-            <Link to="/odds-lab/?tab=games&game=monterey" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
-              Explore rolls →
-            </Link>
-          </div>
-        </div>
-        <div className="">
-          <div className="flex justify-end gap-2 mb-2">
-            <DiceGroup label="monterey" dice={[2, 3, 4]} size="sm" />
-            <DiceGroup tone="kicker" label="Low kicker" dice={[1, 1]} size="sm" />
-          </div>
-          <div className="flex justify-end gap-2 mb-2">
-            <DiceGroup label="monterey" dice={[3, 4, 5]} size="sm" />
-            <DiceGroup tone="kicker" label="High kicker" dice={[6, 6]} size="sm" />
-          </div>
-        </div>
-      </div>
-      <hr className="my-8 border-border" />
-      <div className={`pb-8 px-6 py-6 rounded-lg grid grid-cols-1 md:grid-cols-2 gap-6 ${getGameInfo('vegas').isPlayable ? 'bg-primary/10 border-2 border-primary/30' : 'bg-muted/20'} ${getGameInfo('vegas').shouldDim ? 'opacity-40' : ''}`}>
-        <div className="">
-          <h2 id="vegas" className="text-3xl font-semibold mb-3 text-foreground">
-            🎰 7's <small className="text-muted-foreground">high or low</small>
-          </h2>
-          <div className="mb-3">
-            <Badge variant="secondary">{gameProbabilities['vegas']}% single-roll</Badge>
-            {getGameInfo('vegas').isPlayable && (
-              <Badge variant="default" className="ml-2">
-                Playable ({getGameInfo('vegas').variant.variant})
-                {getGameInfo('vegas').variant.rawStrength != null && ` · ${Math.round(getGameInfo('vegas').variant.rawStrength)}`}
-              </Badge>
-            )}
-          </div>
-          <p>
-            2 sets of 2 dice add up to 7 and or 11 and the remaining die is
-            either high or low.
-          </p>
-          <p>AKA "7-11", "7 and/or 11's", "Vegas"</p>
-          <div className="mt-3 flex gap-2">
-            <Link to="/games/vegas" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
-              Learn more →
-            </Link>
-            <Link to="/odds-lab/?tab=games&game=vegas" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
-              Explore rolls →
-            </Link>
-          </div>
-        </div>
-        <div className="">
-          <div className="flex justify-end gap-2 mb-2">
-            <DiceGroup label="vegas" dice={[5, 6]} size="sm" />
-            <DiceGroup label="vegas" dice={[1, 6]} size="sm" />
-            <DiceGroup tone="kicker" label="Low kicker" dice={[1]} size="sm" />
-          </div>
-          <div className="flex justify-end gap-2 mb-2">
-            <DiceGroup label="vegas" dice={[2, 5]} size="sm" />
-            <DiceGroup label="vegas" dice={[3, 4]} size="sm" />
-            <DiceGroup tone="kicker" label="High kicker" dice={[6]} size="sm" />
-          </div>
-        </div>
-      </div>
-      <hr className="my-8 border-border" />
-      <div className={`pb-8 px-6 py-6 rounded-lg grid grid-cols-1 md:grid-cols-2 gap-6 ${getGameInfo('pairs').isPlayable ? 'bg-primary/10 border-2 border-primary/30' : 'bg-muted/20'} ${getGameInfo('pairs').shouldDim ? 'opacity-40' : ''}`}>
-        <div className="">
-          <h2 id="pairs" className="text-3xl font-semibold mb-3 text-foreground">
-            🍐 Pairs <small className="text-muted-foreground">high or low</small>
-          </h2>
-          <div className="mb-3">
-            <Badge variant="secondary">{gameProbabilities['pairs']}% single-roll</Badge>
-            {getGameInfo('pairs').isPlayable && (
-              <Badge variant="default" className="ml-2">
-                Playable ({getGameInfo('pairs').variant.variant})
-                {getGameInfo('pairs').variant.rawStrength != null && ` · ${Math.round(getGameInfo('pairs').variant.rawStrength)}`}
-              </Badge>
-            )}
-          </div>
-          <p>
-            2 sets of 2 dice are matching pairs and the remaining die is either
-            high or low
-          </p>
-          <div className="mt-3 flex gap-2">
-            <Link to="/games/pairs" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
-              Learn more →
-            </Link>
-            <Link to="/odds-lab/?tab=games&game=pairs" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
-              Explore rolls →
-            </Link>
-          </div>
-        </div>
-        <div className="">
-          <div className="flex justify-end gap-2 mb-2">
-            <DiceGroup label="pairs" dice={[2, 2, 4, 4]} size="sm" />
-            <DiceGroup tone="kicker" label="Low kicker" dice={[1]} size="sm" />
-          </div>
-          <div className="flex justify-end gap-2 mb-2">
-            <DiceGroup label="pairs" dice={[6, 6, 6, 6]} size="sm" />
-            <DiceGroup tone="kicker" label="High kicker" dice={[6]} size="sm" />
-          </div>
-        </div>
-      </div>
-      <hr className="my-8 border-border" />
-      <div className={`pb-8 px-6 py-6 rounded-lg grid grid-cols-1 md:grid-cols-2 gap-6 ${getGameInfo('razzle').isPlayable ? 'bg-primary/10 border-2 border-primary/30' : 'bg-muted/20'} ${getGameInfo('razzle').shouldDim ? 'opacity-40' : ''}`}>
-        <div className="">
-					<h2 id="razzle" className="text-3xl font-semibold mb-3 text-foreground">✨ Razzle</h2>
-          <div className="mb-3">
-            <Badge variant="secondary">Competitive: 3+ wild 6s (~21%) / Strong: 4+ (~4.5%)</Badge>
-            {getGameInfo('razzle').isPlayable && (
-              <Badge variant="default" className="ml-2">
-                Playable
-                {getGameInfo('razzle').variant.rawStrength != null && ` · ${Math.round(getGameInfo('razzle').variant.rawStrength)}`}
-              </Badge>
-            )}
-          </div>
-          <p className="mb-2">Most amount of any one number with aces being wild. Equal counts go to the higher face: four 6s beat four 4s.</p>
-          <div className="mb-3 p-3 bg-primary/10 dark:bg-primary/20 border border-primary/20 dark:border-primary/40 rounded-lg">
-            <strong className="text-primary dark:text-primary">When to Call:</strong> <span className="text-foreground">Call with 3+ wild 6s (1s + 6s), or 5 of any other number. About 21% of rolls meet this competitive threshold. 4+ wild sixes (~4.5%) is a strong call. Over 3 rolls keeping 1s and 6s, players average 3.5 wild sixes.</span>
-          </div>
-          <div className="mt-3 flex gap-2">
-            <Link to="/games/razzle" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
-              Learn more →
-            </Link>
-            <Link to="/odds-lab/?tab=games&game=razzle" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
-              Explore rolls →
-            </Link>
-          </div>
-        </div>
-        <div className="">
-          <div className="flex justify-end gap-2 mb-2">
-            <Hand game="razzle" dice={[1, 6, 6, 2, 4]} size="sm" labels />
-          </div>
-          <div className="flex justify-end gap-2 mb-2">
-            <Hand game="razzle" dice={[1, 5, 1, 1, 3]} size="sm" labels />
-          </div>
-          <div className="flex justify-end gap-2 mb-2">
-            <Hand game="razzle" dice={[1, 1, 1, 1, 6]} size="sm" labels />
-          </div>
-        </div>
-      </div>
+        </Panel>
 
-      <hr className="my-8 border-border" />
-      <div className={`pb-8 px-6 py-6 rounded-lg grid grid-cols-1 md:grid-cols-2 gap-6 ${getGameInfo('boss').isPlayable ? 'bg-primary/10 border-2 border-primary/30' : 'bg-muted/20'} ${getGameInfo('boss').shouldDim ? 'opacity-40' : ''}`}>
-        <div className="">
-          <h2 id="boss" className="text-3xl font-semibold mb-3 text-foreground">👑 Boss</h2>
-          <div className="mb-3">
-            <Badge variant="secondary">Competitive: Two Pair+ (~44%) / Strong: Trips+ (~21%)</Badge>
-            {getGameInfo('boss').isPlayable && (
-              <Badge variant="default" className="ml-2">
-                Playable
-                {getGameInfo('boss').variant.rawStrength != null && ` · ${Math.round(getGameInfo('boss').variant.rawStrength)}`}
-              </Badge>
-            )}
-          </div>
-          <p className="mb-2">
-            Poker-style hands without straights or flushes. All players reveal their dice, and the highest hand becomes the "Boss."
-          </p>
-          <div className="mb-3 p-3 bg-primary/10 dark:bg-primary/20 border border-primary/20 dark:border-primary/40 rounded-lg">
-            <strong className="text-primary dark:text-primary">When to Call:</strong> <span className="text-foreground">Call with Two Pair or better (competitive threshold, ~44% of rolls). Trips or better (~21%) is a strong call. You can keep matching dice and re-roll the others twice to improve your hand.</span>
-          </div>
-          <p className="mb-2">
-            <strong>Hand Rankings (highest to lowest):</strong>
-          </p>
-          <ul className="list-disc list-inside mb-2 space-y-1">
-            <li>5-of-a-kind (e.g., five 6s)</li>
-            <li>4-of-a-kind (e.g., four 5s)</li>
-            <li>Full House (e.g., three 4s, two 3s)</li>
-            <li>3-of-a-kind (e.g., three 6s)</li>
-            <li>Two Pair (e.g., two 6s, two 4s)</li>
-            <li>Pair (e.g., two 5s)</li>
-            <li>High Card (e.g., 6-5-4-3-1)</li>
-          </ul>
-          <p className="mb-2">
-            <strong>Boss Mechanics:</strong> If two players tie for the best first roll, there's no Boss: no loser, and the Hammer passes left. If there's a Boss, they can pick up and re-roll any dice that won't break their winning hand. After re-rolling, the Boss can either call up the other players (everyone re-rolls once to avoid losing) or say "Pick them up" (no loser, play passes left).
-          </p>
-          <p className="text-sm text-muted-foreground mb-3">
-            Note: Hands use poker tie-breaking rules. Two pairs with 6s over 2s beats two pairs with 5s over 4s.
-          </p>
-          <div className="flex gap-2">
-            <Link to="/games/boss" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
-              Learn more →
-            </Link>
-            <Link to="/odds-lab/?tab=games&game=boss" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
-              Explore rolls →
-            </Link>
-          </div>
+        <div className="space-y-4">
+          {SECTIONS.map((s) => (
+            <GameSection
+              key={s.id}
+              section={s}
+              oneRoll={oneRoll[s.id]}
+              playable={playableCall(s.id)}
+              dimmed={roll && !playableCall(s.id)}
+            />
+          ))}
+
+          <Panel tone="note" title="🐕 None of these? Bark." as="section" id="barking">
+            <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
+              <div>
+                <p className="mb-3 text-sm">
+                  The Hammer can say “bark” instead of calling: the Hammer passes left, everyone picks up their dice,
+                  and a new round starts. Bark when your dice make no kicker game and the specialty games look weak.
+                </p>
+                <Link to="/games/barking" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
+                  When to bark
+                </Link>
+              </div>
+              <Hand dice={[3, 3, 3, 5, 6]} size="sm" />
+            </div>
+          </Panel>
         </div>
-        <div className="">
-          <div className="flex justify-end gap-2 mb-2">
-            <Hand game="boss" dice={[6, 6, 6, 6, 6]} size="sm" labels />
-          </div>
-          <div className="flex justify-end gap-2 mb-2">
-            <Hand game="boss" dice={[5, 5, 5, 5, 2]} size="sm" labels />
-          </div>
-          <div className="flex justify-end gap-2 mb-2">
-            <Hand game="boss" dice={[4, 4, 4, 3, 3]} size="sm" labels />
-          </div>
-          <div className="flex justify-end gap-2 mb-2">
-            <Hand game="boss" dice={[6, 6, 6, 4, 2]} size="sm" labels />
-          </div>
-          <div className="flex justify-end gap-2 mb-2">
-            <Hand game="boss" dice={[6, 6, 4, 4, 1]} size="sm" labels />
-          </div>
-          <div className="flex justify-end gap-2 mb-2">
-            <Hand game="boss" dice={[5, 5, 6, 3, 1]} size="sm" labels />
-          </div>
-        </div>
-      </div>
-      <hr className="my-8 border-border" />
-      <hr className="my-8 border-border" />
-      <div className={`pb-8 px-6 py-6 rounded-lg grid grid-cols-1 md:grid-cols-2 gap-6 ${getGameInfo('tres-away').isPlayable ? 'bg-primary/10 border-2 border-primary/30' : 'bg-muted/20'} ${getGameInfo('tres-away').shouldDim ? 'opacity-40' : ''}`}>
-        <div className="">
-          <h2 id="tres-away" className="text-3xl font-semibold mb-3 text-foreground">⛳️ Tres away</h2>
-          <div className="mb-3">
-            <Badge variant="secondary">Competitive: Score ≤10 (~18%) / Strong: ≤7 (~6%)</Badge>
-            {getGameInfo('tres-away').isPlayable && (
-              <Badge variant="default" className="ml-2">
-                Playable
-                {getGameInfo('tres-away').variant.rawStrength != null && ` · ${Math.round(getGameInfo('tres-away').variant.rawStrength)}`}
-              </Badge>
-            )}
-          </div>
-          <p className="mb-2">
-            Just like golf, lowest score wins. Each die is worth its face
-            value except for 3's which are worth 0 points.
-          </p>
-          <div className="mb-3 p-3 bg-primary/10 dark:bg-primary/20 border border-primary/20 dark:border-primary/40 rounded-lg">
-            <strong className="text-primary dark:text-primary">When to Call:</strong> <span className="text-foreground">Call with a score of 10 or less (~18% of rolls). Score ≤ 7 is a strong call (~6%). Lower is better — 3s are worth 0, so multiple 3s are premium.</span>
-          </div>
-          <p className="mb-2">
-            <strong>Reveal Cycle Mechanics:</strong> Play happens in cycles. On each cycle, players must put out (reveal) at least one die but can put out more; put-out dice are final and the rest stay hidden. The caller sets the pace: after the caller puts dice out, everyone else, starting on the caller's left, rolls until they have as many dice out as the caller. The optimal strategy (based on Monte Carlo simulation) is to reveal dice with expected value below 2.33 (i.e., 1s, 2s, and 3s always). With remaining dice, re-roll and repeat until all dice are revealed.
-          </p>
-          <p className="mb-2">
-            Once all players have revealed all five dice, calculate total scores. The player with the highest total score loses.
-          </p>
-          <p className="text-sm text-muted-foreground mb-3">
-            Perfect score: Five 3s = 0 points. Worst score: Five 6s = 30 points.
-          </p>
-          <div className="flex gap-2">
-            <Link to="/games/tres-away" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
-              Learn more →
-            </Link>
-            <Link to="/odds-lab/?tab=games&game=tres-away" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
-              Explore rolls →
-            </Link>
-          </div>
-        </div>
-        <div className="">
-          <div className="flex justify-end gap-2 mb-2">
-            <DiceGroup label="0 (Best)" dice={[3, 3, 3, 3, 3]} size="sm" />
-          </div>
-          <div className="flex justify-end gap-2 mb-2">
-            <DiceGroup label="2 (Strong)" dice={[3, 1, 1, 3, 3]} size="sm" />
-          </div>
-          <div className="flex justify-end gap-2 mb-2">
-            <DiceGroup label="7 (Average)" dice={[3, 1, 2, 4, 3]} size="sm" />
-          </div>
-          <div className="flex justify-end gap-2 mb-2">
-            <DiceGroup label="15 (Weak)" dice={[3, 5, 3, 4, 3]} size="sm" />
-          </div>
-          <div className="flex justify-end gap-2 mb-2">
-            <DiceGroup label="30 (Worst)" dice={[6, 6, 6, 6, 6]} size="sm" />
-          </div>
-        </div>
-      </div>
-      <hr className="my-8 border-border" />
-      <div className="pb-8 px-6 py-6 rounded-lg bg-amber-500/10 border-2 border-amber-500/30 grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="">
-          <h2 id="barking" className="text-2xl font-semibold mb-3 text-foreground">🐕 Barking</h2>
-          <Badge variant="warning" className="mb-3">Strategy</Badge>
-          <p className="text-muted-foreground mb-3">Don't have any of these games? Consider...barking</p>
-          <p className="mb-3">
-            A player calls "Bark" to pass their turn when they have no good calls 
-            and don't want to risk a bluff. The call passes to the player on their left, 
-            all players pick up their dice, and a new round starts with the player to 
-            the left as the new caller.
-          </p>
-          <p className="text-sm text-muted-foreground mb-3">
-            Barking is recommended when you have low flexibility (few playable games) 
-            and weak hand strength. See the detailed page for specific thresholds.
-          </p>
-          <div className="flex gap-2">
-            <Link to="/games/barking" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
-              Learn when to bark →
-            </Link>
-          </div>
-        </div>
-        <div className="">
-          <div className="flex justify-end gap-2 mb-2">
-            <DiceGroup label="bark" dice={[2, 2, 2, 5, 6]} size="sm" />
-          </div>
-          <div className="flex justify-end gap-2 mb-2">
-            <DiceGroup label="bark" dice={[3, 3, 3, 5, 6]} size="sm" />
-          </div>
-        </div>
-      </div>
-    </Page>
-  </Layout>
+      </Page>
+    </Layout>
   )
 }
 
