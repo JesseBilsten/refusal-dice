@@ -188,7 +188,7 @@ const StrengthDistributionChart = ({ rolls, gameId, variant }) => {
           <div className="flex-1 bg-muted rounded-full h-5 relative overflow-hidden">
             <div
               className={`h-full rounded-full transition-all ${
-                i >= 7 ? 'bg-green-500' : i >= 4 ? 'bg-yellow-500' : 'bg-red-400'
+                i >= 7 ? 'bg-odds-safe' : i >= 4 ? 'bg-odds-coin' : 'bg-odds-lose'
               }`}
               style={{ width: `${(d.pct / maxPct) * 100}%` }}
             />

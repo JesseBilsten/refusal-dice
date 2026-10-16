@@ -39,7 +39,7 @@ export const useRollAnalysis = (dice, numOpponents = 3) => {
  */
 export const StrengthBar = ({ value, className = '' }) => {
   const barColor =
-    value >= 70 ? 'bg-green-500' : value >= 40 ? 'bg-yellow-500' : 'bg-red-500'
+    value >= 70 ? 'bg-odds-safe' : value >= 40 ? 'bg-odds-coin' : 'bg-odds-lose'
 
   return (
     <div className={`h-1.5 bg-muted rounded-full overflow-hidden ${className}`}>

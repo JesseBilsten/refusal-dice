@@ -35,7 +35,7 @@ Build it once and every later phase gets cheaper.
 
 **Stack:** Gatsby 5 static site, React 18, Tailwind 3 + shadcn/ui (JS, not TSX), Jest. No backend.
 
-**Pages:** Rules, Games (10 games + Barking, with `/games/<id>` detail pages), Glossary, Odds, Odds Lab (added 2026-10-14), Strategy Assistant, Second Call Predictor, three roll-explorer variants, and a "Coming Soon" Practice page.
+**Pages** (as of 2026-10-15, in story order): Learn, Rules, Games (10 games + Barking, with `/games/<id>` detail pages), Odds Lab (*What should I keep?*, *Every game's odds*, *Build any roll*), Strategy Assistant (with *Predict the second call*), Play (full games vs bots), Glossary, and `/design` (the design system, unlisted). `/odds`, `/second-call-predictor` and `/practice` redirect.
 
 **Core logic:** `src/lib/game-validation.js` (~2,600 lines) handles game matching (`checkGame`), kicker strength, Boss rank, Tres Away score, Razzle, Hammer call recommendations, refuser advice and second-call prediction. 148 Jest tests pass.
 
@@ -50,7 +50,7 @@ Build it once and every later phase gets cheaper.
 - **Dead code.** `rolls-explorer`, `rolls-hybrid` and `rolls-original` are three parallel pages; `src/ideas/` holds about 12 abandoned prototypes; `src/pages/rolls.js.archive` is unused.
 - **Starter leftovers.** The manifest is still named "gatsby-starter-default" and the README is Gatsby boilerplate.
 - ✅ ~~**The game list is defined in several places:**~~ (fixed) `gatsby-node.js`, `second-call-predictor.js`, `generate-roll-game-matrix.js`, `game-validation.js` (`predictHammerSecondCalls`) and `games-config.js`.
-- **The Practice page's email signup only does `console.log`.**
+- ✅ ~~**The Practice page's email signup only does `console.log`.**~~ Practice became Play (2026-10-15).
 - **`npm audit` reports 128 vulnerabilities,** mostly transitive through Gatsby 5.
 - ✅ ~~**Wrong odds feeding strategy.**~~ Fixed 2026-10-14: 10-3 was hardcoded at 53.43% (exact: 63.85%) in the odds table behind Hammer/refuser advice. Odds are now computed from the rules.
 - ✅ ~~**Node version mismatch.**~~ `.nvmrc` now pins Node 24 (LTS).
@@ -96,7 +96,7 @@ Build it once and every later phase gets cheaper.
 3. **Inline jargon.** Use the existing `Term` component everywhere: Hammer, kicker, pencil, bark, piddle, parity, refusal.
    - ✅ _Done 2026-10-14 (`src/components/Dice`: CSS 3D cube, Web Audio rattle, settings in the tutorial; add them to the header when the game table ships)._ **3D dice with sound (optional).** Rolling 3D dice and dice sounds for the tutorial and game table. Both start **off and muted**; players turn them on in preferences (remembered per browser). Respect `prefers-reduced-motion`, and keep the flat dice as the default and the fallback. Owner request, 2026-10-14.
 4. **Micro-drills.** Quick quizzes with instant feedback: "Which games does this roll make?", "Who takes the pencil?", "Is this second call legal?"
-5. **Simpler information architecture:** **Learn / Practice / Analyze / Play** replaces the current seven tool pages.
+5. ✅ _Done 2026-10-15: navigation follows the story (Learn, Rules, Games, Odds Lab, Strategy, Play, Glossary); Odds folded into the Odds Lab and the Second Call Predictor into the Strategy Assistant; one design system (`docs/DESIGN_SYSTEM.md`, `/design`, guarded by a test)._ **Simpler information architecture.**
 
 **Measure:** time from landing to finishing the tutorial; tutorial completion rate.
 
@@ -132,7 +132,7 @@ Build it once and every later phase gets cheaper.
 
 ## Phase 3 — Play vs AI
 
-1. **Full game table UI** on the engine, 2–7 bots. Show dice animations, whose turn it is, pencils and Hammer position clearly.
+1. ✅ _Shipped 2026-10-15 (`/play`, `src/components/Play`): 1–7 solid bots, every game, hints, Odds Lab links for your exact situation. Next: difficulty levels, saving games, post-game review._ **Full game table UI** on the engine, 2–7 bots. Show dice animations, whose turn it is, pencils and Hammer position clearly.
 2. **Bot difficulty levels:**
    - **Novice:** simple rules of thumb, some randomness.
    - **Solid:** today's heuristics.
@@ -196,4 +196,6 @@ Build it once and every later phase gets cheaper.
 | 2026-10-14 | House rules are a site-wide setting that recalculates all odds | Owner requirement |
 | 2026-10-14 | 3D dice and sounds are opt-in, off and muted by default | Owner request |
 | 2026-10-14 | Decision advice = simulated chance of the pencil, through the engine with bot players | Accounts for refusals, second calls and play; labeled with sample size and the bot assumption |
+| 2026-10-15 | The site tells one story: Learn → Games → Odds Lab → Play; the home page shows a round as an animation | Owner direction: new players learn fast, experts answer their own questions |
+| 2026-10-15 | Keep-or-roll advice is exact (`strategy/situations.ts`), not simulated | Every keep can be enumerated; simulation is kept for decisions involving other players |
 | 2026-10-14 | Odds Lab ships ahead of Phase 0 | Self-contained (`roll-query.js` is pure and tested), so it doesn't block or depend on the engine split |

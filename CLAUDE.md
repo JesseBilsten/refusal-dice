@@ -36,7 +36,11 @@ src/
   pages/            Gatsby file-based routes (one file = one URL)
   templates/        game-detail.js → /games/<id> (created in gatsby-node.js)
   components/       App components; ui/ = shadcn primitives; nav-items.js = site navigation
-                    Page/ = the page frame: Page (reading | tool | wide width) and PageHeader
+                    Page/ = the page kit: Page (reading | tool | wide), PageHeader, Panel, Stat, PageTabs, Chip
+                    Table/ = Seat, one player at the table (tutorial and Play)
+                    Play/ = full games against bots (play-model.ts is the pure side)
+                    Home/ = the home page's animated round (RoundStory)
+                    OddsLab/ = the Odds Lab tools: KeepAdvisor, GameOdds, EveryPossibility, the roll builder; situations-catalog.js
                     Dice/ = the dice kit: Die, Hand (game + kicker groups), DiceGroup, RollInput; opt-in 3D and sound
                     Tutorial/ = the /learn guided round (script.ts holds its scripted dice)
                     Odds/ = the odds-decision pattern (verdict, comparison bars, outcome grid, math, questions)
@@ -70,6 +74,8 @@ All ten games are playable. Kicker games and Razzle use the `play` phase (simult
 ```
 src/strategy/
   make-odds.ts   Exact chance of making a kicker game with optimal keeps (DP over the 252 sorted hands)
+  situations.ts  Exact keep-or-roll odds for any goal (make a game, beat a kicker, Razzle and Boss hands)
+  tres-away.ts   Exact best Tres Away put-out (lowest expected score)
   bots.ts        "Solid" heuristic bot: call, refuse and play decisions for every game (botAction)
   simulate.ts    Seeded Monte Carlo through the engine: your chance of the pencil per decision
                  (simulateHammer, simulateRefusal); common random numbers across options

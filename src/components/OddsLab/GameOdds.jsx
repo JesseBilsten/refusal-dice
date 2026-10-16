@@ -483,14 +483,14 @@ const OddsDashboard = () => {
                 <CardContent>
                   <div className="space-y-6">
                     {/* Default odds summary */}
-                    <div className="p-4 rounded-lg bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800">
+                    <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
                       <div className="text-xs text-muted-foreground mb-1">
                         Default thresholds (Flexibility ≤ 4, Strength ≤ 65)
                       </div>
-                      <div className="text-3xl font-bold text-orange-600 dark:text-orange-400">
+                      <div className="text-3xl font-bold text-primary">
                         {barkingWeakHands.reduce((s, h) => s + h.count, 0).toLocaleString()} / 7,776
                       </div>
-                      <div className="text-lg font-semibold text-orange-600 dark:text-orange-400">
+                      <div className="text-lg font-semibold text-primary">
                         {((barkingWeakHands.reduce((s, h) => s + h.count, 0) / 7776) * 100).toFixed(1)}% of rolls
                       </div>
                       <p className="text-xs text-muted-foreground mt-2">

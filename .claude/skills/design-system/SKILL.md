@@ -8,7 +8,9 @@ description: Build or change any Refusal Dice UI from the shared design system (
 1. Read `docs/DESIGN_SYSTEM.md` before writing UI.
 2. Reach for the shared piece first:
    - **Pages:** `Page` with a width (`reading`, `tool`, `wide`) and
-     `PageHeader`. Never set a page's own `max-w-*`.
+     `PageHeader`; `Panel` (default, tool, note), `Stat`, `PageTabs`,
+     `Chip`. Never set a page's own `max-w-*`; never nest panels.
+   - **Players at a table:** `Seat`.
    - **Dice:** `Hand` for any roll shown for a game, `RollInput` wherever
      the player edits a roll, and `Die` otherwise. Never write a roll as
      text.
@@ -26,7 +28,9 @@ description: Build or change any Refusal Dice UI from the shared design system (
    Then list it in `docs/DESIGN_SYSTEM.md`.
 5. **When you touch a page with a listed one-off,** fold it into the
    system and remove it from the "Known one-offs" list.
-6. **Check the change everywhere the component appears.** Use 390px wide,
+6. **Check `/design`** after changing a kit, and run
+   `src/__tests__/design-system.test.ts`.
+7. **Check the change everywhere the component appears.** Use 390px wide,
    light and dark mode, and the 3D dice setting both on and off.
 
 Avoid filenames that differ only by case: `hand.ts` next to `Hand.jsx`

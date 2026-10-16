@@ -6,7 +6,7 @@ import Tutorial from '../components/Tutorial'
 
 const LearnPage = () => (
   <Layout>
-    <Page width="reading">
+    <Page width="tool">
       <PageHeader
         title="Learn by playing"
         description={

@@ -143,12 +143,12 @@ const RulesPage = () => (
                 The player <strong>directly left</strong> of the Hammer looks at their dice and decides:
               </p>
               <div className="grid grid-cols-2 gap-2 mt-2 text-xs">
-                <div className="rounded bg-green-500/10 border border-green-500/30 p-2 dark:bg-green-500/5">
-                  <p className="font-semibold text-green-700 dark:text-green-400">✅ Accept</p>
+                <div className="rounded bg-odds-safe/10 border border-odds-safe/30 p-2">
+                  <p className="font-semibold text-foreground">✅ Accept</p>
                   <p className="text-muted-foreground mt-0.5">Everyone plays this game.</p>
                 </div>
-                <div className="rounded bg-red-500/10 border border-red-500/30 p-2 dark:bg-red-500/5">
-                  <p className="font-semibold text-red-700 dark:text-red-400">🚫 Refuse</p>
+                <div className="rounded bg-odds-lose/10 border border-odds-lose/30 p-2">
+                  <p className="font-semibold text-foreground">🚫 Refuse</p>
                   <p className="text-muted-foreground mt-0.5">Passes to 2nd Refusal.</p>
                 </div>
               </div>
@@ -165,19 +165,19 @@ const RulesPage = () => (
                 The player <strong>two seats left</strong> of the Hammer. Only decides if 1st Refusal has refused.
               </p>
               <div className="grid grid-cols-2 gap-2 mt-2 text-xs">
-                <div className="rounded bg-green-500/10 border border-green-500/30 p-2 dark:bg-green-500/5">
-                  <p className="font-semibold text-green-700 dark:text-green-400">✅ Accept</p>
+                <div className="rounded bg-odds-safe/10 border border-odds-safe/30 p-2">
+                  <p className="font-semibold text-foreground">✅ Accept</p>
                   <p className="text-muted-foreground mt-0.5">Everyone plays this game.</p>
                 </div>
-                <div className="rounded bg-amber-500/10 border border-amber-500/30 p-2 dark:bg-amber-500/5">
-                  <p className="font-semibold text-amber-700 dark:text-amber-400">🔄 Refuse</p>
+                <div className="rounded bg-odds-coin/10 border border-odds-coin/30 p-2">
+                  <p className="font-semibold text-foreground">🔄 Refuse</p>
                   <p className="text-muted-foreground mt-0.5">Hammer makes a 2nd call.</p>
                 </div>
               </div>
             </div>
           </div>
 
-          <p className="text-xs text-amber-700 dark:text-amber-400">
+          <p className="text-xs text-foreground">
             ⚠️ If you refuse but the other player accepts, you still play!
           </p>
           <p className="text-xs text-muted-foreground mt-1">
@@ -185,8 +185,8 @@ const RulesPage = () => (
           </p>
 
           {/* Second Call aside */}
-          <div className="mt-3 bg-amber-500/5 border border-amber-500/20 rounded-lg p-3 dark:bg-amber-500/5">
-            <p className="text-sm font-semibold text-amber-700 dark:text-amber-400 mb-1">
+          <div className="mt-3 bg-odds-coin/5 border border-odds-coin/30 rounded-lg p-3">
+            <p className="text-sm font-semibold text-foreground mb-1">
               ↳ Second Call
             </p>
             <p className="text-sm text-muted-foreground">
