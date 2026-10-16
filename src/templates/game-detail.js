@@ -40,7 +40,7 @@ const GAME_CONTENT = {
     subtitle: 'high or low',
     description: '4 dice add up to 10 and the remaining die is either high or low.',
     aka: 'Shotgun',
-    partialKeep: 'You can keep dice that sum to 10 and re-roll the remaining die to improve your kicker. This multi-roll strategy significantly improves your odds.',
+    partialKeep: 'Keep small dice that can still reach 10 with one more. Watch for the trap: 1-3-6 (or any three dice that already make 10) can never be part of 10-4, so keeping them wastes a roll. Once you have it, the kicker is the one die left.',
   },
   'ship-captain-crew': {
     subtitle: 'high or low',
@@ -52,7 +52,7 @@ const GAME_CONTENT = {
     subtitle: 'high or low',
     description: '3 dice make up an inside straight (2-3-4 or 3-4-5) and the remaining 2 dice are either high or low.',
     aka: 'Inside straight',
-    partialKeep: 'You can keep portions of the straight: (1) Keep [2,3] and roll for [4], (2) Keep [4,5] and roll for [3], or (3) Keep [3,4] (best option!) and roll for either [2] or [5]. The [3,4] partial is most valuable because you have two ways to complete the game. With 2 remaining rolls, partial keeping significantly improves your odds versus re-rolling all dice.',
+    partialKeep: 'Keep 3-4 if you have it: a 2 or a 5 finishes either straight. Holding 2-3 needs exactly a 4. With two rolls left, a lone 3 can even beat holding 2-3, because the 3 is in both straights; with one roll left, 2-3 is better.',
   },
   vegas: {
     subtitle: 'high or low',
@@ -67,16 +67,17 @@ const GAME_CONTENT = {
   },
   razzle: {
     description: 'Most amount of any one number with aces being wild. Equal counts go to the higher face: four 6s beat four 4s.',
-    strategy: 'Call with 3 or more 1s/6s (wild sixes), or 5 of any other number. About 21% of rolls meet this competitive threshold. Over 3 rolls keeping 1s and 6s, players average 3.5 wild sixes.',
+    strategy: 'Call with three or more wild 6s (1s count as 6s), or five of any number. Equal counts go to the higher number, so 6s are the ones to chase.',
   },
   boss: {
     description: 'Poker-style hands without straights or flushes. All players reveal their dice, and the highest hand becomes the "Boss." A tie for the best hand means no Boss: no loser, and the Hammer passes left.',
-    strategy: 'Call with Two Pair or better (competitive threshold, ~44% of rolls). Trips or better (~21%) is a strong call. You can keep matching dice and re-roll the others twice to improve your hand.',
-    partialKeep: 'You can keep any dice that help your poker hand and re-roll the rest. For example, with Three of a Kind, keep those three dice and re-roll the other two to try for Four/Five of a Kind or a Full House.',
+    strategy: 'Call with two pair or better; three of a kind is a strong call. If you’re the Boss you get one more roll in secret, keeping the dice that made you Boss, then decide whether to call everyone up.',
+    partialKeep: 'On your last roll after “come up”, you only need to beat the worst hand showing. From 6-4-2-1-5 against a pair of 3s, holding the 6 (80%) is close to holding 5-6 (81%), and both beat rolling all five (74%): see the question below.',
   },
   'tres-away': {
     description: 'Just like golf, lowest score wins. Each die is worth its face value except for 3\'s which are worth 0 points.',
-    strategy: 'Call with a score of 10 or less (~18% of rolls). Score ≤ 7 is a strong call (~6%). Lower is better — 3s are worth 0, so multiple 3s are premium.',
+    strategy: 'Call with a score of 10 or less; 7 or less is strong. Every 3 is worth 0, so 3s are gold.',
+    partialKeep: 'After each roll put out at least one die. Put out every 3; a 1 joins them only beside three 3s. With no 3s, put out just your lowest die and roll the rest.',
   },
   barking: {
     description: 'A strategic decision to pass your turn when you have no good calls and don\'t want to risk a bluff.',
