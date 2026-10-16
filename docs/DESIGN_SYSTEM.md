@@ -79,6 +79,7 @@ site.
 - `Stat`: a headline number with its label.
 - `PageTabs` (+ `tabFromUrl`): top-level tools on one page, kept in
   `?tab=`. Only the chosen tab renders.
+- `NextStep`: the next stop on the path, at the foot of a page.
 - `Chip`: a tappable choice (a game, a count, an example question);
   `active` makes a row of chips a segmented control.
 
@@ -180,5 +181,5 @@ you work on that page:
 - **Duplicate strength meter:** `StrengthBar` and `CallList` in
   `RollAnalysis.jsx` are a separate strength meter. Decide whether it
   belongs in the Odds kit.
-- **Cards:** the Strategy Assistant, Rules and Glossary still use `ui/card`
-  directly, with some cards inside cards. Move them to `Panel`.
+- **Cards:** Rules, Glossary and the Strategy Assistant's rule-of-thumb
+  detail still use `ui/card` directly. Move them to `Panel`.

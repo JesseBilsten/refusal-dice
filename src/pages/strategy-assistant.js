@@ -1,13 +1,9 @@
 import React, { useState, useCallback, useEffect } from 'react'
 import Layout from '../components/layout'
-import Page, { PageHeader, PageTabs, tabFromUrl, NextStep } from '../components/Page'
+import Page, { Chip, NextStep, PageHeader, PageTabs, Panel, tabFromUrl } from '../components/Page'
+import { Disclosure } from '../components/Odds'
 import SecondCallPredictor from '../components/SecondCallPredictor'
 import { Badge } from '../components/ui/badge'
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '../components/ui/card'
-import { Button } from '../components/ui/button'
-import VariantSelector from '../components/VariantSelector'
-import { ToggleGroup, ToggleGroupItem } from '../components/ui/toggle-group'
-import { Label } from '../components/ui/label'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../components/ui/tooltip'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '../components/ui/dialog'
@@ -193,148 +189,81 @@ const StrategyAssistantPage = () => {
         {tab === 'second' && <SecondCallPredictor />}
         {tab === 'roll' && (<>
 
-        <Card className="mb-6">
-          <CardContent className="pt-6">
-            <div className="flex flex-col lg:flex-row gap-6">
-              {/* Help Section — position-specific tips */}
-              <div className="lg:order-2 lg:w-80 flex-shrink-0">
-                <div className="bg-muted/50 rounded-lg p-4 space-y-3">
-                  <h2 className="font-semibold text-sm">How to use</h2>
-                  <div className="flex gap-2">
-                    <span className="text-lg">1️⃣</span>
-                    <div>
-                      <p className="font-medium text-sm">Enter Your Roll</p>
-                      <p className="text-xs text-muted-foreground">Type each die, or tap Roll to roll all five</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <span className="text-lg">2️⃣</span>
-                    <div>
-                      <p className="font-medium text-sm">Select Your Position</p>
-                      <p className="text-xs text-muted-foreground">
-                        <strong>Hammer:</strong> You call the game<br/>
-                        <strong>First/Second Refusal:</strong> Accept or refuse
-                      </p>
-                    </div>
-                  </div>
-                  {testPosition !== 'hammer' && (
-                    <div className="flex gap-2">
-                      <span className="text-lg">3️⃣</span>
-                      <div>
-                        <p className="font-medium text-sm">Select the Called Game</p>
-                        <p className="text-xs text-muted-foreground">
-                          Pick the game the Hammer called
-                          {GAMES.find(g => g.id === testGame)?.hasVariants && ' and its variant'}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                  {/* Position-specific tip */}
-                  <div className="border-t pt-3 mt-1">
-                    {positionTips[testPosition]}
-                  </div>
+        <Panel tone="tool" title="Your roll and seat" as="div" className="mb-6">
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
+            <div className="space-y-5">
+              <div className="space-y-2">
+                <div className="text-sm font-semibold">Your dice</div>
+                <RollInput diceValues={diceValues} onDiceChange={handleDiceChange} onClear={handleClear} />
+              </div>
+
+              <div className="space-y-2">
+                <div className="text-sm font-semibold">Your seat</div>
+                <div className="flex flex-wrap gap-1.5" role="group" aria-label="Your seat">
+                  {[
+                    ['hammer', '🔨 Hammer'],
+                    ['first-refusal', '1st refusal'],
+                    ['second-refusal', '2nd refusal'],
+                  ].map(([id, text]) => (
+                    <Chip key={id} active={testPosition === id} onClick={() => handlePositionChange(id)}>
+                      {text}
+                    </Chip>
+                  ))}
                 </div>
               </div>
 
-              {/* Form Section */}
-              <div className="lg:order-1 flex-1 space-y-4">
-                <div>
-                  <Label className="text-sm font-medium mb-2 block">Your Dice Roll</Label>
-                  <RollInput
-                    diceValues={diceValues}
-                    onDiceChange={handleDiceChange}
-                    onClear={handleClear}
-                  />
-                </div>
-                
-                <div>
-                  <Label className="text-sm font-medium mb-2 block">Your Position</Label>
-                  <ToggleGroup type="single" value={testPosition} onValueChange={handlePositionChange} className="justify-start">
-                    <ToggleGroupItem value="hammer" className="px-6">
-                      🔨 Hammer
-                    </ToggleGroupItem>
-                    <ToggleGroupItem value="first-refusal" className="px-6">
-                      🥇 First Refusal
-                    </ToggleGroupItem>
-                    <ToggleGroupItem value="second-refusal" className="px-6">
-                      🥈 Second Refusal
-                    </ToggleGroupItem>
-                  </ToggleGroup>
-                </div>
-                
-                {/* Game Called — refusal only */}
-                {testPosition !== 'hammer' && (
-                  <div>
-                    <Label className="text-sm font-medium mb-2 block">Game the Hammer Called</Label>
-                    <div className="flex flex-wrap gap-2">
-                      {GAMES.filter(game => game.id !== 'barking').map(game => (
-                        <Button
-                          key={game.id}
-                          onClick={() => handleGameSelect(game.id)}
-                          variant={testGame === game.id ? 'default' : 'outline'}
-                          size="sm"
-                        >
-                          {game.emoji} {game.name}
-                        </Button>
+              {testPosition !== 'hammer' && (
+                <div className="space-y-2">
+                  <div className="text-sm font-semibold">The Hammer called</div>
+                  <div className="flex flex-wrap gap-1.5" role="group" aria-label="Game called">
+                    {GAMES.filter((game) => game.id !== 'barking').map((game) => (
+                      <Chip key={game.id} active={testGame === game.id} onClick={() => handleGameSelect(game.id)}>
+                        <span aria-hidden>{game.emoji}</span> {game.name}
+                      </Chip>
+                    ))}
+                  </div>
+                  {testGame && GAMES.find((g) => g.id === testGame)?.hasVariants && (
+                    <div className="flex gap-1.5" role="group" aria-label="Variant called">
+                      {['high', 'low'].map((v) => (
+                        <Chip key={v} active={selectedVariant === v} onClick={() => setSelectedVariant(v)}>
+                          {v === 'high' ? 'High' : 'Low'}
+                        </Chip>
                       ))}
                     </div>
-                  </div>
-                )}
-                
-                {/* Variant selector */}
-                {testPosition !== 'hammer' && testGame && GAMES.find(g => g.id === testGame)?.hasVariants && (
-                  <div>
-                    <Label className="text-sm font-medium mb-2 block">Variant Called</Label>
-                    <VariantSelector
-                      selectedVariant={selectedVariant || 'all'}
-                      onChange={v => setSelectedVariant(v)}
-                      className="justify-start"
-                    />
-                  </div>
-                )}
+                  )}
+                </div>
+              )}
 
-                {testPosition !== 'hammer' && testGame && GAMES.find(g => g.id === testGame)?.hasVariants &&
-                  selectedVariant !== 'high' && selectedVariant !== 'low' && rollIsComplete && (
-                  <p className="text-sm text-destructive font-medium">
-                    Select High or Low: the call decides which kicker wins.
-                  </p>
-                )}
-
-                {/* Inline validation — prompt to select a game */}
-                {testPosition !== 'hammer' && !testGame && rollIsComplete && (
-                  <p className="text-sm text-destructive font-medium">
-                    Select the game the Hammer called to see your analysis.
-                  </p>
-                )}
-              </div>
+              {testPosition !== 'hammer' && testGame && GAMES.find(g => g.id === testGame)?.hasVariants &&
+                selectedVariant !== 'high' && selectedVariant !== 'low' && rollIsComplete && (
+                <p className="text-sm font-medium text-primary">Pick High or Low: the call decides which kicker wins.</p>
+              )}
+              {testPosition !== 'hammer' && !testGame && rollIsComplete && (
+                <p className="text-sm font-medium text-primary">Pick the game the Hammer called to see your odds.</p>
+              )}
             </div>
-          </CardContent>
-        </Card>
+
+            <aside className="space-y-1 rounded-lg bg-background/70 p-4 text-sm">{positionTips[testPosition]}</aside>
+          </div>
+        </Panel>
 
         {/* ═══════════ Results ═══════════ */}
         {debugInfo && (
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex flex-wrap items-center gap-3">
-                  Analysis
-                  {/* A refuser's hand is shown grouped for the call below */}
-                  {debugInfo.position === 'hammer' && <Hand dice={debugInfo.roll} size="sm" />}
-                </CardTitle>
-                <CardDescription>
-                  {debugInfo.position === 'hammer' ? 'Recommended calls for your roll' : 
-                   debugInfo.position === 'first-refusal' ? 'First refusal analysis' : 
-                   'Second refusal analysis'}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {debugInfo.pencilOdds && debugInfo.position === 'hammer' && (
+          <section className="space-y-6" aria-live="polite">
+            {debugInfo.position === 'hammer' ? (
+              <>
+                {debugInfo.pencilOdds && (
                   <HammerPencilOdds options={debugInfo.pencilOdds} dice={debugInfo.roll} playerCount={playerCount} />
                 )}
-                {debugInfo.strategy && debugInfo.position === 'hammer' && (
-                  <HammerResults strategy={debugInfo.strategy} dice={debugInfo.roll} playerCount={playerCount} />
+                {debugInfo.strategy && (
+                  <Disclosure title="More detail: hand strength by rule of thumb">
+                    <HammerResults strategy={debugInfo.strategy} dice={debugInfo.roll} playerCount={playerCount} />
+                  </Disclosure>
                 )}
-                {debugInfo.strategy && debugInfo.position !== 'hammer' && (
+              </>
+            ) : (
+              debugInfo.strategy && (
+                <Panel title={debugInfo.position === 'first-refusal' ? 'You’re the 1st refusal' : 'You’re the 2nd refusal'}>
                   <RefusalDecision
                     estimate={debugInfo.strategy}
                     dice={debugInfo.roll}
@@ -342,10 +271,10 @@ const StrategyAssistantPage = () => {
                     position={debugInfo.position === 'first-refusal' ? 1 : 2}
                     players={playerCount}
                   />
-                )}
-              </CardContent>
-            </Card>
-          </div>
+                </Panel>
+              )
+            )}
+          </section>
         )}
         </>)}
         <NextStep to="/play" title="Play the bots" text="Try your calls and refusals in full games." />
@@ -633,14 +562,11 @@ const SimulationNote = ({ samples, players }) => (
 /* ───────────────────── Hammer: simulated pencil odds ──────────── */
 
 const HammerPencilOdds = ({ options, dice, playerCount }) => (
-  <Card>
-    <CardHeader className="pb-2">
-      <CardTitle className="text-base">Chance you take the pencil, by call</CardTitle>
-      <CardDescription className="text-xs">
-        Lower is better. A random player at a {playerCount}-player table takes the pencil {pct(1 / playerCount)} of the time.
-      </CardDescription>
-    </CardHeader>
-    <CardContent className="space-y-3">
+  <Panel
+    title="Chance you take the pencil, by call"
+    description={`Lower is better. A random player at a ${playerCount}-player table takes the pencil ${pct(1 / playerCount)} of the time.`}
+  >
+    <div className="space-y-3">
       <Table>
         <TableHeader>
           <TableRow>
@@ -664,8 +590,8 @@ const HammerPencilOdds = ({ options, dice, playerCount }) => (
         </TableBody>
       </Table>
       <SimulationNote samples={options[0].samples} players={playerCount} />
-    </CardContent>
-  </Card>
+    </div>
+  </Panel>
 )
 
 export default StrategyAssistantPage
