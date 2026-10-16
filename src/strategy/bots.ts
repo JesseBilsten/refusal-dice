@@ -5,21 +5,21 @@ import {
   GameState,
   KICKER_GAMES,
   KickerGameId,
-  PlayerId,
   SPECIALTY_GAMES,
   activeSeats,
   bossHand,
   compareBoss,
-  compareRazzle,
   evaluateKickerHand,
   isKickerGame,
   razzleScore,
+  bottomTarget,
+  bottomTurn,
   refusalSeats,
   tresAwayScore,
   wouldLoseIfStopped,
 } from '../engine'
-import { rollOrTakeTie } from './kicker-odds'
-import { bestKeepToMake, makeChance } from './make-odds'
+import { makeChance } from './make-odds'
+import { Goal, keepOptions } from './situations'
 import { tresAwayPutOut } from './tres-away'
 
 /**
@@ -113,135 +113,33 @@ export const wouldAccept = (dice: Dice, call: Call): boolean =>
 
 /* ── Playing ── */
 
-/** Is `player` already safe from losing, given the players who are done rolling? */
-function safeInPlay(state: GameState, player: PlayerId): boolean {
-  const phase = state.phase
-  if (phase.kind !== 'play') return false
-  const call = phase.call
-  const done = Object.keys(phase.rolling).filter(
-    (id) => id !== player && phase.rolling[id].done
-  )
-  const mine = state.dice[player]
-  if (call.game === 'razzle')
-    return done.some((id) => compareRazzle(mine, state.dice[id]) > 0)
-  if (!isKickerGame(call.game)) return false
-  const me = evaluateKickerHand(mine, call.game, call.variant!)
-  if (!me.made) return false
-  return done.some((id) => {
-    const them = evaluateKickerHand(
-      state.dice[id],
-      call.game as KickerGameId,
-      call.variant!
-    )
-    if (!them.made) return true
-    return call.variant === 'high'
-      ? me.kickerTotal > them.kickerTotal
-      : me.kickerTotal < them.kickerTotal
-  })
-}
-
-function playAction(state: GameState, player: PlayerId): Action {
+/**
+ * Play from the bottom (§4): whoever must roll holds the worst hand, so
+ * roll with the exact best keep for beating the next-worst hand (or just
+ * making the game, when that hand missed too). Tied at the bottom with
+ * nobody else left to roll, take the tie when that's at least as good as
+ * rolling (always with two players left, where a tie means no pencil).
+ */
+function bottomAction(state: GameState): Action {
   const phase = state.phase
   if (phase.kind !== 'play') throw new Error('not in play')
+  const player = bottomTurn(state)!
   const dice = state.dice[player]
-  const rerolls = 3 - phase.rolling[player].rollsUsed
-  const call = phase.call
-
-  if (call.game === 'razzle') {
-    const { count, face } = razzleScore(dice)
-    if (count === 5 || safeInPlay(state, player))
-      return { type: 'stand', player }
-    const keep = dice
-      .map((d, i) => (d === face || d === 1 ? i : -1))
-      .filter((i) => i >= 0)
-    return { type: 'reroll', player, keep }
-  }
-
-  const game = call.game as KickerGameId
-  const variant = call.variant!
-  const hand = evaluateKickerHand(dice, game, variant)
-  if (!hand.made)
-    return { type: 'reroll', player, keep: bestKeepToMake(dice, game, rerolls) }
-  if (safeInPlay(state, player)) return { type: 'stand', player }
-
-  // Everyone else has finished and nobody is worse: you're tied for the
-  // weakest hand (take the tie, or roll if the odds say so) or alone at the
-  // bottom (roll: standing would just take the pencil)
-  const others = Object.keys(phase.rolling).filter((id) => id !== player)
-  if (others.every((id) => phase.rolling[id].done)) {
-    const tiedWith = others.filter((id) => {
-      const them = evaluateKickerHand(state.dice[id], game, variant)
-      return them.made && them.kickerTotal === hand.kickerTotal
-    })
-    if (!tiedWith.length) return { type: 'reroll', player, keep: hand.gameDice }
-    const odds = rollOrTakeTie({
-      kickerDice: hand.kickerDice.length,
-      rolls: 3 - phase.rolling[player].rollsUsed,
-      variant,
-      total: hand.kickerTotal,
-      tied: tiedWith.length + 1,
-      twoPlayerTable: activeSeats(state).length === 2,
-    })
-    return odds.choice === 'roll'
-      ? { type: 'reroll', player, keep: hand.gameDice }
-      : { type: 'stand', player }
-  }
-
-  // Made it but not safe yet. Kickers are rolled together, so the choice is
-  // to stand or re-roll every kicker: re-roll when the kickers are worse than
-  // a fresh roll would average, or when they're the worst made hand in sight
-  const n = hand.kickerDice.length
-  const average = 3.5 * n
-  const belowAverage =
-    variant === 'high' ? hand.kickerTotal < average : hand.kickerTotal > average
-  if (belowAverage || worstMadeHand(state, player))
-    return { type: 'reroll', player, keep: hand.gameDice }
-  return { type: 'stand', player }
+  const target = state.dice[bottomTarget(state, player)!]
+  const options = keepOptions(dice, 3 - phase.rolling[player].rollsUsed, bottomGoal(phase.call, target))
+  if (!wouldLoseIfStopped(state, player) && (activeSeats(state).length === 2 || options[0].stand))
+    return { type: 'stand', player }
+  return { type: 'reroll', player, keep: options.find((o) => !o.stand)!.keep }
 }
 
-/** Forced to roll from the bottom: keep the game dice (or 1s and 6s in Razzle) and roll the rest */
-function lastDitchRoll(state: GameState, player: PlayerId): Action {
-  const phase = state.phase
-  if (phase.kind !== 'play') throw new Error('not in play')
-  const dice = state.dice[player]
-  const call = phase.call
-  if (call.game === 'razzle') {
-    return {
-      type: 'reroll',
-      player,
-      keep: dice
-        .map((d, i) => (d === 1 || d === 6 ? i : -1))
-        .filter((i) => i >= 0),
-    }
-  }
+/** What the worst hand needs: beat `target` (Razzle or a kicker), or make the game when `target` missed too */
+export function bottomGoal(call: Call, target: Dice): Goal {
+  if (call.game === 'razzle') return { kind: 'razzle', ...razzleScore(target) }
   const game = call.game as KickerGameId
-  const hand = evaluateKickerHand(dice, game, call.variant!)
-  const rerolls = 3 - phase.rolling[player].rollsUsed
-  return {
-    type: 'reroll',
-    player,
-    keep: hand.made ? hand.gameDice : bestKeepToMake(dice, game, rerolls),
-  }
-}
-
-/** Is `player`'s made hand the worst (or tied worst) among players who made the game? */
-function worstMadeHand(state: GameState, player: PlayerId): boolean {
-  const phase = state.phase
-  if (phase.kind !== 'play' || !isKickerGame(phase.call.game)) return false
-  const game = phase.call.game
-  const variant = phase.call.variant!
-  const totals = Object.keys(phase.rolling)
-    .map((id) => ({
-      id,
-      hand: evaluateKickerHand(state.dice[id], game, variant),
-    }))
-    .filter((e) => e.hand.made)
-    .map((e) => ({ id: e.id, total: e.hand.made ? e.hand.kickerTotal : 0 }))
-  const mine = totals.find((t) => t.id === player)
-  if (!mine || totals.length < 2) return false
-  return totals.every((t) =>
-    variant === 'high' ? mine.total <= t.total : mine.total >= t.total
-  )
+  const them = evaluateKickerHand(target, game, call.variant!)
+  return them.made
+    ? { kind: 'kicker', game, variant: call.variant!, total: them.kickerTotal }
+    : { kind: 'make', game }
 }
 
 /** The action the bot takes for whoever must act next. */
@@ -268,20 +166,8 @@ export function botAction(state: GameState): Action {
         player: state.hammer,
         call: chooseCall(state.dice[state.hammer], phase.refused.game),
       }
-    case 'play': {
-      // Simultaneous rolling, approximated as rounds: whoever has rolled least goes next
-      const ids = Object.keys(phase.rolling).filter(
-        (id) => !phase.rolling[id].done
-      )
-      const player = ids.reduce((a, b) =>
-        phase.rolling[b].rollsUsed < phase.rolling[a].rollsUsed ? b : a
-      )
-      const action = playAction(state, player)
-      // No standing at the bottom: the lowest hand rolls while it can
-      if (action.type === 'stand' && wouldLoseIfStopped(state, player))
-        return lastDitchRoll(state, player)
-      return action
-    }
+    case 'play':
+      return bottomAction(state)
     case 'tresAway': {
       const player = phase.turn
       const hand = phase.hands[player]

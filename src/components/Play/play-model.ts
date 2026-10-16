@@ -45,6 +45,7 @@ type Names = Record<PlayerId, string>
 type Label = (call: Call) => string
 
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`
+const diceCount = (n: number) => `${n} ${n === 1 ? 'die' : 'dice'}`
 const list = (ids: PlayerId[], names: Names) => {
   const n = ids.map((id) => names[id])
   return n.length < 2 ? n.join('') : `${n.slice(0, -1).join(', ')} and ${n[n.length - 1]}`
@@ -53,36 +54,38 @@ const list = (ids: PlayerId[], names: Names) => {
 /** One event in words, or null for events not worth a line */
 export function describeEvent(e: GameEvent, names: Names, label: Label): string | null {
   const who = 'player' in e ? names[e.player] : ''
+  /** "You roll" but "Ava rolls" */
+  const v = (verb: string, third = `${verb}s`) => (who === 'You' ? verb : third)
   switch (e.type) {
     case 'hammer':
-      return `${who} won the piddle and holds the Hammer.`
+      return `${who} won the piddle and ${v('hold')} the Hammer.`
     case 'called':
       return e.second
-        ? `${who} makes a second call: ${label(e.call)}. No refusals.`
-        : `${who} calls ${label(e.call)}.`
+        ? `${who} ${v('make')} a second call: ${label(e.call)}. No refusals.`
+        : `${who} ${v('call')} ${label(e.call)}.`
     case 'barked':
-      return `${who} barks. The Hammer passes left and everyone rolls again.`
+      return `${who} ${v('bark')}. The Hammer passes left and everyone rolls again.`
     case 'accepted':
-      return `${who} accepts. Everyone plays it.`
+      return `${who} ${v('accept')}. Everyone plays it.`
     case 'refused':
-      return `${who} refuses.`
+      return `${who} ${v('refuse')}.`
     case 'rolled':
-      if (e.hidden) return `${who} rolls in secret.`
-      return `${who} ${e.kept.length ? `keeps ${plural(e.kept.length, 'die')} and rolls` : 'rolls'}: ${e.dice.join(' ')}.`
+      if (e.hidden) return `${who} ${v('roll')} in secret.`
+      return `${who} ${e.kept.length ? `${v('keep')} ${diceCount(e.kept.length)} and ${v('roll')}` : v('roll')}: ${e.dice.join(' ')}.`
     case 'putOut':
-      return `${who} puts out ${e.dice.join(' ')}.`
+      return `${who} ${v('put', 'puts')} out ${e.dice.join(' ')}.`
     case 'boss':
       return `${who} ${who === 'You' ? 'have' : 'has'} the best hand and ${who === 'You' ? 'are' : 'is'} the Boss.`
     case 'noBoss':
       return `${list(e.players, names)} tie for the best hand: no Boss, no loser.`
     case 'comeUp':
-      return `${who} says “come up”: everyone else gets one last roll.`
+      return `${who} ${v('say')} “come up”: everyone else gets one last roll.`
     case 'dontComeUp':
-      return `${who} says “don’t come up”: no loser this round.`
+      return `${who} ${v('say')} “don’t come up”: no loser this round.`
     case 'revealed':
-      return `${who} shows the Boss's dice: ${e.dice.join(' ')}.`
+      return `${who} ${v('show')} the Boss's dice: ${e.dice.join(' ')}.`
     case 'stood':
-      return `${who} ${who === 'You' ? 'stand' : 'stands'}.`
+      return `${who} ${v('stand')}.`
     case 'cycle':
       return e.reason === 'tie'
         ? `${list(e.players, names)} tie for the worst hand and play again.`

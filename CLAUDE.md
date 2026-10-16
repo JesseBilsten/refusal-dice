@@ -67,7 +67,7 @@ src/engine/
   index.ts         Public API; import from '../engine'
 ```
 
-All ten games are playable. Kicker games and Razzle use the `play` phase (simultaneous rolls); Tres Away (`tresAway` phase: `putOut`/`roll`, caller-paced) and Boss (`boss` phase: hidden Boss roll, `comeUp`/`dontComeUp`) have their own phases. `viewFor` hides what a player mustn't see, including redacting other players' hidden rolls from the log.
+All ten games are playable. Kicker games and Razzle use the `play` phase, played from the bottom: only the worst hand rolls (`bottomTurn`) until it climbs off or runs out of rolls; Tres Away (`tresAway` phase: `putOut`/`roll`, caller-paced) and Boss (`boss` phase: hidden Boss roll, `comeUp`/`dontComeUp`) have their own phases. `viewFor` hides what a player mustn't see, including redacting other players' hidden rolls from the log.
 
 ### Strategy (`src/strategy/`, TypeScript)
 

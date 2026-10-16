@@ -147,7 +147,22 @@ interface Value {
 }
 const score = (v: Value) => v.win + TIE_WEIGHT * v.tie
 
+/** Solvers are pure per goal; bots ask the same few goals over and over, so keep them */
+const SOLVERS = new Map<string, ReturnType<typeof makeSolver>>()
+const goalKey = (g: Goal) =>
+  g.kind === 'boss' ? `boss:${[...g.hand].sort().join('')}` : JSON.stringify(g)
 function solver(goal: Goal) {
+  const k = goalKey(goal)
+  let s = SOLVERS.get(k)
+  if (!s) {
+    if (SOLVERS.size > 500) SOLVERS.clear()
+    s = makeSolver(goal)
+    SOLVERS.set(k, s)
+  }
+  return s
+}
+
+function makeSolver(goal: Goal) {
   const judged = new Map<number, Value>()
   const finish = (c: Counts): Value => {
     const k = key(c)

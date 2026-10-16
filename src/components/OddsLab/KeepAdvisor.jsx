@@ -3,7 +3,7 @@ import { bossHand, isKickerGame, tresAwayScore } from '../../engine'
 import { keepOptions, tresAwayExpected, tresAwayPutOut } from '../../strategy'
 import { CALLABLE_GAMES, getGameName } from '../../lib/games-config'
 import { cn } from '../../lib/utils'
-import { DiceGroup, Hand, RollInput } from '../Dice'
+import { COUNT_WORDS, DiceGroup, Hand, RollInput, razzleName } from '../Dice'
 import { Disclosure, OddsDecision, Questions, fmtPct } from '../Odds'
 import { Chip, Panel } from '../Page'
 import { SITUATIONS } from './situations-catalog'
@@ -16,7 +16,6 @@ import { goalFor, optionLabel, rerollsFor } from './keep-model'
  * from a game page.
  */
 
-const COUNT = ['', 'one', 'two', 'three', 'four', 'five']
 
 /** A Boss hand in words: "a pair of 3s", "two pair", "a high 6" */
 function bossName(dice) {
@@ -142,7 +141,7 @@ export default function KeepAdvisor() {
       : goal.kind === 'kicker'
         ? { outcome: `beat a kicker of ${goal.total}`, win: `beat ${goal.total}`, tie: `tie at ${goal.total}: replay` }
         : goal.kind === 'razzle'
-          ? { outcome: `beat ${COUNT[goal.count]} ${goal.face}s`, win: 'beat it', tie: 'tie: replay' }
+          ? { outcome: `beat ${razzleName(goal.count, goal.face)}`, win: 'beat it', tie: 'tie: replay' }
           : { outcome: `beat ${bossName(goal.hand)}`, win: 'beat it', tie: 'tie: replay' }
 
   const rerolls = rerollsFor(s)
@@ -263,7 +262,7 @@ export default function KeepAdvisor() {
                     label="How many"
                     value={s.count}
                     onChange={(v) => update({ count: v })}
-                    options={[1, 2, 3, 4, 5].map((n) => ({ value: n, label: COUNT[n] }))}
+                    options={[1, 2, 3, 4, 5].map((n) => ({ value: n, label: COUNT_WORDS[n] }))}
                   />
                   <NumberSelect
                     label="Of which number"

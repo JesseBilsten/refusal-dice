@@ -1,10 +1,8 @@
 import React from 'react'
 import { Link } from 'gatsby'
 import Layout from '../components/layout'
-import Page, { PageHeader, NextStep } from '../components/Page'
+import Page, { PageHeader, NextStep, Panel } from '../components/Page'
 import { Disclosure } from '../components/Odds'
-import { Card, CardContent } from '../components/ui/card'
-import { Badge } from '../components/ui/badge'
 
 /**
  * RULES: "Numbered Steps" with combined Refusal phase
@@ -18,18 +16,26 @@ import { Badge } from '../components/ui/badge'
 
 
 const StepCard = ({ number, title, icon, children, id }) => (
-  <Card id={id} className="scroll-mt-20 shadow-sm overflow-hidden">
-    <div className="flex">
-      <div className="w-16 sm:w-20 shrink-0 bg-primary/10 flex flex-col items-center justify-center border-r border-primary/20">
-        <span className="text-2xl mb-1">{icon}</span>
-        <span className="text-xs font-bold text-primary uppercase tracking-wider">Step {number}</span>
+  <Panel id={id} className="scroll-mt-20">
+    <div className="mb-3 flex items-center gap-3">
+      <span aria-hidden className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xl">
+        {icon}
+      </span>
+      <div>
+        <p className="text-xs font-bold uppercase tracking-wider text-primary">Step {number}</p>
+        <h3 className="text-lg font-semibold leading-tight">{title}</h3>
       </div>
-      <CardContent className="flex-1 p-4 sm:p-5">
-        <h3 className="text-lg font-semibold text-foreground mb-2">{title}</h3>
-        {children}
-      </CardContent>
     </div>
-  </Card>
+    {children}
+  </Panel>
+)
+
+/** One way a round can end, in step 5 */
+const Outcome = ({ icon, children }) => (
+  <div className="flex items-start gap-2 rounded-lg bg-muted/50 p-3 text-sm text-muted-foreground">
+    <span aria-hidden className="mt-0.5 shrink-0">{icon}</span>
+    <p>{children}</p>
+  </div>
 )
 
 const RulesPage = () => (
@@ -42,16 +48,16 @@ const RulesPage = () => (
       />
 
       {/* One-line summary */}
-      <div className="bg-muted/50 rounded-lg p-4 mb-8 text-center">
+      <Panel tone="note" as="div" className="mb-8">
         <p className="text-sm sm:text-base">
           Roll → call a game → others accept or refuse → everyone gets up to 3 rolls to make it → worst hand takes a{' '}
           <Link to="/glossary#pencil" className="text-primary hover:underline">pencil</Link>.
-          <br className="hidden sm:block" /> 3 pencils = out. Last player standing wins.
+          {' '}3 pencils = out. Last player standing wins.
         </p>
-      </div>
+      </Panel>
 
       {/* Collapsed setup sections */}
-      <div className="space-y-2 mb-10">
+      <div id="setup" className="space-y-2 mb-10 scroll-mt-20">
         <Disclosure title="🎲 Equipment — what you need">
           <ul className="space-y-3">
             <li>
@@ -184,8 +190,13 @@ const RulesPage = () => (
         {/* Step 4: Play the game */}
         <StepCard number={4} title="Play the game" icon="🔄" id="play">
           <p className="text-sm text-muted-foreground mb-3">
-            Everyone plays at once, and everyone can now see each other's dice. You get{' '}
-            <strong>up to 3 rolls</strong>, and the roll you already have counts as the first.
+            Everyone's dice are now face up. Each player gets <strong>up to 3 rolls</strong>, and the roll
+            they already have counts as the first.
+          </p>
+          <p className="text-sm text-muted-foreground mb-3">
+            <strong>The worst hand rolls first.</strong> Whoever holds it is the loser right now, so they roll
+            until they climb off the bottom or run out of rolls. Then whoever holds the worst hand rolls. If the
+            worst hand never gets off the bottom, nobody else has to roll at all.
           </p>
           <ul className="text-sm text-muted-foreground space-y-1.5 mb-3 list-disc pl-5">
             <li>After each roll, <strong>keep any dice</strong> you like and re-roll the rest, or stop.</li>
@@ -199,7 +210,7 @@ const RulesPage = () => (
               stay on the table: re-roll your whole kicker or none of it. You can't keep part of your kicker,
               like keeping the 6 of a 6+1 and re-rolling the 1.
             </li>
-            <li>Watch the table: you only need to beat the worst hand.</li>
+            <li>You only ever roll to get off the bottom: beat the next-worst hand and your turn ends.</li>
           </ul>
 
           <div className="rounded-lg bg-muted/40 p-3 text-xs text-muted-foreground mb-3">
@@ -228,7 +239,8 @@ const RulesPage = () => (
               <li>
                 <Link to="/games/razzle" className="font-medium text-primary hover:underline">Razzle</Link>: most
                 of any one number, with 1s wild. Three 1s and a 4 make four 4s. Equal counts go to the higher
-                face, so four 6s beat four 4s. Re-rolling everything to chase 1s and 6s is common.
+                face, so four 6s beat four 4s. The lowest hand rolls first, as in the other games. Re-rolling
+                everything to chase 1s and 6s is common.
               </li>
             </ul>
           </Disclosure>
@@ -237,58 +249,34 @@ const RulesPage = () => (
         {/* Step 5: Find the loser */}
         <StepCard number={5} title="Find the loser" icon="✏️" id="score">
           <div className="space-y-2">
-            <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/50 rounded p-2">
-              <span className="shrink-0 mt-0.5">❌</span>
-              <p>
-                <strong>Missed the game?</strong> If you're the only one who missed, you lose. If two or more
-                missed, everyone who made it is safe and the players who missed play the same game again with
-                3 fresh rolls, until one loses.
-              </p>
-            </div>
-            <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/50 rounded p-2">
-              <span className="shrink-0 mt-0.5">➕</span>
-              <p>
-                <strong>Everyone made it?</strong> The weakest hand loses. The call already says what's weakest:
-                in <em>10-3 High</em>, a player whose kicker is 2+1 = 3 loses to everyone with a higher kicker.
-              </p>
-            </div>
-            <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/50 rounded p-2">
-              <span className="shrink-0 mt-0.5">🤝</span>
-              <p>
-                <strong>Tied for worst?</strong> The tied players replay the same game (same High/Low) with fresh
-                rolls. With only 2 players left in the game, a tie (or both missing) means no pencil and the
-                Hammer passes. If you're level with the lowest hand, they're done rolling and you have a roll
-                left, you can <strong>take the tie</strong> or roll to beat them. Alone at the bottom, there's
-                no choice: you roll until you're out of rolls.
-              </p>
-            </div>
-            <div className="flex items-start gap-2 text-xs text-muted-foreground bg-muted/50 rounded p-2">
-              <span className="shrink-0 mt-0.5">✏️</span>
-              <p>
-                The loser takes a{' '}
-                <Link to="/glossary#pencil" className="text-primary hover:underline">pencil</Link> and becomes
-                the next Hammer. <strong>3 pencils = out</strong>, and the Hammer skips you.
-              </p>
-            </div>
+            <Outcome icon="❌">
+              <strong>Missed the game?</strong> Missing is the worst hand. If you're the only one who missed, you
+              lose. If two or more missed, everyone who made it is safe and the players who missed play the same
+              game again with 3 fresh rolls, until one loses.
+            </Outcome>
+            <Outcome icon="➕">
+              <strong>Everyone made it?</strong> The weakest hand loses. The call already says what's weakest:
+              in <em>10-3 High</em>, a player whose kicker is 2+1 = 3 loses to everyone with a higher kicker.
+            </Outcome>
+            <Outcome icon="🤝">
+              <strong>Tied for worst?</strong> The tied player nearest the Hammer rolls first. Once the others
+              you're tied with are out of rolls, you can <strong>take the tie</strong> (you replay the same game,
+              same High/Low, with fresh rolls) or roll to beat them. With only 2 players left in the game, a tie
+              (or both missing) means no pencil and the Hammer passes. Alone at the bottom, there's no choice:
+              you roll until you're out of rolls.
+            </Outcome>
+            <Outcome icon="✏️">
+              The loser takes a{' '}
+              <Link to="/glossary#pencil" className="text-primary hover:underline">pencil</Link> and becomes the
+              next Hammer. <strong>3 pencils = out</strong>, and the Hammer skips you.
+            </Outcome>
           </div>
         </StepCard>
       </div>
 
-      {/* Repeat */}
-      <div className="text-center mt-8 mb-4">
-        <Badge variant="outline" className="text-sm px-4 py-2">
-          🔁 Repeat until one player remains — they win the pot!
-        </Badge>
-      </div>
-
-      {/* Nav */}
-      <div className="flex flex-wrap justify-center gap-3 mt-8 text-sm">
-        <Link to="/games" className="text-primary hover:underline">Browse Games →</Link>
-        <span className="text-border">·</span>
-        <Link to="/strategy-assistant" className="text-primary hover:underline">Strategy Tool →</Link>
-        <span className="text-border">·</span>
-        <Link to="/glossary" className="text-primary hover:underline">Glossary →</Link>
-      </div>
+      <p className="mt-8 text-center font-display text-lg font-bold">
+        🔁 Repeat until one player remains: they win the pot!
+      </p>
       <NextStep to="/games" title="Meet the ten games" text="What makes each one, what it looks like, and its quirks." />
     </Page>
   </Layout>

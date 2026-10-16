@@ -11,6 +11,8 @@ import {
   compareRazzle,
   createGame,
   razzleScore,
+  bottomTarget,
+  bottomTurn,
   scripted,
   tresAwayScore,
   viewFor,
@@ -81,20 +83,15 @@ describe('scoring', () => {
 })
 
 describe('Razzle', () => {
-  test('everyone rolls at once; the lowest score loses', () => {
-    const g = play(
-      // c can't stand at the bottom, so re-rolls twice and stays on two of a kind
-      called(
-        'razzle',
-        [6, 6, 6, 1, 2, 1, 1, 1, 4, 2, 5, 5, 2, 3, 4],
-        [2, 3, 4, 2, 3, 4]
-      ),
-      { type: 'stand', player: 'a' },
-      { type: 'stand', player: 'b' }
-    )
-    expect(() => applyAction(g, { type: 'stand', player: 'c' })).toThrow(
-      /lowest hand/
-    )
+  // a: four 6s, b: four 4s, c: two 5s
+  const DEAL = [6, 6, 6, 1, 2, 1, 1, 1, 4, 2, 5, 5, 2, 3, 4]
+
+  test('the lowest hand rolls first; out of rolls at the bottom loses', () => {
+    const g = called('razzle', DEAL, [2, 3, 4, 2, 3, 4])
+    expect(bottomTurn(g)).toBe('c')
+    // Nobody else rolls, and the bottom can't stand
+    expect(() => applyAction(g, { type: 'reroll', player: 'a', keep: [] })).toThrow(/c's turn/)
+    expect(() => applyAction(g, { type: 'stand', player: 'c' })).toThrow(/worst hand/)
     const end = play(
       g,
       { type: 'reroll', player: 'c', keep: [0, 1] },
@@ -103,19 +100,43 @@ describe('Razzle', () => {
     expect(end.phase).toMatchObject({ kind: 'roundOver', loser: 'c' })
   })
 
-  test('identical lowest scores replay', () => {
-    const g = play(
-      called(
-        'razzle',
-        [6, 6, 6, 1, 2, 5, 5, 2, 3, 4, 5, 5, 4, 3, 2],
-        Array(10).fill(6)
-      ),
-      { type: 'stand', player: 'a' },
-      { type: 'stand', player: 'b' },
-      { type: 'stand', player: 'c' }
+  test('climbing off the bottom hands the roll to the new lowest hand', () => {
+    // c rolls five 5s, beating everyone; b (four 4s) is now lowest and misses twice
+    const g = play(called('razzle', DEAL, [5, 5, 5, 2, 3, 2, 3]), {
+      type: 'reroll',
+      player: 'c',
+      keep: [0, 1],
+    })
+    expect(bottomTurn(g)).toBe('b')
+    expect(bottomTarget(g, 'b')).toBe('a')
+    const end = play(
+      g,
+      { type: 'reroll', player: 'b', keep: [0, 1, 2, 3] },
+      { type: 'reroll', player: 'b', keep: [0, 1, 2, 3] }
     )
-    expect(g.phase).toMatchObject({ kind: 'play', cycle: 1 })
-    expect(g.log.at(-1)).toEqual({
+    expect(end.phase).toMatchObject({ kind: 'roundOver', loser: 'b' })
+  })
+
+  test('tied at the bottom: roll in turn, then take the tie and replay', () => {
+    // b and c both hold two 5s; b (nearest the Hammer) rolls first
+    const g = called(
+      'razzle',
+      [6, 6, 6, 1, 2, 5, 5, 2, 3, 4, 5, 5, 4, 3, 2],
+      [2, 3, 4, 4, 3, 2, ...Array(10).fill(6)]
+    )
+    expect(bottomTurn(g)).toBe('b')
+    // c can still roll, so b can't take the tie yet
+    expect(() => applyAction(g, { type: 'stand', player: 'b' })).toThrow(/worst hand/)
+    const level = play(
+      g,
+      { type: 'reroll', player: 'b', keep: [0, 1] },
+      { type: 'reroll', player: 'b', keep: [0, 1] }
+    )
+    // b is out of rolls and still level: c may take the tie
+    expect(bottomTurn(level)).toBe('c')
+    const replay = play(level, { type: 'stand', player: 'c' })
+    expect(replay.phase).toMatchObject({ kind: 'play', cycle: 1 })
+    expect(replay.log.at(-1)).toEqual({
       type: 'cycle',
       players: ['b', 'c'],
       reason: 'tie',

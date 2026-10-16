@@ -37,7 +37,12 @@ export const BOSS_NAMES: Record<BossCategory, string> = {
   'four-of-a-kind': 'four of a kind',
   'five-of-a-kind': 'five of a kind',
 }
-const COUNT = ['', 'one', 'two', 'three', 'four', 'five']
+/** Counts in words, for Razzle hands */
+export const COUNT_WORDS = ['', 'one', 'two', 'three', 'four', 'five']
+const COUNT = COUNT_WORDS
+
+/** A Razzle hand in words: "three 2s" */
+export const razzleName = (count: number, face: number) => `${COUNT[count]} ${face}s`
 
 /** The game dice first, then the rest of the roll (unlabeled) */
 const split = (
@@ -69,7 +74,7 @@ function specialtyGroups(
     // The chosen number plus the wild 1s
     const { count, face } = razzleScore(dice)
     const indices = all.filter((i) => dice[i] === face || dice[i] === 1)
-    return split(all, indices, `${COUNT[count]} ${face}s`)
+    return split(all, indices, razzleName(count, face))
   }
   // Tres Away: the dice put out so far, or, before any are, the best first
   // put-out from this roll

@@ -31,3 +31,14 @@ export function resolveKickerCycle(
   const tied = totals.filter((t) => t.total === worst.total).map((t) => t.id)
   return tied.length === 1 ? { kind: 'loser', loser: tied[0] } : { kind: 'tie', players: tied }
 }
+
+/**
+ * Order two hands in a kicker game, worst first: missing the game is worst
+ * (all misses are level), then the kicker decides by the call's variant.
+ */
+export function compareKickerHands(a: Dice, b: Dice, game: KickerGameId, variant: Variant): number {
+  const x = evaluateKickerHand(a, game, variant)
+  const y = evaluateKickerHand(b, game, variant)
+  if (!x.made || !y.made) return (x.made ? 1 : 0) - (y.made ? 1 : 0)
+  return compareKickerTotals(x.kickerTotal, y.kickerTotal, variant)
+}

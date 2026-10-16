@@ -308,6 +308,12 @@ const Tutorial = () => {
             best 10 is outlined; the rest is their kicker. You have the best
             kicker right now.
           </p>
+          <p>
+            Now the <strong>worst hand rolls first</strong>: right now that
+            player is the loser. They keep rolling until they climb off the
+            bottom or run out of rolls. If they never get off it, nobody else
+            has to roll. Ava's kicker of 7 is the worst.
+          </p>
         </>
       ),
       action: (
@@ -317,7 +323,7 @@ const Tutorial = () => {
             setStep('ava')
           }}
         >
-          Next: everyone rolls
+          Next: Ava rolls
         </Button>
       ),
     },
@@ -333,7 +339,8 @@ const Tutorial = () => {
           </p>
           <p>
             Ava keeps 2+4+4 and re-rolls her kicker, the 6 and the 1. She gets
-            6+6 = 12, the best possible, and stops rolling.
+            6+6 = 12, the best possible. She's off the bottom, so her turn
+            ends. Ben's 8 is the worst hand now.
           </p>
         </>
       ),
@@ -353,13 +360,14 @@ const Tutorial = () => {
       body: (
         <>
           <p>
-            Ben keeps 6+3+1 and re-rolls his kicker, the 6 and the 2. He gets a
-            kicker of {ben.text.split('kicker ')[1]}, and stops.
+            Ben keeps 6+3+1 and re-rolls his kicker, the 6 and the 2. He gets
+            5+4 = 9: still the worst hand, so he rolls again, and gets a kicker
+            of {ben.text.split('kicker ')[1]}. That was his third roll.
           </p>
           <p>
             Now look at the table: your kicker (10) <strong>ties</strong> Ben's
-            for the weakest hand, and Ben has stopped rolling. You've used 1
-            roll and have 2 left.
+            for the weakest hand, and Ben is out of rolls, so it's your move.
+            You haven't rolled again yet: you have 2 rolls left.
           </p>
         </>
       ),
@@ -577,21 +585,13 @@ const Tutorial = () => {
       title: 'Ben chases your 12',
       body: (
         <p>
-          Ben keeps his 10 and re-rolls his kicker, twice. He ends on a kicker
-          of {ben.text.split('kicker ')[1]} and he's out of rolls. Nothing can
-          beat your 12, so you're done rolling.
+          Ben has the worst hand, so he rolls and you wait. He keeps his 10
+          and re-rolls his kicker, twice, and ends on a kicker of{' '}
+          {ben.text.split('kicker ')[1]}. He's out of rolls and still at the
+          bottom. You never had to roll.
         </p>
       ),
-      action: (
-        <Button
-          onClick={() => {
-            act({ type: 'stand', player: 'you' })
-            setStep('done')
-          }}
-        >
-          Stop rolling
-        </Button>
-      ),
+      action: <Button onClick={() => setStep('done')}>Next: the pencil</Button>,
     },
     lucky: {
       title: mine.made ? `Kicker ${mine.total}: that paid off` : 'Your roll',
@@ -599,19 +599,11 @@ const Tutorial = () => {
         <p>
           {mine.text}. You beat Ben's 10, but it was a long shot: only{' '}
           {fmtPct(TIE_ODDS.better, 1)} of rolls do that. Next time, take the
-          tie. You still have a roll, but you're safe now, so stop rolling.
+          tie. You're off the bottom, and Ben, the worst hand now, is out of
+          rolls.
         </p>
       ),
-      action: (
-        <Button
-          onClick={() => {
-            act({ type: 'stand', player: 'you' })
-            setStep('done')
-          }}
-        >
-          Stop rolling
-        </Button>
-      ),
+      action: <Button onClick={() => setStep('done')}>Next: the pencil</Button>,
     },
     done: {
       title: 'Ben takes a pencil',

@@ -14,6 +14,8 @@ import {
   keepsKickers,
   activeSeats,
   applyAction,
+  bottomTarget,
+  bottomTurn,
   wouldLoseIfStopped,
   createGame,
   refusalSeats,
@@ -225,6 +227,18 @@ describe('playing and scoring (§3.1, §4)', () => {
       { type: 'accept', player: 'b' }
     )
 
+  test('the worst hand rolls first; nobody else can roll', () => {
+    const g = start()
+    // c alone missed 10-2
+    expect(bottomTurn(g)).toBe('c')
+    expect(() =>
+      applyAction(g, { type: 'reroll', player: 'a', keep: [0, 1] })
+    ).toThrow(/c's turn/)
+    expect(() => applyAction(g, { type: 'stand', player: 'b' })).toThrow(
+      /c's turn/
+    )
+  })
+
   test('re-rolling keeps the chosen dice in place', () => {
     const g = applyAction(start([6, 1, 1, 1]), {
       type: 'reroll',
@@ -237,10 +251,8 @@ describe('playing and scoring (§3.1, §4)', () => {
   test('worst kicker takes a pencil and the Hammer', () => {
     const g = play(
       start([6, 1, 1, 1, 1, 1, 1]),
-      { type: 'stand', player: 'a' },
-      { type: 'stand', player: 'b' },
       { type: 'reroll', player: 'c', keep: [3] }, // 6+4 = 10, kickers 1+1+1 = 3
-      // c is the lowest hand with a roll left, so c rolls the kickers and stays at 3
+      // still the worst hand, so c rolls the kickers again and stays at 3
       { type: 'reroll', player: 'c', keep: [0, 3] }
     )
     expect(g.phase).toMatchObject({ kind: 'roundOver', loser: 'c' })
@@ -248,50 +260,65 @@ describe('playing and scoring (§3.1, §4)', () => {
     expect(g.seats.find((s) => s.id === 'c')!.pencils).toBe(1)
   })
 
-  test('a player is done after 3 rolls', () => {
+  test('out of rolls at the bottom: the worst hand loses, and nobody else rolls', () => {
     const g = play(
       start([1, 1, 1, 1, 1, 1, 1, 1, 1, 1]),
       { type: 'reroll', player: 'c', keep: [] },
       { type: 'reroll', player: 'c', keep: [] }
     )
-    expect(() =>
-      applyAction(g, { type: 'reroll', player: 'c', keep: [] })
-    ).toThrow(/already done/)
+    expect(g.phase).toMatchObject({ kind: 'roundOver', loser: 'c' })
+    expect(g.log.filter((e) => e.type === 'rolled')).toHaveLength(2)
+  })
+
+  test('climbing off the bottom hands the roll to the new worst hand', () => {
+    // c makes 10-2 with kickers 6+6+6 = 18: now b (4) is the worst
+    const g = applyAction(start([4, 6, 6, 6, 6]), {
+      type: 'reroll',
+      player: 'c',
+      keep: [],
+    })
+    expect(dice(g, 'c')).toEqual([4, 6, 6, 6, 6])
+    expect(bottomTurn(g)).toBe('b')
+    expect(bottomTarget(g, 'b')).toBe('a')
   })
 
   test('a player may pick up dice that already made the game (no rule against it)', () => {
-    const g = applyAction(start([1, 1, 1, 1, 1]), {
-      type: 'reroll',
-      player: 'a',
-      keep: [],
-    })
-    expect(dice(g, 'a')).toEqual([1, 1, 1, 1, 1])
+    const g = play(
+      start([6, 1, 1, 1, 1, 1, 1, 1, 1]),
+      { type: 'reroll', player: 'c', keep: [3] }, // made, kicker 3: still worst
+      { type: 'reroll', player: 'c', keep: [] }
+    )
+    expect(dice(g, 'c')).toEqual([1, 1, 1, 1, 1])
   })
 
   test('two players miss: they cycle with fresh rolls while the maker is safe', () => {
-    // b re-rolls everything into a miss; c stands on a miss → b and c cycle
+    // a makes it; b and c both miss, so they're tied at the bottom
+    const g0 = play(
+      createGame({
+        players: players('a', 'b', 'c'),
+        hammer: 'a',
+        source: scripted([
+          ...[4, 6, 6, 6, 5],
+          ...[1, 1, 1, 1, 2],
+          ...[1, 2, 3, 4, 1],
+          /* b's re-rolls: */ ...Array(10).fill(1),
+          /* cycle: */ ...[4, 6, 1, 1, 1, 2, 2, 2, 2, 2],
+          /* c's re-rolls: */ ...Array(10).fill(2),
+        ]),
+      }),
+      { type: 'call', player: 'a', call: { game: '10-2', variant: 'high' } },
+      { type: 'accept', player: 'b' }
+    )
+    // b, nearest the Hammer, rolls first, and can't take the tie while c can still roll
+    expect(bottomTurn(g0)).toBe('b')
+    expect(() => applyAction(g0, { type: 'stand', player: 'b' })).toThrow(
+      /worst hand/
+    )
     const g = play(
-      start([
-        1,
-        1,
-        1,
-        1,
-        1,
-        /* cycle: */ 4,
-        6,
-        1,
-        1,
-        1,
-        2,
-        2,
-        2,
-        2,
-        2,
-        /* c's re-rolls: */ ...Array(10).fill(2),
-      ]),
-      { type: 'stand', player: 'a' },
+      g0,
       { type: 'reroll', player: 'b', keep: [] },
-      { type: 'stand', player: 'b' },
+      { type: 'reroll', player: 'b', keep: [] },
+      // b is out of rolls and still level: c takes the tie
       { type: 'stand', player: 'c' }
     )
     expect(g.phase.kind).toBe('play')
@@ -305,66 +332,67 @@ describe('playing and scoring (§3.1, §4)', () => {
       reason: 'missed',
     })
 
-    // In the cycle, b makes it and c misses; c can't stand on a miss, rolls twice more and loses
+    // In the cycle, b makes it and c misses; c rolls twice more and loses
+    expect(bottomTurn(g)).toBe('c')
     const end = play(
       g,
-      { type: 'stand', player: 'b' },
       { type: 'reroll', player: 'c', keep: [] },
       { type: 'reroll', player: 'c', keep: [] }
     )
     expect(end.phase).toMatchObject({ kind: 'roundOver', loser: 'c' })
   })
 
-  test('no standing at the bottom: with everyone else finished, the lowest hand rolls; level with it, you may take the tie', () => {
-    // a 17, b 4; c re-rolls into 6+4 = 10 with kickers 1+1+1 = 3, the lowest
-    const g = play(
-      start([6, 1, 1, 1]),
-      { type: 'stand', player: 'a' },
-      { type: 'stand', player: 'b' },
-      { type: 'reroll', player: 'c', keep: [3] }
-    )
+  test('no standing at the bottom: the worst hand rolls while it has rolls', () => {
+    const g = start([6, 1, 1, 1])
+    expect(wouldLoseIfStopped(g, 'c')).toBe(true)
     expect(() => applyAction(g, { type: 'stand', player: 'c' })).toThrow(
-      /lowest hand/
+      /worst hand/
     )
-    // While anyone else is still rolling, standing is allowed (the lowest hand isn't known yet)
-    const early = play(start([6, 1, 1, 1]), {
+    // c makes it, but kickers 1+1+1 = 3 are still the worst
+    const made = applyAction(g, { type: 'reroll', player: 'c', keep: [3] })
+    expect(() => applyAction(made, { type: 'stand', player: 'c' })).toThrow(
+      /worst hand/
+    )
+  })
+
+  test('kickers are rolled together: once the kept dice make the game, every other die is re-rolled', () => {
+    // c rolls into 6+4 (10-2) with kickers 1, 1, 1
+    const g = applyAction(start([6, 1, 1, 1, 1, 2, 3]), {
       type: 'reroll',
       player: 'c',
       keep: [3],
     })
+    expect(dice(g, 'c')).toEqual([6, 1, 1, 4, 1])
     expect(() =>
-      applyAction(early, { type: 'stand', player: 'c' })
-    ).not.toThrow()
-  })
-
-  test('kickers are rolled together: once the kept dice make the game, every other die is re-rolled', () => {
-    // a has 4,6 (10-2) + 6,6,5: keeping a kicker is not allowed
-    const g = start([1, 2, 3])
-    expect(() =>
-      applyAction(g, { type: 'reroll', player: 'a', keep: [0, 1, 2] })
+      applyAction(g, { type: 'reroll', player: 'c', keep: [0, 3, 1] })
     ).toThrow(/rolled together/)
     expect(() =>
-      applyAction(g, { type: 'reroll', player: 'a', keep: [0, 1, 2, 3, 4] })
+      applyAction(g, { type: 'reroll', player: 'c', keep: [0, 1, 2, 3, 4] })
     ).toThrow(/rolled together/)
     // keeping just the game dice re-rolls all three kickers
-    const next = applyAction(g, { type: 'reroll', player: 'a', keep: [0, 1] })
-    expect(dice(next, 'a')).toEqual([4, 6, 1, 2, 3])
+    const next = applyAction(g, { type: 'reroll', player: 'c', keep: [0, 3] })
+    expect(dice(next, 'c')).toEqual([6, 1, 2, 4, 3])
     // breaking up the game is still allowed, and so is keeping dice toward a game you haven't made
     expect(() =>
-      applyAction(g, { type: 'reroll', player: 'a', keep: [1, 2] })
+      applyAction(g, { type: 'reroll', player: 'c', keep: [1, 2] })
     ).not.toThrow()
     expect(() =>
-      applyAction(g, { type: 'reroll', player: 'c', keep: [3, 0] })
+      applyAction(start([1, 1, 1]), { type: 'reroll', player: 'c', keep: [3, 0] })
     ).not.toThrow()
   })
 
   test('a tie for worst kicker replays the same call (3+ players)', () => {
-    // c re-rolls to 4,6 + 1,1,2 = 4, tying b's 4
     const g = play(
-      start([6, 1, 2, 1, /* tie replay: */ ...Array(10).fill(5)]),
-      { type: 'stand', player: 'a' },
-      { type: 'stand', player: 'b' },
+      start([
+        /* c: 6+4, kickers 1+2+1 = 4, tying b */ 6, 1, 2, 1,
+        /* b stays at 4, twice */ 1, 1, 2, 2, 1, 1,
+        /* tie replay: */ ...Array(10).fill(5),
+      ]),
       { type: 'reroll', player: 'c', keep: [3] },
+      // b is nearest the Hammer, so b rolls first
+      { type: 'reroll', player: 'b', keep: [0, 1] },
+      { type: 'reroll', player: 'b', keep: [0, 1] },
+      // b is out of rolls: c may take the tie
       { type: 'stand', player: 'c' }
     )
     expect(g.phase).toMatchObject({
@@ -383,11 +411,13 @@ describe('playing and scoring (§3.1, §4)', () => {
       createGame({
         players: players('a', 'b'),
         hammer: 'a',
-        source: scripted([4, 6, 1, 1, 2, 5, 5, 1, 1, 2]),
+        source: scripted([4, 6, 1, 1, 2, 5, 5, 1, 1, 2, 1, 1, 2, 2, 1, 1]),
       }),
       { type: 'call', player: 'a', call: { game: '10-2', variant: 'high' } },
       { type: 'accept', player: 'b' },
-      { type: 'stand', player: 'a' },
+      // tied at 4: a (the Hammer) rolls first and stays level, twice
+      { type: 'reroll', player: 'a', keep: [0, 1] },
+      { type: 'reroll', player: 'a', keep: [0, 1] },
       { type: 'stand', player: 'b' }
     )
     expect(g.phase).toMatchObject({ kind: 'roundOver', loser: null })
@@ -400,11 +430,12 @@ describe('playing and scoring (§3.1, §4)', () => {
       createGame({
         players: players('a', 'b'),
         hammer: 'a',
-        source: scripted([1, 1, 1, 1, 1, 2, 2, 2, 2, 2]),
+        source: scripted([1, 1, 1, 1, 1, 2, 2, 2, 2, 2, ...Array(10).fill(1)]),
       }),
       { type: 'call', player: 'a', call: { game: '10-2', variant: 'high' } },
       { type: 'accept', player: 'b' },
-      { type: 'stand', player: 'a' },
+      { type: 'reroll', player: 'a', keep: [] },
+      { type: 'reroll', player: 'a', keep: [] },
       { type: 'stand', player: 'b' }
     )
     expect(g.phase).toMatchObject({ kind: 'roundOver', loser: null })
@@ -423,33 +454,13 @@ describe('playing and scoring (§3.1, §4)', () => {
       rules: { pencilsToLose: 1 },
       source: scripted([
         // round 1: c misses 10-2, and misses again on both re-rolls
-        4,
-        6,
-        1,
-        1,
-        1,
-        5,
-        5,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        2,
+        ...[4, 6, 1, 1, 1],
+        ...[5, 5, 1, 1, 1],
+        ...[1, 1, 1, 1, 2],
         ...Array(10).fill(1),
         // round 2 deal (a, b): b misses, twice more
-        4,
-        6,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        1,
-        2,
+        ...[4, 6, 1, 1, 1],
+        ...[1, 1, 1, 1, 2],
         ...Array(10).fill(1),
       ]),
     })
@@ -457,8 +468,6 @@ describe('playing and scoring (§3.1, §4)', () => {
       g,
       { type: 'call', player: 'a', call: { game: '10-2', variant: 'high' } },
       { type: 'accept', player: 'b' },
-      { type: 'stand', player: 'a' },
-      { type: 'stand', player: 'b' },
       { type: 'reroll', player: 'c', keep: [] },
       { type: 'reroll', player: 'c', keep: [] }
     )
@@ -471,7 +480,6 @@ describe('playing and scoring (§3.1, §4)', () => {
       g,
       { type: 'call', player: 'a', call: { game: '10-2', variant: 'high' } },
       { type: 'accept', player: 'b' },
-      { type: 'stand', player: 'a' },
       { type: 'reroll', player: 'b', keep: [] },
       { type: 'reroll', player: 'b', keep: [] }
     )
@@ -527,8 +535,8 @@ describe('random games always finish and keep invariants', () => {
         return { type: 'call', player: g.hammer, call: c }
       }
       case 'play': {
-        const rolling = g.phase.rolling
-        const id = pick(Object.keys(rolling).filter((p) => !rolling[p].done))
+        // Played from the bottom: only the worst hand rolls
+        const id = bottomTurn(g)!
         if (r() < 0.4 && !wouldLoseIfStopped(g, id))
           return { type: 'stand', player: id }
         let keep = [0, 1, 2, 3, 4].filter(() => r() < 0.5)

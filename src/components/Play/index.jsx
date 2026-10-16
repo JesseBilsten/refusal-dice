@@ -3,11 +3,15 @@ import { withPrefix } from 'gatsby'
 import { FlaskConical, Lightbulb } from 'lucide-react'
 import {
   applyAction,
+  bottomHands,
+  bottomTarget,
   evaluateKickerHand,
   isKickerGame,
   keepsKickers,
+  razzleScore,
   refusalSeats,
   viewFor,
+  wouldLoseIfStopped,
 } from '../../engine'
 import { ALL_CALLS, botAction, callScore } from '../../strategy'
 import { formatCallLabel, GAMES_MAP } from '../../lib/games-config'
@@ -20,6 +24,7 @@ import {
   Hand,
   RollButton,
   playRollSound,
+  razzleName,
   useDicePrefs,
 } from '../Dice'
 import { Panel } from '../Page'
@@ -45,8 +50,18 @@ const BOT_DELAY = 750
 const ZERO = [0, 0, 0, 0, 0]
 const label = (call) => formatCallLabel(call)
 
+/** A hand in the play phase, in words: "three 2s", "a kicker of 9", "no 10-3" */
+function handText(dice, call) {
+  if (call.game === 'razzle') {
+    const { count, face } = razzleScore(dice)
+    return razzleName(count, face)
+  }
+  const hand = evaluateKickerHand(dice, call.game, call.variant)
+  return hand.made ? `a kicker of ${hand.kickerTotal}` : `no ${GAMES_MAP[call.game]?.name || call.game}`
+}
+
 /** What a suggested action means, in words */
-function hintText(action, dice) {
+function hintText(action, dice, phase) {
   switch (action.type) {
     case 'call':
       return `Call ${label(action.call)}.`
@@ -61,7 +76,7 @@ function hintText(action, dice) {
         ? `Keep ${action.keep.map((i) => dice[i]).join('-')} and roll ${5 - action.keep.length}.`
         : 'Roll all five.'
     case 'stand':
-      return 'Stand: stop rolling.'
+      return phase.kind === 'play' ? 'Take the tie: stand and replay.' : 'Stand: stop rolling.'
     case 'putOut':
       return `Put out ${action.dice.map((i) => dice[i]).join(' ')}.`
     case 'roll':
@@ -211,12 +226,14 @@ export default function Play() {
   game.log.slice(roundStart).forEach((e) => {
     if (e.type === 'refused') decisions[e.player] = 'Refused'
     if (e.type === 'accepted') decisions[e.player] = 'Accepted'
-    if (e.type === 'stood') decisions[e.player] = 'Done'
+    if (e.type === 'stood') decisions[e.player] = phase.kind === 'play' ? 'Took the tie' : 'Done'
     if (e.type === 'cycle') e.players.forEach((id) => (decisions[id] = 'Replaying'))
   })
+  // Played from the bottom: the worst hand rolls until it climbs off or runs out of rolls
+  const bottom = bottomHands(game)
   if (phase.kind === 'play')
     Object.entries(phase.rolling).forEach(([id, r]) => {
-      if (r.done) decisions[id] = 'Done'
+      if (r.done && decisions[id] !== 'Took the tie') decisions[id] = 'Out of rolls'
     })
 
   const toggleKeep = (i) => {
@@ -248,7 +265,18 @@ export default function Play() {
     controls = <RollButton onClick={() => act({ type: 'nextRound' })}>Next round</RollButton>
   } else if (!mine) {
     title = meOut ? 'You’re out: watching the bots' : `${names[who]} is thinking…`
-    body = <p className="text-muted-foreground">{phase.kind === 'call' ? 'The Hammer looks at their dice.' : 'Watch the table.'}</p>
+    if (phase.kind === 'play') {
+      const target = bottomTarget(game, who)
+      title = `${names[who]} has the worst hand and rolls`
+      body = (
+        <p className="text-muted-foreground">
+          {target === YOU ? 'They need to beat your' : `They need to beat ${names[target]}’s`} {handText(game.dice[target], call)}.
+          If they run out of rolls at the bottom, they take the pencil{phase.rolling[YOU] && !bottom.includes(YOU) ? ' and you never have to roll' : ''}.
+        </p>
+      )
+    } else {
+      body = <p className="text-muted-foreground">{phase.kind === 'call' ? 'The Hammer looks at their dice.' : 'Watch the table.'}</p>
+    }
   } else if (phase.kind === 'call' || phase.kind === 'secondCall') {
     const second = phase.kind === 'secondCall'
     title = second ? 'Both refused: make a second call' : 'You hold the Hammer: call a game'
@@ -314,23 +342,51 @@ export default function Play() {
     const kicker = isKickerGame(call.game)
     const hand = kicker ? evaluateKickerHand(myDice, call.game, call.variant) : null
     const badKeep = Boolean(kicker && keep.length && keepsKickers(keep.map((i) => myDice[i]), call.game))
-    title = `Your roll: ${left} ${left === 1 ? 'roll' : 'rolls'} left`
+    const must = wouldLoseIfStopped(game, YOU)
+    const target = bottomTarget(game, YOU)
+    const targetDice = game.dice[target]
+    const tied = bottom.filter((id) => id !== YOU)
+    title = `You have the worst hand: ${left} ${left === 1 ? 'roll' : 'rolls'} left`
     body = (
-      <p>
-        Tap dice to keep them, then roll the rest, or stand.
-        {kicker && hand?.made && ' You’ve made the game: the kicker is rolled whole, so keep just the game dice to re-roll it.'}
-      </p>
+      <>
+        <p>
+          {must ? (
+            <>
+              Roll to beat {names[target]}’s {handText(targetDice, call)}. Climb off the bottom
+              and your turn ends; still there when your rolls run out, and you take the pencil.
+            </>
+          ) : (
+            <>
+              You’re tied with {tied.map((id) => names[id]).join(' and ')}, who {tied.length === 1 ? 'is' : 'are'} out of
+              rolls. Take the tie and you replay, or roll to beat it.
+            </>
+          )}
+        </p>
+        <p className="text-muted-foreground">
+          Tap dice to keep them, then roll the rest.
+          {kicker && hand?.made && ' You’ve made the game: the kicker is rolled whole, so keep just the game dice.'}
+        </p>
+      </>
     )
     controls = (
       <div className="flex flex-wrap items-center gap-2">
         <RollButton disabled={keep.length === 5 || badKeep} onClick={() => act({ type: 'reroll', player: YOU, keep })}>
           Roll {5 - keep.length}
         </RollButton>
-        <Button variant="outline" onClick={() => act({ type: 'stand', player: YOU })}>Stand</Button>
+        {!must && <Button variant="outline" onClick={() => act({ type: 'stand', player: YOU })}>Take the tie</Button>}
         {badKeep && <span className="text-sm text-destructive">Keep only the game dice: the kicker is rolled whole.</span>}
       </div>
     )
-    labLink = `/odds-lab/?tab=keep&game=${call.game}&roll=${myDice.join('')}&rolls=${Math.max(1, left - 1)}${kicker && hand?.made ? `&goal=kicker&variant=${call.variant}&total=${hand.kickerTotal}` : ''}`
+    // The Odds Lab: your exact keep options for beating that hand
+    let goal = ''
+    if (call.game === 'razzle') {
+      const { count, face } = razzleScore(targetDice)
+      goal = `&count=${count}&face=${face}`
+    } else {
+      const theirs = evaluateKickerHand(targetDice, call.game, call.variant)
+      goal = theirs.made ? `&goal=kicker&variant=${call.variant}&total=${theirs.kickerTotal}` : '&goal=make'
+    }
+    labLink = `/odds-lab/?tab=keep&game=${call.game}&roll=${myDice.join('')}&rolls=${left}${goal}`
   } else if (phase.kind === 'tresAway') {
     const h = phase.hands[YOU]
     title = h.fresh ? 'Put out at least one die' : 'Roll the dice in your hand'
@@ -382,7 +438,7 @@ export default function Play() {
     ((phase.kind === 'play') ||
       (phase.kind === 'tresAway' && phase.hands[YOU].fresh) ||
       (phase.kind === 'boss' && phase.stage !== 'decide'))
-  const hint = hints && suggestion ? hintText(suggestion, myDice) : null
+  const hint = hints && suggestion ? hintText(suggestion, myDice, phase) : null
 
   return (
     <div className="space-y-6">
@@ -404,12 +460,14 @@ export default function Play() {
           const badges = []
           if (phase.kind !== 'gameOver') {
             if (s.id === game.hammer) badges.push(phase.kind === 'roundOver' ? '🔨 Next Hammer' : '🔨 Hammer')
-            if (phase.kind !== 'roundOver') {
+            // Refusal seats matter until play starts; then the decision badge says what they did
+            if (['call', 'refusal', 'secondCall'].includes(phase.kind)) {
               if (s.id === seats.first) badges.push('1st refusal')
               if (s.id === seats.second) badges.push('2nd refusal')
             }
           }
           if (phase.kind === 'boss' && phase.boss === s.id) badges.push('👑 Boss')
+          if (bottom.includes(s.id)) badges.push(bottom.length > 1 ? 'Tied worst' : 'Worst hand')
           const dice = view.dice[s.id] || [null, null, null, null, null]
           const isYou = s.id === YOU
           const tres = phase.kind === 'tresAway' && phase.hands[s.id]

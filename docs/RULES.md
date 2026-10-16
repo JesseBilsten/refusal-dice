@@ -39,7 +39,7 @@ Each rule is tagged by where it came from:
 - **Up to 3 rolls total.** The initial hidden roll is roll 1. [confirmed]
 - Between rolls a player keeps whatever dice they choose and re-rolls the rest. Re-rolling is optional, and a player can stop at any time. [confirmed]
   - **No rule forces a player to keep dice.** A player may re-roll any dice, including all five, even dice that already made the game. New players sometimes do this by accident. In practice nobody breaks up a made game, and the table might object, but there's no hard rule against it. The engine allows it. Strategy tools should flag it as almost always a mistake (to be checked case by case with the owner). [confirmed]
-- **Everyone rolls at the same time** (not in turn order). [confirmed]
+- **The worst hand rolls first** (§4), not in seat order: only the player at the bottom rolls, until they climb off it or run out of rolls. [confirmed]
 - **Dice are visible to everyone** from the start of play onward; only the initial roll is hidden (until play starts). [confirmed]
 - A player tries to **make the game** and then get a kicker that beats the worst kicker at the table (e.g. in 10-3, roll until you have the game and a better kicker than the worst player). [confirmed]
 - **Terminology: "the kicker" is all the remaining dice together** (one die in 10-4, three in 10-2), not each die. Say "a kicker of 6+1", never "kickers 6 and 1" or "a good kicker and a bad one". [confirmed]
@@ -90,14 +90,17 @@ Each rule is tagged by where it came from:
 
 ### 3.4 Razzle
 
-- **3 rolls**, everyone at once, dice visible (same as the default). [confirmed]
+- **3 rolls**, dice visible, played from the bottom like the kicker games (§4): the lowest hand rolls first. [confirmed]
 - **Score:** the most of any one number, with **1s wild for any number**. Example: 1-1-1-4-x is four 4s. [confirmed]
 - **Lowest score loses.** A higher count beats a lower count; **equal counts are broken by face value** (four 6s beat four 4s). Only identical hands tie (e.g. two players each with three 1s and a 4 both have four 4s), and the tied lowest hands play Razzle again until one loses. [confirmed]
+- Example: Ava holds two 5s, the lowest hand, and the next-lowest is your three 2s. Ava rolls until she beats three 2s; if she runs out of rolls first, she takes the pencil and nobody else rolls. Once she beats it, you're the lowest hand, so you roll. [confirmed]
 - Example: holding 1-1-1-4 (four 4s) against 6-6-6-1 (four 6s) with a roll left, the first player may pick up the 4 and the other dice and roll for 1s and 6s to tie or beat four 6s. [confirmed]
 - Re-rolling everything is common and allowed. For example, a player holding three 2s may pick them all up to chase 1s and 6s once someone else shows three 6s. [confirmed]
 
 ## 4. Finding the loser
 
+- **The worst hand rolls first** (kicker games and Razzle; Tres Away and Boss have their own order). [confirmed] After the first roll, whoever holds the worst hand is the loser at that moment, so they roll, and keep rolling until they climb off the bottom or run out of rolls. Then whoever holds the worst hand now rolls. If the worst hand never improves, nobody else has to roll, and they take the pencil. "Worst" follows the call: missing the game is worst; in a Low call, the highest kicker is worst. The engine enforces it (`bottomTurn`, `bottomTarget` in `src/engine/round/game.ts`).
+  - Several players tied at the bottom: the tied player nearest the Hammer (going left, Hammer first) with rolls left rolls first. [inferred]
 - **Kicker games:** [confirmed]
   - Anyone who made the game beats anyone who didn't.
   - **Exactly one** player misses: they lose.
@@ -105,8 +108,8 @@ Each rule is tagged by where it came from:
   - **Everyone** made it: the **weakest hand** loses. The call (game + High/Low) defines what's weakest, so no separate kicker comparison is needed: in 10-3 High, a player with a kicker of 2+1 = 3 loses to everyone with a higher kicker. [confirmed]
 - **Ties for the loser:**
   - The tied players **replay the same called game, variant included**, starting over with fresh rolls, until one loser remains. [confirmed]
-  - **No standing at the bottom:** once everyone else has finished, a player whose hand would lose outright has no choice: they roll while they have rolls, and lose when they're out. The engine rejects `stand` there (`wouldLoseIfStopped`). [confirmed] While others are still rolling, the bottom isn't settled, so stopping is allowed. [inferred]
-  - **Taking a tie:** a player tied for the weakest hand who still has a roll left, when the player(s) they're tied with have finished, may stand and **take the tie** (go to the replay) or roll in hope of beating it. [confirmed] Tables usually take the tie when the tied kicker is strong; when the chance of losing on a last roll is lower than the chance of losing the replay, rolling is right. `rollOrTakeTie` in `src/strategy/kicker-odds.ts` computes both exactly (e.g. tied at 5+5 in 10-3 High with 2 rolls left: rolling loses ~77% even using both rolls, and 87.5% on a last roll; the replay ~50%). It counts every roll left: falling short means rolling again, and landing level is the same choice again.
+  - **No standing at the bottom:** the worst hand has no choice: it rolls while it has rolls, and loses when it's out. The engine rejects `stand` there (`wouldLoseIfStopped`). [confirmed]
+  - **Taking a tie:** a player tied for the weakest hand who still has a roll left, when the player(s) they're tied with are out of rolls, may stand and **take the tie** (go to the replay) or roll in hope of beating it. [confirmed] Tables usually take the tie when the tied kicker is strong; when the chance of losing on a last roll is lower than the chance of losing the replay, rolling is right. `rollOrTakeTie` in `src/strategy/kicker-odds.ts` computes both exactly (e.g. tied at 5+5 in 10-3 High with 2 rolls left: rolling loses ~77% even using both rolls, and 87.5% on a last roll; the replay ~50%). It counts every roll left: falling short means rolling again, and landing level is the same choice again.
   - **Exception, 2-player table:** when only 2 players are left in the whole game and they tie, or **both miss the game**, no pencil is taken and the Hammer passes to the other player. [confirmed]
 
 ## 5. House rules (configurable)
@@ -128,7 +131,8 @@ Engine choices made without a ruling yet (the engine does the [inferred] thing u
 2. **Boss replay: a tie for the best hand.** When tied worst hands replay Boss and two of them tie for the best hand, the main-game rule (no Boss, no loser) would let them all off. [inferred: the replaying players start over with fresh rolls]
 3. **Boss on high card: which dice must the Boss keep?** [inferred: the single highest die. For other hands, the dice of the pairs/sets]
 4. **Boss: may the Boss skip the extra roll?** [inferred: yes, standing is allowed]
-5. **Boss "come up": strict order?** [inferred: the engine enforces order from the Boss's left, since in online play waiting can be an advantage]
+5. **Tied at the bottom: who rolls first?** [inferred: the tied player nearest the Hammer, going left; they can't take the tie while another tied player can still roll]
+6. **Boss "come up": strict order?** [inferred: the engine enforces order from the Boss's left, since in online play waiting can be an advantage]
 
 ## Resolved questions (2026-10-14)
 

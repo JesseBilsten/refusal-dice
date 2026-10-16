@@ -1,6 +1,6 @@
 import { DiceSource, rollDice } from '../dice-source'
 import { isKickerGame, keepsKickers } from '../rules/kicker-games'
-import { resolveKickerCycle } from '../rules/resolve'
+import { compareKickerHands, resolveKickerCycle } from '../rules/resolve'
 import {
   bestHands,
   bossHand,
@@ -27,8 +27,8 @@ import {
  * State is plain data (including the dice source), so games can be saved,
  * replayed, sent over the network and run identically on a server.
  *
- * Kicker games and Razzle use the `play` phase (everyone rolls at once, up
- * to 3 rolls). Tres Away (§3.2) and Boss (§3.3) have their own phases.
+ * Kicker games and Razzle use the `play` phase (up to 3 rolls, played from
+ * the bottom: the worst hand rolls first). Tres Away (§3.2) and Boss (§3.3) have their own phases.
  */
 
 export const MAX_ROLLS = 3
@@ -384,32 +384,67 @@ function scorePencil(state: GameState, call: Call, loser: PlayerId): GameState {
   return { ...next, hammer, phase: { kind: 'roundOver', call, loser } }
 }
 
+/** How the play phase ranks hands, worst first: Razzle scores, or the kicker game's hands */
+function playCompare(call: Call): (a: Dice, b: Dice) => number {
+  if (call.game === 'razzle') return compareRazzle
+  if (!isKickerGame(call.game) || !call.variant) throw new EngineError('Unsupported call in play')
+  const { game, variant } = call
+  return (a, b) => compareKickerHands(a, b, game, variant)
+}
+
+const playWorst = (state: GameState, ids: PlayerId[]): PlayerId[] => {
+  const { phase } = state
+  if (phase.kind !== 'play') return []
+  return seatOrderFrom(state, state.hammer, worstHands(ids, (id) => state.dice[id], playCompare(phase.call)))
+}
+
 /**
- * Would `player` be the only loser if they stopped now? Only decidable once
- * everyone else in the cycle has finished rolling.
+ * Kicker games and Razzle are played from the bottom (§4): whoever holds the
+ * worst hand is the loser at that moment, so they roll, and keep rolling
+ * until they climb off the bottom or run out of rolls. Then the new worst
+ * hand rolls. If the worst hand never improves, nobody else has to roll.
+ *
+ * Returns who must roll now, or null when the cycle is settled: the worst
+ * hand is out of rolls. With a tie at the bottom, the tied player nearest
+ * the Hammer with rolls left goes first [inferred]; they may take the tie
+ * (stand) only once the others they're tied with have no rolls left.
+ */
+export function bottomTurn(state: GameState): PlayerId | null {
+  const { phase } = state
+  if (phase.kind !== 'play') return null
+  return playWorst(state, Object.keys(phase.rolling)).find((id) => !phase.rolling[id].done) ?? null
+}
+
+/** Who holds the worst hand right now (several when tied), nearest the Hammer first */
+export function bottomHands(state: GameState): PlayerId[] {
+  const { phase } = state
+  return phase.kind === 'play' ? playWorst(state, Object.keys(phase.rolling)) : []
+}
+
+/** Whose hand `player` must beat to get off the bottom: the worst of the others */
+export function bottomTarget(state: GameState, player: PlayerId): PlayerId | null {
+  const { phase } = state
+  if (phase.kind !== 'play') return null
+  return playWorst(state, Object.keys(phase.rolling).filter((id) => id !== player))[0] ?? null
+}
+
+/**
+ * Must `player` keep rolling? Yes when they hold the worst hand alone, or
+ * tied with someone who can still roll (§4: no standing at the bottom).
  */
 export function wouldLoseIfStopped(state: GameState, player: PlayerId): boolean {
   const { phase } = state
   if (phase.kind !== 'play' || !phase.rolling[player]) return false
-  const players = Object.keys(phase.rolling)
-  if (players.some((id) => id !== player && !phase.rolling[id].done)) return false
-  const call = phase.call
-  if (call.game === 'razzle') {
-    const worst = worstHands(players, (id) => state.dice[id], compareRazzle)
-    return worst.length === 1 && worst[0] === player
-  }
-  if (!isKickerGame(call.game) || !call.variant) return false
-  const hands: Record<PlayerId, Dice> = {}
-  players.forEach((id) => (hands[id] = state.dice[id]))
-  const result = resolveKickerCycle(hands, call.game, call.variant)
-  return result.kind === 'loser' && result.loser === player
+  const worst = playWorst(state, Object.keys(phase.rolling))
+  return worst.includes(player) && (worst.length === 1 || worst.some((id) => id !== player && !phase.rolling[id].done))
 }
 
 /** When everyone in the cycle is done rolling, decide what happens next. */
 function maybeResolve(state: GameState): GameState {
   const { phase } = state
   if (phase.kind !== 'play') return state
-  if (!Object.values(phase.rolling).every((r) => r.done)) return state
+
+  if (bottomTurn(state)) return state
 
   const call = phase.call
   const players = Object.keys(phase.rolling)
@@ -597,13 +632,17 @@ export function applyAction(state: GameState, action: Action): GameState {
         const rolls = phase.rolling[action.player]
         if (!rolls) throw new EngineError(`${action.player} isn't playing this cycle`)
         if (rolls.done) throw new EngineError(`${action.player} is already done rolling`)
+        const turn = bottomTurn(state)
+        if (turn !== action.player) {
+          throw new EngineError(`The worst hand rolls first: it's ${turn}'s turn, not ${action.player}'s`)
+        }
 
         if (action.type === 'stand') {
-          // No standing at the bottom (§4): with everyone else finished, the
-          // lowest hand rolls while it has rolls. Standing level with the
-          // lowest hand is "taking the tie", and that's allowed.
+          // No standing at the bottom (§4): the worst hand rolls while it has
+          // rolls. Standing level with the others at the bottom, once they're
+          // out of rolls, is "taking the tie", and that's allowed.
           if (wouldLoseIfStopped(state, action.player)) {
-            throw new EngineError('You have the lowest hand: roll while you have rolls left')
+            throw new EngineError('You have the worst hand: roll while you have rolls left')
           }
           return maybeResolve(
             log(

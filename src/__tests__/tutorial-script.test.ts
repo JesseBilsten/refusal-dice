@@ -1,7 +1,7 @@
 /**
  * The tutorial's scripted round plays out as the lesson says, on both paths.
  */
-import { Action, GameState, applyAction, evaluateKickerHand } from '../engine'
+import { Action, GameState, applyAction, bottomTurn, evaluateKickerHand } from '../engine'
 import { freshMakeChance, rollOrTakeTie } from '../strategy'
 import {
   AT_THE_LINE,
@@ -42,7 +42,13 @@ function toDecision() {
   expect([kickers(g, 'you'), kickers(g, 'ava'), kickers(g, 'ben')]).toEqual([
     10, 7, 8,
   ])
-  g = play(g, ...AVA_ROLLS, ...BEN_ROLLS)
+  // The worst hand rolls first: Ava, then Ben
+  expect(bottomTurn(g)).toBe('ava')
+  g = play(g, ...AVA_ROLLS)
+  expect(bottomTurn(g)).toBe('ben')
+  g = play(g, ...BEN_ROLLS)
+  // Tied with Ben, who's out of rolls: your call
+  expect(bottomTurn(g)).toBe('you')
   expect([kickers(g, 'ava'), kickers(g, 'ben'), kickers(g, 'you')]).toEqual([
     12, 10, 10,
   ])
@@ -98,9 +104,9 @@ test('taking the tie: you and Ben replay, and Ben loses the replay', () => {
     'ben',
   ])
   expect([kickers(g, 'you'), kickers(g, 'ben')]).toEqual([12, 2])
+  // Ben is the worst hand, so only he rolls; out of rolls at 5, he loses
   g = play(g, ...BEN_REPLAY_ROLLS)
   expect(kickers(g, 'ben')).toBe(5)
-  g = applyAction(g, { type: 'stand', player: 'you' })
   expect(g.phase).toMatchObject({ kind: 'roundOver', loser: 'ben' })
 })
 
@@ -110,8 +116,8 @@ test('rolling anyway: 6+5 beats Ben, who takes the pencil', () => {
     player: 'you',
     keep: [0, 1, 2],
   })
+  // Off the bottom; Ben is out of rolls there, so he loses
   expect(kickers(g, 'you')).toBe(11)
-  g = applyAction(g, { type: 'stand', player: 'you' })
   expect(g.phase).toMatchObject({ kind: 'roundOver', loser: 'ben' })
 })
 
