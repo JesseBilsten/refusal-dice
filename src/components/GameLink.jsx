@@ -1,6 +1,6 @@
 import React from 'react'
 import { Link } from 'gatsby'
-import { GAMES_MAP, getGamePath } from '../lib/games-config'
+import { GAMES_MAP, formatCallLabel, getGamePath } from '../lib/games-config'
 
 /**
  * Inline link to a game's detail page.
@@ -28,3 +28,19 @@ const GameLink = ({ id, children, className = '', showEmoji = false }) => {
 }
 
 export default GameLink
+
+/**
+ * A call, named the same way everywhere: the game's emoji, its name and the
+ * variant ("👌 10-3 High"), linking to the game's page unless `link` is false.
+ * call: { game, variant? }
+ */
+export const CallName = ({ call, link = true, className = '' }) => {
+  const game = GAMES_MAP[call.game]
+  const text = formatCallLabel(call)
+  return (
+    <span className={`inline-flex items-center gap-1.5 ${className}`}>
+      {game?.emoji && <span aria-hidden>{game.emoji}</span>}
+      {link ? <GameLink id={call.game}>{text}</GameLink> : <span className="font-medium">{text}</span>}
+    </span>
+  )
+}

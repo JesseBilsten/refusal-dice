@@ -8,7 +8,9 @@ import { fmtPct, inWords, rankOptions } from './model'
  * chance as a bar, split into the ways it happens. See
  * .claude/skills/explain-odds/SKILL.md.
  *
- * options: [{ id, label: 'Take the tie', segments: [{ p, label, kind }], error?, visual? }]
+ * options: [{ id, label: 'Take the tie', segments: [{ p, label, kind }], error?, title?, visual? }]
+ *   label: the option as a verb phrase, also used in the verdict sentence
+ *   title: a node to head the option's row instead of label (e.g. a CallName)
  *   visual: a picture of the option, e.g. the dice it keeps
  *   error: standard error of a simulated total, shown as ± points
  * outcome: what the bars measure, as a verb phrase ('take the pencil')
@@ -56,13 +58,14 @@ function Verdict({ ranked, outcome, lowerIsBetter }) {
     return (
       <p className="text-base">
         <strong>It's a toss-up.</strong> You {outcome}{' '}
-        {ranked.map((o, i) => (
+        {best.map((o, i) => (
           <React.Fragment key={o.id}>
-            {i > 0 && (i === ranked.length - 1 ? ', or ' : ', ')}
+            {i > 0 && (i === best.length - 1 ? ', or ' : ', ')}
             {label(o)}
           </React.Fragment>
         ))}
         : too close to call.
+        {best.length < ranked.length && ' Everything else is worse.'}
       </p>
     )
   const [pick] = best
@@ -111,7 +114,7 @@ export default function OddsDecision({
               <div className="flex items-center justify-between gap-2">
                 <div className="flex flex-col gap-1.5">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-medium">{o.label}</span>
+                    <span className="font-medium">{o.title ?? o.label}</span>
                     {o.best && ranked.length > 1 && <Badge>Best</Badge>}
                   </div>
                   {o.visual}

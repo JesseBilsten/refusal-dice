@@ -21,6 +21,7 @@ import {
   SEAT_ODDS,
   barkOdds,
   simulateSeats,
+  mergeHammerOptions,
   simulateHammer,
   simulateRefusal,
   CALL_ODDS,
@@ -320,6 +321,26 @@ describe('call odds table', () => {
     Object.values(CALL_ODDS).forEach((row) => {
       expect(row).toHaveLength(ALL_CALLS.length)
       row.forEach((x) => expect(x >= 0 && x <= 1000).toBe(true))
+    })
+  })
+})
+
+describe('merging Hammer estimates', () => {
+  test('two halves merge to the same estimate as one run with those samples', () => {
+    const dice = [1, 2, 4, 4, 5] as const
+    const a = simulateHammer({ dice: [...dice] as any, samples: 120, seed: 4 })
+    const b = simulateHammer({ dice: [...dice] as any, samples: 80, seed: 9 })
+    const merged = mergeHammerOptions([
+      { options: a, samples: 120 },
+      { options: b, samples: 80 },
+    ])
+    const key = (o: any) => `${o.call.game}:${o.call.variant ?? ''}`
+    merged.forEach((m) => {
+      const x = a.find((o) => key(o) === key(m))!
+      const y = b.find((o) => key(o) === key(m))!
+      expect(m.pencil).toBeCloseTo((x.pencil * 120 + y.pencil * 80) / 200, 10)
+      expect(m.samples).toBe(200)
+      expect(m.paths.reduce((s, p) => s + p.share * p.pencil, 0)).toBeCloseTo(m.pencil, 10)
     })
   })
 })

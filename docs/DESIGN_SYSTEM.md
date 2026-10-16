@@ -61,10 +61,12 @@ The home page tells a round as an animated story and lays out this path.
 ## Page frame: `src/components/Page/`
 
 Every page is `<Layout><Page width="…"><PageHeader … />…</Page></Layout>`.
-Pages never set their own `max-w-*`, so content edges line up across the
-site.
+Every page sits in the header's 1280px frame, so the title starts under the
+logo on every page and nothing jumps as you move between pages. `width`
+caps the content column, **left-aligned**. Pages never set their own
+`max-w-*`.
 
-| Width | Max | Use it for |
+| Width | Content column | Use it for |
 |---|---|---|
 | `reading` | 768px | Text read top to bottom: Rules, Glossary |
 | `tool` | 1024px | Things you use: Learn, Play, Strategy Assistant, Odds Lab, game pages |
@@ -74,7 +76,7 @@ site.
   then optional `breadcrumbs`, `badge`, `eyebrow` and links (children).
   No emoji in titles, except a game's own emoji on its page.
 - `Container`: width and gutters only, for full-bleed sections such as the
-  home hero.
+  home hero. Use `width="wide"` so it lines up with every page.
 - `Panel`: a section in a box, and the only one: never use `ui/card`.
   `tone`: `default`, `tool` (the thing you interact with, tinted; one per
   page) or `note` (an aside). `title` can be a node (a game's emoji and
@@ -173,6 +175,14 @@ links. Components:
 - `OddsLabLink`
 - `ProbabilityBar`: one chance as a labeled bar (for a single figure;
   compare options with `OddsDecision`)
+- `useSimulation` (`use-simulation.js`): runs a strategy simulation in Web
+  Workers (`src/strategy/simulate.worker.ts`), split across CPU cores, with
+  the estimate updating as it goes. Never run a simulation on the main
+  thread: it freezes the page.
+- `HammerDecision` (`src/components/HammerDecision/`) and
+  `RefusalDecision`: the Strategy Assistant's two answers, both on
+  `OddsDecision`. Each call is a `CallName` with its `Hand`, its bar split
+  into the ways you lose (accepted vs. both refuse and your second call).
 - `BarkOdds`: what a bark is worth, as two `SeatRing`s (you call vs. you
   bark) with a player-count picker, from the generated `seat-odds.ts`. On
   the Games page's Bark card and the Barking page.
@@ -195,6 +205,9 @@ accept-or-refuse decision (`RefusalDecision`).
 ## Game references
 
 - `GameLink`: a game's name linking to its page.
+- `CallName` (same file): **a call, named the same way everywhere**: the
+  game's emoji, its name and the variant ("👌 10-3 High"), linked. Use it
+  wherever a list or decision names a call.
 - Game names and labels come from `src/lib/games-config.js`
   (`getGameName`, `formatCallLabel`, `GAMES_MAP`). Never hardcode them.
 - Site navigation lives in `src/components/nav-items.js`.
@@ -204,8 +217,7 @@ accept-or-refuse decision (`RefusalDecision`).
 These predate the design system. Move each onto a kit piece the next time
 you work on that page:
 
-- **Percent formatting** is duplicated: `pct` in `strategy-assistant.js`
-  and `OddsLab/RollGrid.jsx`, `formatPct` in `odds-lab.js`, `fmtPct` in
+- **Percent formatting** is duplicated: `pct` in `OddsLab/RollGrid.jsx`, `formatPct` in `odds-lab.js`, `fmtPct` in
   `games-config.js`. Use `fmtPct` from the Odds kit.
 - **Glossary links:**
   - `Term` is an empty wrapper.
