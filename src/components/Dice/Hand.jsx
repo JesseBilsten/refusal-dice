@@ -13,6 +13,7 @@ import { handGroups } from './hand-groups'
  *   (outlines, no labels) for tables
  * - `rollIds`: per-die roll counters, by position, to animate re-rolls
  * - `kept` / `onToggleKeep(i)`: tap a die to keep it (modeled games)
+ * - `dimension`: '3d' or 'flat', overriding the player's 3D setting
  * - `putOut`: Tres Away, the positions put out so far (default: the best
  *   first put-out from this roll, labeled "put out first")
  *
@@ -29,6 +30,7 @@ export default function Hand({
   onToggleKeep,
   labels,
   putOut,
+  dimension,
   className,
 }) {
   // Small sizes are compact (outlines, no labels) unless `labels` says otherwise
@@ -67,6 +69,7 @@ export default function Hand({
               value={dice[i]}
               size={size}
               rollId={rollIds?.[i] || 0}
+              dimension={dimension}
               kept={kept ? kept.includes(i) : undefined}
               onClick={
                 onToggleKeep && dice[i] ? () => onToggleKeep(i) : undefined

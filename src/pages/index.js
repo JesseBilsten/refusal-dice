@@ -1,302 +1,154 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react'
+import React from 'react'
 import { Link } from 'gatsby'
+import { ArrowRight, BookOpen, Dices, FlaskConical, Swords } from 'lucide-react'
 import Layout from '../components/layout'
 import { Container } from '../components/Page'
-import { Die } from '../components/Dice'
-import { CallList } from '../components/RollAnalysis'
-import {
-  generateHammerStrategy,
-  gameOddsMap,
-} from '../lib/game-validation'
+import { buttonVariants } from '../components/ui/button'
+import RoundStory from '../components/Home/RoundStory'
+import { CALLABLE_GAMES, getGamePath } from '../lib/games-config'
+import { cn } from '../lib/utils'
 
-/* ── Tier cards (from homepage-3) ── */
-const TIERS = [
+/**
+ * Home: the game in one animated round, then the path from first roll to
+ * sharp player: learn it, meet the games, answer your own questions in the
+ * Odds Lab, then play.
+ */
+
+const PATH = [
   {
-    level: 'Beginner',
-    tagline: 'Never played before',
-    description: 'Learn the rules, equipment, and how a round works.',
-    icon: '📖',
-    cta: 'Read the Rules',
-    to: '/rules',
-    color: 'green',
-    features: ['What you need to play', 'How rounds work', 'Accept & refuse', 'How you win'],
+    step: 1,
+    icon: BookOpen,
+    title: 'Learn by playing',
+    text: 'One guided round against two friendly players. About two minutes, and you’ll know how a round works.',
+    to: '/learn',
+    cta: 'Play the guided round',
   },
   {
-    level: 'Intermediate',
-    tagline: 'Know the basics',
-    description: 'Explore all 10 games and understand kicker strength.',
-    icon: '🎲',
-    cta: 'Browse Games',
+    step: 2,
+    icon: Dices,
+    title: 'Meet the ten games',
+    text: 'From 10-3 to Boss. Each has its own quirks: what makes it, what to keep, when to call it.',
     to: '/games',
-    color: 'blue',
-    features: ['All 10 game types', 'High vs low variants', 'Difficulty ratings', 'Best kicker combos'],
+    cta: 'Browse the games',
   },
   {
-    level: 'Advanced',
-    tagline: 'Ready for an edge',
-    description: 'Win probabilities and strategic call recommendations.',
-    icon: '🧠',
-    cta: 'Strategy Tools',
-    to: '/strategy-assistant',
-    color: 'purple',
-    features: ['Win probability per call', 'Accept or refuse advice', 'Roll odds lookup', 'Second call predictor'],
+    step: 3,
+    icon: FlaskConical,
+    title: 'Settle the arguments',
+    text: 'Hold the 6 in Boss, or roll all five? Keep 2-3 in Monterey, or just the 3? The Odds Lab works it out exactly.',
+    to: '/odds-lab/',
+    cta: 'Ask the Odds Lab',
+  },
+  {
+    step: 4,
+    icon: Swords,
+    title: 'Play the bots',
+    text: 'Full games against 1 to 7 solid bots, with hints when you want them. Three pencils and you’re out.',
+    to: '/play',
+    cta: 'Take a seat',
   },
 ]
 
-const colorClasses = {
-  green: {
-    border: 'border-green-500/40 hover:border-green-500',
-    bg: 'hover:bg-green-500/5',
-    accent: 'text-green-600 dark:text-green-400',
-    dot: 'bg-green-500',
-    button: 'bg-green-600 hover:bg-green-700 text-white',
-  },
-  blue: {
-    border: 'border-blue-500/40 hover:border-blue-500',
-    bg: 'hover:bg-blue-500/5',
-    accent: 'text-blue-600 dark:text-blue-400',
-    dot: 'bg-blue-500',
-    button: 'bg-blue-600 hover:bg-blue-700 text-white',
-  },
-  purple: {
-    border: 'border-purple-500/40 hover:border-purple-500',
-    bg: 'hover:bg-purple-500/5',
-    accent: 'text-purple-600 dark:text-purple-400',
-    dot: 'bg-purple-500',
-    button: 'bg-purple-600 hover:bg-purple-700 text-white',
-  },
-}
-
-const TierCard = ({ tier }) => {
-  const c = colorClasses[tier.color]
-  return (
-    <Link
-      to={tier.to}
-      className={`group flex flex-col rounded-xl border-2 p-5 transition-all duration-300 ${c.border} ${c.bg} focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2`}
-    >
-      <div className="flex items-center gap-3 mb-2">
-        <span className="text-2xl">{tier.icon}</span>
+const IndexPage = () => (
+  <Layout>
+    {/* ─── Hero: the pitch, and a round playing out ─── */}
+    <Container as="section" width="wide" className="py-10 sm:py-16">
+      <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:gap-16">
         <div>
-          <h2 className={`text-lg font-bold ${c.accent}`}>{tier.level}</h2>
-          <p className="text-xs text-muted-foreground">{tier.tagline}</p>
+          <p className="mb-3 text-sm font-semibold uppercase tracking-wide text-primary">
+            The bar dice game for 2–8 players
+          </p>
+          <h1 className="mb-5 font-display text-5xl font-extrabold leading-[1.05] tracking-tight sm:text-6xl lg:text-7xl">
+            Roll. Call.
+            <br />
+            <span className="relative inline-block text-pop">
+              Refuse.
+              <svg aria-hidden viewBox="0 0 200 12" className="absolute -bottom-2 left-0 h-3 w-full text-pop/40" preserveAspectRatio="none">
+                <path d="M2 9 C 50 2, 120 2, 198 7" stroke="currentColor" strokeWidth="5" fill="none" strokeLinecap="round" />
+              </svg>
+            </span>
+          </h1>
+          <p className="mb-8 text-lg text-muted-foreground">
+            Five dice, ten games, one loser a round. Call the game your dice play best and dare the table to play it,
+            or refuse and make the Hammer think again.
+          </p>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <Link to="/learn" className={cn(buttonVariants({ size: 'lg' }), 'h-12 gap-2 px-6 text-base')}>
+              Learn by playing <ArrowRight aria-hidden className="h-4 w-4" />
+            </Link>
+            <Link to="/play" className={cn(buttonVariants({ size: 'lg', variant: 'outline' }), 'h-12 px-6 text-base')}>
+              Play the bots
+            </Link>
+          </div>
+          <p className="mt-4 text-sm text-muted-foreground">
+            Already play?{' '}
+            <Link to="/strategy-assistant" className="font-medium text-primary hover:underline">
+              Check a call
+            </Link>{' '}
+            or{' '}
+            <Link to="/odds-lab/" className="font-medium text-primary hover:underline">
+              work out the odds
+            </Link>
+            .
+          </p>
         </div>
+        <RoundStory />
       </div>
-      <p className="text-sm text-foreground/80 mb-3 leading-relaxed">{tier.description}</p>
-      <ul className="space-y-1 mb-4 flex-1">
-        {tier.features.map(f => (
-          <li key={f} className="flex items-center gap-2 text-xs text-muted-foreground">
-            <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${c.dot}`} />
-            {f}
+    </Container>
+
+    {/* ─── The path ─── */}
+    <section className="border-y bg-muted/40 py-12 sm:py-16">
+      <Container width="wide">
+        <h2 className="mb-2 text-3xl font-bold tracking-tight">From first roll to sharp player</h2>
+        <p className="mb-8 text-muted-foreground">Four stops. Start wherever you are.</p>
+        <ol className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {PATH.map((p) => (
+            <li key={p.step}>
+              <Link
+                to={p.to}
+                className="group flex h-full flex-col rounded-2xl border bg-card p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <span className="mb-4 flex items-center gap-3">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary font-display text-lg font-bold text-primary-foreground">
+                    {p.step}
+                  </span>
+                  <p.icon aria-hidden className="h-5 w-5 text-muted-foreground transition-colors group-hover:text-primary" />
+                </span>
+                <span className="mb-1 font-display text-lg font-bold">{p.title}</span>
+                <span className="mb-4 flex-1 text-sm text-muted-foreground">{p.text}</span>
+                <span className="inline-flex items-center gap-1 text-sm font-semibold text-primary">
+                  {p.cta} <ArrowRight aria-hidden className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ol>
+      </Container>
+    </section>
+
+    {/* ─── The games ─── */}
+    <Container as="section" width="wide" className="py-12 sm:py-16">
+      <h2 className="mb-2 text-3xl font-bold tracking-tight">Ten games, one roll</h2>
+      <p className="mb-8 text-muted-foreground">
+        The Hammer picks which game everyone plays, after seeing their own dice. Knowing them all is half the fun.
+      </p>
+      <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        {CALLABLE_GAMES.map((g) => (
+          <li key={g.id}>
+            <Link
+              to={getGamePath(g.id)}
+              className="flex h-full items-center gap-3 rounded-xl border bg-card p-3 shadow-sm transition-colors hover:border-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <span aria-hidden className="text-2xl">
+                {g.emoji}
+              </span>
+              <span className="font-display font-bold">{g.fullName || g.name}</span>
+            </Link>
           </li>
         ))}
       </ul>
-      <div className={`inline-flex items-center justify-center rounded-md text-sm font-medium h-9 px-4 transition-colors ${c.button}`}>
-        {tier.cta} →
-      </div>
-    </Link>
-  )
-}
-
-/* ── Main Page ── */
-const IndexPage = () => {
-  const [dice, setDice] = useState([3, 5, 2, 6, 1])
-  const [isRolling, setIsRolling] = useState(false)
-  const [calls, setCalls] = useState([])
-  const [phase, setPhase] = useState('idle') // 'idle' | 'in' | 'hold' | 'out'
-  const [progress, setProgress] = useState(0)
-  const timerRef = useRef(null)
-  const progressRef = useRef(null)
-
-  const performRoll = useCallback(() => {
-    setIsRolling(true)
-    setPhase('out')
-
-    // Brief fade-out of previous results
-    setTimeout(() => {
-      setCalls([])
-      setPhase('idle')
-
-      // Rapid dice animation
-      const interval = setInterval(() => {
-        setDice(Array.from({ length: 5 }, () => Math.ceil(Math.random() * 6)))
-      }, 70)
-
-      setTimeout(() => {
-        clearInterval(interval)
-        const finalDice = Array.from({ length: 5 }, () => Math.ceil(Math.random() * 6))
-        setDice(finalDice)
-        setIsRolling(false)
-
-        // Compute all calls
-        const result = generateHammerStrategy(finalDice, 3, gameOddsMap)
-        const recs = (result?.allRecommendations || []).filter(
-          (r) => r.rawStrength > 0
-        )
-
-        setCalls(recs)
-
-        // Slide in
-        setTimeout(() => setPhase('in'), 80)
-      }, 700)
-    }, 250)
-  }, [])
-
-  // Auto-roll on mount
-  useEffect(() => {
-    const t = setTimeout(performRoll, 600)
-    return () => clearTimeout(t)
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Progress bar tracks hold duration
-  useEffect(() => {
-    if (phase !== 'in') {
-      setProgress(0)
-      if (progressRef.current) cancelAnimationFrame(progressRef.current)
-      return
-    }
-    const holdMs = 4000
-    const start = performance.now()
-    const tick = (now) => {
-      const elapsed = now - start
-      const pct = Math.min(elapsed / holdMs, 1)
-      setProgress(pct)
-      if (pct < 1) progressRef.current = requestAnimationFrame(tick)
-    }
-    progressRef.current = requestAnimationFrame(tick)
-    return () => { if (progressRef.current) cancelAnimationFrame(progressRef.current) }
-  }, [phase])
-
-  // Hold, then fade-out and re-roll
-  useEffect(() => {
-    if (phase !== 'in') return
-    timerRef.current = setTimeout(() => {
-      setPhase('out')
-      setTimeout(performRoll, 400)
-    }, 4000)
-    return () => clearTimeout(timerRef.current)
-  }, [phase, performRoll])
-
-  const isBark = phase === 'in' && calls.length === 0
-
-  return (
-    <Layout>
-      {/* ─── Hero: Magazine split-screen ─── */}
-      <section className="min-h-[calc(100vh-64px)] flex flex-col">
-        <div className="flex-1 flex flex-col sm:flex-row">
-          {/* Left panel — intro */}
-          <div className="flex-1 flex flex-col justify-center px-6 sm:px-10 lg:px-16 py-10 sm:py-0">
-            <p className="text-sm font-medium text-primary mb-3 tracking-wide uppercase">
-              A social dice game for 2–8 players
-            </p>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground leading-tight mb-4">
-              Roll. Call.<br />
-              <span className="text-primary">Refuse.</span>
-            </h1>
-            <p className="text-muted-foreground text-base sm:text-lg max-w-md mb-8 leading-relaxed">
-              Five dice, ten games, one loser per round. Call a game and dare the
-              table to play — or refuse and force someone else's hand.
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-3 mb-6">
-              <Link
-                to="/learn"
-                className="inline-flex items-center justify-center rounded-md text-sm font-medium h-11 px-6 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-              >
-                Learn to Play
-              </Link>
-              <Link
-                to="/strategy-assistant"
-                className="inline-flex items-center justify-center rounded-md text-sm font-medium h-11 px-6 border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-colors"
-              >
-                Strategy Tool
-              </Link>
-            </div>
-
-            <div className="flex gap-4 text-sm text-muted-foreground">
-              <Link to="/games" className="hover:text-primary transition-colors">10 Games →</Link>
-              <Link to="/odds-lab/" className="hover:text-primary transition-colors">Odds →</Link>
-              <Link to="/glossary" className="hover:text-primary transition-colors">Glossary →</Link>
-            </div>
-          </div>
-
-          {/* Right panel — auto-rolling dice + call list */}
-          <div className="flex-1 flex flex-col items-center justify-center bg-muted/30 border-t sm:border-t-0 sm:border-l border-border px-6 py-10 sm:py-0 relative overflow-hidden">
-            {/* Subtle background pattern */}
-            <div
-              className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05]"
-              style={{
-                backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-              }}
-            />
-
-            <div className="relative z-10 flex flex-col items-center">
-              {/* Dice */}
-              <div className="flex gap-3 sm:gap-4 mb-6">
-                {dice.map((d, i) => (
-                  <div
-                    key={i}
-                    className={`transition-transform duration-150 ${
-                      isRolling ? 'animate-bounce' : ''
-                    }`}
-                    style={{ animationDelay: `${i * 40}ms` }}
-                  >
-                    <Die value={d} size="lg" />
-                  </div>
-                ))}
-              </div>
-
-              {/* Progress bar */}
-              <div className="w-full max-w-xs h-0.5 bg-muted/60 rounded-full overflow-hidden mb-4">
-                <div
-                  className="h-full bg-primary/40 rounded-full"
-                  style={{ width: `${progress * 100}%`, transition: progress === 0 ? 'none' : undefined }}
-                />
-              </div>
-
-              {/* Call list */}
-              <CallList
-                recommendations={isBark ? [] : calls}
-                isBark={isBark}
-                phase={phase}
-                variant="compact"
-                className="w-full max-w-xs min-h-[160px] flex flex-col items-stretch"
-              />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ─── Where do you want to start? ─── */}
-      <Container as="section" width="tool" className="py-10">
-        <h2 className="text-center text-lg font-semibold text-foreground mb-6">
-          Where do you want to start?
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
-          {TIERS.map((tier) => (
-            <TierCard key={tier.level} tier={tier} />
-          ))}
-        </div>
-      </Container>
-
-      {/* ─── Footer links ─── */}
-      <div className="pb-10 flex flex-wrap justify-center gap-4 text-sm text-muted-foreground">
-        <Link to="/glossary" className="hover:text-primary transition-colors">
-          Glossary
-        </Link>
-        <span className="text-border">·</span>
-        <Link to="/odds-lab/" className="hover:text-primary transition-colors">
-          Odds
-        </Link>
-        <span className="text-border">·</span>
-        <Link
-          to="/second-call-predictor"
-          className="hover:text-primary transition-colors"
-        >
-          Second Call Predictor
-        </Link>
-      </div>
-    </Layout>
-  )
-}
+    </Container>
+  </Layout>
+)
 
 export default IndexPage

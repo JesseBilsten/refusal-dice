@@ -86,6 +86,8 @@ const px = (size) => (typeof size === 'number' ? size : DIE_SIZES[size] || 40)
  *   (pass `kept`); in a roll input, tapping edits it
  * - `kept`: set aside, not re-rolled (shown with a lock badge)
  * - `locked`: can't be tapped right now
+ * - `dimension`: '3d' or 'flat' to override the player's setting (the
+ *   home page's story always tumbles); reduced motion still wins
  */
 const Die = ({
   value,
@@ -95,6 +97,7 @@ const Die = ({
   kept,
   locked,
   label,
+  dimension,
   className,
 }) => {
   const [prefs] = useDicePrefs()
@@ -111,7 +114,8 @@ const Die = ({
   }, [rollId, reduced])
 
   // Tiny dice (in tables and text) stay flat and still
-  const show3d = prefs.dice3d && !reduced && value && n >= 32
+  const want3d = dimension ? dimension === '3d' : prefs.dice3d
+  const show3d = want3d && !reduced && value && n >= 32
   const face = show3d ? (
     <Cube value={value} size={n} rollId={rollId} bouncing={rolling} />
   ) : (
