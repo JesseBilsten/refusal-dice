@@ -21,6 +21,8 @@ import {
   simulateBark,
   simulateHammer,
   simulateRefusal,
+  CALL_ODDS,
+  CALL_ODDS_CALLS,
 } from '../strategy'
 
 const allRolls = (n: number): Dice[] => {
@@ -99,7 +101,11 @@ describe('exact make odds', () => {
 describe('bots', () => {
   test('a bot Hammer calls the obvious game', () => {
     expect(chooseCall([3, 3, 3, 3, 3])).toEqual({ game: 'tres-away' })
-    expect(chooseCall([6, 6, 6, 6, 6])).toEqual({ game: 'razzle' })
+    // Five of a kind can't lose Boss
+    expect(chooseCall([6, 6, 6, 6, 6])).toEqual({ game: 'boss' })
+    // Three 3s: Boss, and Tres Away when Boss is refused (not Razzle)
+    expect(chooseCall([3, 3, 3, 5, 6])).toEqual({ game: 'boss' })
+    expect(chooseCall([3, 3, 3, 5, 6], 'boss')).toEqual({ game: 'tres-away' })
     // a second call never repeats the refused game
     expect(chooseCall([3, 3, 3, 3, 3], 'tres-away').game).not.toBe('tres-away')
   })
@@ -276,5 +282,16 @@ describe('take the tie or roll', () => {
     })
     expect(odds.loseIfTie).toBe(0)
     expect(odds.choice).toBe('tie')
+  })
+})
+
+describe('call odds table', () => {
+  test('covers every roll and call', () => {
+    expect(CALL_ODDS_CALLS).toHaveLength(ALL_CALLS.length)
+    expect(Object.keys(CALL_ODDS)).toHaveLength(252)
+    Object.values(CALL_ODDS).forEach((row) => {
+      expect(row).toHaveLength(ALL_CALLS.length)
+      row.forEach((x) => expect(x >= 0 && x <= 1000).toBe(true))
+    })
   })
 })

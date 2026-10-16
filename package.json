@@ -35,7 +35,8 @@
     "develop": "gatsby develop",
     "format": "prettier --write '**/*.js'",
     "test": "jest --verbose",
-    "typecheck": "tsc"
+    "typecheck": "tsc",
+    "generate:call-odds": "sucrase-node src/data/generate-call-odds.ts"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.29.7",
@@ -47,6 +48,7 @@
     "gatsby-plugin-postcss": "^6.16.0",
     "jest": "^30.2.0",
     "prettier": "^3.7.4",
+    "sucrase": "^3.35.1",
     "tailwindcss": "^3.4.19",
     "typescript": "^5.9.3"
   },
