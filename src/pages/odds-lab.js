@@ -12,6 +12,7 @@ import { ToggleGroup, ToggleGroupItem } from '../components/ui/toggle-group'
 import QueryBuilder, { newPattern, withIds } from '../components/OddsLab/QueryBuilder'
 import EveryPossibility from '../components/OddsLab/EveryPossibility'
 import KeepAdvisor from '../components/OddsLab/KeepAdvisor'
+import GameOdds from '../components/OddsLab/GameOdds'
 import { cn } from '../lib/utils'
 import {
   PRESETS,
@@ -348,7 +349,8 @@ const RollBuilder = () => {
 
 const TABS = [
   { id: 'keep', label: 'What should I keep?' },
-  { id: 'build', label: 'How often does a roll come up?' },
+  { id: 'games', label: 'Every game’s odds' },
+  { id: 'build', label: 'Build any roll' },
 ]
 
 const OddsLabPage = () => {
@@ -356,7 +358,8 @@ const OddsLabPage = () => {
   const [tab, setTab] = useState(null)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
-    setTab(params.get('q') || params.get('tab') === 'build' ? 'build' : 'keep')
+    const asked = params.get('tab')
+    setTab(params.get('q') ? 'build' : TABS.some((t) => t.id === asked) ? asked : 'keep')
   }, [])
 
   const choose = (id) => {
@@ -369,7 +372,7 @@ const OddsLabPage = () => {
       <Page width="tool">
         <PageHeader
           title="Odds Lab"
-          description="Answer your own questions with exact odds: what to keep from a roll, or how often any roll comes up."
+          description="Answer your own questions with exact odds: what to keep from a roll, how often each game comes up, or how often any roll you can describe happens."
         />
         <div role="tablist" aria-label="Odds Lab tools" className="mb-6 inline-flex flex-wrap gap-1 rounded-xl bg-muted p-1">
           {TABS.map((t) => (
@@ -389,6 +392,7 @@ const OddsLabPage = () => {
           ))}
         </div>
         {tab === 'keep' && <KeepAdvisor />}
+        {tab === 'games' && <GameOdds />}
         {tab === 'build' && <RollBuilder />}
       </Page>
     </Layout>

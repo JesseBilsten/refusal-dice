@@ -214,7 +214,7 @@ const IndexPage = () => {
 
             <div className="flex gap-4 text-sm text-muted-foreground">
               <Link to="/games" className="hover:text-primary transition-colors">10 Games →</Link>
-              <Link to="/odds" className="hover:text-primary transition-colors">Odds →</Link>
+              <Link to="/odds-lab/" className="hover:text-primary transition-colors">Odds →</Link>
               <Link to="/glossary" className="hover:text-primary transition-colors">Glossary →</Link>
             </div>
           </div>
@@ -284,7 +284,7 @@ const IndexPage = () => {
           Glossary
         </Link>
         <span className="text-border">·</span>
-        <Link to="/odds" className="hover:text-primary transition-colors">
+        <Link to="/odds-lab/" className="hover:text-primary transition-colors">
           Odds
         </Link>
         <span className="text-border">·</span>

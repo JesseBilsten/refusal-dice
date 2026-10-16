@@ -18,9 +18,11 @@ export default function Panel({
   as: As = 'section',
   className,
   children,
+  ...rest
 }) {
   return (
     <As
+      {...rest}
       className={cn(
         'rounded-xl border p-4 sm:p-6',
         tone === 'default' && 'bg-card text-card-foreground shadow-sm',

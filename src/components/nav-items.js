@@ -1,17 +1,20 @@
-/** Site navigation, shared by the desktop header and the mobile menu. */
+/**
+ * Site navigation, shared by the desktop header and the mobile menu, in the
+ * order the story goes: learn the game, look up the rules and games, work
+ * out the odds, then play.
+ */
 
 export const PRIMARY_NAV = [
   { to: '/learn', label: 'Learn' },
   { to: '/rules', label: 'Rules' },
   { to: '/games', label: 'Games' },
-  { to: '/strategy-assistant', label: 'Strategy' },
-  { to: '/odds', label: 'Odds' },
   { to: '/odds-lab', label: 'Odds Lab' },
-  { to: '/glossary', label: 'Glossary' },
+  { to: '/strategy-assistant', label: 'Strategy' },
+  { to: '/play', label: 'Play' },
 ]
 
-/** Extra destinations shown only in the mobile menu. */
+/** Reference pages: in the header's end and the mobile menu */
 export const MORE_NAV = [
+  { to: '/glossary', label: 'Glossary' },
   { to: '/second-call-predictor', label: 'Second Call Predictor' },
-  { to: '/practice', label: 'Practice Mode (coming soon)' },
 ]

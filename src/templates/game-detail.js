@@ -568,7 +568,7 @@ const GameDetailTemplate = ({ pageContext }) => {
 
             {/* Deep-link to Rolls page */}
             <div className="text-center mt-8 mb-4">
-              <Link to={`/odds?game=${gameId}&view=table`}>
+              <Link to={`/odds-lab/?tab=games&game=${gameId}`}>
                 <Button variant="outline" size="lg">
                   Explore All {gameMeta.name} Rolls on the Odds Page →
                 </Button>

@@ -39,7 +39,6 @@ import {
   WAYS,
 } from './tie-odds'
 import { Button, buttonVariants } from '../ui/button'
-import { Badge } from '../ui/badge'
 import {
   DiceSettings,
   DieSlot,
@@ -48,7 +47,7 @@ import {
   playRollSound,
   useDicePrefs,
 } from '../Dice'
-import { cn } from '../../lib/utils'
+import Seat from '../Table/Seat'
 
 /**
  * Interactive first round, played on the real engine with scripted dice so
@@ -699,27 +698,25 @@ const Tutorial = () => {
           const isLoser =
             game.phase.kind === 'roundOver' && game.phase.loser === p.id
           return (
-            <div
+            <Seat
               key={p.id}
-              className={cn(
-                'rounded-lg border bg-card p-3',
-                p.id === 'you' && 'border-primary/60',
-                isLoser && 'border-destructive'
-              )}
+              name={p.name}
+              you={p.id === 'you'}
+              loser={isLoser}
+              badges={role[p.id] ? [role[p.id]] : []}
+              decision={decisions[p.id]}
+              pencils={seat.pencils}
+              status={
+                <>
+                  {status && <p>{status.text}</p>}
+                  {isLoser && (
+                    <p className="mt-1 font-semibold text-destructive">
+                      Weakest hand: takes a pencil
+                    </p>
+                  )}
+                </>
+              }
             >
-              <div className="mb-2 flex flex-wrap items-center gap-2">
-                <span className="font-semibold">{p.name}</span>
-                {role[p.id] && <Badge variant="secondary">{role[p.id]}</Badge>}
-                {decisions[p.id] && (
-                  <Badge variant="outline">{decisions[p.id]}</Badge>
-                )}
-                <span
-                  className="ml-auto text-xs text-muted-foreground"
-                  aria-label={`${seat.pencils} pencils`}
-                >
-                  {seat.pencils ? '✏️'.repeat(seat.pencils) : 'No pencils'}
-                </span>
-              </div>
               {unrolled ? (
                 // Your dice before the first roll: empty slots, as in RollInput
                 <span className="flex gap-2" aria-label="Not rolled yet">
@@ -735,17 +732,7 @@ const Tutorial = () => {
                   rollIds={rollIds[p.id]}
                 />
               )}
-              {status && (
-                <p className="mt-2 text-xs text-muted-foreground">
-                  {status.text}
-                </p>
-              )}
-              {isLoser && (
-                <p className="mt-1 text-xs font-semibold text-destructive">
-                  Weakest hand: takes a pencil
-                </p>
-              )}
-            </div>
+            </Seat>
           )
         })}
       </div>

@@ -3,7 +3,7 @@ import { Link } from 'gatsby'
 import DarkModeToggle from './DarkModeToggle'
 import MobileNav from './MobileNav'
 import { DieFace } from './Dice'
-import { PRIMARY_NAV } from './nav-items'
+import { MORE_NAV, PRIMARY_NAV } from './nav-items'
 
 const Header = ({ siteTitle }) => (
   <nav className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/75" role="navigation">
@@ -16,7 +16,7 @@ const Header = ({ siteTitle }) => (
       </Link>
       <div className="flex items-center gap-4">
         <ul className="hidden md:flex flex-row gap-6">
-          {PRIMARY_NAV.map((item) => (
+          {[...PRIMARY_NAV, MORE_NAV[0]].map((item) => (
             <li key={item.to}>
               <Link
                 to={item.to}

@@ -163,7 +163,7 @@ const GamesPage = () => {
             <Link to="/games/10-2" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
               Learn more →
             </Link>
-            <Link to="/odds?game=10-2&view=table" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
+            <Link to="/odds-lab/?tab=games&game=10-2" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
               Explore rolls →
             </Link>
           </div>
@@ -202,7 +202,7 @@ const GamesPage = () => {
             <Link to="/games/10-3" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
               Learn more →
             </Link>
-            <Link to="/odds?game=10-3&view=table" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
+            <Link to="/odds-lab/?tab=games&game=10-3" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
               Explore rolls →
             </Link>
           </div>
@@ -241,7 +241,7 @@ const GamesPage = () => {
             <Link to="/games/10-4" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
               Learn more →
             </Link>
-            <Link to="/odds?game=10-4&view=table" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
+            <Link to="/odds-lab/?tab=games&game=10-4" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
               Explore rolls →
             </Link>
           </div>
@@ -281,7 +281,7 @@ const GamesPage = () => {
             <Link to="/games/ship-captain-crew" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
               Learn more →
             </Link>
-            <Link to="/odds?game=ship-captain-crew&view=table" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
+            <Link to="/odds-lab/?tab=games&game=ship-captain-crew" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
               Explore rolls →
             </Link>
           </div>
@@ -321,7 +321,7 @@ const GamesPage = () => {
             <Link to="/games/monterey" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
               Learn more →
             </Link>
-            <Link to="/odds?game=monterey&view=table" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
+            <Link to="/odds-lab/?tab=games&game=monterey" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
               Explore rolls →
             </Link>
           </div>
@@ -361,7 +361,7 @@ const GamesPage = () => {
             <Link to="/games/vegas" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
               Learn more →
             </Link>
-            <Link to="/odds?game=vegas&view=table" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
+            <Link to="/odds-lab/?tab=games&game=vegas" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
               Explore rolls →
             </Link>
           </div>
@@ -402,7 +402,7 @@ const GamesPage = () => {
             <Link to="/games/pairs" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
               Learn more →
             </Link>
-            <Link to="/odds?game=pairs&view=table" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
+            <Link to="/odds-lab/?tab=games&game=pairs" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
               Explore rolls →
             </Link>
           </div>
@@ -439,7 +439,7 @@ const GamesPage = () => {
             <Link to="/games/razzle" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
               Learn more →
             </Link>
-            <Link to="/odds?game=razzle&view=table" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
+            <Link to="/odds-lab/?tab=games&game=razzle" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
               Explore rolls →
             </Link>
           </div>
@@ -498,7 +498,7 @@ const GamesPage = () => {
             <Link to="/games/boss" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
               Learn more →
             </Link>
-            <Link to="/odds?game=boss&view=table" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
+            <Link to="/odds-lab/?tab=games&game=boss" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
               Explore rolls →
             </Link>
           </div>
@@ -558,7 +558,7 @@ const GamesPage = () => {
             <Link to="/games/tres-away" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
               Learn more →
             </Link>
-            <Link to="/odds?game=tres-away&view=table" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
+            <Link to="/odds-lab/?tab=games&game=tres-away" className={buttonVariants({ variant: 'ghost', size: 'sm' })}>
               Explore rolls →
             </Link>
           </div>
