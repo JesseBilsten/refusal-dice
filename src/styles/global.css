@@ -1,28 +1,39 @@
+/* Fonts (docs/DESIGN_SYSTEM.md): Bricolage Grotesque for headings, Inter for text */
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=Inter:wght@400..700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --color-background: 0 0% 100%;
-    --color-foreground: 222.2 84% 4.9%;
+    /* Warm paper and ink: a bar napkin, not a spreadsheet */
+    --color-background: 40 33% 98%;
+    --color-foreground: 24 14% 10%;
     --color-card: 0 0% 100%;
-    --color-card-foreground: 222.2 84% 4.9%;
+    --color-card-foreground: 24 14% 10%;
     --color-popover: 0 0% 100%;
-    --color-popover-foreground: 222.2 84% 4.9%;
-    --color-primary: 221.2 83.2% 53.3%;
+    --color-popover-foreground: 24 14% 10%;
+    --color-primary: 221 83% 53%;
     --color-primary-foreground: 210 40% 98%;
-    --color-secondary: 210 40% 96.1%;
-    --color-secondary-foreground: 222.2 47.4% 11.2%;
-    --color-muted: 210 40% 96.1%;
-    --color-muted-foreground: 215.4 16.3% 46.9%;
-    --color-accent: 210 40% 96.1%;
-    --color-accent-foreground: 222.2 47.4% 11.2%;
-    --color-destructive: 0 84.2% 60.2%;
+    --color-secondary: 38 30% 93%;
+    --color-secondary-foreground: 24 14% 14%;
+    --color-muted: 38 30% 94%;
+    --color-muted-foreground: 25 8% 40%;
+    --color-accent: 38 40% 92%;
+    --color-accent-foreground: 24 14% 14%;
+    --color-destructive: 0 72% 51%;
     --color-destructive-foreground: 210 40% 98%;
-    --color-border: 214.3 31.8% 91.4%;
-    --color-input: 214.3 31.8% 91.4%;
-    --color-ring: 221.2 83.2% 53.3%;
+    --color-border: 35 20% 87%;
+    --color-input: 35 20% 82%;
+    --color-ring: 221 83% 53%;
+
+    /* Brand */
+    --color-felt: 158 52% 24%;            /* the table */
+    --color-felt-foreground: 45 90% 92%;
+    --color-dice: 45 97% 82%;             /* the dice (#fee9a5) */
+    --color-pop: 8 86% 58%;               /* a playful highlight, used sparingly */
+    --color-pop-foreground: 0 0% 100%;
     --radius-lg: 0.5rem;
     --radius-md: calc(0.5rem - 2px);
     --radius-sm: calc(0.5rem - 4px);
@@ -55,25 +66,31 @@
   }
 
   .dark {
-    --color-background: 222.2 84% 4.9%;
-    --color-foreground: 210 40% 98%;
-    --color-card: 222.2 84% 4.9%;
-    --color-card-foreground: 210 40% 98%;
-    --color-popover: 222.2 84% 4.9%;
-    --color-popover-foreground: 210 40% 98%;
-    --color-primary: 217.2 91.2% 59.8%;
-    --color-primary-foreground: 222.2 47.4% 11.2%;
-    --color-secondary: 217.2 32.6% 17.5%;
-    --color-secondary-foreground: 210 40% 98%;
-    --color-muted: 217.2 32.6% 17.5%;
-    --color-muted-foreground: 215 20.2% 65.1%;
-    --color-accent: 217.2 32.6% 17.5%;
-    --color-accent-foreground: 210 40% 98%;
-    --color-destructive: 0 62.8% 30.6%;
+    --color-background: 222 28% 8%;
+    --color-foreground: 40 30% 96%;
+    --color-card: 222 24% 11%;
+    --color-card-foreground: 40 30% 96%;
+    --color-popover: 222 24% 11%;
+    --color-popover-foreground: 40 30% 96%;
+    --color-primary: 217 91% 64%;
+    --color-primary-foreground: 222 47% 11%;
+    --color-secondary: 222 18% 18%;
+    --color-secondary-foreground: 40 30% 96%;
+    --color-muted: 222 18% 16%;
+    --color-muted-foreground: 35 12% 70%;
+    --color-accent: 222 18% 19%;
+    --color-accent-foreground: 40 30% 96%;
+    --color-destructive: 0 62.8% 45%;
     --color-destructive-foreground: 210 40% 98%;
-    --color-border: 217.2 32.6% 17.5%;
-    --color-input: 217.2 32.6% 17.5%;
-    --color-ring: 224.3 76.3% 48%;
+    --color-border: 222 16% 21%;
+    --color-input: 222 16% 26%;
+    --color-ring: 217 91% 64%;
+
+    --color-felt: 158 45% 20%;
+    --color-felt-foreground: 45 90% 92%;
+    --color-dice: 45 97% 82%;
+    --color-pop: 8 90% 64%;
+    --color-pop-foreground: 0 0% 100%;
     
     /* Rarity colors - Dark mode with WCAG-compliant backgrounds */
     --color-legendary: 280 60% 15%;  /* Muted purple background */
@@ -110,7 +127,22 @@
   body {
     background-color: hsl(var(--color-background));
     color: hsl(var(--color-foreground));
-    font-feature-settings: "rlig" 1, "calt" 1;
+    font-family: theme('fontFamily.sans');
+    font-feature-settings: "rlig" 1, "calt" 1, "cv11" 1;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Headings in the display face; tight, but not cramped */
+  h1, h2, h3 {
+    font-family: theme('fontFamily.display');
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+
+  /* Comfortable reading: running text never runs past ~70 characters */
+  p {
+    max-width: 70ch;
+    text-wrap: pretty;
   }
 }
 

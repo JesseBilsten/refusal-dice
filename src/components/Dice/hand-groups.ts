@@ -27,7 +27,8 @@ export interface HandGroup {
   detail?: string
 }
 
-const BOSS_NAMES: Record<BossCategory, string> = {
+/** Boss hands in words */
+export const BOSS_NAMES: Record<BossCategory, string> = {
   'high-card': 'high die',
   pair: 'pair',
   'two-pair': 'two pair',

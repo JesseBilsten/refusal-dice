@@ -1,7 +1,10 @@
 import React, { useState, useMemo } from 'react'
 import { Link } from 'gatsby'
 import Layout from '../components/layout'
-import Page, { PageHeader } from '../components/Page'
+import Page, { PageHeader, Panel, Stat } from '../components/Page'
+import { ProbabilityBar } from '../components/Odds'
+import { freshMakeChance } from '../strategy'
+import { isKickerGame } from '../engine'
 import { Badge } from '../components/ui/badge'
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
@@ -87,10 +90,6 @@ const GAME_CONTENT = {
 const TOTAL_ROLLS = 7776
 
 /** Max rolls for probability table per game */
-const MAX_ROLLS = { boss: 2, 'tres-away': 5 }
-
-const multiRollProb = (singlePct, n) =>
-  (1 - Math.pow((100 - singlePct) / 100, n)) * 100
 
 const calcSingleRollProb = (gameId) => {
   let count = 0
@@ -355,7 +354,6 @@ const GameDetailTemplate = ({ pageContext }) => {
     )
   }
 
-  const maxRolls = MAX_ROLLS[gameId] || 3
 
   return (
     <Layout>
@@ -382,41 +380,25 @@ const GameDetailTemplate = ({ pageContext }) => {
         {/*  Layer 1: At-a-Glance Stats   */}
         {/* ────────────────────────────── */}
         {gameId !== 'barking' && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
-            <Card className="text-center">
-              <CardContent className="pt-6 pb-4">
-                <div className="text-3xl font-bold text-primary">{singleRollProb.toFixed(1)}%</div>
-                <p className="text-xs text-muted-foreground mt-1">Single-roll chance</p>
-              </CardContent>
-            </Card>
-            <Card className="text-center">
-              <CardContent className="pt-6 pb-4">
-                <div className="text-3xl font-bold text-primary">{totalMatching.toLocaleString()}</div>
-                <p className="text-xs text-muted-foreground mt-1">of {TOTAL_ROLLS.toLocaleString()} rolls</p>
-              </CardContent>
-            </Card>
-            <Card className="text-center col-span-2 sm:col-span-1">
-              <CardContent className="pt-6 pb-4">
-                <div className="text-3xl font-bold text-primary">{gameRolls.length}</div>
-                <p className="text-xs text-muted-foreground mt-1">Unique patterns</p>
-              </CardContent>
-            </Card>
+          <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
+            <Stat value={`${singleRollProb.toFixed(1)}%`} label="Made on one roll" />
+            <Stat value={totalMatching.toLocaleString()} label="Rolls that make it" sub={`of ${TOTAL_ROLLS.toLocaleString()}`} />
+            <Stat value={gameRolls.length} label="Unique patterns" sub="order ignored" className="col-span-2 sm:col-span-1" />
           </div>
         )}
 
-        {/* ── Strategy guidance ── */}
-        {content.strategy && (
-          <div className="mb-6 p-4 bg-primary/10 dark:bg-primary/20 border border-primary/20 dark:border-primary/40 rounded-lg">
-            <h3 className="font-semibold text-primary dark:text-primary mb-1">When to Call</h3>
-            <p className="text-sm text-foreground">{content.strategy}</p>
-          </div>
-        )}
-
-        {/* ── Multi-roll strategy ── */}
-        {content.partialKeep && (
-          <div className="mb-6 p-4 bg-accent/50 border border-accent rounded-lg">
-            <h3 className="font-semibold text-accent-foreground mb-1">Multi-Roll Strategy</h3>
-            <p className="text-sm text-accent-foreground/90">{content.partialKeep}</p>
+        {(content.strategy || content.partialKeep) && (
+          <div className="mb-8 grid gap-3 sm:grid-cols-2 sm:gap-4">
+            {content.strategy && (
+              <Panel tone="note" title="When to call it">
+                <p className="text-sm">{content.strategy}</p>
+              </Panel>
+            )}
+            {content.partialKeep && (
+              <Panel tone="note" title="What to keep">
+                <p className="text-sm">{content.partialKeep}</p>
+              </Panel>
+            )}
           </div>
         )}
 
@@ -480,44 +462,43 @@ const GameDetailTemplate = ({ pageContext }) => {
             {/* ─────────────────────────────────────── */}
             {/*  Layer 2: Probability Table (always open) */}
             {/* ─────────────────────────────────────── */}
-            <Card className="mb-6">
-              <CardHeader>
-                <CardTitle>Roll Probabilities</CardTitle>
-                <CardDescription>
-                  {isSpecialtyGame(gameId)
-                    ? `Chance of a competitive ${gameMeta.name} hand across multiple roll attempts`
-                    : `Chance of rolling ${gameMeta.name} across multiple attempts`}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-24">Rolls</TableHead>
-                      <TableHead>Probability</TableHead>
-                      <TableHead className="text-right w-20">%</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {Array.from({ length: maxRolls }, (_, i) => {
-                      const n = i + 1
-                      const pct = n === 1 ? singleRollProb : multiRollProb(singleRollProb, n)
-                      return (
-                        <TableRow key={n}>
-                          <TableCell className="font-medium">{n} roll{n > 1 ? 's' : ''}</TableCell>
-                          <TableCell>
-                            <div className="h-2 bg-muted rounded-full overflow-hidden max-w-xs">
-                              <div className="h-full bg-primary rounded-full" style={{ width: `${Math.min(pct, 100)}%` }} />
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-right font-semibold tabular-nums">{pct.toFixed(1)}%</TableCell>
-                        </TableRow>
-                      )
-                    })}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
+            {isKickerGame(gameId) ? (
+              <Panel
+                className="mb-6"
+                title={`Chance of making ${gameMeta.name}`}
+                description="Keeping the right dice between rolls, exact over every roll."
+              >
+                <div className="max-w-xl space-y-3">
+                  {[1, 2, 3].map((n) => (
+                    <ProbabilityBar key={n} label={`${n} roll${n > 1 ? 's' : ''}`} p={freshMakeChance(gameId, n)} />
+                  ))}
+                </div>
+                <p className="mt-4 text-sm text-muted-foreground">
+                  Not sure what to keep from a roll?{' '}
+                  <Link to={`/odds-lab/?tab=keep&game=${gameId}`} className="font-medium text-primary hover:underline">
+                    Ask the Odds Lab
+                  </Link>
+                  .
+                </p>
+              </Panel>
+            ) : (
+              <Panel
+                className="mb-6"
+                title={`A competitive ${gameMeta.name} hand`}
+                description="How often one roll of five gives a hand worth calling on."
+              >
+                <div className="max-w-xl">
+                  <ProbabilityBar label="1 roll" p={singleRollProb / 100} />
+                </div>
+                <p className="mt-4 text-sm text-muted-foreground">
+                  After that it depends on what you keep and what you're up against.{' '}
+                  <Link to={`/odds-lab/?tab=keep&game=${gameId}`} className="font-medium text-primary hover:underline">
+                    Work out a situation in the Odds Lab
+                  </Link>
+                  .
+                </p>
+              </Panel>
+            )}
 
             {/* ── Co-playable games (quick summary) ── */}
             <Card className="mb-6">

@@ -7,7 +7,7 @@ export { default as RollInput } from './RollInput'
 export { default as RollButton } from './RollButton'
 export { default as DieSlot, SLOT_CLASS } from './DieSlot'
 export { default as DiceSettings } from './DiceSettings'
-export { handGroups } from './hand-groups'
+export { BOSS_NAMES, handGroups } from './hand-groups'
 export {
   useDicePrefs,
   usePrefersReducedMotion,

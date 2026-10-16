@@ -67,11 +67,25 @@ module.exports = {
           coin: 'hsl(var(--color-odds-coin) / <alpha-value>)',
           safe: 'hsl(var(--color-odds-safe) / <alpha-value>)',
         },
+        // Brand: the felt of a bar-dice table, the dice, and a playful pop
+        felt: {
+          DEFAULT: 'hsl(var(--color-felt) / <alpha-value>)',
+          foreground: 'hsl(var(--color-felt-foreground))',
+        },
+        dice: 'hsl(var(--color-dice) / <alpha-value>)',
+        pop: {
+          DEFAULT: 'hsl(var(--color-pop) / <alpha-value>)',
+          foreground: 'hsl(var(--color-pop-foreground))',
+        },
         common: {
           DEFAULT: 'hsl(var(--color-common))',
           foreground: 'hsl(var(--color-common-foreground))',
           border: 'hsl(var(--color-common-border))',
         },
+      },
+      fontFamily: {
+        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        display: ['"Bricolage Grotesque"', 'Inter', 'ui-sans-serif', 'sans-serif'],
       },
       borderRadius: {
         lg: 'var(--radius-lg)',

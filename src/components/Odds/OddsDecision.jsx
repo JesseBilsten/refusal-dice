@@ -8,7 +8,8 @@ import { fmtPct, inWords, rankOptions } from './model'
  * chance as a bar, split into the ways it happens. See
  * .claude/skills/explain-odds/SKILL.md.
  *
- * options: [{ id, label: 'Take the tie', segments: [{ p, label, kind }], error? }]
+ * options: [{ id, label: 'Take the tie', segments: [{ p, label, kind }], error?, visual? }]
+ *   visual: a picture of the option, e.g. the dice it keeps
  *   error: standard error of a simulated total, shown as ± points
  * outcome: what the bars measure, as a verb phrase ('take the pencil')
  * tieMargin: totals this close to the best are a toss-up (default 0.5 pts;
@@ -108,9 +109,12 @@ export default function OddsDecision({
               )}
             >
               <div className="flex items-center justify-between gap-2">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-medium">{o.label}</span>
-                  {o.best && ranked.length > 1 && <Badge>Best</Badge>}
+                <div className="flex flex-col gap-1.5">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="font-medium">{o.label}</span>
+                    {o.best && ranked.length > 1 && <Badge>Best</Badge>}
+                  </div>
+                  {o.visual}
                 </div>
                 <span className="text-right">
                   <span className="text-xl font-semibold tabular-nums">

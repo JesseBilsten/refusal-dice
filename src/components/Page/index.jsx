@@ -115,3 +115,5 @@ export function PageHeader({
     </header>
   )
 }
+
+export { default as Panel, Stat } from './Panel'

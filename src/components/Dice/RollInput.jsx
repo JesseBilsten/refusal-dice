@@ -20,6 +20,7 @@ import { playRollSound } from './sound'
  *  - onClear?()
  *  - initialRoll?: '13655', filled in once on mount (e.g. from the URL)
  *  - size?: a Die size (default 'lg')
+ *  - label?: what the roll is, for screen readers (default 'Your roll')
  */
 const DIGIT = /[1-6]/
 
@@ -29,6 +30,7 @@ export default function RollInput({
   onClear,
   initialRoll,
   size = 'lg',
+  label = 'Your roll',
   className,
 }) {
   const inputs = useRef([])
@@ -129,7 +131,7 @@ export default function RollInput({
     <div
       className={cn('flex flex-wrap items-center gap-2 sm:gap-3', className)}
     >
-      <div className="flex gap-2" role="group" aria-label="Your roll">
+      <div className="flex gap-2" role="group" aria-label={label}>
         {diceValues.map((value, i) =>
           value === '' || editing === i ? (
             <input

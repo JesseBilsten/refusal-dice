@@ -11,6 +11,8 @@ import { Alert, AlertDescription } from '../components/ui/alert'
 import { ToggleGroup, ToggleGroupItem } from '../components/ui/toggle-group'
 import QueryBuilder, { newPattern, withIds } from '../components/OddsLab/QueryBuilder'
 import EveryPossibility from '../components/OddsLab/EveryPossibility'
+import KeepAdvisor from '../components/OddsLab/KeepAdvisor'
+import { cn } from '../lib/utils'
 import {
   PRESETS,
   atLeastOneOf,
@@ -69,7 +71,7 @@ const Stat = ({ label, value, sub }) => (
   </div>
 )
 
-const OddsLabPage = () => {
+const RollBuilder = () => {
   const [query, setQuery] = useState(() => withIds(PRESETS[0].query))
   const [compareGame, setCompareGame] = useState(PRESETS[0].gameId)
   const [view, setView] = useState('unique')
@@ -138,13 +140,12 @@ const OddsLabPage = () => {
   const compareName = COMPARABLE_GAMES.find((g) => g.id === compareGame)?.name
 
   return (
-    <Layout>
-      <Page width="tool">
-        {/* ── Header ── */}
-        <PageHeader
-          title="Odds Lab"
-          description="Describe any roll and see exactly how often it happens. Every possible outcome is shown below; the ones that don't fit your requirements fade out. Use it to check the site's odds against your own rules for a game or situation."
-        />
+    <>
+      <p className="mb-6 text-muted-foreground">
+        Describe any roll and see exactly how often it happens. Every possible
+        outcome is shown below; the ones that don't fit fade out. Use it to
+        check the site's odds against your own rules for a game.
+      </p>
 
         {/* ── Presets ── */}
         <div className="mb-6">
@@ -341,6 +342,54 @@ const OddsLabPage = () => {
             <li>Odds are exact: every one of the {result.total.toLocaleString()} outcomes is counted, not sampled.</li>
           </ul>
         </div>
+    </>
+  )
+}
+
+const TABS = [
+  { id: 'keep', label: 'What should I keep?' },
+  { id: 'build', label: 'How often does a roll come up?' },
+]
+
+const OddsLabPage = () => {
+  // Shared links with a query open the builder; everything else starts with "what should I keep?"
+  const [tab, setTab] = useState(null)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    setTab(params.get('q') || params.get('tab') === 'build' ? 'build' : 'keep')
+  }, [])
+
+  const choose = (id) => {
+    window.history.replaceState(null, '', `${window.location.pathname}?tab=${id}`)
+    setTab(id)
+  }
+
+  return (
+    <Layout>
+      <Page width="tool">
+        <PageHeader
+          title="Odds Lab"
+          description="Answer your own questions with exact odds: what to keep from a roll, or how often any roll comes up."
+        />
+        <div role="tablist" aria-label="Odds Lab tools" className="mb-6 inline-flex flex-wrap gap-1 rounded-xl bg-muted p-1">
+          {TABS.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              role="tab"
+              aria-selected={tab === t.id}
+              onClick={() => choose(t.id)}
+              className={cn(
+                'rounded-lg px-3 py-2 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                tab === t.id ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+        {tab === 'keep' && <KeepAdvisor />}
+        {tab === 'build' && <RollBuilder />}
       </Page>
     </Layout>
   )
