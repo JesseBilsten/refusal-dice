@@ -21,6 +21,7 @@ import {
   refusalSeats,
   scripted,
   seeded,
+  standings,
   viewFor,
 } from '../engine'
 
@@ -55,6 +56,22 @@ describe('setup', () => {
       source: scripted([5, 6, 6, 2, 4, ...Array(15).fill(1)]),
     })
     expect(g.hammer).toBe('c')
+    // Every piddle roll is logged so the table can see the ranking
+    expect(g.log[0]).toEqual({
+      type: 'piddle',
+      rounds: [
+        [
+          { player: 'a', die: 5 },
+          { player: 'b', die: 6 },
+          { player: 'c', die: 6 },
+        ],
+        [
+          { player: 'b', die: 2 },
+          { player: 'c', die: 4 },
+        ],
+      ],
+    })
+    expect(g.log[1]).toEqual({ type: 'hammer', player: 'c' })
   })
 
   test('2–8 players with unique ids', () => {
@@ -604,8 +621,17 @@ describe('random games always finish and keep invariants', () => {
         source: seeded(game),
       })
       let steps = 0
+      // Anyone marked safe ("in the cup") this round must not take the pencil
+      let safe = new Set<string>()
       while (g.phase.kind !== 'gameOver') {
+        const before = g.log.length
         g = applyAction(g, randomAction(g, r))
+        g.log.slice(before).forEach((e) => {
+          if (e.type === 'pencil' && safe.has(e.player))
+            throw new Error(`${e.player} was in the cup but took the pencil`)
+        })
+        if (g.phase.kind === 'roundOver' || g.phase.kind === 'call') safe = new Set()
+        standings(g).forEach((s) => s.status === 'safe' && safe.add(s.player))
         expect(++steps).toBeLessThan(20000)
         g.seats.forEach((s) =>
           expect(s.pencils).toBeLessThanOrEqual(g.rules.pencilsToLose)

@@ -57,6 +57,13 @@ export function describeEvent(e: GameEvent, names: Names, label: Label): string 
   /** "You roll" but "Ava rolls" */
   const v = (verb: string, third = `${verb}s`) => (who === 'You' ? verb : third)
   switch (e.type) {
+    case 'piddle':
+      return e.rounds
+        .map((round, i) => {
+          const rolls = round.map((r) => `${names[r.player]} ${r.die}`).join(', ')
+          return i === 0 ? `Piddle: ${rolls}.` : `Roll-off: ${rolls}.`
+        })
+        .join(' ')
     case 'hammer':
       return `${who} won the piddle and ${v('hold')} the Hammer.`
     case 'called':

@@ -88,6 +88,14 @@ site.
 
 ## Table: `src/components/Table/`
 
+- `Standings`: **the ranking pattern.** Players best first: rank (tied
+  players share one), name, a line of detail, an optional `aside` (the
+  piddle die) and a status chip from `STANDING_STATUS`: *Worst hand*,
+  *Tied worst*, *In the cup*, *Pencil*, *Rolls again*, *Hammer*, *Boss*.
+  Rows slide to their new place as the order changes. Play uses it for the
+  piddle and for each round (fed by the engine's `standings()`); use it for
+  any ranked list of players.
+
 - `Seat`: one player at the table (name, role badges, decision, pencils,
   their dice, a status line). The tutorial and Play both use it.
 

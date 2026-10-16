@@ -20,6 +20,7 @@ import {
   Questions,
 } from '../components/Odds'
 import Seat from '../components/Table/Seat'
+import Standings from '../components/Table/Standings'
 import { PRESETS } from '../lib/roll-query'
 import { Badge } from '../components/ui/badge'
 import { Button } from '../components/ui/button'
@@ -185,6 +186,24 @@ const DesignPage = () => {
               <Seat name="Ava" badges={['1st refusal']} decision="Refused" pencils={2} status="Thinking…">
                 <Hand dice={[null, null, null, null, null]} />
               </Seat>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Standings
+                label="Example standings"
+                rows={[
+                  { id: 'a', name: 'Ava', rank: 1, detail: 'A kicker of 11 · 2 rolls left', status: 'safe' },
+                  { id: 'y', name: 'You', you: true, rank: 2, detail: 'A kicker of 7 · all day' },
+                  { id: 'b', name: 'Ben', rank: 3, detail: 'A kicker of 6 · 1 roll left', status: 'bottom' },
+                ]}
+              />
+              <Standings
+                label="Example piddle"
+                rows={[
+                  { id: 'y', name: 'You', you: true, rank: 1, aside: <Die value={6} size="sm" />, status: 'again' },
+                  { id: 'a', name: 'Ava', rank: 1, aside: <Die value={6} size="sm" />, status: 'again' },
+                  { id: 'b', name: 'Ben', rank: 3, aside: <Die value={2} size="sm" /> },
+                ]}
+              />
             </div>
           </Section>
 

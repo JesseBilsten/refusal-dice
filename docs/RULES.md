@@ -100,6 +100,7 @@ Each rule is tagged by where it came from:
 ## 4. Finding the loser
 
 - **The worst hand rolls first** (kicker games and Razzle; Tres Away and Boss have their own order). [confirmed] After the first roll, whoever holds the worst hand is the loser at that moment, so they roll, and keep rolling until they climb off the bottom or run out of rolls. Then whoever holds the worst hand now rolls. If the worst hand never improves, nobody else has to roll, and they take the pencil. "Worst" follows the call: missing the game is worst; in a Low call, the highest kicker is worst. The engine enforces it (`bottomTurn`, `bottomTarget` in `src/engine/round/game.ts`).
+- **All day** means out of rolls: that hand is final. A player whose hand is already better than a hand that's all day is **in the cup** (safe): they can't lose the round and never roll again in it. In Boss a player is in the cup only once their own last roll is taken (a last roll can make a hand worse); in Tres Away, once another player's worst possible score is certainly beaten. `standings()` in `src/engine/round/standings.ts` ranks the table from public information; a random-games test checks nobody in the cup ever takes the pencil.
   - Several players tied at the bottom: the tied player nearest the Hammer (going left, Hammer first) with rolls left rolls first. [inferred]
 - **Kicker games:** [confirmed]
   - Anyone who made the game beats anyone who didn't.

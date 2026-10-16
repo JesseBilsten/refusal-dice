@@ -3,13 +3,17 @@ import { withPrefix } from 'gatsby'
 import { FlaskConical, Lightbulb } from 'lucide-react'
 import {
   applyAction,
+  bossHand,
   bottomHands,
   bottomTarget,
   evaluateKickerHand,
   isKickerGame,
   keepsKickers,
+  rankBest,
   razzleScore,
   refusalSeats,
+  standings,
+  tresAwayScore,
   viewFor,
   wouldLoseIfStopped,
 } from '../../engine'
@@ -20,7 +24,9 @@ import { Button } from '../ui/button'
 import { Switch } from '../ui/switch'
 import { Label } from '../ui/label'
 import {
+  BOSS_NAMES,
   DiceSettings,
+  Die,
   Hand,
   RollButton,
   playRollSound,
@@ -29,6 +35,7 @@ import {
 } from '../Dice'
 import { Panel } from '../Page'
 import Seat from '../Table/Seat'
+import Standings from '../Table/Standings'
 import {
   BOT_NAMES,
   YOU,
@@ -50,8 +57,13 @@ const BOT_DELAY = 750
 const ZERO = [0, 0, 0, 0, 0]
 const label = (call) => formatCallLabel(call)
 
-/** A hand in the play phase, in words: "three 2s", "a kicker of 9", "no 10-3" */
+/** A hand in words: "three 2s", "a kicker of 9", "no 10-3", "a score of 7", "a full house" */
 function handText(dice, call) {
+  if (call.game === 'tres-away') return `a score of ${tresAwayScore(dice)}`
+  if (call.game === 'boss') {
+    const name = BOSS_NAMES[bossHand(dice).category]
+    return /^(two|three|four|five)/.test(name) ? name : `a ${name}`
+  }
   if (call.game === 'razzle') {
     const { count, face } = razzleScore(dice)
     return razzleName(count, face)
@@ -88,6 +100,54 @@ function hintText(action, dice, phase) {
     default:
       return null
   }
+}
+
+/** "Roll to beat Ava’s three 6s", or "Roll to make 10-3" when the hand to beat missed the game */
+function beatText(dice, whose, call, lead) {
+  const text = handText(dice, call)
+  return text.startsWith('no ') ? `${lead} make ${text.slice(3)}` : `${lead} beat ${whose} ${text}`
+}
+
+const list = (xs) => (xs.length < 2 ? xs.join('') : `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}`)
+
+/** The piddle, ranked: everyone's die, then any roll-off for the highest, then who holds the Hammer */
+function Piddle({ rounds, names, hammer, onDeal }) {
+  return (
+    <Panel tone="tool" title="The piddle" description="Everyone rolls one die. Highest holds the Hammer; a tie for the highest rolls again.">
+      <div className="space-y-4">
+        {rounds.map((round, i) => {
+          const last = i === rounds.length - 1
+          const high = Math.max(...round.map((r) => r.die))
+          const prev = i > 0 ? rounds[i - 1] : null
+          const prevHigh = prev && Math.max(...prev.map((r) => r.die))
+          return (
+            <div key={i}>
+              {prev && (
+                <p className="mb-2 text-sm font-semibold">
+                  Roll-off: {list(round.map((r) => names[r.player]))} tied on {prevHigh}
+                </p>
+              )}
+              <Standings
+                label={i === 0 ? 'Piddle rolls' : `Roll-off ${i}`}
+                rows={rankBest(round, (a, b) => a.die - b.die).map(({ id: r, rank }) => ({
+                  id: r.player,
+                  name: names[r.player],
+                  you: r.player === YOU,
+                  rank,
+                  aside: <Die value={r.die} size="md" rollId={1} label={`rolled ${r.die}`} />,
+                  status: last && r.player === hammer ? 'hammer' : !last && r.die === high ? 'again' : undefined,
+                }))}
+              />
+            </div>
+          )
+        })}
+        <p className="font-medium">
+          {hammer === YOU ? 'You rolled highest and hold the Hammer.' : `${names[hammer]} rolled highest and holds the Hammer.`}
+        </p>
+        <RollButton onClick={onDeal}>Deal the dice</RollButton>
+      </div>
+    </Panel>
+  )
 }
 
 function Setup({ onStart }) {
@@ -134,6 +194,8 @@ export default function Play() {
   const [error, setError] = useState(null)
   const [hints, setHints] = useState(true)
   const [roundStart, setRoundStart] = useState(0)
+  // The piddle's ranking shows before the first deal
+  const [dealt, setDealt] = useState(false)
   const [prefs] = useDicePrefs()
   const prev = useRef(null)
 
@@ -141,6 +203,7 @@ export default function Play() {
     const g = newTable(bots, Math.floor(Math.random() * 2 ** 31))
     setRollIds(Object.fromEntries(g.seats.map((s) => [s.id, ZERO.map(() => 1)])))
     setGame(g)
+    setDealt(!g.log.some((e) => e.type === 'piddle'))
     setRoundStart(0)
     setKeep([])
     setError(null)
@@ -190,10 +253,10 @@ export default function Play() {
 
   // Bots move on their own, a beat apart
   useEffect(() => {
-    if (!game || !who || who === YOU) return undefined
+    if (!game || !dealt || !who || who === YOU) return undefined
     const t = setTimeout(() => act(botAction(game)), BOT_DELAY)
     return () => clearTimeout(t)
-  }, [game, who, act])
+  }, [game, dealt, who, act])
 
   // A fresh keep selection whenever it becomes your move
   useEffect(() => {
@@ -211,6 +274,21 @@ export default function Play() {
   if (!game) return <Setup onStart={start} />
 
   const names = Object.fromEntries(game.seats.map((s) => [s.id, s.name]))
+  if (!dealt) {
+    const piddle = game.log.find((e) => e.type === 'piddle')
+    return (
+      <Piddle
+        rounds={piddle.rounds}
+        names={names}
+        hammer={game.hammer}
+        onDeal={() => {
+          setDealt(true)
+          setRollIds((ids) => Object.fromEntries(Object.entries(ids).map(([id, r]) => [id, r.map((n) => n + 1)])))
+          if (prefs.sound) playRollSound(5)
+        }}
+      />
+    )
+  }
   const phase = game.phase
   const call = 'call' in phase ? phase.call : null
   const myDice = game.dice[YOU]
@@ -233,8 +311,41 @@ export default function Play() {
   const bottom = bottomHands(game)
   if (phase.kind === 'play')
     Object.entries(phase.rolling).forEach(([id, r]) => {
-      if (r.done && decisions[id] !== 'Took the tie') decisions[id] = 'Out of rolls'
+      if (r.done && decisions[id] !== 'Took the tie') decisions[id] = 'All day'
     })
+
+  // The table ranked, best first: who's at the bottom, who's all day, who's in the cup
+  const table = standings(game)
+  const safe = table.filter((st) => st.status === 'safe').map((st) => st.player)
+  const standingDetail = (st) => {
+    const dice = game.dice[st.player]
+    if (st.rank == null) return 'Safe from the first cycle'
+    if (phase.kind === 'roundOver') return handText(dice, call)
+    if (phase.kind === 'tresAway') {
+      const h = phase.hands[st.player]
+      const score = tresAwayScore(h.out.map((i) => dice[i]))
+      return st.allDay ? `A score of ${score}: all out` : `${score} so far, ${h.out.length} of 5 out`
+    }
+    if (phase.kind === 'boss') {
+      if (st.boss) return st.player === YOU ? `${handText(dice, call)}, hidden from the others` : 'Hand hidden until the end'
+      return `${handText(dice, call)} · ${st.allDay ? 'final' : 'one last roll to come'}`
+    }
+    const rolls = decisions[st.player] === 'Took the tie'
+      ? 'took the tie'
+      : st.allDay
+        ? 'all day'
+        : `${st.rollsLeft} ${st.rollsLeft === 1 ? 'roll' : 'rolls'} left`
+    return `${handText(dice, call)} · ${rolls}`
+  }
+  const capital = (t) => t.charAt(0).toUpperCase() + t.slice(1)
+  const standingRows = table.map((st) => ({
+    id: st.player,
+    name: names[st.player],
+    you: st.player === YOU,
+    rank: st.rank,
+    detail: capital(standingDetail(st)),
+    status: st.boss ? 'boss' : phase.kind === 'roundOver' && st.status === 'bottom' ? 'pencil' : st.status === 'live' ? undefined : st.status,
+  }))
 
   const toggleKeep = (i) => {
     if (phase.kind === 'boss' && phase.stage === 'bossRoll' && phase.mustKeep.includes(i)) return
@@ -270,7 +381,7 @@ export default function Play() {
       title = `${names[who]} has the worst hand and rolls`
       body = (
         <p className="text-muted-foreground">
-          {target === YOU ? 'They need to beat your' : `They need to beat ${names[target]}’s`} {handText(game.dice[target], call)}.
+          {beatText(game.dice[target], target === YOU ? 'your' : `${names[target]}’s`, call, 'They need to')}.
           If they run out of rolls at the bottom, they take the pencil{phase.rolling[YOU] && !bottom.includes(YOU) ? ' and you never have to roll' : ''}.
         </p>
       )
@@ -352,7 +463,7 @@ export default function Play() {
         <p>
           {must ? (
             <>
-              Roll to beat {names[target]}’s {handText(targetDice, call)}. Climb off the bottom
+              {beatText(targetDice, `${names[target]}’s`, call, 'Roll to')}. Climb off the bottom
               and your turn ends; still there when your rolls run out, and you take the pencil.
             </>
           ) : (
@@ -468,6 +579,7 @@ export default function Play() {
           }
           if (phase.kind === 'boss' && phase.boss === s.id) badges.push('👑 Boss')
           if (bottom.includes(s.id)) badges.push(bottom.length > 1 ? 'Tied worst' : 'Worst hand')
+          if (safe.includes(s.id) && phase.kind !== 'roundOver') badges.push('In the cup')
           const dice = view.dice[s.id] || [null, null, null, null, null]
           const isYou = s.id === YOU
           const tres = phase.kind === 'tresAway' && phase.hands[s.id]
@@ -506,6 +618,20 @@ export default function Play() {
           )
         })}
       </div>
+
+      {/* Standings: from the first roll of play to the pencil */}
+      {standingRows.length > 0 && (
+        <Panel
+          title="Standings"
+          description={
+            phase.kind === 'roundOver'
+              ? 'How the round finished.'
+              : 'Best hand first. Anyone above a hand that’s all day is in the cup: they can’t lose this round.'
+          }
+        >
+          <Standings rows={standingRows} label="Standings this round" />
+        </Panel>
+      )}
 
       {/* Your move */}
       <Panel tone={mine ? 'tool' : 'default'} as="div" aria-live="polite">

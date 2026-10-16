@@ -211,6 +211,13 @@ const RulesPage = () => (
               like keeping the 6 of a 6+1 and re-rolling the 1.
             </li>
             <li>You only ever roll to get off the bottom: beat the next-worst hand and your turn ends.</li>
+            <li>
+              Out of rolls is{' '}
+              <Link to="/glossary#all-day" className="text-primary hover:underline">all day</Link>: that hand is
+              final. Anyone already better than a hand that's all day is{' '}
+              <Link to="/glossary#in-the-cup" className="text-primary hover:underline">in the cup</Link>: safe, with
+              nothing left to do this round.
+            </li>
           </ul>
 
           <div className="rounded-lg bg-muted/40 p-3 text-xs text-muted-foreground mb-3">

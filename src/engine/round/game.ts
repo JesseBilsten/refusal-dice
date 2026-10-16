@@ -100,7 +100,12 @@ export type Phase =
   | { kind: 'roundOver'; call: Call; loser: PlayerId | null }
   | { kind: 'gameOver'; winner: PlayerId }
 
+/** One die each in the piddle; a later round is a roll-off between the players tied for the highest */
+export type PiddleRound = { player: PlayerId; die: Die }[]
+
 export type GameEvent =
+  /** Everyone rolled one die for the Hammer; ties for the highest rolled again */
+  | { type: 'piddle'; rounds: PiddleRound[] }
   | { type: 'hammer'; player: PlayerId }
   | { type: 'called'; player: PlayerId; call: Call; second: boolean }
   | { type: 'barked'; player: PlayerId }
@@ -206,18 +211,20 @@ function deal(state: GameState): GameState {
 }
 
 /** Everyone rolls one die; highest takes the Hammer; ties roll again. */
-function piddle(ids: PlayerId[], source: DiceSource): [PlayerId, DiceSource] {
+function piddle(ids: PlayerId[], source: DiceSource): [PlayerId, DiceSource, PiddleRound[]] {
   let contenders = ids
+  const rounds: PiddleRound[] = []
   while (contenders.length > 1) {
-    const rolls = contenders.map((id) => {
+    const rolls = contenders.map((player) => {
       const [[die], next] = rollDice(source, 1)
       source = next
-      return { id, die }
+      return { player, die }
     })
+    rounds.push(rolls)
     const high = Math.max(...rolls.map((r) => r.die))
-    contenders = rolls.filter((r) => r.die === high).map((r) => r.id)
+    contenders = rolls.filter((r) => r.die === high).map((r) => r.player)
   }
-  return [contenders[0], source]
+  return [contenders[0], source, rounds]
 }
 
 export function createGame(options: CreateGameOptions): GameState {
@@ -227,8 +234,9 @@ export function createGame(options: CreateGameOptions): GameState {
 
   let source = options.source
   let hammer = options.hammer
+  let rounds: PiddleRound[] | null = null
   if (hammer === undefined) {
-    ;[hammer, source] = piddle(
+    ;[hammer, source, rounds] = piddle(
       players.map((p) => p.id),
       source
     )
@@ -244,7 +252,7 @@ export function createGame(options: CreateGameOptions): GameState {
     dice: {},
     phase: { kind: 'call' },
     source,
-    log: [{ type: 'hammer', player: hammer }],
+    log: [...(rounds ? [{ type: 'piddle' as const, rounds }] : []), { type: 'hammer', player: hammer }],
   }
   return deal(state)
 }
@@ -384,8 +392,8 @@ function scorePencil(state: GameState, call: Call, loser: PlayerId): GameState {
   return { ...next, hammer, phase: { kind: 'roundOver', call, loser } }
 }
 
-/** How the play phase ranks hands, worst first: Razzle scores, or the kicker game's hands */
-function playCompare(call: Call): (a: Dice, b: Dice) => number {
+/** How the play phase ranks hands (negative when `a` is worse): Razzle scores, or the kicker game's hands */
+export function playCompare(call: Call): (a: Dice, b: Dice) => number {
   if (call.game === 'razzle') return compareRazzle
   if (!isKickerGame(call.game) || !call.variant) throw new EngineError('Unsupported call in play')
   const { game, variant } = call

@@ -37,7 +37,7 @@ src/
   templates/        game-detail.js → /games/<id> (created in gatsby-node.js)
   components/       App components; ui/ = shadcn primitives; nav-items.js = site navigation
                     Page/ = the page kit: Page (reading | tool | wide), PageHeader, Panel, Stat, PageTabs, Chip
-                    Table/ = Seat, one player at the table (tutorial and Play)
+                    Table/ = Seat, one player at the table (tutorial and Play); Standings, the ranking pattern
                     Play/ = full games against bots (play-model.ts is the pure side)
                     Home/ = the home page's animated round (RoundStory)
                     OddsLab/ = the Odds Lab tools: KeepAdvisor, GameOdds, EveryPossibility, the roll builder; situations-catalog.js
@@ -64,6 +64,7 @@ src/engine/
   rules/           Kicker games (making the game, kicker totals, a cycle's loser) and
                    specialty-games.ts (Tres Away score, Razzle score, Boss poker hands)
   round/game.ts    Full game: createGame / applyAction (reducer) / viewFor (hidden info)
+  round/standings.ts  The table ranked from public info: bottom, all day (out of rolls), in the cup (safe)
   index.ts         Public API; import from '../engine'
 ```
 

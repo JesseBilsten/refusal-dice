@@ -162,7 +162,7 @@ const GLOSSARY_TERMS = [
       <>
         <p className="mb-2">
           The initial roll to determine who gets the <Link to="#hammer" className="text-primary hover:underline">Hammer</Link> first.
-          Each player rolls one die. Highest roll wins (ties roll again).
+          Each player rolls one die. Highest roll wins; players tied for the highest roll again (a roll-off).
         </p>
         <p className="text-sm text-muted-foreground">
           <strong>See also:</strong> <Link to="/rules#setup" className="text-primary hover:underline">Rules: Who Goes First</Link>
@@ -278,6 +278,45 @@ const GLOSSARY_TERMS = [
         <p className="text-sm text-muted-foreground">
           <strong>Applies to:</strong> the kicker games and <GameLink id="razzle">Razzle</GameLink>. Tres Away and Boss have their own order.<br/>
           <strong>See also:</strong> <Link to="/rules#play" className="text-primary hover:underline">Rules: Play the game</Link>
+        </p>
+      </>
+    ),
+  },
+  {
+    id: 'all-day',
+    term: 'All Day',
+    emoji: '🛑',
+    keywords: ['all day', 'out of rolls', 'no rolls', 'done', 'final'],
+    body: (
+      <>
+        <p className="mb-2">
+          Out of rolls. A player who's all day can't change their hand, so it's final. Anyone whose hand is
+          already better than theirs is <Link to="#in-the-cup" className="text-primary hover:underline">in the cup</Link>.
+        </p>
+        <p className="text-sm text-muted-foreground">
+          <strong>Example:</strong> "Ava's all day with a kicker of 5." Everyone above a 5 is safe.<br/>
+          <strong>See also:</strong> <Link to="#worst-hand" className="text-primary hover:underline">Worst Hand</Link>,{' '}
+          <Link to="/rules#play" className="text-primary hover:underline">Rules: Play the game</Link>
+        </p>
+      </>
+    ),
+  },
+  {
+    id: 'in-the-cup',
+    term: 'In the Cup (safe)',
+    emoji: '✅',
+    keywords: ['in the cup', 'safe', 'cup', 'can\'t lose', 'standings'],
+    body: (
+      <>
+        <p className="mb-2">
+          Safe for the round. Someone who's <Link to="#all-day" className="text-primary hover:underline">all day</Link> already
+          has a worse hand than yours, so you can't take the{' '}
+          <Link to="#pencil" className="text-primary hover:underline">pencil</Link>, and you never have to roll again this round.
+          Your dice can go back in the cup.
+        </p>
+        <p className="text-sm text-muted-foreground">
+          <strong>In Play:</strong> the standings mark everyone in the cup.<br/>
+          <strong>See also:</strong> <Link to="#worst-hand" className="text-primary hover:underline">Worst Hand</Link>
         </p>
       </>
     ),
