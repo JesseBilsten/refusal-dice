@@ -20,6 +20,7 @@ import {
 } from '../engine'
 import { rollOrTakeTie } from './kicker-odds'
 import { bestKeepToMake, makeChance } from './make-odds'
+import { tresAwayPutOut } from './tres-away'
 
 /**
  * A "solid" heuristic bot: reasonable, deterministic decisions for every
@@ -287,16 +288,7 @@ export function botAction(state: GameState): Action {
       if (!hand.fresh) return { type: 'roll', player }
       const dice = state.dice[player]
       const inHand = [0, 1, 2, 3, 4].filter((i) => !hand.out.includes(i))
-      // Put out 3s, 1s and 2s; otherwise the single lowest die
-      const good = inHand.filter((i) => dice[i] <= 3)
-      const out = good.length
-        ? good
-        : [
-            inHand.reduce((a, b) =>
-              tresAwayScore([dice[b]]) < tresAwayScore([dice[a]]) ? b : a
-            ),
-          ]
-      return { type: 'putOut', player, dice: out }
+      return { type: 'putOut', player, dice: tresAwayPutOut(dice, inHand) }
     }
     case 'boss': {
       if (phase.stage === 'bossRoll') {

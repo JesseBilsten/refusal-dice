@@ -68,9 +68,9 @@ test('Tres Away: the dice put out, scored with 3s as 0', () => {
   expect(
     handGroups([3, 2, 6, 3, 1], 'tres-away', null, { putOut: [] })
   ).toEqual([{ tone: 'plain', label: null, indices: all }])
-  // A finished hand (no put-out order known): all five
+  // A fresh roll: the best first put-out (the 3s, not the 1 or 2)
   expect(handGroups([3, 2, 6, 3, 1], 'tres-away')[0]).toMatchObject({
-    indices: all,
-    detail: '9',
+    indices: [0, 3],
+    detail: 'put out first',
   })
 })

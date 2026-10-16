@@ -13,7 +13,8 @@ import { handGroups } from './hand-groups'
  *   (outlines, no labels) for tables
  * - `rollIds`: per-die roll counters, by position, to animate re-rolls
  * - `kept` / `onToggleKeep(i)`: tap a die to keep it (modeled games)
- * - `putOut`: Tres Away, the positions put out so far (default: all five)
+ * - `putOut`: Tres Away, the positions put out so far (default: the best
+ *   first put-out from this roll, labeled "put out first")
  *
  * Boss outlines the dice that make the poker hand (the high die for a high
  * die), Razzle the chosen number plus wild 1s, Tres Away the dice put out.

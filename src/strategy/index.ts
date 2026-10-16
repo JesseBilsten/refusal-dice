@@ -2,10 +2,12 @@
  * Strategy and odds built on the engine (src/engine). Pure TypeScript.
  * - make-odds: exact chance of making a kicker game with optimal keeps
  * - kicker-odds: exact kicker re-roll odds, e.g. take the tie or roll
+ * - tres-away: exact best put-out in Tres Away
  * - bots:      a solid heuristic bot for every decision
  * - simulate:  seeded Monte Carlo of your chance of the pencil per decision
  */
 export * from './make-odds'
 export * from './kicker-odds'
+export * from './tres-away'
 export * from './bots'
 export * from './simulate'

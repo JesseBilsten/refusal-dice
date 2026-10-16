@@ -9,6 +9,7 @@ import {
   razzleScore,
   tresAwayScore,
 } from '../../engine'
+import { tresAwayPutOut } from '../../strategy/tres-away'
 
 /**
  * How a roll is grouped on screen for a game: the dice that make it, then
@@ -69,10 +70,11 @@ function specialtyGroups(
     const indices = all.filter((i) => dice[i] === face || dice[i] === 1)
     return split(all, indices, `${COUNT[count]} ${face}s`)
   }
-  // Tres Away: the dice put out so far (all five for a finished hand)
-  const out = putOut ?? all
-  if (!out.length) return [{ tone: 'plain', label: null, indices: all }]
-  return split(all, out, `${tresAwayScore(out.map((i) => dice[i]))}`)
+  // Tres Away: the dice put out so far, or, before any are, the best first
+  // put-out from this roll
+  if (!putOut) return split(all, tresAwayPutOut(dice), 'put out first')
+  if (!putOut.length) return [{ tone: 'plain', label: null, indices: all }]
+  return split(all, putOut, `${tresAwayScore(putOut.map((i) => dice[i]))}`)
 }
 
 export function handGroups(
