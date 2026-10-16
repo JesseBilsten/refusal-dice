@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react'
 import { Badge } from './ui/badge'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card'
+import { Panel } from './Page'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table'
 import VariantSelector from './VariantSelector'
 import { analyzeSecondCallDistribution, checkGame, getKickerStrength } from '../lib/game-validation'
@@ -183,12 +183,7 @@ const SecondCallDistribution = ({
   const [selectedVariant, setSelectedVariant] = React.useState('all')
   if (showTabs && hasVariants) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>{title}</CardTitle>
-          <CardDescription>{autoDescription}</CardDescription>
-        </CardHeader>
-        <CardContent>
+      <Panel title={title} description={autoDescription}>
           <VariantSelector
             selectedVariant={selectedVariant}
             onChange={setSelectedVariant}
@@ -197,21 +192,14 @@ const SecondCallDistribution = ({
           {selectedVariant === 'all' && renderDistributionTable(distributions.all)}
           {selectedVariant === 'high' && renderDistributionTable(distributions.high)}
           {selectedVariant === 'low' && renderDistributionTable(distributions.low)}
-        </CardContent>
-      </Card>
+      </Panel>
     )
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{autoDescription}</CardDescription>
-      </CardHeader>
-      <CardContent>
+    <Panel title={title} description={autoDescription}>
         {renderDistributionTable(distributions.selected)}
-      </CardContent>
-    </Card>
+    </Panel>
   )
 }
 

@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react'
 import { Plus, X } from 'lucide-react'
 import { DiceGroup, Die } from '../Dice'
 import { Button } from '../ui/button'
-import { Card, CardContent } from '../ui/card'
 import { cn } from '../../lib/utils'
 import { describePattern, diceClaimed } from '../../lib/roll-query'
 
@@ -345,15 +344,14 @@ const PatternCard = ({ pattern, index, diceCount, canRemove, onChange, onRemove 
     })
 
   return (
-    <Card>
-      <CardContent className="p-4 space-y-3">
+    <div className="space-y-3 rounded-lg border bg-background p-4">
         <div className="flex items-center justify-between gap-2">
-          <h2 className="text-sm font-semibold">
+          <h3 className="text-sm font-semibold">
             Pattern {letter}
             <span className="ml-2 font-normal text-muted-foreground">
               {claimed > 0 && `uses ${claimed} of ${diceCount} dice`}
             </span>
-          </h2>
+          </h3>
           {canRemove && (
             <Button variant="ghost" size="sm" className="h-7 px-2" onClick={onRemove} aria-label={`Remove pattern ${letter}`}>
               <X className="h-4 w-4" />
@@ -405,8 +403,7 @@ const PatternCard = ({ pattern, index, diceCount, canRemove, onChange, onRemove 
           <span className="text-muted-foreground">Matches </span>
           <span className="font-medium">{describePattern(pattern)}</span>
         </p>
-      </CardContent>
-    </Card>
+    </div>
   )
 }
 

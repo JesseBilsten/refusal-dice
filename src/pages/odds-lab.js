@@ -2,8 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'gatsby'
 import { Check, Link2, RotateCcw } from 'lucide-react'
 import Layout from '../components/layout'
-import Page, { PageHeader, PageTabs, NextStep } from '../components/Page'
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
+import Page, { PageHeader, PageTabs, NextStep, Panel } from '../components/Page'
 import { Button } from '../components/ui/button'
 import { Switch } from '../components/ui/switch'
 import { Label } from '../components/ui/label'
@@ -174,7 +173,7 @@ const RollBuilder = () => {
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {/* ── Builder ── */}
-          <div className="min-w-0 space-y-4">
+          <Panel tone="tool" title="Your roll" className="min-w-0 space-y-4">
             <div className="flex flex-wrap items-center gap-3">
               <Label className="text-sm font-medium">Dice rolled</Label>
               <ToggleGroup
@@ -215,15 +214,11 @@ const RollBuilder = () => {
                 </AlertDescription>
               </Alert>
             )}
-          </div>
+          </Panel>
 
           {/* ── Results ── */}
           <div className="min-w-0 space-y-4 lg:sticky lg:top-4 lg:self-start">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base">Odds</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+            <Panel title="Odds" className="space-y-4">
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-3" aria-live="polite">
                   <Stat label="Chance" value={formatPct(result.probability)} sub={formatOneIn(result.probability)} />
                   <Stat
@@ -259,12 +254,10 @@ const RollBuilder = () => {
                     {copied ? 'Copied' : 'Copy link'}
                   </Button>
                 </div>
-              </CardContent>
-            </Card>
+            </Panel>
 
             {/* ── Compare with the site ── */}
-            <Card>
-              <CardContent className="space-y-2 p-4">
+            <Panel tone="note" className="space-y-2">
                 <div className="flex flex-wrap items-center gap-2">
                   <Label htmlFor="compare" className="text-sm font-medium">
                     Check against the site's odds for
@@ -313,8 +306,7 @@ const RollBuilder = () => {
                     )}
                   </div>
                 )}
-              </CardContent>
-            </Card>
+            </Panel>
           </div>
         </div>
 
@@ -330,8 +322,7 @@ const RollBuilder = () => {
         />
 
         {/* ── How it works ── */}
-        <div className="mt-10 rounded-lg bg-muted/40 p-4 text-sm text-muted-foreground">
-          <h2 className="mb-2 font-semibold text-foreground">How requirements combine</h2>
+        <Panel tone="note" title="How requirements combine" className="mt-10 text-sm text-muted-foreground">
           <ul className="list-disc space-y-1 pl-5">
             <li>All requirements in a pattern must hold. If you add more than one pattern, a roll counts when <em>any</em> pattern fits.</li>
             <li>
@@ -341,7 +332,7 @@ const RollBuilder = () => {
             <li>"Remaining dice" means the dice no other requirement used (the kicker). "All dice" looks at the whole roll.</li>
             <li>Odds are exact: every one of the {result.total.toLocaleString()} outcomes is counted, not sampled.</li>
           </ul>
-        </div>
+        </Panel>
     </>
   )
 }

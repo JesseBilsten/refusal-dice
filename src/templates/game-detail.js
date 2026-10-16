@@ -8,8 +8,7 @@ import { SITUATIONS, situationPath } from '../components/OddsLab/situations-cata
 import { freshMakeChance } from '../strategy'
 import { isKickerGame } from '../engine'
 import { Badge } from '../components/ui/badge'
-import { Button } from '../components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
+import { Button, buttonVariants } from '../components/ui/button'
 import { Slider } from '../components/ui/slider'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table'
 import VariantSelector from '../components/VariantSelector'
@@ -137,23 +136,26 @@ const classifyRoll = (roll, gameId) => {
 const CollapsibleSection = ({ title, description, defaultOpen = false, children, badge }) => {
   const [open, setOpen] = useState(defaultOpen)
   return (
-    <Card className="mb-6">
-      <button type="button" onClick={() => setOpen(o => !o)} className="w-full text-left">
-        <CardHeader className="cursor-pointer select-none">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <CardTitle className="text-lg">{title}</CardTitle>
-              {badge}
-            </div>
-            {open
-              ? <ChevronUp className="w-5 h-5 text-muted-foreground" />
-              : <ChevronDown className="w-5 h-5 text-muted-foreground" />}
-          </div>
-          {description && <CardDescription>{description}</CardDescription>}
-        </CardHeader>
-      </button>
-      {open && <CardContent>{children}</CardContent>}
-    </Card>
+    <Panel
+      className="mb-6"
+      title={
+        <button
+          type="button"
+          onClick={() => setOpen(o => !o)}
+          aria-expanded={open}
+          className="flex items-center gap-2 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          {open
+            ? <ChevronUp aria-hidden className="h-5 w-5 text-muted-foreground" />
+            : <ChevronDown aria-hidden className="h-5 w-5 text-muted-foreground" />}
+          {title}
+          {badge}
+        </button>
+      }
+      description={description}
+    >
+      {open ? children : null}
+    </Panel>
   )
 }
 
@@ -409,14 +411,11 @@ const GameDetailTemplate = ({ pageContext }) => {
         {/*  Barking-specific content        */}
         {/* ──────────────────────────────── */}
         {gameId === 'barking' && (
-          <Card className="mb-8">
-            <CardHeader>
-              <CardTitle>When Should You Bark?</CardTitle>
-              <CardDescription>
-                Adjust the thresholds to see which hands warrant barking
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
+          <Panel
+            className="mb-8"
+            title="When should you bark?"
+            description="Move the thresholds to see which hands are worth barking on. A rule of thumb."
+          >
               <div className="space-y-6">
                 <div>
                   <label className="text-sm font-medium mb-2 block">
@@ -453,8 +452,7 @@ const GameDetailTemplate = ({ pageContext }) => {
                   </div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+          </Panel>
         )}
 
         {/* ──────────────────────────────── */}
@@ -506,17 +504,13 @@ const GameDetailTemplate = ({ pageContext }) => {
             )}
 
             {/* ── Co-playable games (quick summary) ── */}
-            <Card className="mb-6">
-              <CardHeader>
-                <CardTitle>Often Paired With</CardTitle>
-                <CardDescription>
-                  Games most commonly playable on the same rolls as {gameMeta.name}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <CoPlayableGamesSummary rolls={gameRolls} gameId={gameId} />
-              </CardContent>
-            </Card>
+            <Panel
+              className="mb-6"
+              title="Often paired with"
+              description={`The games most often made by the same rolls as ${gameMeta.name}.`}
+            >
+              <CoPlayableGamesSummary rolls={gameRolls} gameId={gameId} />
+            </Panel>
 
             {/* ─────────────────────────────────── */}
             {/*  Layer 3: Detailed Analysis          */}
@@ -535,7 +529,7 @@ const GameDetailTemplate = ({ pageContext }) => {
 
             {/* Strength Distribution */}
             <CollapsibleSection
-              title="Strength Distribution"
+              title="Strength distribution"
               description={`How strong are ${gameMeta.name} hands? Distribution of raw strength across all qualifying rolls.`}
             >
               <StrengthDistributionChart
@@ -552,14 +546,14 @@ const GameDetailTemplate = ({ pageContext }) => {
                 hasVariants={gameMeta.hasVariants}
                 numOpponents={0}
                 showTabs={gameMeta.hasVariants}
-                title="Second Call Distribution"
+                title="Second call distribution"
                 description={`When the hammer calls ${gameMeta.name}, what other games are most likely as a second call?`}
               />
             </div>
 
             {/* Sample Rolls */}
             <CollapsibleSection
-              title="Sample Rolls"
+              title="Sample rolls"
               description={`${gameRolls.length} unique roll patterns for ${gameMeta.name}, sorted by strength.`}
               badge={<Badge variant="outline" className="text-xs">{gameRolls.length}</Badge>}
             >
@@ -573,10 +567,11 @@ const GameDetailTemplate = ({ pageContext }) => {
 
             {/* Deep-link to Rolls page */}
             <div className="text-center mt-8 mb-4">
-              <Link to={`/odds-lab/?tab=games&game=${gameId}`}>
-                <Button variant="outline" size="lg">
-                  Explore All {gameMeta.name} Rolls on the Odds Page →
-                </Button>
+              <Link
+                to={`/odds-lab/?tab=games&game=${gameId}`}
+                className={buttonVariants({ variant: 'outline', size: 'lg' })}
+              >
+                See every {gameMeta.name} roll in the Odds Lab →
               </Link>
             </div>
           </>

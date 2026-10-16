@@ -8,7 +8,7 @@ twice or more, add it to the right kit and list it here.
 **See it live at `/design`** (not in the navigation): every piece below,
 in light and dark mode. `src/__tests__/design-system.test.ts` fails on
 raw palette colors, pages that set their own width, pages without a
-`PageHeader`, local copies of the game list and `@/` imports.
+`PageHeader`, any use of `ui/card` (use `Panel`), local copies of the game list and `@/` imports.
 
 ## The story the site tells
 
@@ -73,9 +73,12 @@ site.
   No emoji in titles, except a game's own emoji on its page.
 - `Container`: width and gutters only, for full-bleed sections such as the
   home hero.
-- `Panel`: a section in a box. `tone`: `default`, `tool` (the thing you
-  interact with, tinted; one per page) or `note` (an aside). Never nest
-  panels.
+- `Panel`: a section in a box, and the only one: never use `ui/card`.
+  `tone`: `default`, `tool` (the thing you interact with, tinted; one per
+  page) or `note` (an aside). `title` can be a node (a game's emoji and
+  link, or a button that collapses the panel). Never nest panels: inside
+  one, group with a heading, a divider, a `Stat` or a plain
+  `rounded-lg border bg-background` box (the roll builder's patterns).
 - `Stat`: a headline number with its label.
 - `PageTabs` (+ `tabFromUrl`): top-level tools on one page, kept in
   `?tab=`. Only the chosen tab renders.
@@ -91,7 +94,7 @@ site.
 ## Primitives: `src/components/ui/`
 
 These are shadcn/ui components (JS): Button (and `buttonVariants` for
-links), Badge, Card, Table, Dialog, Sheet, Tooltip, Tabs, ToggleGroup,
+links), Badge, Card (kept for shadcn; use `Panel`), Table, Dialog, Sheet, Tooltip, Tabs, ToggleGroup,
 Switch, Slider, Select, Input, Label, Alert. Add new primitives with the
 shadcn CLI.
 
@@ -181,5 +184,3 @@ you work on that page:
 - **Duplicate strength meter:** `StrengthBar` and `CallList` in
   `RollAnalysis.jsx` are a separate strength meter. Decide whether it
   belongs in the Odds kit.
-- **Cards:** the Strategy Assistant's rule-of-thumb detail still uses `ui/card`
-  directly. Move it to `Panel`. (Rules and Glossary moved 2026-10-16.)

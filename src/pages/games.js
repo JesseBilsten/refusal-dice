@@ -147,10 +147,10 @@ function GameSection({ section, oneRoll, playable, dimmed }) {
   const meta = GAMES_MAP[section.id]
   const callLine = useMemo(() => section.callLine?.(), [section])
   return (
-    <section
+    <Panel
       id={section.id}
       className={cn(
-        'scroll-mt-24 rounded-2xl border bg-card p-5 shadow-sm transition-opacity sm:p-6',
+        'scroll-mt-24 transition-opacity',
         playable && 'border-primary ring-1 ring-primary',
         dimmed && 'opacity-50'
       )}
@@ -197,7 +197,7 @@ function GameSection({ section, oneRoll, playable, dimmed }) {
           ))}
         </div>
       </div>
-    </section>
+    </Panel>
   )
 }
 

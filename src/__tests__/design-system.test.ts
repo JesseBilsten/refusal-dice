@@ -53,3 +53,8 @@ test('imports are relative (the @/ alias breaks the Gatsby build)', () => {
   const offenders = source.filter((f) => /from '@\//.test(f.text)).map((f) => f.p)
   expect(offenders).toEqual([])
 })
+
+test('sections are Panels, never the raw ui/card primitive', () => {
+  const offenders = source.filter((f) => /from '[./]+\/(?:components\/)?ui\/card'/.test(f.text)).map((f) => f.p)
+  expect(offenders).toEqual([])
+})

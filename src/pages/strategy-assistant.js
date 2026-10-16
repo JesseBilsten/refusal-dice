@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react'
 import Layout from '../components/layout'
-import Page, { Chip, NextStep, PageHeader, PageTabs, Panel, tabFromUrl } from '../components/Page'
-import { Disclosure } from '../components/Odds'
+import Page, { Chip, NextStep, PageHeader, PageTabs, Panel, Stat, tabFromUrl } from '../components/Page'
+import { MathSteps } from '../components/Odds'
 import SecondCallPredictor from '../components/SecondCallPredictor'
 import { Badge } from '../components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table'
@@ -256,9 +256,16 @@ const StrategyAssistantPage = () => {
                   <HammerPencilOdds options={debugInfo.pencilOdds} dice={debugInfo.roll} playerCount={playerCount} />
                 )}
                 {debugInfo.strategy && (
-                  <Disclosure title="More detail: hand strength by rule of thumb">
-                    <HammerResults strategy={debugInfo.strategy} dice={debugInfo.roll} playerCount={playerCount} />
-                  </Disclosure>
+                  <Panel tone="note" title="Hand strength by rule of thumb">
+                    <details className="group">
+                      <summary className="cursor-pointer font-medium text-primary hover:underline">
+                        Show every game’s score
+                      </summary>
+                      <div className="mt-4">
+                        <HammerResults strategy={debugInfo.strategy} dice={debugInfo.roll} playerCount={playerCount} />
+                      </div>
+                    </details>
+                  </Panel>
                 )}
               </>
             ) : (
@@ -314,66 +321,37 @@ const FormulaDialog = ({ rec, playerCount, trigger }) => {
       </DialogTrigger>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>How We Ranked {label}</DialogTitle>
+          <DialogTitle>How {label} is ranked</DialogTitle>
           <DialogDescription>
-            The globalStrength formula calculates the probability you won't have the worst hand.
+            Global strength is the chance you won’t have the worst hand, by rule of thumb.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 text-sm">
-          {/* Step 1: Threat probability */}
-          <div className="rounded-md border p-3 bg-muted/30">
-            <p className="font-semibold text-xs text-muted-foreground mb-1">Step 1 — Threat per opponent</p>
-            <p className="font-mono text-sm">
-              P(threat) = P(opponent makes game) × P(ties or beats kicker)
-            </p>
-            <p className="font-mono text-lg mt-1">
-              P(threat) = <strong>{(pThreat * 100).toFixed(2)}%</strong>
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              This is the chance a single opponent can produce a hand at least as good as yours in {label}.
-              {rec.kicker?.length > 0 && (
-                <span> Your kicker [{rec.kicker.join(',')}] determines how hard it is to tie.</span>
-              )}
-            </p>
-          </div>
-
-          {/* Step 2: All opponents */}
-          <div className="rounded-md border p-3 bg-muted/30">
-            <p className="font-semibold text-xs text-muted-foreground mb-1">Step 2 — Worst-hand probability</p>
-            <p className="font-mono text-sm">
-              P(worst) = P(threat)<sup>{numOpp}</sup> = {(pThreat * 100).toFixed(2)}%<sup>{numOpp}</sup>
-            </p>
-            <p className="font-mono text-lg mt-1">
-              P(worst) = <strong>{(pWorst * 100).toFixed(4)}%</strong>
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              You'd need <em>all</em> {numOpp} opponent{numOpp > 1 ? 's' : ''} to tie or beat you to have the worst hand.
-            </p>
-          </div>
-
-          {/* Step 3: Global strength */}
-          <div className="rounded-md border p-3 bg-primary/10 border-primary/30">
-            <p className="font-semibold text-xs text-muted-foreground mb-1">Step 3 — Global Strength</p>
-            <p className="font-mono text-sm">
-              globalStrength = (1 − P(worst)) × 100
-            </p>
-            <p className="font-mono text-lg mt-1">
-              globalStrength = (1 − {(pWorst * 100).toFixed(4)}%) × 100 = <strong className="text-primary">{globalStr.toFixed(2)}%</strong>
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              This is the probability that at least one opponent will have a worse hand than yours — meaning you <em>won't</em> lose.
-            </p>
-          </div>
-
-          {/* Summary comparison */}
-          <div className="text-xs text-muted-foreground border-t pt-3">
-            <p><strong>Why this matters:</strong> Games with more kicker dice are harder to tie.
-            A perfect 3-die kicker (e.g. <GameLink id="10-2">10-2</GameLink> [6,6,6]) has only a {(Math.pow(1/6,3)*100).toFixed(2)}% tie chance per opponent,
-            while a perfect 1-die kicker (e.g. <GameLink id="pairs">Pairs</GameLink> [6]) has a {(1/6 * 100).toFixed(2)}% tie chance.
-            Global strength captures this cross-game distinction.
-            </p>
-          </div>
+          <MathSteps
+            steps={[
+              {
+                label: 'One opponent ties or beats you (makes the game, then ties or beats your kicker)',
+                result: `${(pThreat * 100).toFixed(2)}%`,
+              },
+              {
+                label: `All ${numOpp} opponent${numOpp > 1 ? 's' : ''} tie or beat you (you have the worst hand)`,
+                expr: `${(pThreat * 100).toFixed(2)}%^${numOpp}`,
+                result: `${(pWorst * 100).toFixed(4)}%`,
+              },
+              {
+                label: 'Global strength',
+                expr: `1 − ${(pWorst * 100).toFixed(4)}%`,
+                result: `${globalStr.toFixed(2)}%`,
+                total: true,
+              },
+            ]}
+          />
+          <p className="text-xs text-muted-foreground">
+            Games with more kicker dice are harder to tie. A perfect 3-die kicker (<GameLink id="10-2">10-2</GameLink> with
+            6+6+6) is tied {(Math.pow(1 / 6, 3) * 100).toFixed(2)}% of the time by one opponent; a perfect 1-die kicker
+            (<GameLink id="pairs">Pairs</GameLink> with a 6) {(100 / 6).toFixed(2)}%.
+          </p>
         </div>
       </DialogContent>
     </Dialog>
@@ -383,89 +361,71 @@ const FormulaDialog = ({ rec, playerCount, trigger }) => {
 /* ───────────────────── Hammer Results ────────────────────────── */
 
 const HammerResults = ({ strategy, dice, playerCount }) => (
-  <div className="space-y-4">
-    <h2 className="text-lg font-semibold">🔨 Hand strength (heuristic)</h2>
-    <p className="text-xs text-muted-foreground -mt-2">
+  <div className="space-y-6">
+    <p className="text-muted-foreground">
       A quick score of your dice for each game. The simulated pencil chances above account for the refusals,
       the other players and the play itself, so trust those when the two disagree.
     </p>
-    
+
     {/* Best Call */}
-    <div className="p-4 bg-primary/10 rounded-lg border-2 border-primary">
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 mb-3">
-        <span className="text-lg font-bold">Strongest hand:</span>
-        <span className="flex items-center gap-2">
-          <Badge variant="default" className="gap-1 whitespace-nowrap px-3 py-1 text-base sm:px-4 sm:text-lg">
-            {strategy.bestCall
-              ? <><GameLink id={strategy.bestCall.game} className="text-inherit hover:text-inherit" />{strategy.bestCall.variant && <span>{strategy.bestCall.variant}</span>}</>
-              : 'None'}
-          </Badge>
-          {strategy.bestCall && (
+    <div className="space-y-3">
+      <h3 className="flex flex-wrap items-center gap-2 text-lg font-semibold">
+        Strongest hand:
+        {strategy.bestCall ? (
+          <span className="flex items-center gap-1">
+            <GameLink id={strategy.bestCall.game} />
+            {strategy.bestCall.variant && <span>{strategy.bestCall.variant}</span>}
             <FormulaDialog rec={strategy.bestCall} playerCount={playerCount} />
-          )}
-        </span>
-      </div>
-      <p className="text-muted-foreground mb-4">
-        {strategy.bestCall?.explanation || strategy.summary}
-      </p>
-      {/* How the dice make the call */}
+          </span>
+        ) : (
+          'none'
+        )}
+      </h3>
+      <p className="text-muted-foreground">{strategy.bestCall?.explanation || strategy.summary}</p>
       {strategy.bestCall && (
-        <Hand dice={dice} game={strategy.bestCall.game} variant={strategy.bestCall.variant} className="mb-4" />
+        <Hand dice={dice} game={strategy.bestCall.game} variant={strategy.bestCall.variant} />
       )}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="p-3 bg-background rounded-md">
-          <div className="text-xs text-muted-foreground mb-1">Global Strength</div>
-          <div className="text-2xl font-bold">
-            {strategy.bestCall?.globalStrength?.toFixed(1) || '0'}%
-          </div>
-        </div>
-        <div className="p-3 bg-background rounded-md">
-          <div className="text-xs text-muted-foreground mb-1">Flexibility</div>
-          <div className="text-2xl font-bold">{strategy.flexibility || 0}/10</div>
-        </div>
-        <div className="p-3 bg-background rounded-md">
-          <div className="text-xs text-muted-foreground mb-1">Difficulty</div>
-          <div className="text-2xl font-bold capitalize">
-            {strategy.bestCall?.gameInfo?.gameDifficulty || 'N/A'}
-          </div>
-        </div>
+      <div className="grid gap-3 sm:grid-cols-3">
+        <Stat value={`${strategy.bestCall?.globalStrength?.toFixed(1) || '0'}%`} label="Global strength" />
+        <Stat value={`${strategy.flexibility || 0}/10`} label="Flexibility" />
+        <Stat
+          value={<span className="capitalize">{strategy.bestCall?.gameInfo?.gameDifficulty || 'N/A'}</span>}
+          label="Difficulty"
+        />
       </div>
     </div>
 
     {/* Alternatives */}
     {(strategy.secondBestCall || strategy.thirdBestCall) && (
-      <div className="space-y-3">
-        <h4 className="font-semibold text-sm text-muted-foreground">Alternative Calls</h4>
-        {[strategy.secondBestCall, strategy.thirdBestCall].filter(Boolean).map((call, idx) => (
-          <div key={idx} className="p-3 bg-muted/30 rounded-lg border">
-            <div className="flex items-center gap-2 mb-2">
-              <Badge variant={idx === 0 ? 'secondary' : 'outline'} className="text-sm">
-                {idx === 0 ? '2nd Best' : '3rd Best'}
-              </Badge>
-              <span className="font-semibold">
-                <GameLink id={call.game} />{call.variant ? ` ${call.variant}` : ''}
-              </span>
-              <FormulaDialog rec={call} playerCount={playerCount} />
-              {call.kicker && (
-                <span className="text-xs text-muted-foreground">({call.kicker})</span>
-              )}
-            </div>
-            <p className="text-sm text-muted-foreground mb-2">{call.explanation}</p>
-            <div className="flex gap-4 text-xs">
-              <span><strong>Global:</strong> {call.globalStrength.toFixed(1)}%</span>
-              <span><strong>Tie Risk:</strong> {(call.tieProbability * 100).toFixed(1)}%</span>
-              <span><strong>Difficulty:</strong> {call.gameInfo?.gameDifficulty || 'N/A'}</span>
-            </div>
-          </div>
-        ))}
+      <div>
+        <h3 className="mb-2 text-lg font-semibold">Alternative calls</h3>
+        <ol className="divide-y border-y">
+          {[strategy.secondBestCall, strategy.thirdBestCall].filter(Boolean).map((call, idx) => (
+            <li key={idx} className="py-3">
+              <div className="mb-1 flex flex-wrap items-center gap-2">
+                <Badge variant="secondary">{idx === 0 ? '2nd best' : '3rd best'}</Badge>
+                <span className="font-semibold">
+                  <GameLink id={call.game} />{call.variant ? ` ${call.variant}` : ''}
+                </span>
+                <FormulaDialog rec={call} playerCount={playerCount} />
+              </div>
+              <p className="mb-1 text-muted-foreground">{call.explanation}</p>
+              <div className="flex flex-wrap gap-x-4 text-xs">
+                <span><strong>Global:</strong> {call.globalStrength.toFixed(1)}%</span>
+                <span><strong>Tie risk:</strong> {(call.tieProbability * 100).toFixed(1)}%</span>
+                <span><strong>Difficulty:</strong> {call.gameInfo?.gameDifficulty || 'N/A'}</span>
+              </div>
+            </li>
+          ))}
+        </ol>
       </div>
     )}
 
     {/* All Playable Games Table */}
     {strategy.allRecommendations?.length > 0 && (
       <div>
-        <h2 className="text-lg font-semibold mb-3">All playable games</h2>
-        <div className="rounded-md border">
+        <h3 className="mb-2 text-lg font-semibold">All playable games</h3>
+        <div className="overflow-x-auto">
           <TooltipProvider>
             <Table>
               <TableHeader>

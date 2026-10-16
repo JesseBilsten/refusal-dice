@@ -48,6 +48,7 @@ import {
   useDicePrefs,
 } from '../Dice'
 import Seat from '../Table/Seat'
+import { Panel } from '../Page'
 
 /**
  * Interactive first round, played on the real engine with scripted dice so
@@ -733,11 +734,7 @@ const Tutorial = () => {
       </div>
 
       {/* Narration */}
-      <div
-        className="rounded-lg border bg-muted/30 p-4 sm:p-5"
-        aria-live="polite"
-      >
-        <h2 className="mb-2 text-lg font-semibold">{current.title}</h2>
+      <Panel tone="tool" as="div" title={current.title} aria-live="polite">
         <div className="space-y-2 text-sm leading-relaxed text-muted-foreground">
           {current.body}
         </div>
@@ -747,7 +744,7 @@ const Tutorial = () => {
           </p>
         )}
         <div className="mt-4">{current.action}</div>
-      </div>
+      </Panel>
 
       <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
         <DiceSettings />

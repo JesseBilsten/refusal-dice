@@ -32,7 +32,12 @@ export default function Panel({
       )}
     >
       {(title || actions) && (
-        <div className="mb-4 flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
+        <div
+          className={cn(
+            'flex flex-wrap items-start justify-between gap-x-4 gap-y-2',
+            children && 'mb-4'
+          )}
+        >
           <div>
             {title && (
               <h2

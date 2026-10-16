@@ -1,10 +1,10 @@
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import { Badge } from '../ui/badge'
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '../ui/card'
+import { Panel, Stat } from '../Page'
 import { Button } from '../ui/button'
 import VariantSelector from '../VariantSelector'
 import { Slider } from '../ui/slider'
-import { Info, X } from 'lucide-react'
+import { X } from 'lucide-react'
 import GameLink from '../GameLink'
 import uniqueRollsData from '../../data/unique-rolls.json'
 import rollGameMatrix from '../../data/roll-game-matrix.json'
@@ -146,19 +146,12 @@ const StrategyCallout = ({ gameId }) => {
   const insight = STRATEGY_INSIGHTS[gameId]
   if (!insight) return null
 
-  // Detail-panel level: full-width info banner
   return (
-    <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
-      <div className="flex items-start gap-3">
-        <Info className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-        <div className="space-y-2">
-          <p className="font-semibold text-sm">{insight.title}</p>
-          {insight.lines.map((line, i) => (
-            <p key={i} className="text-sm leading-relaxed">{line}</p>
-          ))}
-        </div>
-      </div>
-    </div>
+    <Panel tone="note" title={insight.title} className="space-y-2">
+      {insight.lines.map((line, i) => (
+        <p key={i} className="text-sm leading-relaxed">{line}</p>
+      ))}
+    </Panel>
   )
 }
 
@@ -255,14 +248,7 @@ const CoPlayableGames = ({ matchingRolls, currentGameId, variant }) => {
   if (!coPlayable.length) return null
 
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-base">Other Games Playable on Same Rolls</CardTitle>
-        <CardDescription className="text-xs">
-          Percentage of matching rolls that also qualify for each game
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
+    <Panel title="Other games on the same rolls" description="How many of these rolls also make each game.">
         <div className="space-y-1.5">
           {coPlayable.map(c => {
             const g = GAMES_MAP[c.game]
@@ -285,8 +271,7 @@ const CoPlayableGames = ({ matchingRolls, currentGameId, variant }) => {
             )
           })}
         </div>
-      </CardContent>
-    </Card>
+    </Panel>
   )
 }
 
@@ -397,6 +382,7 @@ const OddsDashboard = () => {
     })
     return hands.sort((a, b) => b.count - a.count)
   }, [selectedId, barkingFlexThreshold, barkingStrengthThreshold])
+  const barkCount = barkingWeakHands.reduce((s, h) => s + h.count, 0)
   const proofRolls = useMemo(() => {
     const matches = new Set(matchingRolls.map(r => [...r.roll].sort((a, b) => a - b).join('')))
     return uniqueRollsData.uniqueRolls.map(r => {
@@ -429,20 +415,16 @@ const OddsDashboard = () => {
         {selectedGame && (
           <div ref={detailRef} className="space-y-6">
             {/* Summary */}
-            <Card>
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between flex-wrap gap-3">
-                  <div className="flex items-center gap-3">
-                    <span className="text-3xl">{selectedGame.emoji}</span>
-                    <div>
-                      <CardTitle className="text-xl">{selectedGame.name}</CardTitle>
-                      <CardDescription>
-                        {matchingRolls.length} unique rolls &bull;{' '}
-                        {totalInstances.toLocaleString()} instances (
-                        {((totalInstances / TOTAL) * 100).toFixed(1)}%)
-                      </CardDescription>
-                    </div>
-                  </div>
+            <Panel
+              title={
+                <>
+                  <span aria-hidden className="mr-2">{selectedGame.emoji}</span>
+                  <GameLink id={selectedId} className="text-inherit" />
+                </>
+              }
+              description={`${matchingRolls.length} unique rolls · ${totalInstances.toLocaleString()} of ${TOTAL.toLocaleString()} outcomes (${((totalInstances / TOTAL) * 100).toFixed(1)}%)`}
+              actions={
+                <div className="flex flex-wrap items-center gap-3">
                   {selectedGame.hasVariants && (
                     <VariantSelector
                       selectedVariant={variant || 'all'}
@@ -468,35 +450,21 @@ const OddsDashboard = () => {
                     </ToggleGroup>
                   )}
                 </div>
-              </CardHeader>
-            </Card>
+              }
+            />
 
             {/* Barking-specific: weak hands to bark on */}
             {selectedId === 'barking' && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">When Should You Bark?</CardTitle>
-                  <CardDescription>
-                    Roll a hand with limited flexibility and weak alternatives → recommend barking to avoid being spread too thin
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
+              <Panel
+                title="When should you bark?"
+                description="A hand that makes few games, none of them well, is worth barking: pass the Hammer rather than call a weak game. A rule of thumb."
+              >
                   <div className="space-y-6">
-                    {/* Default odds summary */}
-                    <div className="p-4 rounded-lg bg-primary/5 border border-primary/20">
-                      <div className="text-xs text-muted-foreground mb-1">
-                        Default thresholds (Flexibility ≤ 4, Strength ≤ 65)
-                      </div>
-                      <div className="text-3xl font-bold text-primary">
-                        {barkingWeakHands.reduce((s, h) => s + h.count, 0).toLocaleString()} / 7,776
-                      </div>
-                      <div className="text-lg font-semibold text-primary">
-                        {((barkingWeakHands.reduce((s, h) => s + h.count, 0) / 7776) * 100).toFixed(1)}% of rolls
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-2">
-                        {barkingWeakHands.length} unique hand patterns
-                      </p>
-                    </div>
+                    <Stat
+                      value={`${((barkCount / 7776) * 100).toFixed(1)}%`}
+                      label={`of rolls are bark-worthy at flexibility ≤ ${barkingFlexThreshold[0]}, strength ≤ ${barkingStrengthThreshold[0]}`}
+                      sub={`${barkCount.toLocaleString()} of 7,776 outcomes · ${barkingWeakHands.length} unique rolls`}
+                    />
 
                     <div>
                       <label className="text-sm font-medium mb-2 block">
@@ -510,21 +478,6 @@ const OddsDashboard = () => {
                       </label>
                       <Slider value={barkingStrengthThreshold} onValueChange={setBarkingStrengthThreshold} min={0} max={100} step={5} className="w-full" />
                     </div>
-
-                    {/* Adjusted odds if different from defaults */}
-                    {(barkingFlexThreshold[0] !== 4 || barkingStrengthThreshold[0] !== 65) && (
-                      <div className="p-3 rounded-lg bg-muted/50 border border-muted-foreground/20">
-                        <div className="text-xs text-muted-foreground mb-1">
-                          Current thresholds (Flexibility ≤ {barkingFlexThreshold[0]}, Strength ≤ {barkingStrengthThreshold[0]})
-                        </div>
-                        <div className="text-xl font-bold text-foreground">
-                          {barkingWeakHands.reduce((s, h) => s + h.count, 0).toLocaleString()} / 7,776
-                        </div>
-                        <div className="text-base font-semibold text-foreground">
-                          {((barkingWeakHands.reduce((s, h) => s + h.count, 0) / 7776) * 100).toFixed(1)}% of rolls
-                        </div>
-                      </div>
-                    )}
 
                     <div>
                       <div className="flex items-baseline gap-2 mb-3">
@@ -545,8 +498,7 @@ const OddsDashboard = () => {
                       </div>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+              </Panel>
             )}
 
             {/* Strategy Insight for specialty games */}
