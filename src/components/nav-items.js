@@ -16,5 +16,4 @@ export const PRIMARY_NAV = [
 /** Reference pages: in the header's end and the mobile menu */
 export const MORE_NAV = [
   { to: '/glossary', label: 'Glossary' },
-  { to: '/second-call-predictor', label: 'Second Call Predictor' },
 ]

@@ -5,7 +5,7 @@ import { CALLABLE_GAMES, getGameName } from '../../lib/games-config'
 import { cn } from '../../lib/utils'
 import { DiceGroup, Hand, RollInput } from '../Dice'
 import { Disclosure, OddsDecision, Questions, fmtPct } from '../Odds'
-import { Panel } from '../Page'
+import { Chip, Panel } from '../Page'
 import { SITUATIONS } from './situations-catalog'
 import { goalFor, optionLabel, rerollsFor } from './keep-model'
 
@@ -58,22 +58,6 @@ function readUrl() {
     ask: p.get('ask') !== null ? p.get('ask').split(',') : [],
   }
 }
-
-const Chip = ({ active, children, ...props }) => (
-  <button
-    type="button"
-    aria-pressed={active}
-    className={cn(
-      'rounded-full border px-3 py-1.5 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-      active
-        ? 'border-primary bg-primary text-primary-foreground'
-        : 'border-border bg-background hover:border-primary/50 hover:bg-accent'
-    )}
-    {...props}
-  >
-    {children}
-  </button>
-)
 
 const Field = ({ label, children, hint }) => (
   <div className="space-y-2">

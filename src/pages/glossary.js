@@ -212,7 +212,7 @@ const GLOSSARY_TERMS = [
         </p>
         <p className="text-sm text-muted-foreground">
           <strong>See also:</strong> <Link to="/rules#second-call" className="text-primary hover:underline">Rules: Second Call</Link>,{' '}
-          <Link to="/second-call-predictor" className="text-primary hover:underline">Second Call Predictor Tool</Link>
+          <Link to="/strategy-assistant/?tab=second" className="text-primary hover:underline">predict the second call</Link>
         </p>
       </>
     ),

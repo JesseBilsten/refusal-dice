@@ -109,9 +109,9 @@ const SecondCallDistribution = ({
             <TableHead className="w-[50px]">Rank</TableHead>
             <TableHead>Second Call</TableHead>
             <TableHead className="text-right">Likelihood</TableHead>
-            <TableHead className="text-right">Count</TableHead>
-            <TableHead className="text-right">Avg Strength</TableHead>
-            <TableHead>Example Rolls</TableHead>
+            <TableHead className="hidden text-right sm:table-cell">Count</TableHead>
+            <TableHead className="hidden text-right md:table-cell">Avg Strength</TableHead>
+            <TableHead className="hidden sm:table-cell">Example Rolls</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -129,26 +129,17 @@ const SecondCallDistribution = ({
                 </span>
               </TableCell>
               <TableCell className="text-right">
-                <Badge 
-                  variant="outline"
-                  className={
-                    parseFloat(call.percentage) > 30 
-                      ? 'bg-green-500/10 text-green-700 dark:text-green-400'
-                      : parseFloat(call.percentage) > 15
-                      ? 'bg-blue-500/10 text-blue-700 dark:text-blue-400'
-                      : ''
-                  }
-                >
+                <Badge variant={idx === 0 ? 'default' : 'outline'} className="tabular-nums">
                   {call.percentage}%
                 </Badge>
               </TableCell>
-              <TableCell className="text-right font-mono text-sm">
+              <TableCell className="hidden text-right tabular-nums sm:table-cell">
                 {call.count}
               </TableCell>
-              <TableCell className="text-right font-mono text-sm">
+              <TableCell className="hidden text-right tabular-nums md:table-cell">
                 {call.avgOffensiveStrength}%
               </TableCell>
-              <TableCell>
+              <TableCell className="hidden sm:table-cell">
                 <div className="flex flex-wrap items-center gap-2">
                   {call.examples.slice(0, 3).map((ex, i) => (
                     <span key={i} title={`Strength: ${ex.strength}%`}>

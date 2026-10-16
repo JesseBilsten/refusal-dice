@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react'
 import Layout from '../components/layout'
-import Page, { PageHeader } from '../components/Page'
+import Page, { PageHeader, PageTabs, tabFromUrl } from '../components/Page'
+import SecondCallPredictor from '../components/SecondCallPredictor'
 import { Badge } from '../components/ui/badge'
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '../components/ui/card'
 import { Button } from '../components/ui/button'
@@ -23,7 +24,19 @@ import {
 import { simulateHammer, simulateRefusal } from '../strategy'
 import { GAMES, GAMES_MAP } from '../lib/games-config'
 
+const TABS = [
+  { id: 'roll', label: 'Your roll' },
+  { id: 'second', label: 'Predict the second call' },
+]
+
 const StrategyAssistantPage = () => {
+  const [tab, setTab] = useState(null)
+  useEffect(() => setTab(tabFromUrl(TABS)), [])
+  const chooseTab = (id) => {
+    window.history.replaceState(null, '', `${window.location.pathname}?tab=${id}`)
+    setTab(id)
+  }
+
   const [diceValues, setDiceValues] = useState(['', '', '', '', ''])
   const playerCount = 3 // fixed for now
   const [testPosition, setTestPosition] = useState('hammer')
@@ -176,6 +189,9 @@ const StrategyAssistantPage = () => {
           title="Strategy Assistant"
           description="Enter your roll and your seat to see what to call, or whether to accept or refuse."
         />
+        {tab && <PageTabs tabs={TABS} value={tab} onChange={chooseTab} label="Strategy tools" />}
+        {tab === 'second' && <SecondCallPredictor />}
+        {tab === 'roll' && (<>
 
         <Card className="mb-6">
           <CardContent className="pt-6">
@@ -331,6 +347,7 @@ const StrategyAssistantPage = () => {
             </Card>
           </div>
         )}
+        </>)}
       </Page>
     </Layout>
   )

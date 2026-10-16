@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'gatsby'
 import { Check, Link2, RotateCcw } from 'lucide-react'
 import Layout from '../components/layout'
-import Page, { PageHeader } from '../components/Page'
+import Page, { PageHeader, PageTabs } from '../components/Page'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button'
 import { Switch } from '../components/ui/switch'
@@ -13,7 +13,6 @@ import QueryBuilder, { newPattern, withIds } from '../components/OddsLab/QueryBu
 import EveryPossibility from '../components/OddsLab/EveryPossibility'
 import KeepAdvisor from '../components/OddsLab/KeepAdvisor'
 import GameOdds from '../components/OddsLab/GameOdds'
-import { cn } from '../lib/utils'
 import {
   PRESETS,
   atLeastOneOf,
@@ -374,23 +373,7 @@ const OddsLabPage = () => {
           title="Odds Lab"
           description="Answer your own questions with exact odds: what to keep from a roll, how often each game comes up, or how often any roll you can describe happens."
         />
-        <div role="tablist" aria-label="Odds Lab tools" className="mb-6 inline-flex flex-wrap gap-1 rounded-xl bg-muted p-1">
-          {TABS.map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              role="tab"
-              aria-selected={tab === t.id}
-              onClick={() => choose(t.id)}
-              className={cn(
-                'rounded-lg px-3 py-2 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                tab === t.id ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
-              )}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
+        {tab && <PageTabs tabs={TABS} value={tab} onChange={choose} label="Odds Lab tools" />}
         {tab === 'keep' && <KeepAdvisor />}
         {tab === 'games' && <GameOdds />}
         {tab === 'build' && <RollBuilder />}
