@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { withPrefix } from 'gatsby'
-import { FlaskConical, Lightbulb } from 'lucide-react'
+import { ChevronDown, FlaskConical, Lightbulb } from 'lucide-react'
 import {
   applyAction,
   bossHand,
@@ -111,6 +111,19 @@ function beatText(dice, whose, call, lead) {
 }
 
 const list = (xs) => (xs.length < 2 ? xs.join('') : `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}`)
+
+/** This round in words, the latest last */
+function RoundLog({ events }) {
+  return (
+    <ol className="space-y-1 text-sm">
+      {events.slice(-12).map((t, i) => (
+        <li key={i} className="text-muted-foreground last:font-medium last:text-foreground">
+          {t}
+        </li>
+      ))}
+    </ol>
+  )
+}
 
 /** The piddle, ranked: everyone's die, then any roll-off for the highest, then who holds the Hammer */
 function Piddle({ rounds, names, hammer, onComeOut }) {
@@ -588,127 +601,170 @@ export default function Play() {
       (phase.kind === 'boss' && phase.stage !== 'decide'))
   const hint = hints && suggestion ? hintText(suggestion, myDice, phase) : null
 
+  // Seats top to bottom from this round's Hammer, going left: the Hammer, 1st refusal, 2nd refusal, ...
+  // (once the round is over, game.hammer already holds the next Hammer, so keep this round's order)
+  const lastCall = phase.kind === 'roundOver' ? game.log.slice(roundStart).findLast((e) => e.type === 'called') : null
+  const topSeat = lastCall ? lastCall.player : game.hammer
+  const from = Math.max(0, game.seats.findIndex((s) => s.id === topSeat))
+  const seatOrder = [...game.seats.slice(from), ...game.seats.slice(0, from)]
+
+  // Your move sits in your seat; anyone else's shows as the acting seat's status
+  const moveInSeat = Boolean(controls) && !meOut
+  // A finished Tres Away round: every die is out
+  const roundOverTres = phase.kind === 'roundOver' && call?.game === 'tres-away'
+  const move = (
+    <div className="mt-3 border-t pt-3" aria-live="polite">
+      <h2 className="text-lg font-semibold">{title}</h2>
+      <div className="mt-1 space-y-2 text-sm leading-relaxed text-muted-foreground">{body}</div>
+      {error && (
+        <p className="mt-3 rounded-md border border-destructive/40 bg-destructive/10 p-2 text-sm">{error}</p>
+      )}
+      {controls && <div className="mt-3">{controls}</div>}
+      {labLink && (
+        <a
+          href={withPrefix(labLink)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+        >
+          <FlaskConical aria-hidden className="h-4 w-4" /> Not sure? See the exact odds in the Odds Lab
+          <span className="sr-only">(opens in a new tab)</span>
+        </a>
+      )}
+    </div>
+  )
+  const status = (
+    <div aria-live="polite">
+      <h2 className="text-sm font-semibold text-foreground">{title}</h2>
+      {body && <div className="mt-0.5 space-y-1">{body}</div>}
+    </div>
+  )
+
+  // Collapsed standings (phones): just the worst hand
+  const worstRows = standingRows.filter((r) => ['bottom', 'tied', 'pencil'].includes(r.status))
+  const worstLine = worstRows.length
+    ? `${worstRows[0].status === 'pencil' ? 'Pencil' : worstRows.length > 1 ? 'Tied worst' : 'Worst hand'}: ${worstRows
+        .map((r) => `${r.name}, ${r.detail.charAt(0).toLowerCase()}${r.detail.slice(1)}`)
+        .join('; ')}`
+    : 'Standings'
+  const standingsNote =
+    phase.kind === 'roundOver'
+      ? 'How the round finished.'
+      : 'Best hand first. Anyone above a hand that’s all day is in the cup: they can’t lose this round.'
+
   return (
     <div className="space-y-6">
-      {/* The table: the round and the seats, on the felt */}
-      <TableFelt className="space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-3 text-felt-foreground">
-          <div className="font-display text-lg font-bold">
-            Round {game.round}
-            {call && <span className="font-normal"> · {label(call)}</span>}
-          </div>
-          <div className="flex items-center gap-2 text-sm">
-            <Switch id="hints" checked={hints} onCheckedChange={setHints} />
-            <Label htmlFor="hints" className="text-felt-foreground">Hints</Label>
-          </div>
-        </div>
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_19rem] lg:gap-6">
+        {/* Standings and advice: beside the players on wide screens, above them (collapsed) on phones */}
+        <aside className="space-y-4 lg:col-start-2 lg:row-start-1">
+          {standingRows.length > 0 && (
+            <>
+              <details className="group rounded-xl border bg-card shadow-sm lg:hidden">
+                <summary className="flex cursor-pointer list-none items-center gap-2 p-3 text-sm [&::-webkit-details-marker]:hidden">
+                  <span className="min-w-0 flex-1 font-medium">{worstLine}</span>
+                  <span className="shrink-0 text-xs text-muted-foreground">All standings</span>
+                  <ChevronDown aria-hidden className="h-4 w-4 shrink-0 transition-transform group-open:rotate-180" />
+                </summary>
+                <div className="px-3 pb-3">
+                  <p className="mb-2 text-xs text-muted-foreground">{standingsNote}</p>
+                  <Standings rows={standingRows} label="Standings this round" />
+                </div>
+              </details>
+              <Panel title="Standings" description={standingsNote} className="hidden lg:block">
+                <Standings rows={standingRows} label="Standings this round" />
+              </Panel>
+            </>
+          )}
+          {hint && (
+            <p className="flex items-start gap-2 rounded-xl border bg-card p-3 text-sm shadow-sm">
+              <Lightbulb aria-hidden className="mt-0.5 h-4 w-4 shrink-0 text-odds-coin" />
+              <span>
+                <strong>A solid player would:</strong> {hint}
+              </span>
+            </p>
+          )}
+          {/* This round, in words */}
+          <Panel title="This round" tone="note" as="section" className="hidden lg:block">
+            <RoundLog events={roundEvents} />
+          </Panel>
+        </aside>
 
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {game.seats.map((s) => {
-            const badges = []
-            if (phase.kind !== 'gameOver') {
-              if (s.id === game.hammer) badges.push(phase.kind === 'roundOver' ? '🔨 Next Hammer' : '🔨 Hammer')
-              // Refusal seats matter until play starts; then the decision badge says what they did
-              if (['call', 'refusal', 'secondCall'].includes(phase.kind)) {
-                if (s.id === seats.first) badges.push('1st refusal')
-                if (s.id === seats.second) badges.push('2nd refusal')
+        {/* The table: the round and the players, Hammer first, on the felt */}
+        <TableFelt className="space-y-3 lg:col-start-1 lg:row-start-1">
+          <div className="flex flex-wrap items-center justify-between gap-3 text-felt-foreground">
+            <div className="font-display text-lg font-bold">
+              Round {game.round}
+              {call && <span className="font-normal"> · {label(call)}</span>}
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <Switch id="hints" checked={hints} onCheckedChange={setHints} />
+              <Label htmlFor="hints" className="text-felt-foreground">Hints</Label>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            {seatOrder.map((s) => {
+              const badges = []
+              if (phase.kind !== 'gameOver') {
+                if (s.id === game.hammer) badges.push(phase.kind === 'roundOver' ? '🔨 Next Hammer' : '🔨 Hammer')
+                // Refusal seats matter until play starts; then the decision badge says what they did
+                if (['call', 'refusal', 'secondCall'].includes(phase.kind)) {
+                  if (s.id === seats.first) badges.push('1st refusal')
+                  if (s.id === seats.second) badges.push('2nd refusal')
+                }
               }
-            }
-            if (phase.kind === 'boss' && phase.boss === s.id) badges.push('👑 Boss')
-            if (bottom.includes(s.id)) badges.push(bottom.length > 1 ? 'Tied worst' : 'Worst hand')
-            if (safe.includes(s.id) && phase.kind !== 'roundOver') badges.push('In the cup')
-            const dice = view.dice[s.id] || [null, null, null, null, null]
-            const isYou = s.id === YOU
-            const tres = phase.kind === 'tresAway' && phase.hands[s.id]
-            return (
-              <Seat
-                key={s.id}
-                name={s.name}
-                you={isYou}
-                out={s.out}
-                active={who === s.id}
-                loser={phase.kind === 'roundOver' && phase.loser === s.id}
-                badges={badges}
-                decision={decisions[s.id]}
-                pencils={s.pencils}
-                maxPencils={game.rules.pencilsToLose}
-              >
-                {!s.out && (
-                  <Hand
-                    dice={dice}
-                    game={call ? call.game : null}
-                    variant={call?.variant}
-                    rollIds={rollIds[s.id]}
-                    putOut={tres ? tres.out : undefined}
-                    kept={isYou && canKeep ? keep : undefined}
-                    locked={
-                      isYou && tres
-                        ? tres.out
-                        : isYou && phase.kind === 'boss' && phase.stage === 'bossRoll' && phase.boss === YOU
-                          ? phase.mustKeep
-                          : undefined
-                    }
-                    onToggleKeep={isYou && canKeep ? toggleKeep : undefined}
-                  />
-                )}
-              </Seat>
-            )
-          })}
-        </div>
-      </TableFelt>
+              if (phase.kind === 'boss' && phase.boss === s.id) badges.push('👑 Boss')
+              if (bottom.includes(s.id)) badges.push(bottom.length > 1 ? 'Tied worst' : 'Worst hand')
+              if (safe.includes(s.id) && phase.kind !== 'roundOver') badges.push('In the cup')
+              const dice = view.dice[s.id] || [null, null, null, null, null]
+              const isYou = s.id === YOU
+              const tres = phase.kind === 'tresAway' && phase.hands[s.id]
+              const showsStatus = !moveInSeat && title && (who ? who === s.id : isYou)
+              return (
+                <Seat
+                  key={s.id}
+                  name={s.name}
+                  you={isYou}
+                  out={s.out}
+                  active={who === s.id}
+                  loser={phase.kind === 'roundOver' && phase.loser === s.id}
+                  badges={badges}
+                  decision={decisions[s.id]}
+                  pencils={s.pencils}
+                  maxPencils={game.rules.pencilsToLose}
+                  status={showsStatus ? status : undefined}
+                >
+                  {!s.out && (
+                    <Hand
+                      dice={dice}
+                      game={call ? call.game : null}
+                      variant={call?.variant}
+                      rollIds={rollIds[s.id]}
+                      putOut={tres ? tres.out : roundOverTres ? [0, 1, 2, 3, 4] : undefined}
+                      kept={isYou && canKeep ? keep : undefined}
+                      locked={
+                        isYou && tres
+                          ? tres.out
+                          : isYou && phase.kind === 'boss' && phase.stage === 'bossRoll' && phase.boss === YOU
+                            ? phase.mustKeep
+                            : undefined
+                      }
+                      onToggleKeep={isYou && canKeep ? toggleKeep : undefined}
+                    />
+                  )}
+                  {isYou && moveInSeat && move}
+                </Seat>
+              )
+            })}
+          </div>
+          {/* Out of the game: the table's actions sit under the players */}
+          {controls && meOut && <div className="rounded-xl border bg-card p-3 shadow-sm">{move}</div>}
+        </TableFelt>
+      </div>
 
-      {/* Standings: from the first roll of play to the pencil */}
-      {standingRows.length > 0 && (
-        <Panel
-          title="Standings"
-          description={
-            phase.kind === 'roundOver'
-              ? 'How the round finished.'
-              : 'Best hand first. Anyone above a hand that’s all day is in the cup: they can’t lose this round.'
-          }
-        >
-          <Standings rows={standingRows} label="Standings this round" />
-        </Panel>
-      )}
-
-      {/* Your move */}
-      <Panel tone={mine ? 'tool' : 'default'} as="div" aria-live="polite">
-        <h2 className="mb-2 text-xl font-semibold">{title}</h2>
-        <div className="space-y-2 text-sm leading-relaxed">{body}</div>
-        {hint && (
-          <p className="mt-3 flex items-start gap-2 rounded-md bg-muted/70 p-2 text-sm">
-            <Lightbulb aria-hidden className="mt-0.5 h-4 w-4 shrink-0 text-odds-coin" />
-            <span>
-              <strong>A solid player would:</strong> {hint}
-            </span>
-          </p>
-        )}
-        {error && (
-          <p className="mt-3 rounded-md border border-destructive/40 bg-destructive/10 p-2 text-sm">{error}</p>
-        )}
-        {controls && <div className="mt-4">{controls}</div>}
-        {labLink && (
-          <a
-            href={withPrefix(labLink)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
-          >
-            <FlaskConical aria-hidden className="h-4 w-4" /> Not sure? See the exact odds in the Odds Lab
-            <span className="sr-only">(opens in a new tab)</span>
-          </a>
-        )}
-      </Panel>
-
-      {/* This round, in words */}
-      <Panel title="This round" tone="note" as="section">
-        <ol className="space-y-1 text-sm">
-          {roundEvents.slice(-12).map((t, i) => (
-            <li key={i} className="text-muted-foreground last:font-medium last:text-foreground">
-              {t}
-            </li>
-          ))}
-        </ol>
+      {/* This round, in words (phones: under the table) */}
+      <Panel title="This round" tone="note" as="section" className="lg:hidden">
+        <RoundLog events={roundEvents} />
       </Panel>
 
       <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
