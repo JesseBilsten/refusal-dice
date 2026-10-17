@@ -8,13 +8,13 @@ export const SEAT_ODDS_SAMPLES = 20000
  * tenths of a percent. Index 0 is the Hammer, then each seat to their left.
  */
 export const SEAT_ODDS: Record<number, number[]> = {
-  2: [291, 568],
-  3: [137, 444, 418],
-  4: [62, 315, 300, 322],
-  5: [32, 229, 235, 252, 250],
-  6: [19, 181, 185, 212, 204, 197],
-  7: [14, 151, 151, 177, 174, 167, 165],
-  8: [9, 125, 126, 152, 152, 149, 146, 138],
+  2: [283, 576],
+  3: [134, 438, 427],
+  4: [61, 308, 301, 329],
+  5: [32, 228, 229, 255, 255],
+  6: [18, 181, 183, 210, 203, 205],
+  7: [12, 150, 148, 178, 174, 167, 169],
+  8: [9, 128, 124, 151, 153, 146, 145, 144],
 }
 
 /** Each seat's chance of the pencil (0–1) at a table of `players`, Hammer first */
