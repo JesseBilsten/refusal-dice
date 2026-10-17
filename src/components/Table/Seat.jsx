@@ -32,7 +32,7 @@ export default function Seat({
       className={cn(
         'rounded-xl border bg-card p-3 shadow-sm transition-shadow',
         you && 'border-primary/60',
-        active && 'ring-2 ring-primary/40 ring-offset-2 ring-offset-background',
+        active && 'ring-2 ring-pop ring-offset-2 ring-offset-transparent',
         loser && 'border-destructive',
         out && 'opacity-50',
         className

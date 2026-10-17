@@ -283,6 +283,26 @@ const GLOSSARY_TERMS = [
     ),
   },
   {
+    id: 'coming-out',
+    term: 'Coming Out',
+    emoji: '🎲',
+    keywords: ['coming out', 'come out', 'roll', 'start', 'round'],
+    body: (
+      <>
+        <p className="mb-2">
+          What the <Link to="#hammer" className="text-primary hover:underline">Hammer</Link> says to start a round:
+          “Coming out!” lets everyone know the dice are about to be rolled. Everyone rolls their five dice and keeps
+          them hidden, then the Hammer calls a game (or <Link to="#bark" className="text-primary hover:underline">barks</Link>).
+        </p>
+        <p className="text-sm text-muted-foreground">
+          <strong>Usage:</strong> "Coming out!"<br/>
+          <strong>See also:</strong> <Link to="#hammer" className="text-primary hover:underline">Hammer</Link>,{' '}
+          <Link to="/rules#roll" className="text-primary hover:underline">Rules: Roll</Link>
+        </p>
+      </>
+    ),
+  },
+  {
     id: 'all-day',
     term: 'All Day',
     emoji: '🛑',

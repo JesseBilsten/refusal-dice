@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { Pause, Pencil, Play, RotateCcw } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import { Hand, usePrefersReducedMotion } from '../Dice'
+import TableFelt from '../Table/TableFelt'
 
 /**
  * The home page's story: one round of Refusal told in six scenes on a felt
@@ -145,7 +146,7 @@ export default function RoundStory({ className }) {
       aria-label="How a round of Refusal goes"
     >
       {/* The table */}
-      <div className="story-felt relative overflow-hidden rounded-[2rem] p-4 shadow-xl sm:p-6">
+      <TableFelt>
         <div className="relative grid gap-3 sm:gap-4">
           <Player name="You" state={bump(s.you, 'you')} hammer />
           <div className="grid gap-3 sm:grid-cols-2 sm:gap-4">
@@ -153,7 +154,7 @@ export default function RoundStory({ className }) {
             <Player name="Ben" state={bump(s.ben, 'ben')} />
           </div>
         </div>
-      </div>
+      </TableFelt>
 
       {/* The story */}
       <figcaption className="mt-4 min-h-[6.5rem]" aria-live={autoplay ? 'off' : 'polite'}>

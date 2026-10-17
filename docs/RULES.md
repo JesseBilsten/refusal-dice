@@ -18,7 +18,7 @@ Each rule is tagged by where it came from:
 
 ## 2. A round
 
-1. **Roll.** Everyone rolls all 5 dice and keeps them hidden. This roll is everyone's **roll 1** for whatever game ends up being played, including after a second call. [site] [confirmed]
+1. **Roll.** The Hammer says **"coming out"** to start the round, then everyone rolls all 5 dice and keeps them hidden. [confirmed] This roll is everyone's **roll 1** for whatever game ends up being played, including after a second call. [site] [confirmed]
 2. **Call or bark.** The Hammer looks at their dice and either:
    - **calls** a game, including a high/low variant for kicker games (e.g. "10-3 High"), or
    - **barks:** the Hammer passes to the player on the left, everyone picks up, and the round starts over with a fresh roll and the new Hammer calling. [confirmed]

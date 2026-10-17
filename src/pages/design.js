@@ -23,6 +23,7 @@ import {
 import { Settings } from '../components/Settings'
 import Seat from '../components/Table/Seat'
 import SeatRing from '../components/Table/SeatRing'
+import TableFelt from '../components/Table/TableFelt'
 import Standings from '../components/Table/Standings'
 import { PRESETS } from '../lib/roll-query'
 import { seatOdds } from '../strategy'
@@ -202,14 +203,14 @@ const DesignPage = () => {
                 seats={seatOdds(5).map((_, i, o) => ({ value: o[(i + 4) % 5], hammer: i === 1, you: i === 0 }))}
               />
             </div>
-            <div className="grid gap-3 sm:grid-cols-2">
+            <TableFelt className="grid gap-3 sm:grid-cols-2">
               <Seat name="You" you active badges={['🔨 Hammer']} pencils={1}>
                 <Hand dice={[1, 3, 6, 5, 5]} game="10-3" variant="high" />
               </Seat>
               <Seat name="Ava" badges={['1st refusal']} decision="Refused" pencils={2} status="Thinking…">
                 <Hand dice={[null, null, null, null, null]} />
               </Seat>
-            </div>
+            </TableFelt>
             <div className="grid gap-3 sm:grid-cols-2">
               <Standings
                 label="Example standings"

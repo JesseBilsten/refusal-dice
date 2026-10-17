@@ -100,7 +100,8 @@ const RulesPage = () => (
         {/* Step 1: Roll */}
         <StepCard number={1} title="Roll" icon="🎲" id="roll">
           <p className="text-sm text-muted-foreground">
-            Everyone rolls all 5 dice and <strong>hides</strong> them from other players.
+            The Hammer says <Link to="/glossary#coming-out" className="text-primary hover:underline">“coming out”</Link>,
+            then everyone rolls all 5 dice and <strong>hides</strong> them from other players.
           </p>
         </StepCard>
 

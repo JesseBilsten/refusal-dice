@@ -100,6 +100,10 @@ caps the content column, **left-aligned**. Pages never set their own
   piddle and for each round (fed by the engine's `standings()`); use it for
   any ranked list of players.
 
+- `TableFelt`: **the table**: green felt in a wood rail. Seats, and
+  anything played at the table, sit on it: the home page's story and
+  Play. Text placed directly on the felt uses `text-felt-foreground`.
+
 - `Seat`: one player at the table (name, role badges, decision, pencils,
   their dice, a status line). The tutorial and Play both use it.
 

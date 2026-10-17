@@ -168,8 +168,8 @@
   }
 }
 
-/* Home page story (src/components/Home/RoundStory.jsx) */
-.story-felt {
+/* The table: green felt in a wood rail (TableFelt, src/components/Table/) */
+.table-felt {
   background:
     radial-gradient(120% 90% at 50% 0%, hsl(var(--color-felt) / 0.75), transparent 70%),
     repeating-linear-gradient(45deg, hsl(0 0% 100% / 0.025) 0 2px, transparent 2px 6px),

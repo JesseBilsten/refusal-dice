@@ -35,6 +35,7 @@ import {
 } from '../Dice'
 import { Panel } from '../Page'
 import Seat from '../Table/Seat'
+import TableFelt from '../Table/TableFelt'
 import Standings from '../Table/Standings'
 import {
   BOT_NAMES,
@@ -111,7 +112,7 @@ function beatText(dice, whose, call, lead) {
 const list = (xs) => (xs.length < 2 ? xs.join('') : `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}`)
 
 /** The piddle, ranked: everyone's die, then any roll-off for the highest, then who holds the Hammer */
-function Piddle({ rounds, names, hammer, onDeal }) {
+function Piddle({ rounds, names, hammer, onComeOut }) {
   return (
     <Panel tone="tool" title="The piddle" description="Everyone rolls one die. Highest holds the Hammer; a tie for the highest rolls again.">
       <div className="space-y-4">
@@ -144,7 +145,10 @@ function Piddle({ rounds, names, hammer, onDeal }) {
         <p className="font-medium">
           {hammer === YOU ? 'You rolled highest and hold the Hammer.' : `${names[hammer]} rolled highest and holds the Hammer.`}
         </p>
-        <RollButton onClick={onDeal}>Deal the dice</RollButton>
+        <p className="text-sm text-muted-foreground">
+          {hammer === YOU ? 'Say “coming out” and everyone rolls.' : `${names[hammer]} says “coming out” and everyone rolls.`}
+        </p>
+        <RollButton onClick={onComeOut}>Come out</RollButton>
       </div>
     </Panel>
   )
@@ -281,7 +285,7 @@ export default function Play() {
         rounds={piddle.rounds}
         names={names}
         hammer={game.hammer}
-        onDeal={() => {
+        onComeOut={() => {
           setDealt(true)
           setRollIds((ids) => Object.fromEntries(Object.entries(ids).map(([id, r]) => [id, r.map((n) => n + 1)])))
           if (prefs.sound) playRollSound(5)
@@ -372,8 +376,13 @@ export default function Play() {
   } else if (phase.kind === 'roundOver') {
     const loser = phase.loser
     title = loser ? (loser === YOU ? 'You take the pencil' : `${names[loser]} takes the pencil`) : 'No pencil this round'
-    body = <p>{loser ? `${loser === YOU ? 'You hold' : `${names[loser]} holds`} the Hammer next.` : 'The Hammer passes left.'}</p>
-    controls = <RollButton onClick={() => act({ type: 'nextRound' })}>Next round</RollButton>
+    body = (
+      <p>
+        {loser ? `${loser === YOU ? 'You hold' : `${names[loser]} holds`} the Hammer next.` : 'The Hammer passes left.'}{' '}
+        When everyone’s ready, the Hammer comes out.
+      </p>
+    )
+    controls = <RollButton onClick={() => act({ type: 'nextRound' })}>Come out</RollButton>
   } else if (!mine) {
     title = meOut ? 'You’re out: watching the bots' : `${names[who]} is thinking…`
     if (phase.kind === 'play') {
@@ -553,71 +562,72 @@ export default function Play() {
 
   return (
     <div className="space-y-6">
-      {/* Status bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-felt px-4 py-3 text-felt-foreground shadow-sm">
-        <div className="font-display text-lg font-bold">
-          Round {game.round}
-          {call && <span className="font-normal"> · {label(call)}</span>}
+      {/* The table: the round and the seats, on the felt */}
+      <TableFelt className="space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 text-felt-foreground">
+          <div className="font-display text-lg font-bold">
+            Round {game.round}
+            {call && <span className="font-normal"> · {label(call)}</span>}
+          </div>
+          <div className="flex items-center gap-2 text-sm">
+            <Switch id="hints" checked={hints} onCheckedChange={setHints} />
+            <Label htmlFor="hints" className="text-felt-foreground">Hints</Label>
+          </div>
         </div>
-        <div className="flex items-center gap-2 text-sm">
-          <Switch id="hints" checked={hints} onCheckedChange={setHints} />
-          <Label htmlFor="hints" className="text-felt-foreground">Hints</Label>
-        </div>
-      </div>
 
-      {/* The table */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {game.seats.map((s) => {
-          const badges = []
-          if (phase.kind !== 'gameOver') {
-            if (s.id === game.hammer) badges.push(phase.kind === 'roundOver' ? '🔨 Next Hammer' : '🔨 Hammer')
-            // Refusal seats matter until play starts; then the decision badge says what they did
-            if (['call', 'refusal', 'secondCall'].includes(phase.kind)) {
-              if (s.id === seats.first) badges.push('1st refusal')
-              if (s.id === seats.second) badges.push('2nd refusal')
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {game.seats.map((s) => {
+            const badges = []
+            if (phase.kind !== 'gameOver') {
+              if (s.id === game.hammer) badges.push(phase.kind === 'roundOver' ? '🔨 Next Hammer' : '🔨 Hammer')
+              // Refusal seats matter until play starts; then the decision badge says what they did
+              if (['call', 'refusal', 'secondCall'].includes(phase.kind)) {
+                if (s.id === seats.first) badges.push('1st refusal')
+                if (s.id === seats.second) badges.push('2nd refusal')
+              }
             }
-          }
-          if (phase.kind === 'boss' && phase.boss === s.id) badges.push('👑 Boss')
-          if (bottom.includes(s.id)) badges.push(bottom.length > 1 ? 'Tied worst' : 'Worst hand')
-          if (safe.includes(s.id) && phase.kind !== 'roundOver') badges.push('In the cup')
-          const dice = view.dice[s.id] || [null, null, null, null, null]
-          const isYou = s.id === YOU
-          const tres = phase.kind === 'tresAway' && phase.hands[s.id]
-          return (
-            <Seat
-              key={s.id}
-              name={s.name}
-              you={isYou}
-              out={s.out}
-              active={who === s.id}
-              loser={phase.kind === 'roundOver' && phase.loser === s.id}
-              badges={badges}
-              decision={decisions[s.id]}
-              pencils={s.pencils}
-              maxPencils={game.rules.pencilsToLose}
-            >
-              {!s.out && (
-                <Hand
-                  dice={dice}
-                  game={call ? call.game : null}
-                  variant={call?.variant}
-                  rollIds={rollIds[s.id]}
-                  putOut={tres ? tres.out : undefined}
-                  kept={isYou && canKeep ? keep : undefined}
-                  locked={
-                    isYou && tres
-                      ? tres.out
-                      : isYou && phase.kind === 'boss' && phase.stage === 'bossRoll' && phase.boss === YOU
-                        ? phase.mustKeep
-                        : undefined
-                  }
-                  onToggleKeep={isYou && canKeep ? toggleKeep : undefined}
-                />
-              )}
-            </Seat>
-          )
-        })}
-      </div>
+            if (phase.kind === 'boss' && phase.boss === s.id) badges.push('👑 Boss')
+            if (bottom.includes(s.id)) badges.push(bottom.length > 1 ? 'Tied worst' : 'Worst hand')
+            if (safe.includes(s.id) && phase.kind !== 'roundOver') badges.push('In the cup')
+            const dice = view.dice[s.id] || [null, null, null, null, null]
+            const isYou = s.id === YOU
+            const tres = phase.kind === 'tresAway' && phase.hands[s.id]
+            return (
+              <Seat
+                key={s.id}
+                name={s.name}
+                you={isYou}
+                out={s.out}
+                active={who === s.id}
+                loser={phase.kind === 'roundOver' && phase.loser === s.id}
+                badges={badges}
+                decision={decisions[s.id]}
+                pencils={s.pencils}
+                maxPencils={game.rules.pencilsToLose}
+              >
+                {!s.out && (
+                  <Hand
+                    dice={dice}
+                    game={call ? call.game : null}
+                    variant={call?.variant}
+                    rollIds={rollIds[s.id]}
+                    putOut={tres ? tres.out : undefined}
+                    kept={isYou && canKeep ? keep : undefined}
+                    locked={
+                      isYou && tres
+                        ? tres.out
+                        : isYou && phase.kind === 'boss' && phase.stage === 'bossRoll' && phase.boss === YOU
+                          ? phase.mustKeep
+                          : undefined
+                    }
+                    onToggleKeep={isYou && canKeep ? toggleKeep : undefined}
+                  />
+                )}
+              </Seat>
+            )
+          })}
+        </div>
+      </TableFelt>
 
       {/* Standings: from the first roll of play to the pencil */}
       {standingRows.length > 0 && (
