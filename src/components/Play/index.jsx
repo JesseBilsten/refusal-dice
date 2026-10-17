@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { withPrefix } from 'gatsby'
-import { ChevronDown, FlaskConical, Lightbulb } from 'lucide-react'
+import { ChevronDown, FlaskConical } from 'lucide-react'
 import {
   applyAction,
   bossHand,
@@ -37,6 +37,8 @@ import {
 import { Panel } from '../Page'
 import Seat from '../Table/Seat'
 import TableFelt from '../Table/TableFelt'
+import HintCard from './HintCard'
+import { hintStats } from './hint-stats'
 import Standings from '../Table/Standings'
 import {
   BOT_NAMES,
@@ -87,12 +89,16 @@ function hintText(action, dice, phase) {
       return 'Refuse the call.'
     case 'reroll':
       return action.keep.length
-        ? `Keep ${action.keep.map((i) => dice[i]).join('-')} and roll ${5 - action.keep.length}.`
+        ? `Keep ${action.keep.map((i) => dice[i]).sort((a, b) => a - b).join('-')} and roll ${5 - action.keep.length}.`
         : 'Roll all five.'
     case 'stand':
       return phase.kind === 'play' ? 'Take the tie: stand and replay.' : 'Stand: stop rolling.'
     case 'putOut':
-      return `Put out ${action.dice.map((i) => dice[i]).join(' ')}.`
+      // Lowest-scoring first (3s count 0), matching the hint's options
+      return `Put out ${action.dice
+        .map((i) => dice[i])
+        .sort((a, b) => tresAwayScore([a]) - tresAwayScore([b]))
+        .join(' ')}.`
     case 'roll':
       return 'Roll the dice still in your hand.'
     case 'comeUp':
@@ -600,6 +606,13 @@ export default function Play() {
       (phase.kind === 'tresAway') ||
       (phase.kind === 'boss' && phase.stage !== 'decide'))
   const hint = hints && suggestion ? hintText(suggestion, myDice, phase) : null
+  const hintDetail = hint
+    ? hintStats(game, YOU, suggestion, {
+        call: label,
+        player: (id) => names[id],
+        hand: (dice) => handText(dice, call),
+      })
+    : null
 
   // Seats top to bottom from this round's Hammer, going left: the Hammer, 1st refusal, 2nd refusal, ...
   // (once the round is over, game.hammer already holds the next Hammer, so keep this round's order)
@@ -675,14 +688,7 @@ export default function Play() {
               </Panel>
             </>
           )}
-          {hint && (
-            <p className="flex items-start gap-2 rounded-xl border bg-card p-3 text-sm shadow-sm">
-              <Lightbulb aria-hidden className="mt-0.5 h-4 w-4 shrink-0 text-odds-coin" />
-              <span>
-                <strong>A solid player would:</strong> {hint}
-              </span>
-            </p>
-          )}
+          {hint && <HintCard hint={hint} stats={hintDetail} />}
           {/* This round, in words */}
           <Panel title="This round" tone="note" as="section" className="hidden lg:block">
             <RoundLog events={roundEvents} />
