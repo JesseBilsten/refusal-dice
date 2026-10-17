@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import Helmet from 'react-helmet'
 import Layout from '../components/layout'
-import Page, { Chip, PageHeader, PageTabs, Panel, Stat } from '../components/Page'
+import Page, { Chip, PageHeader, PageTabs, Panel, Stat, StepNumber } from '../components/Page'
 import {
   DiceGroup,
   Die,
@@ -101,6 +101,16 @@ const DesignPage = () => {
           </Section>
 
           <Section title="Page kit">
+            <Panel
+              title={
+                <span className="flex items-center gap-3">
+                  <StepNumber n={1} />
+                  A numbered step
+                </span>
+              }
+            >
+              <p>Numbered steps are Panels titled with a StepNumber.</p>
+            </Panel>
             <PageTabs
               label="Example tabs"
               tabs={[

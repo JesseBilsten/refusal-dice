@@ -6,16 +6,18 @@ import { cn } from '../../lib/utils'
  * the Hammer marked 🔨 and your seat at the bottom. Seats run clockwise
  * from yours, which is to your left (the way the Hammer passes).
  *
- * seats: [{ value, hammer, you }] in seat order clockwise from your seat
- * (index 0 is you). value is 0–1. `even` (0–1), an even share, tints
- * each seat: better than it (safe) or worse (lose). `passTo`: draw the Hammer passing
+ * seats: [{ value, text, hammer, you }] in seat order clockwise from your
+ * seat (index 0 is you). value is 0–1, shown as a percent; or `text` shows
+ * a label instead (e.g. "1st"), untinted. `even` (0–1), an even share,
+ * tints each value: better than it (safe) or worse (lose). `passTo`: draw the Hammer passing
  * from your seat to that seat index.
  */
-const tone = (value, even) => (value < even ? 'safe' : 'lose')
+const tone = (value, even) => (value == null ? 'plain' : value < even ? 'safe' : 'lose')
 
 const FILL = {
   safe: 'fill-odds-safe/20 stroke-odds-safe',
   lose: 'fill-odds-lose/20 stroke-odds-lose',
+  plain: 'fill-card stroke-border',
 }
 
 export default function SeatRing({ seats, even, passTo, label, className }) {
@@ -58,7 +60,7 @@ export default function SeatRing({ seats, even, passTo, label, className }) {
           <g key={i}>
             <circle cx={x} cy={y} r={seatR} strokeWidth={s.you ? 3 : 1.5} className={cn(FILL[t], s.you && 'stroke-primary')} />
             <text x={x} y={y} textAnchor="middle" dominantBaseline="central" className={cn('fill-foreground font-bold tabular-nums', n > 6 ? 'text-[14px]' : 'text-[16px]')}>
-              {Math.round(s.value * 100)}%
+              {s.text ?? `${Math.round(s.value * 100)}%`}
             </text>
             {s.hammer && (
               <text x={x + seatR * 0.75} y={y - seatR * 0.75} textAnchor="middle" dominantBaseline="central" className="text-[16px]">

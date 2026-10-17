@@ -2,7 +2,7 @@ import React from 'react'
 import { Link } from 'gatsby'
 import { ArrowRight, BookOpen, Dices, FlaskConical, Swords } from 'lucide-react'
 import Layout from '../components/layout'
-import { Container } from '../components/Page'
+import { Container, StepNumber } from '../components/Page'
 import { buttonVariants } from '../components/ui/button'
 import RoundStory from '../components/Home/RoundStory'
 import { CALLABLE_GAMES, getGamePath } from '../lib/games-config'
@@ -109,9 +109,7 @@ const IndexPage = () => (
                 className="group flex h-full flex-col rounded-2xl border bg-card p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <span className="mb-4 flex items-center gap-3">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary font-display text-lg font-bold text-primary-foreground">
-                    {p.step}
-                  </span>
+                  <StepNumber n={p.step} className="h-10 w-10 text-lg" />
                   <p.icon aria-hidden className="h-5 w-5 text-muted-foreground transition-colors group-hover:text-primary" />
                 </span>
                 <span className="mb-1 font-display text-lg font-bold">{p.title}</span>

@@ -75,6 +75,9 @@ caps the content column, **left-aligned**. Pages never set their own
 - `PageHeader`: left-aligned title, a one- or two-sentence description,
   then optional `breadcrumbs`, `badge`, `eyebrow` and links (children).
   No emoji in titles, except a game's own emoji on its page.
+- `StepNumber`: a step's number in a filled circle. Numbered steps are
+  Panels titled with it (the Rules page) or cards led by it (the home
+  page's path).
 - `Container`: width and gutters only, for full-bleed sections such as the
   home hero. Use `width="wide"` so it lines up with every page.
 - `Panel`: a section in a box, and the only one: never use `ui/card`.
@@ -110,7 +113,8 @@ caps the content column, **left-aligned**. Pages never set their own
 - `SeatRing`: **the table seen from above** (SVG). Each seat shows a
   chance (of the pencil), tinted better or worse than an even share; your
   seat is at the bottom, seats run clockwise to your left, the Hammer gets
-  🔨, and `passTo` draws the Hammer passing. Use it for anything that
+  🔨, and `passTo` draws the Hammer passing. A seat's `text` shows a label
+  instead of a chance (the Rules page marks the 1st and 2nd refusal). Use it for anything that
   depends on where people sit.
 
 ## Settings: `src/components/Settings/`
