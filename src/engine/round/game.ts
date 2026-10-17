@@ -418,14 +418,19 @@ const playWorst = (state: GameState, ids: PlayerId[]): PlayerId[] => {
  * hand rolls. If the worst hand never improves, nobody else has to roll.
  *
  * Returns who must roll now, or null when the cycle is settled: the worst
- * hand is out of rolls. With a tie at the bottom, the tied player nearest
- * the Hammer with rolls left goes first [inferred]; they may take the tie
- * (stand) only once the others they're tied with have no rolls left.
+ * hand is out of rolls. With a tie at the bottom, whoever has the most
+ * rolls left goes first, until the tied players have used as many rolls as
+ * each other; then the tied player nearest the Hammer goes [confirmed]. A
+ * player may take the tie (stand) only once the others they're tied with
+ * have no rolls left.
  */
 export function bottomTurn(state: GameState): PlayerId | null {
   const { phase } = state
   if (phase.kind !== 'play') return null
-  return playWorst(state, Object.keys(phase.rolling)).find((id) => !phase.rolling[id].done) ?? null
+  const able = playWorst(state, Object.keys(phase.rolling)).filter((id) => !phase.rolling[id].done)
+  if (!able.length) return null
+  const fewest = Math.min(...able.map((id) => phase.rolling[id].rollsUsed))
+  return able.find((id) => phase.rolling[id].rollsUsed === fewest)!
 }
 
 /** Who holds the worst hand right now (several when tied), nearest the Hammer first */

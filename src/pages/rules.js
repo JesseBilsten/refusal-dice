@@ -218,8 +218,9 @@ const RulesPage = () => (
               <em>10-3 High</em>, a player whose kicker is 2+1 = 3 loses to everyone with a higher kicker.
             </li>
             <li className="py-3">
-              <strong>Tied for worst?</strong> The tied player nearest the Hammer rolls first. Once the others
-              you’re tied with are out of rolls, you can <strong>take the tie</strong> (replay the same game, same
+              <strong>Tied for worst?</strong> Whoever has the most rolls left rolls first, until you’ve all used
+              the same number; then the tied player nearest the Hammer goes. Once the others you’re tied with are
+              out of rolls, you can <strong>take the tie</strong> (replay the same game, same
               High or Low, with fresh rolls) or roll to beat them. With only 2 players left in the game, a tie (or
               both missing) means no pencil and the Hammer passes. Alone at the bottom, there’s no choice: you roll
               until you’re out of rolls.

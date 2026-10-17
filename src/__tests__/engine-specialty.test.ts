@@ -122,14 +122,17 @@ describe('Razzle', () => {
     const g = called(
       'razzle',
       [6, 6, 6, 1, 2, 5, 5, 2, 3, 4, 5, 5, 4, 3, 2],
-      [2, 3, 4, 4, 3, 2, ...Array(10).fill(6)]
+      [2, 3, 4, 4, 3, 2, 2, 3, 4, ...Array(10).fill(6)]
     )
     expect(bottomTurn(g)).toBe('b')
     // c can still roll, so b can't take the tie yet
     expect(() => applyAction(g, { type: 'stand', player: 'b' })).toThrow(/worst hand/)
+    const once = applyAction(g, { type: 'reroll', player: 'b', keep: [0, 1] })
+    // Still tied, and c has more rolls left: c rolls before b goes again
+    expect(bottomTurn(once)).toBe('c')
     const level = play(
-      g,
-      { type: 'reroll', player: 'b', keep: [0, 1] },
+      once,
+      { type: 'reroll', player: 'c', keep: [0, 1] },
       { type: 'reroll', player: 'b', keep: [0, 1] }
     )
     // b is out of rolls and still level: c may take the tie

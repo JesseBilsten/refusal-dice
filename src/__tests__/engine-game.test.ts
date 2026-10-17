@@ -319,7 +319,7 @@ describe('playing and scoring (§3.1, §4)', () => {
           ...[4, 6, 6, 6, 5],
           ...[1, 1, 1, 1, 2],
           ...[1, 2, 3, 4, 1],
-          /* b's re-rolls: */ ...Array(10).fill(1),
+          /* b, c and b re-roll and still miss: */ ...Array(15).fill(1),
           /* cycle: */ ...[4, 6, 1, 1, 1, 2, 2, 2, 2, 2],
           /* c's re-rolls: */ ...Array(10).fill(2),
         ]),
@@ -332,9 +332,13 @@ describe('playing and scoring (§3.1, §4)', () => {
     expect(() => applyAction(g0, { type: 'stand', player: 'b' })).toThrow(
       /worst hand/
     )
+    const g1 = applyAction(g0, { type: 'reroll', player: 'b', keep: [] })
+    // Still tied: c has more rolls left, so c rolls before b rolls again
+    expect(bottomTurn(g1)).toBe('c')
     const g = play(
-      g0,
-      { type: 'reroll', player: 'b', keep: [] },
+      g1,
+      { type: 'reroll', player: 'c', keep: [] },
+      // Level on rolls again: b, nearest the Hammer, goes
       { type: 'reroll', player: 'b', keep: [] },
       // b is out of rolls and still level: c takes the tie
       { type: 'stand', player: 'c' }
@@ -429,12 +433,13 @@ describe('playing and scoring (§3.1, §4)', () => {
       createGame({
         players: players('a', 'b'),
         hammer: 'a',
-        source: scripted([4, 6, 1, 1, 2, 5, 5, 1, 1, 2, 1, 1, 2, 2, 1, 1]),
+        source: scripted([4, 6, 1, 1, 2, 5, 5, 1, 1, 2, 1, 1, 2, 2, 1, 1, 1, 2, 1]),
       }),
       { type: 'call', player: 'a', call: { game: '10-2', variant: 'high' } },
       { type: 'accept', player: 'b' },
-      // tied at 4: a (the Hammer) rolls first and stays level, twice
+      // tied at 4: a (the Hammer) rolls first, then b (more rolls left), then a; all stay level
       { type: 'reroll', player: 'a', keep: [0, 1] },
+      { type: 'reroll', player: 'b', keep: [0, 1] },
       { type: 'reroll', player: 'a', keep: [0, 1] },
       { type: 'stand', player: 'b' }
     )
@@ -448,11 +453,12 @@ describe('playing and scoring (§3.1, §4)', () => {
       createGame({
         players: players('a', 'b'),
         hammer: 'a',
-        source: scripted([1, 1, 1, 1, 1, 2, 2, 2, 2, 2, ...Array(10).fill(1)]),
+        source: scripted([1, 1, 1, 1, 1, 2, 2, 2, 2, 2, ...Array(15).fill(1)]),
       }),
       { type: 'call', player: 'a', call: { game: '10-2', variant: 'high' } },
       { type: 'accept', player: 'b' },
       { type: 'reroll', player: 'a', keep: [] },
+      { type: 'reroll', player: 'b', keep: [] },
       { type: 'reroll', player: 'a', keep: [] },
       { type: 'stand', player: 'b' }
     )
