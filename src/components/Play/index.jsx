@@ -118,6 +118,20 @@ function beatText(dice, whose, call, lead) {
 
 const list = (xs) => (xs.length < 2 ? xs.join('') : `${xs.slice(0, -1).join(', ')} and ${xs[xs.length - 1]}`)
 
+/**
+ * The button that starts a round, named for your place in it: the Hammer
+ * rolls a new hand; the refusals roll knowing their seat; anyone else rolls
+ * for the call still to come.
+ */
+function comeOutLabel(game) {
+  if (game.seats.find((s) => s.id === YOU).out) return 'Next round'
+  if (game.hammer === YOU) return 'Roll new hand'
+  const { first, second } = refusalSeats(game)
+  if (first === YOU) return 'Roll 1st refusal'
+  if (second === YOU) return 'Roll 2nd refusal'
+  return 'Roll for …'
+}
+
 /** This round in words, the latest last */
 function RoundLog({ events }) {
   return (
@@ -132,7 +146,7 @@ function RoundLog({ events }) {
 }
 
 /** The piddle, ranked: everyone's die, then any roll-off for the highest, then who holds the Hammer */
-function Piddle({ rounds, names, hammer, onComeOut }) {
+function Piddle({ rounds, names, hammer, cta, onComeOut }) {
   return (
     <Panel tone="tool" title="The piddle" description="Everyone rolls one die. Highest holds the Hammer; a tie for the highest rolls again.">
       <div className="space-y-4">
@@ -168,7 +182,7 @@ function Piddle({ rounds, names, hammer, onComeOut }) {
         <p className="text-sm text-muted-foreground">
           {hammer === YOU ? 'Say “coming out” and everyone rolls.' : `${names[hammer]} says “coming out” and everyone rolls.`}
         </p>
-        <RollButton onClick={onComeOut}>{hammer === YOU ? 'Come out' : 'Roll your dice'}</RollButton>
+        <RollButton onClick={onComeOut}>{cta}</RollButton>
       </div>
     </Panel>
   )
@@ -305,6 +319,7 @@ export default function Play() {
         rounds={piddle.rounds}
         names={names}
         hammer={game.hammer}
+        cta={comeOutLabel(game)}
         onComeOut={() => {
           setDealt(true)
           setRollIds((ids) => Object.fromEntries(Object.entries(ids).map(([id, r]) => [id, r.map((n) => n + 1)])))
@@ -415,7 +430,7 @@ export default function Play() {
     // Only the Hammer comes out; everyone else just rolls
     controls = (
       <RollButton onClick={() => act({ type: 'nextRound' })}>
-        {game.hammer === YOU ? 'Come out' : 'Roll your dice'}
+        {comeOutLabel(game)}
       </RollButton>
     )
   } else if (!mine) {
