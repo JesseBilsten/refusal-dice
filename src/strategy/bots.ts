@@ -14,6 +14,8 @@ import {
   bottomTarget,
   bottomTurn,
   refusalSeats,
+  tresAwayMaxPutOut,
+  tresAwayScore,
   wouldLoseIfStopped,
 } from '../engine'
 import { CALL_ODDS, CALL_ODDS_CALLS, CALL_ODDS_PLAYERS } from './call-odds'
@@ -140,10 +142,19 @@ export function botAction(state: GameState): Action {
     case 'tresAway': {
       const player = phase.turn
       const hand = phase.hands[player]
-      if (!hand.fresh) return { type: 'roll', player }
       const dice = state.dice[player]
       const inHand = [0, 1, 2, 3, 4].filter((i) => !hand.out.includes(i))
-      return { type: 'putOut', player, dice: tresAwayPutOut(dice, inHand) }
+      // Can't lose: another player's put-out dice alone already score more than this whole hand
+      const shown = (id: string) => tresAwayScore(phase.hands[id].out.map((i) => state.dice[id][i]))
+      const safe = phase.order.some((id) => id !== player && shown(id) > tresAwayScore(dice))
+      // Only the caller may put out past the caller's count: the rest stop there, lowest dice first,
+      // and may put the held dice out on a later turn without rolling
+      const choice = safe ? inHand : tresAwayPutOut(dice, inHand, { mayRoll: !hand.fresh })
+      if (!choice.length) return { type: 'roll', player }
+      const putOut = [...choice]
+        .sort((a, b) => tresAwayScore([dice[a]]) - tresAwayScore([dice[b]]))
+        .slice(0, tresAwayMaxPutOut(phase, player))
+      return { type: 'putOut', player, dice: putOut.sort((a, b) => a - b) }
     }
     case 'boss': {
       if (phase.stage === 'bossRoll') {

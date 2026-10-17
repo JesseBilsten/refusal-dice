@@ -147,7 +147,7 @@ describe('Razzle', () => {
 describe('Tres Away', () => {
   // a 3,3,6,6,6 · b 3,1,5,5,5 · c 2,2,6,6,6
   const deal = [3, 3, 6, 6, 6, 3, 1, 5, 5, 5, 2, 2, 6, 6, 6]
-  const extra = [1, 1, 1, 1, /* a: */ 3, 3, 3, /* b: */ 6, /* c: */ 5, 5, 5]
+  const extra = [1, 1, 1, 1, /* a: */ 3, 3, 3, /* c: */ 5, 5, 5]
 
   test('the caller sets the pace; the others catch up in order; highest score loses', () => {
     let g = called('tres-away', deal, extra)
@@ -156,25 +156,29 @@ describe('Tres Away', () => {
       applyAction(g, { type: 'putOut', player: 'b', dice: [0] })
     ).toThrow(/turn/)
 
-    // a puts out two 3s; everyone must match two dice out
+    // a puts out two 3s; everyone must match two dice out, and no more
     g = applyAction(g, { type: 'putOut', player: 'a', dice: [0, 1] })
     expect(g.phase).toMatchObject({ turn: 'b' })
-
-    // b puts out one 3, must roll again before putting out more
-    g = applyAction(g, { type: 'putOut', player: 'b', dice: [0] })
     expect(() =>
-      applyAction(g, { type: 'putOut', player: 'b', dice: [1] })
-    ).toThrow(/Roll/)
+      applyAction(g, { type: 'putOut', player: 'b', dice: [0, 1, 2] })
+    ).toThrow(/no more than 2/)
+
+    // b puts out one 3, then rolls the rest and must put out again before rolling
+    g = applyAction(g, { type: 'putOut', player: 'b', dice: [0] })
+    expect(g.phase).toMatchObject({ turn: 'b' })
     g = applyAction(g, { type: 'roll', player: 'b' })
     expect(g.dice.b).toEqual([3, 1, 1, 1, 1])
     expect(() => applyAction(g, { type: 'roll', player: 'b' })).toThrow(
       /Put out/
     )
-    g = applyAction(g, { type: 'putOut', player: 'b', dice: [1, 2, 3] }) // b is ahead: 4 out
+    expect(() =>
+      applyAction(g, { type: 'putOut', player: 'b', dice: [1, 2] })
+    ).toThrow(/no more than 1/)
+    g = applyAction(g, { type: 'putOut', player: 'b', dice: [1] })
     expect(g.phase).toMatchObject({ turn: 'c' })
 
     g = applyAction(g, { type: 'putOut', player: 'c', dice: [0, 1] })
-    expect(g.phase).toMatchObject({ turn: 'a' }) // everyone has matched; the pacer goes again
+    expect(g.phase).toMatchObject({ turn: 'a' }) // everyone has matched; the caller goes again
 
     g = play(
       g,
@@ -182,18 +186,32 @@ describe('Tres Away', () => {
       { type: 'putOut', player: 'a', dice: [2, 3, 4] }
     )
     expect(g.phase).toMatchObject({ turn: 'b' })
-    // b's last single die is put out as soon as it's rolled
-    g = applyAction(g, { type: 'roll', player: 'b' })
+    // b's dice in hand (1, 1, 1) can go out without rolling again
+    g = applyAction(g, { type: 'putOut', player: 'b', dice: [2, 3, 4] })
     expect(g.phase).toMatchObject({ turn: 'c' })
-    expect(g.dice.b).toEqual([3, 1, 1, 1, 6])
+    expect(g.dice.b).toEqual([3, 1, 1, 1, 1])
 
     g = play(
       g,
       { type: 'roll', player: 'c' },
       { type: 'putOut', player: 'c', dice: [2, 3, 4] }
     )
-    // a 0 · b 9 · c 19
+    // a 0 · b 4 · c 19
     expect(g.phase).toMatchObject({ kind: 'roundOver', loser: 'c' })
+  })
+
+  test('the caller may put out from hand on a later turn without rolling', () => {
+    let g = called('tres-away', deal, extra)
+    g = play(
+      g,
+      { type: 'putOut', player: 'a', dice: [0] },
+      { type: 'putOut', player: 'b', dice: [0] },
+      { type: 'putOut', player: 'c', dice: [0] }
+    )
+    expect(g.phase).toMatchObject({ turn: 'a' })
+    g = applyAction(g, { type: 'putOut', player: 'a', dice: [1] })
+    expect(g.dice.a).toEqual([3, 3, 6, 6, 6])
+    expect(g.phase).toMatchObject({ turn: 'b' })
   })
 
   test('dice in hand stay hidden; put-out dice are shown', () => {

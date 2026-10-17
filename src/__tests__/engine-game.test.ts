@@ -22,6 +22,7 @@ import {
   scripted,
   seeded,
   standings,
+  tresAwayMaxPutOut,
   viewFor,
 } from '../engine'
 
@@ -571,11 +572,12 @@ describe('random games always finish and keep invariants', () => {
       }
       case 'tresAway': {
         const { turn, hands } = g.phase
-        if (!hands[turn].fresh) return { type: 'roll', player: turn }
         const inHand = [0, 1, 2, 3, 4].filter(
           (i) => !hands[turn].out.includes(i)
         )
-        const out = someOf(inHand)
+        // Not fresh: roll, or sometimes put out from hand without rolling
+        if (!hands[turn].fresh && r() < 0.7) return { type: 'roll', player: turn }
+        const out = someOf(inHand).slice(0, tresAwayMaxPutOut(g.phase, turn))
         return {
           type: 'putOut',
           player: turn,

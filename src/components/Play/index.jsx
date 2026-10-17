@@ -13,6 +13,7 @@ import {
   razzleScore,
   refusalSeats,
   standings,
+  tresAwayMaxPutOut,
   tresAwayScore,
   viewFor,
   wouldLoseIfStopped,
@@ -355,7 +356,15 @@ export default function Play() {
     if (phase.kind === 'boss' && phase.stage === 'bossRoll' && phase.mustKeep.includes(i)) return
     // Dice already put out in Tres Away are final
     if (phase.kind === 'tresAway' && phase.hands[YOU].out.includes(i)) return
-    setKeep((k) => (k.includes(i) ? k.filter((x) => x !== i) : [...k, i]))
+    setKeep((k) => {
+      if (k.includes(i)) return k.filter((x) => x !== i)
+      // Tres Away: only the caller may put out past the caller's count; a new pick replaces the oldest
+      if (phase.kind === 'tresAway') {
+        const most = tresAwayMaxPutOut(phase, YOU)
+        if (k.length >= most) return [...k.slice(k.length - most + 1), i]
+      }
+      return [...k, i]
+    })
   }
 
   // Your controls for this moment
@@ -509,16 +518,28 @@ export default function Play() {
     labLink = `/odds-lab/?tab=keep&game=${call.game}&roll=${myDice.join('')}&rolls=${left}${goal}`
   } else if (phase.kind === 'tresAway') {
     const h = phase.hands[YOU]
-    title = h.fresh ? 'Put out at least one die' : 'Roll the dice in your hand'
-    body = <p>Lowest total wins; 3s count 0. Put-out dice are final and everyone sees them.</p>
-    controls = h.fresh ? (
+    const most = tresAwayMaxPutOut(phase, YOU)
+    const caller = phase.pacer === YOU
+    const callerOut = phase.hands[phase.pacer].out.length
+    title = h.fresh ? 'Put out at least one die' : 'Put out from your hand, or roll it'
+    body = (
+      <p>
+        Lowest total wins; 3s count 0. Put-out dice are final and everyone sees them.{' '}
+        {caller
+          ? 'You called it, so you set the pace: put out as many as you like, and everyone else catches up to your count.'
+          : `${names[phase.pacer]} has ${callerOut} ${callerOut === 1 ? 'die' : 'dice'} out, so you can put out ${most === 1 ? '1 more' : `up to ${most} more`}.`}
+        {!h.fresh && ' The dice in your hand can go out as they are, or you can roll them all.'}
+      </p>
+    )
+    controls = (
       <div className="flex flex-wrap gap-2">
         <Button disabled={!keep.length} onClick={() => act({ type: 'putOut', player: YOU, dice: keep })}>
           Put out {keep.length || ''} {keep.length === 1 ? 'die' : 'dice'}
         </Button>
+        {!h.fresh && (
+          <RollButton onClick={() => act({ type: 'roll', player: YOU })}>Roll {5 - h.out.length}</RollButton>
+        )}
       </div>
-    ) : (
-      <RollButton onClick={() => act({ type: 'roll', player: YOU })}>Roll {5 - h.out.length}</RollButton>
     )
     if (h.fresh) labLink = `/odds-lab/?tab=keep&game=tres-away&roll=${myDice.join('')}`
   } else if (phase.kind === 'boss') {
@@ -556,7 +577,7 @@ export default function Play() {
   const canKeep =
     mine &&
     ((phase.kind === 'play') ||
-      (phase.kind === 'tresAway' && phase.hands[YOU].fresh) ||
+      (phase.kind === 'tresAway') ||
       (phase.kind === 'boss' && phase.stage !== 'decide'))
   const hint = hints && suggestion ? hintText(suggestion, myDice, phase) : null
 

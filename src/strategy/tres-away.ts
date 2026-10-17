@@ -40,17 +40,20 @@ export function tresAwayExpected(): number[] {
  * The dice to put out from the dice in hand (positions in `dice`): the
  * lowest-scoring dice, as many as lower the expected final score. From five
  * dice that's every 3, plus a 1 only alongside three 3s; with no 3s, just the
- * lowest die.
+ * lowest die. With `mayRoll` (the hand was rolled on an earlier turn) it
+ * returns [] when rolling them all beats putting any out.
  */
 export function tresAwayPutOut(
   dice: readonly number[],
-  inHand: readonly number[] = dice.map((_, i) => i)
+  inHand: readonly number[] = dice.map((_, i) => i),
+  { mayRoll = false }: { mayRoll?: boolean } = {}
 ): number[] {
   const v = tresAwayExpected()
   const order = [...inHand].sort((a, b) => value(dice[a]) - value(dice[b]))
   const n = order.length
-  let best = Infinity
-  let bestK = 1
+  // mayRoll: the dice in hand weren't just rolled, so rolling them all (none out) is an option
+  let best = mayRoll ? v[n] : Infinity
+  let bestK = mayRoll ? 0 : 1
   let sum = 0
   for (let k = 1; k <= n; k++) {
     sum += value(dice[order[k - 1]])

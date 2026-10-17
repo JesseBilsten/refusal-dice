@@ -67,12 +67,13 @@ Each rule is tagged by where it came from:
 
 - **Score:** sum of the dice, where **3s count 0**. **Lowest score wins**; **highest score loses**. Perfect = 0 (five 3s), worst = 30 (five 6s). [site] [confirmed]
 - **Hidden dice:** a player's rolled dice stay hidden until they put dice out. Put-out dice are shown and added to their score; the rest stay hidden. A last single die doesn't matter, since it's put out as soon as it's rolled. [confirmed]
-- **Putting out dice:** after every roll a player must **put out at least 1 die**, and may put out more. Put-out dice are final. The player re-rolls only the dice still in hand, so a player rolls at most 5 times (5, 4, 3, 2, 1 dice). A player with no dice left is done. [confirmed]
+- **Putting out dice:** after every roll a player must **put out at least 1 die** before rolling again. Put-out dice are final. The player re-rolls only the dice still in hand, so a player rolls at most 5 times (5, 4, 3, 2, 1 dice). A player with no dice left is done. [confirmed]
+- **Dice in hand keep their values between turns.** On a later turn a player may put out dice from their hand as they are, without rolling, or roll every die still in hand. That lets them watch the table first: holding a 4 when an opponent has just put out a 6, they can put the 4 out and be sure not to lose to that player. [confirmed]
 - **The caller sets the pace.** [confirmed]
-  1. The caller puts out dice from their roll.
-  2. Everyone else must keep rolling until they have **as many dice out as the caller**.
-  3. Starting with the player on the caller's left and going around, each player rolls until they've matched the caller's count, then the next player goes.
-  4. Then the caller puts out another die (or several) and the cycle repeats until all dice are out.
+  1. The caller puts out dice from their roll: at least 1, as many as they like.
+  2. Everyone else puts out dice until they have **as many dice out as the caller, and never more**.
+  3. Starting with the player on the caller's left and going around, each player catches up: put out at least 1 die (from their hand, or after a roll), then roll and put out at least 1 after each roll until they've matched the caller's count. Then the next player goes.
+  4. Then it's the caller's turn again: they put out another die (or several), from their hand or after rolling, and the cycle repeats until all dice are out.
 - The loser is the highest score once everyone has all 5 dice out. [site]
 
 ### 3.3 Boss

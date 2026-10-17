@@ -47,11 +47,16 @@ export interface PlayerRolls {
   done: boolean
 }
 
-/** A Tres Away player's progress: which dice are out, and whether the hand has been rolled since the last put-out */
+/**
+ * A Tres Away player's progress: which dice are out, and whether the hand
+ * has been rolled since the last put-out. Dice in hand keep their values
+ * between turns: on a later turn the player may put more of them out
+ * without rolling, or roll them all.
+ */
 export interface TresHand {
   /** Indices (0–4) of dice put out, in order; final and visible */
   out: number[]
-  /** The dice in hand were just rolled, so the player must put out at least one */
+  /** The dice in hand were just rolled, so the player must put out at least one before rolling again */
   fresh: boolean
   /** Rolls used this cycle, including the first */
   rolls: number
@@ -148,7 +153,7 @@ export type Action =
   | { type: 'stand'; player: PlayerId }
   /** Tres Away: roll every die still in hand */
   | { type: 'roll'; player: PlayerId }
-  /** Tres Away: put out these die positions (0–4) from a fresh roll */
+  /** Tres Away: put out these die positions (0–4) from the dice in hand */
   | { type: 'putOut'; player: PlayerId; dice: number[] }
   /** Boss: everyone else gets one last roll */
   | { type: 'comeUp'; player: PlayerId }
@@ -486,6 +491,15 @@ function tresTurn(order: PlayerId[], hands: Record<PlayerId, TresHand>): PlayerI
   return hands[pacer].out.length < 5 ? pacer : null
 }
 
+/**
+ * The most dice `player` may put out now: the caller (pacer) any number from
+ * hand; everyone else only up to the caller's count, never past it.
+ */
+export function tresAwayMaxPutOut(phase: Extract<Phase, { kind: 'tresAway' }>, player: PlayerId): number {
+  const out = phase.hands[player].out.length
+  return player === phase.pacer ? 5 - out : Math.max(0, phase.hands[phase.pacer].out.length - out)
+}
+
 function tresAwayAction(state: GameState, action: Action): GameState {
   const phase = state.phase
   if (phase.kind !== 'tresAway') throw new EngineError('Not playing Tres Away')
@@ -506,9 +520,13 @@ function tresAwayAction(state: GameState, action: Action): GameState {
     return inHand.length === 1 ? tresAwayAction(next, { type: 'putOut', player: action.player, dice: inHand }) : next
   }
 
-  if (!hand.fresh) throw new EngineError('Roll before putting out more dice')
+  // Dice in hand may go out without rolling first: a player can wait to see the table, then put out
   if (!action.dice.length || !validIndices(action.dice) || action.dice.some((i) => !inHand.includes(i))) {
     throw new EngineError('Put out at least one die from your hand')
+  }
+  const most = tresAwayMaxPutOut(phase, action.player)
+  if (action.dice.length > most) {
+    throw new EngineError(`Put out no more than ${most}: only the caller sets how many dice are out`)
   }
   const hands = { ...phase.hands, [action.player]: { ...hand, out: [...hand.out, ...action.dice], fresh: false } }
   const next = log(state, {

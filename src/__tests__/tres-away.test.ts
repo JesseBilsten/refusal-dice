@@ -23,3 +23,9 @@ test('only dice still in hand are put out', () => {
   expect(tresAwayPutOut([3, 3, 3, 2, 3], [3, 4])).toEqual([3, 4])
   expect(tresAwayPutOut([3, 3, 3, 4, 3], [3, 4])).toEqual([4])
 })
+
+test('dice held from an earlier roll: put out the good ones, otherwise roll', () => {
+  // Held 3s go out as they are; held 6s are rolled again
+  expect(tresAwayPutOut([3, 3, 3, 3, 3], [2, 3, 4], { mayRoll: true })).toEqual([2, 3, 4])
+  expect(tresAwayPutOut([3, 3, 6, 6, 6], [2, 3, 4], { mayRoll: true })).toEqual([])
+})

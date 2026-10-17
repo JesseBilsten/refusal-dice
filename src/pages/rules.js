@@ -185,9 +185,10 @@ const RulesPage = () => (
             <ul className="space-y-3">
               <li>
                 <GameLink id="tres-away" />: lowest total wins (3s count 0). After every roll you must put out at
-                least one die, and put-out dice are final. The caller sets the pace: everyone matches how many dice
-                the caller has out, taking turns from the caller’s left. Your dice stay hidden until you put them
-                out.
+                least one die, and put-out dice are final. The caller sets the pace: taking turns from the caller’s
+                left, everyone catches up to how many dice the caller has out, and never past it. Your dice stay
+                hidden until you put them out, and keep their values between turns: on your next turn you can put
+                one out as it is, after seeing what the others put out, or roll them all.
               </li>
               <li>
                 <GameLink id="boss" />: poker hands without straights. The best first roll is the Boss, who rolls
