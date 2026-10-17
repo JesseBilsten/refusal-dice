@@ -149,7 +149,7 @@ function Piddle({ rounds, names, hammer, onComeOut }) {
         <p className="text-sm text-muted-foreground">
           {hammer === YOU ? 'Say “coming out” and everyone rolls.' : `${names[hammer]} says “coming out” and everyone rolls.`}
         </p>
-        <RollButton onClick={onComeOut}>Come out</RollButton>
+        <RollButton onClick={onComeOut}>{hammer === YOU ? 'Come out' : 'Roll your dice'}</RollButton>
       </div>
     </Panel>
   )
@@ -388,10 +388,17 @@ export default function Play() {
     body = (
       <p>
         {loser ? `${loser === YOU ? 'You hold' : `${names[loser]} holds`} the Hammer next.` : 'The Hammer passes left.'}{' '}
-        When everyone’s ready, the Hammer comes out.
+        {game.hammer === YOU
+          ? 'When everyone’s ready, say “coming out” and everyone rolls.'
+          : `When everyone’s ready, ${names[game.hammer]} says “coming out” and everyone rolls.`}
       </p>
     )
-    controls = <RollButton onClick={() => act({ type: 'nextRound' })}>Come out</RollButton>
+    // Only the Hammer comes out; everyone else just rolls
+    controls = (
+      <RollButton onClick={() => act({ type: 'nextRound' })}>
+        {game.hammer === YOU ? 'Come out' : 'Roll your dice'}
+      </RollButton>
+    )
   } else if (!mine) {
     title = meOut ? 'You’re out: watching the bots' : `${names[who]} is thinking…`
     if (phase.kind === 'play') {
