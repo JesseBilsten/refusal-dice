@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { Lock } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import DieFace from './DieFace'
@@ -32,12 +32,13 @@ const cubeTransform = (value, size, rollId) => {
   return `translateZ(${-size / 2}px) rotateX(${x + turns}deg) rotateY(${y + turns}deg)`
 }
 
-const Cube = ({ value, size, rollId, bouncing }) => {
+const Cube = ({ value, size, rollId, bouncing, settled }) => {
   const target = cubeTransform(value, size, rollId)
   // A cube that appears already rolled (the first roll, or 3D just switched
-  // on) starts a roll behind and tumbles into place instead of popping in
+  // on) starts a roll behind and tumbles into place instead of popping in;
+  // a settled die (one that only moved) starts where it landed
   const [shown, setShown] = useState(() =>
-    rollId > 0 ? cubeTransform(value, size, rollId - 1) : target
+    rollId > 0 && !settled ? cubeTransform(value, size, rollId - 1) : target
   )
   useEffect(() => {
     let inner
@@ -88,6 +89,8 @@ const px = (size) => (typeof size === 'number' ? size : DIE_SIZES[size] || 40)
  * - `locked`: can't be tapped right now
  * - `dimension`: '3d' or 'flat' to override the player's setting (the
  *   home page's story always tumbles); reduced motion still wins
+ * - `settled`: this die already showed its roll and has only moved (e.g.
+ *   put out into another group), so it slides in instead of rolling
  */
 const Die = ({
   value,
@@ -98,6 +101,7 @@ const Die = ({
   locked,
   label,
   dimension,
+  settled,
   className,
 }) => {
   const [prefs] = useDicePrefs()
@@ -105,9 +109,13 @@ const Die = ({
   const [rolling, setRolling] = useState(false)
   const n = px(size)
 
+  // A settled die mounts with its roll already shown: only a later roll animates
+  const [slid] = useState(settled)
+  const shownRoll = useRef(settled ? rollId : 0)
+
   // Flat dice wobble; 3D dice bounce while they tumble
   useEffect(() => {
-    if (!rollId || reduced) return
+    if (!rollId || reduced || rollId === shownRoll.current) return
     setRolling(true)
     const t = setTimeout(() => setRolling(false), 950)
     return () => clearTimeout(t)
@@ -117,7 +125,7 @@ const Die = ({
   const want3d = dimension ? dimension === '3d' : prefs.dice3d
   const show3d = want3d && !reduced && value && n >= 32
   const face = show3d ? (
-    <Cube value={value} size={n} rollId={rollId} bouncing={rolling} />
+    <Cube value={value} size={n} rollId={rollId} bouncing={rolling} settled={slid} />
   ) : (
     <DieFace
       value={value}
@@ -132,6 +140,7 @@ const Die = ({
       className={cn(
         'relative inline-flex shrink-0 rounded-[22%] transition-transform',
         kept && '-translate-y-1',
+        slid && 'dice-slide',
         className
       )}
     >

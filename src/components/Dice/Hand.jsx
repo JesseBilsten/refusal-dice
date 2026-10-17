@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useRef } from 'react'
 import { getGameName } from '../../lib/games-config'
 import Die from './Die'
 import DiceGroup from './DiceGroup'
@@ -11,7 +11,9 @@ import { handGroups } from './hand-groups'
  *
  * - `size`: a Die size ('xs' | 'sm' | 'md' | 'lg'); xs and sm are compact
  *   (outlines, no labels) for tables
- * - `rollIds`: per-die roll counters, by position, to animate re-rolls
+ * - `rollIds`: per-die roll counters, by position, to animate re-rolls. A
+ *   die that moves between groups without a new roll (put out, say)
+ *   slides there instead of rolling again
  * - `kept` / `onToggleKeep(i)`: tap a die to keep it (modeled games)
  * - `locked`: positions that can't be tapped (dice put out, or a Boss's hand)
  * - `dimension`: '3d' or 'flat', overriding the player's 3D setting
@@ -38,6 +40,11 @@ export default function Hand({
   // Small sizes are compact (outlines, no labels) unless `labels` says otherwise
   const compact = !(labels ?? !(size === 'xs' || size === 'sm'))
   const groups = handGroups(dice, game, variant, { putOut })
+  // The roll each position last showed, so a die that only changed groups doesn't roll again
+  const shown = useRef({})
+  useEffect(() => {
+    shown.current = Object.fromEntries(dice.map((_, i) => [i, rollIds?.[i] || 0]))
+  })
   const name = game ? getGameName(game) : null
   const variantName = variant
     ? `${variant[0].toUpperCase()}${variant.slice(1)} `
@@ -71,6 +78,7 @@ export default function Hand({
               value={dice[i]}
               size={size}
               rollId={rollIds?.[i] || 0}
+              settled={shown.current[i] === (rollIds?.[i] || 0)}
               dimension={dimension}
               kept={kept ? kept.includes(i) : undefined}
               locked={locked?.includes(i)}

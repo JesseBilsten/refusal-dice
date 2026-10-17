@@ -17,6 +17,24 @@
   backface-visibility: hidden;
 }
 
+/* A die that moved between groups (put out, say) slides in; it isn't rolled */
+@keyframes dice-slide {
+  from {
+    transform: translateX(-0.75rem);
+    opacity: 0.4;
+  }
+}
+
+.dice-slide {
+  animation: dice-slide 0.25s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dice-slide {
+    animation: none;
+  }
+}
+
 /* 3D dice: hop and settle while the cube tumbles */
 @keyframes dice-bounce {
   0% {
