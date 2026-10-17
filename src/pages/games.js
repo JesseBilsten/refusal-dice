@@ -4,7 +4,8 @@ import { ArrowRight } from 'lucide-react'
 import Layout from '../components/layout'
 import Page, { PageHeader, Panel, NextStep } from '../components/Page'
 import { Hand, RollInput } from '../components/Dice'
-import { BarkOdds, fmtPct } from '../components/Odds'
+import { motion, useReducedMotion } from 'framer-motion'
+import { BarkOdds, StrengthTag, fmtPct } from '../components/Odds'
 import { Badge } from '../components/ui/badge'
 import { buttonVariants } from '../components/ui/button'
 import { analyzeRoll } from '../lib/game-validation'
@@ -12,6 +13,7 @@ import { formatCallLabel, GAMES_MAP } from '../lib/games-config'
 import { cn } from '../lib/utils'
 import rollGameMatrix from '../data/roll-game-matrix.json'
 import { bossHand, razzleScore, tresAwayScore } from '../engine'
+import { callLoss } from '../strategy'
 
 /**
  * Every game in one place: what makes it, what it looks like, how often it
@@ -143,7 +145,7 @@ const madeOnOneRoll = () => {
   return out
 }
 
-function GameSection({ section, oneRoll, playable, dimmed }) {
+function GameSection({ section, oneRoll, playable, loss, dimmed }) {
   const meta = GAMES_MAP[section.id]
   const callLine = useMemo(() => section.callLine?.(), [section])
   return (
@@ -167,6 +169,7 @@ function GameSection({ section, oneRoll, playable, dimmed }) {
                 Your roll plays it{playable.variant ? `: ${formatCallLabel(playable)}` : ''}
               </Badge>
             )}
+            {playable && <StrengthTag loss={loss} />}
           </div>
           <p className="mb-2">{section.made}</p>
           {section.note && <p className="mb-2 text-sm text-muted-foreground">{section.note}</p>}
@@ -221,6 +224,16 @@ const GamesPage = () => {
   }, [])
 
   const playableIds = SECTIONS.filter((s) => playableCall(s.id)).map((s) => s.id)
+  // Your roll's chance of the pencil calling each game it plays (call-odds.ts)
+  const lossOf = (id) => callLoss(roll, playableCall(id))
+  // Games your roll plays rise to the top, strongest first; the rest keep their order
+  const ordered = roll
+    ? [
+        ...SECTIONS.filter((s) => playableCall(s.id)).sort((a, b) => lossOf(a.id) - lossOf(b.id)),
+        ...SECTIONS.filter((s) => !playableCall(s.id)),
+      ]
+    : SECTIONS
+  const reduced = useReducedMotion()
 
   return (
     <Layout>
@@ -250,20 +263,20 @@ const GamesPage = () => {
                     <strong>
                       Your roll plays {playableIds.length} {playableIds.length === 1 ? 'game' : 'games'}
                     </strong>
-                    {analysis.bestCall && (
-                      <>
-                        . Strongest: <strong>{formatCallLabel(analysis.bestCall)}</strong>
-                      </>
-                    )}
+                    . Strongest: <strong>{formatCallLabel(playableCall(ordered[0].id))}</strong>
                     .
                   </p>
                   <div className="flex flex-wrap gap-1.5">
-                    {playableIds.map((id) => (
+                    {ordered.filter((s) => playableCall(s.id)).map(({ id }) => (
                       <a key={id} href={`#${id}`} className="rounded-full border bg-background px-3 py-1 text-sm hover:border-primary">
                         <span aria-hidden>{GAMES_MAP[id].emoji}</span> {GAMES_MAP[id].name}
                       </a>
                     ))}
                   </div>
+                  <p className="text-xs text-muted-foreground">
+                    Strength is your chance of taking the pencil if you call it with this roll, from rounds played out
+                    by solid bots at a 3-player table: Strong is 15% or less, Fair is still under an even share (33%).
+                  </p>
                   <Link
                     to="/strategy-assistant"
                     className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
@@ -277,14 +290,16 @@ const GamesPage = () => {
         </Panel>
 
         <div className="space-y-4">
-          {SECTIONS.map((s) => (
-            <GameSection
-              key={s.id}
-              section={s}
-              oneRoll={oneRoll[s.id]}
-              playable={playableCall(s.id)}
-              dimmed={roll && !playableCall(s.id)}
-            />
+          {ordered.map((s) => (
+            <motion.div key={s.id} layout={!reduced} transition={{ type: 'spring', stiffness: 260, damping: 30 }}>
+              <GameSection
+                section={s}
+                oneRoll={oneRoll[s.id]}
+                playable={playableCall(s.id)}
+                loss={playableCall(s.id) ? lossOf(s.id) : null}
+                dimmed={roll && !playableCall(s.id)}
+              />
+            </motion.div>
           ))}
 
           <Panel tone="note" title="🐕 None of these? Think twice before barking." as="section" id="barking">

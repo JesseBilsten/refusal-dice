@@ -194,6 +194,13 @@ links. Components:
 - `BarkOdds`: what a bark is worth, as two `SeatRing`s (you call vs. you
   bark) with a player-count picker, from the generated `seat-odds.ts`. On
   the Games page's Bark card and the Barking page.
+- `StrengthTag`: how strong a roll is for a call, as a graded tag (Strong,
+  Good, Fair, Weak) with the number beside it, from `callLoss()` (the
+  generated `call-odds.ts`). Fair still beats an even share. On the Games
+  page, where the games a roll plays rise to the top, strongest first.
+- `HintCard` (`src/components/Play/`): Play's hint, with the options a
+  solid player weighed (best first, the pick marked) and why, from
+  `hintStats()` in `hint-stats.ts`.
 - formatting: `fmtPct`, `inWords`
 
 **Every roll:** `EveryPossibility` (`src/components/OddsLab/`) is the one
