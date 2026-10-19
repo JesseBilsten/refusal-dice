@@ -26,6 +26,15 @@ import {
   simulateRefusal,
   CALL_ODDS,
   CALL_ODDS_CALLS,
+  HAMMER_ALT_CALL,
+  HAMMER_ALT_LOSS,
+  HAMMER_CALL,
+  HAMMER_LOSS,
+  HAMMER_ODDS_CALLS,
+  HAMMER_ODDS_SIZES,
+  barkTable,
+  hammerCall,
+  rollWays,
 } from '../strategy'
 
 const allRolls = (n: number): Dice[] => {
@@ -322,6 +331,42 @@ describe('call odds table', () => {
       expect(row).toHaveLength(ALL_CALLS.length)
       row.forEach((x) => expect(x >= 0 && x <= 1000).toBe(true))
     })
+  })
+})
+
+describe('Hammer odds table (call or bark)', () => {
+  test('covers every roll at 2–8 players', () => {
+    expect(HAMMER_ODDS_CALLS).toEqual(CALL_ODDS_CALLS)
+    expect(HAMMER_ODDS_SIZES).toEqual([2, 3, 4, 5, 6, 7, 8])
+    ;[HAMMER_LOSS, HAMMER_CALL, HAMMER_ALT_LOSS, HAMMER_ALT_CALL].forEach((table) => {
+      expect(Object.keys(table)).toHaveLength(252)
+      Object.values(table).forEach((row) => expect(row).toHaveLength(7))
+    })
+    Object.keys(HAMMER_LOSS).forEach((k) =>
+      HAMMER_ODDS_SIZES.forEach((_, i) => {
+        expect(HAMMER_LOSS[k][i] >= 0 && HAMMER_LOSS[k][i] <= 1000).toBe(true)
+        expect(ALL_CALLS[HAMMER_ALT_CALL[k][i]].game).not.toBe('10-4')
+      })
+    )
+  })
+
+  test('the 10-4-free call is the best call whenever the best call isn’t 10-4', () => {
+    const dice: Dice = [2, 2, 3, 5, 6]
+    for (const players of HAMMER_ODDS_SIZES) {
+      const best = hammerCall(dice, players)
+      const alt = hammerCall(dice, players, { except104: true })
+      if (best.call.game !== '10-4') expect(alt).toEqual(best)
+    }
+  })
+
+  test('every roll is ranked, most likely to take the pencil first, and the ways add up to 7,776', () => {
+    expect(rollWays([1, 2, 3, 4, 5])).toBe(120)
+    expect(rollWays([6, 6, 6, 6, 6])).toBe(1)
+    expect(rollWays([2, 2, 3, 3, 3])).toBe(10)
+    const rows = barkTable(5)
+    expect(rows).toHaveLength(252)
+    expect(rows.reduce((s, r) => s + r.ways, 0)).toBe(7776)
+    rows.slice(1).forEach((r, i) => expect(r.best.loss).toBeLessThanOrEqual(rows[i].best.loss))
   })
 })
 

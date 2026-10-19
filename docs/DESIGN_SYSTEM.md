@@ -182,7 +182,8 @@ links. Components:
 - `Disclosure`, `MathSteps`, `Questions`
 - `OddsLabLink`
 - `ProbabilityBar`: one chance as a labeled bar (for a single figure;
-  compare options with `OddsDecision`)
+  compare options with `OddsDecision`). `mark` draws a tick for a chance
+  to compare against (e.g. a bark), named by `markLabel`
 - `useSimulation` (`use-simulation.js`): runs a strategy simulation in Web
   Workers (`src/strategy/simulate.worker.ts`), split across CPU cores, with
   the estimate updating as it goes. Never run a simulation on the main
@@ -193,7 +194,12 @@ links. Components:
   into the ways you lose (accepted vs. both refuse and your second call).
 - `BarkOdds`: what a bark is worth, as two `SeatRing`s (you call vs. you
   bark) with a player-count picker, from the generated `seat-odds.ts`. On
-  the Games page's Bark card and the Barking page.
+  the Games page's Bark card and the Barking page. With `hands` (the
+  Barking page) it adds `BarkHands`: every roll ranked by its chance of the
+  pencil with its best call, worst first, against the bark as a tick on
+  each `ProbabilityBar`, at the same table size, from the generated
+  `hammer-odds.ts`; a "My table refuses 10-4" chip swaps in the best other
+  call.
 - `StrengthTag`: how strong a roll is for a call, as a graded tag (Strong,
   Good, Fair, Weak) with the number beside it, from `callLoss()` (the
   generated `call-odds.ts`). Fair still beats an even share. On the Games

@@ -16,6 +16,7 @@ import {
   barkOdds,
   bottomGoal,
   callLoss,
+  hammerCall,
   keepOptions,
   tresAwayExpected,
 } from '../../strategy'
@@ -84,11 +85,14 @@ export function hintStats(state: GameState, me: string, action: Action, names: H
       `With ${diceText(dice)}, ${names.call(best.call)} loses least often: ${pct(best.loss)} when everyone plays it. ` +
       `Call odds come from rounds played out by solid bots at a ${CALL_ODDS_PLAYERS}-player table.`
     if (except) why = `Your first call was refused, so ${names.call({ game: except } as Call)} is out. ${why}`
-    if (canBark)
+    if (canBark) {
+      // At this table size, with refusals played out (hammer-odds.ts)
+      const here = hammerCall(dice, players)
       why +=
-        bark > best.loss
-          ? ` A bark passes the Hammer left and you sit last: ${pct(bark)} with any hand, so calling is better.`
-          : ` A bark passes the Hammer left and you sit last: ${pct(bark)} with any hand, better than any call here.`
+        bark > here.loss
+          ? ` A bark passes the Hammer left and you sit last: ${pct(bark)} with any hand. At ${players} players your best call, ${names.call(here.call)}, takes the pencil ${pct(here.loss)} of the time, so calling is better.`
+          : ` A bark passes the Hammer left and you sit last: ${pct(bark)} with any hand, better than your best call at ${players} players (${pct(here.loss)}).`
+    }
     return { kind: 'loss', measure: 'Chance you take the pencil', rows, why }
   }
 

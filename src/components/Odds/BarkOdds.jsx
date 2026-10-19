@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Link } from 'gatsby'
 import { Chip } from '../Page'
 import SeatRing from '../Table/SeatRing'
+import BarkHands from './BarkHands'
 import { SEAT_ODDS_SAMPLES, seatOdds } from '../../strategy'
 
 const pct = (p) => `${Math.round(p * 100)}%`
@@ -10,9 +11,10 @@ const pct = (p) => `${Math.round(p * 100)}%`
  * What a bark is worth, drawn: the table when you call (you hold the
  * Hammer) beside the table after you bark (the Hammer passes left and you
  * sit last). Each seat shows its chance of the pencil with random dice,
- * from seat-odds.ts.
+ * from seat-odds.ts. `hands`: also rank every roll by its best call
+ * against the bark, at the same table size (BarkHands).
  */
-export default function BarkOdds({ className }) {
+export default function BarkOdds({ hands, className }) {
   const [players, setPlayers] = useState(3)
   const odds = seatOdds(players)
   const even = 1 / players
@@ -65,7 +67,7 @@ export default function BarkOdds({ className }) {
         suit their dice, so they take the pencil only {pct(odds[0])} of the time; every other seat takes it{' '}
         {Math.round(low * 100) === Math.round(high * 100) ? pct(low) : `${Math.round(low * 100)}–${pct(high)}`}
         {players > 2 && ', wherever it sits'}. An even share is {pct(even)}. A bark hands that edge to the next
-        player, so even a weak hand usually does better calling.{' '}
+        player, so even the worst roll does better calling.{' '}
         <Link to="/strategy-assistant" className="text-primary hover:underline">
           Check your hand in the Strategy Assistant
         </Link>
@@ -75,6 +77,18 @@ export default function BarkOdds({ className }) {
         {SEAT_ODDS_SAMPLES.toLocaleString()} simulated rounds per table size, played out by the game engine with the
         site’s bots, who never bark. Stronger players who refuse more shrewdly may shrink the Hammer’s edge.
       </p>
+      {hands && (
+        <section className="mt-8 border-t border-border pt-6" aria-labelledby="bark-hands">
+          <h3 id="bark-hands" className="mb-1 text-base font-semibold">
+            Every roll against a bark, worst first
+          </h3>
+          <p className="mb-3 text-sm text-muted-foreground">
+            The rolls most likely to take the pencil even with their best call. A roll would be worth barking if its bar
+            ran past the tick.
+          </p>
+          <BarkHands players={players} />
+        </section>
+      )}
     </div>
   )
 }

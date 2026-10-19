@@ -2,20 +2,18 @@ import React, { useState, useMemo } from 'react'
 import { Link } from 'gatsby'
 import Layout from '../components/layout'
 import Page, { NextStep, PageHeader, Panel, Stat } from '../components/Page'
-import { BarkOdds, ProbabilityBar } from '../components/Odds'
+import { BarkCase, BarkOdds, ProbabilityBar } from '../components/Odds'
 import SituationCard from '../components/OddsLab/SituationCard'
 import { SITUATIONS, situationPath } from '../components/OddsLab/situations-catalog'
 import { freshMakeChance } from '../strategy'
 import { isKickerGame } from '../engine'
 import { Badge } from '../components/ui/badge'
 import { Button, buttonVariants } from '../components/ui/button'
-import { Slider } from '../components/ui/slider'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table'
 import VariantSelector from '../components/VariantSelector'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import { analyzeRoll, isCompetitiveSpecialtyHand } from '../lib/game-validation'
 import { GAMES_MAP, isSpecialtyGame, SPECIALTY_THRESHOLDS, getGamePath } from '../lib/games-config'
-import GameLink from '../components/GameLink'
 import { StrengthBar } from '../components/RollAnalysis'
 import SecondCallDistribution from '../components/SecondCallDistribution'
 import rollGameMatrix from '../data/roll-game-matrix.json'
@@ -80,7 +78,7 @@ const GAME_CONTENT = {
     partialKeep: 'After each roll put out at least one die. Put out every 3; a 1 joins them only beside three 3s. With no 3s, put out just your lowest die and roll the rest.',
   },
   barking: {
-    description: 'A strategic decision to pass your turn when you have no good calls and don\'t want to risk a bluff.',
+    description: 'Instead of calling, the Hammer can bark: the Hammer passes to the player on the left and everyone rolls again. Is a bad roll ever worth passing on?',
     isStrategy: true,
   },
 }
@@ -327,27 +325,12 @@ const GameDetailTemplate = ({ pageContext }) => {
   const content = GAME_CONTENT[gameId]
   const gameMeta = GAMES_MAP[gameId] || { name: gameId, emoji: '🎲' }
 
-  const [flexThreshold, setFlexThreshold] = useState([4])
-  const [strengthThreshold, setStrengthThreshold] = useState([65])
   const [variant, setVariant] = useState('all')
 
   const singleRollProb = useMemo(() => calcSingleRollProb(gameId), [gameId])
   const gameRolls = useMemo(() => getRollsForGame(gameId), [gameId])
   const totalMatching = useMemo(() => gameRolls.reduce((s, r) => s + r.count, 0), [gameRolls])
 
-  // Barking — weak hands
-  const weakHands = useMemo(() => {
-    if (gameId !== 'barking') return []
-    const hands = []
-    Object.values(rollGameMatrix).forEach(rd => {
-      const analysis = analyzeRoll(rd.roll)
-      if (analysis.flexibility <= flexThreshold[0] &&
-          (!analysis.bestCall || analysis.bestCall.rawStrength <= strengthThreshold[0])) {
-        hands.push({ roll: rd.roll, flexibility: analysis.flexibility, bestCall: analysis.bestCall, count: rd.count })
-      }
-    })
-    return hands.sort((a, b) => b.count - a.count)
-  }, [gameId, flexThreshold, strengthThreshold])
 
   if (!content) {
     return (
@@ -411,52 +394,17 @@ const GameDetailTemplate = ({ pageContext }) => {
         {/*  Barking-specific content        */}
         {/* ──────────────────────────────── */}
         {gameId === 'barking' && (
-          <Panel className="mb-8" title="What a bark is worth">
-            <BarkOdds />
+          <Panel
+            className="mb-8"
+            title="Should you ever bark?"
+            description="The worst roll at each table size, called against barked, and the reasoning behind the answer."
+          >
+            <BarkCase />
           </Panel>
         )}
         {gameId === 'barking' && (
-          <Panel
-            className="mb-8"
-            title="Weak hands by rule of thumb"
-            description="Move the thresholds to see which hands score as weak. A rule of thumb from hand strength alone; the simulation above says even these usually do better calling."
-          >
-              <div className="space-y-6">
-                <div>
-                  <label className="text-sm font-medium mb-2 block">
-                    Flexibility Threshold: {flexThreshold[0]} or fewer playable games
-                  </label>
-                  <Slider value={flexThreshold} onValueChange={setFlexThreshold} min={0} max={10} step={1} className="w-full" />
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-2 block">
-                    Strength Threshold: {strengthThreshold[0]} or lower raw strength
-                  </label>
-                  <Slider value={strengthThreshold} onValueChange={setStrengthThreshold} min={0} max={100} step={5} className="w-full" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold mb-3">
-                    Weak Hands ({weakHands.length} matching rolls, {weakHands.reduce((s, h) => s + h.count, 0)} total occurrences)
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-96 overflow-y-auto">
-                    {weakHands.map((hand, idx) => (
-                      <div key={idx} className="p-3 border rounded-lg bg-muted/20">
-                        <Hand dice={hand.roll} size="sm" game={hand.bestCall?.game} variant={hand.bestCall?.variant} className="mb-1" />
-                        <div className="text-sm text-muted-foreground">
-                          Flexibility: {hand.flexibility} ·{' '}
-                          {hand.bestCall ? (
-                            <>Best: <GameLink id={hand.bestCall.game}>{GAMES_MAP[hand.bestCall.game]?.name || hand.bestCall.game}</GameLink>
-                            {hand.bestCall.variant ? ` (${hand.bestCall.variant})` : ''} · {Math.round(hand.bestCall.rawStrength)}</>
-                          ) : (
-                            <>No valid games</>
-                          )}
-                        </div>
-                        <div className="text-xs text-muted-foreground">Occurs {hand.count}× in {TOTAL_ROLLS.toLocaleString()} rolls</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
+          <Panel className="mb-8" title="What a bark is worth">
+            <BarkOdds hands />
           </Panel>
         )}
 
