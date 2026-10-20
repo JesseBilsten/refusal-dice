@@ -8,13 +8,14 @@ import { fmtPct } from './model'
 
 const SHOWN = 10
 const diceText = (dice) => dice.join('-')
+const sameCall = (a, b) => a.game === b.game && a.variant === b.variant
 
 /**
  * Every roll the Hammer can hold, the one most likely to take the pencil
  * first, at a table of `players`: each roll's best call and its chance of
  * the pencil, against a bark (the tick). From the generated hammer-odds.ts
  * and seat-odds.ts. "My table refuses 10-4" swaps in each roll's best call
- * that isn't 10-4.
+ * that isn't 10-4. A row notes a decoy that does better against the bots.
  */
 export default function BarkHands({ players, className }) {
   const [no104, setNo104] = useState(false)
@@ -64,6 +65,12 @@ export default function BarkHands({ players, className }) {
       <ol className="space-y-3">
         {shown.map((r, i) => {
           const worse = r.pick.loss > bark
+          // A call that does a point or more better against the bots, usually a decoy
+          const decoy =
+            !sameCall(r.bots.call, r.pick.call) &&
+            !(no104 && r.bots.call.game === '10-4') &&
+            r.pick.loss - r.bots.loss >= 0.01 &&
+            r.bots
           return (
             <li
               key={diceText(r.dice)}
@@ -84,6 +91,12 @@ export default function BarkHands({ players, className }) {
                 mark={bark}
                 markLabel={`a bark ${fmtPct(bark, 1)}`}
               />
+              {decoy && (
+                <p className="col-start-2 text-xs text-muted-foreground sm:col-start-3">
+                  Against the bots, calling {formatCallLabel(decoy.call)} first does better ({fmtPct(decoy.loss, 1)}): a
+                  decoy, see “What the numbers assume”.
+                </p>
+              )}
             </li>
           )
         })}
@@ -94,7 +107,7 @@ export default function BarkHands({ players, className }) {
         </button>
       )}
       <p className="mt-3 text-xs text-muted-foreground">
-        Bars: the Hammer’s chance of the pencil with the best call; the tick is a bark. Each figure is{' '}
+        Bars: the Hammer’s chance of the pencil with the recommended call (the game the roll loses least when everyone plays it); the tick is a bark. Each figure is{' '}
         {HAMMER_ODDS_SAMPLES.toLocaleString()} rounds against solid bots, refusals and second calls played out, so
         it’s good to about ±{fmtPct(1.96 * Math.sqrt((worst.pick.loss * (1 - worst.pick.loss)) / HAMMER_ODDS_SAMPLES), 1)}.
       </p>

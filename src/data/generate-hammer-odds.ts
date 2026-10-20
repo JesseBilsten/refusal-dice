@@ -1,15 +1,22 @@
 /**
  * Generates src/strategy/hammer-odds.ts: for every distinct roll (252) at
- * every table size (2–8), the Hammer's best call and their chance of the
- * pencil making it, refusals and second calls played out by the bots. This
- * is what calling is worth, to set against a bark (seat-odds.ts).
+ * every table size (2–8), the call the site recommends (chooseCall: the
+ * game the roll loses least when everyone plays it, from call-odds.ts) and
+ * the Hammer's chance of the pencil making it, refusals and second calls
+ * played out by the bots. This is what calling is worth, to set against a
+ * bark (seat-odds.ts).
  *
- * Also the best call that isn't 10-4, for tables that refuse a 10-4 on
- * sight (the bots refuse on their own dice only).
+ * Also:
+ *  - the recommended call that isn't 10-4, for tables that refuse a 10-4
+ *    on sight (the bots refuse on their own dice only);
+ *  - the call that does best against the bots. It can be a decoy: a weaker
+ *    game, called to be refused so the real game comes as a second call,
+ *    which can't be refused. It works on the bots, who never read anything
+ *    into a call.
  *
  * Two stages, so picking the lowest of 17 noisy estimates doesn't flatter
- * calling: simulateHammer picks the calls, then each is measured again on
- * fresh dice.
+ * the best call against the bots: simulateHammer picks it, then each call
+ * is measured again on fresh dice.
  *
  *   npm run generate:hammer-odds
  *
@@ -20,7 +27,7 @@ import { cpus } from 'os'
 import { writeFileSync } from 'fs'
 import { join } from 'path'
 import { Call, Dice, applyAction, createGame, seeded } from '../engine'
-import { ALL_CALLS } from '../strategy/bots'
+import { ALL_CALLS, chooseCall } from '../strategy/bots'
 import { playOutRound, simulateHammer } from '../strategy/simulate'
 
 const SIZES = [2, 3, 4, 5, 6, 7, 8]
@@ -58,14 +65,19 @@ function measure(dice: Dice, players: number, call: Call): number {
   return Math.round((lost / SAMPLES) * 1000)
 }
 
-/** [best call, its loss, best call that isn't 10-4, its loss]: calls as indexes into ALL_CALLS */
+/**
+ * [recommended call, its loss, recommended call that isn't 10-4, its loss,
+ * best call against the bots, its loss]: calls as indexes into ALL_CALLS
+ */
 function bestCalls(dice: Dice, players: number): number[] {
-  const ranked = simulateHammer({ dice, players, samples: PICK_SAMPLES, seed: 1 })
-  const best = ranked[0].call
-  const alt = ranked.find((o) => o.call.game !== '10-4')!.call
-  const bestLoss = measure(dice, players, best)
-  const index = (call: Call) => ALL_CALLS.findIndex((c) => same(c, call))
-  return [index(best), bestLoss, index(alt), same(best, alt) ? bestLoss : measure(dice, players, alt)]
+  const best = simulateHammer({ dice, players, samples: PICK_SAMPLES, seed: 1 })[0].call
+  const picks = [chooseCall(dice), chooseCall(dice, '10-4'), best]
+  const losses = new Map<number, number>()
+  return picks.flatMap((call) => {
+    const i = ALL_CALLS.findIndex((c) => same(c, call))
+    if (!losses.has(i)) losses.set(i, measure(dice, players, call))
+    return [i, losses.get(i)!]
+  })
 }
 
 type Job = [string, number]
@@ -96,31 +108,44 @@ if (process.send) {
 export const HAMMER_ODDS_SIZES = [${SIZES.join(', ')}]
 export const HAMMER_ODDS_SAMPLES = ${SAMPLES}
 
-/** The calls, by index in HAMMER_CALL and HAMMER_ALT_CALL below */
+/** The calls, by index in HAMMER_CALL, HAMMER_ALT_CALL and HAMMER_ANY_CALL below */
 export const HAMMER_ODDS_CALLS = [${ALL_CALLS.map((c) => `'${callKey(c)}'`).join(', ')}]
 
 /**
  * Per roll (dice sorted low to high), by table size: the Hammer's chance of
- * the pencil making their best call, refusals played out, in tenths of a
- * percent.
+ * the pencil making the recommended call (chooseCall), refusals played out,
+ * in tenths of a percent.
  */
 export const HAMMER_LOSS: Record<string, number[]> = {
 ${row(1)}
 }
 
-/** Per roll, by table size: the best call (an index into HAMMER_ODDS_CALLS) */
+/** Per roll, by table size: the recommended call (an index into HAMMER_ODDS_CALLS) */
 export const HAMMER_CALL: Record<string, number[]> = {
 ${row(0)}
 }
 
-/** Per roll, by table size: the Hammer's chance of the pencil making their best call that isn't 10-4 */
+/** Per roll, by table size: the same for the recommended call that isn't 10-4 */
 export const HAMMER_ALT_LOSS: Record<string, number[]> = {
 ${row(3)}
 }
 
-/** Per roll, by table size: the best call that isn't 10-4 */
+/** Per roll, by table size: the recommended call that isn't 10-4 */
 export const HAMMER_ALT_CALL: Record<string, number[]> = {
 ${row(2)}
+}
+
+/**
+ * Per roll, by table size: the same for the call that does best against the
+ * bots, which may be a decoy (called to be refused)
+ */
+export const HAMMER_ANY_LOSS: Record<string, number[]> = {
+${row(5)}
+}
+
+/** Per roll, by table size: the call that does best against the bots */
+export const HAMMER_ANY_CALL: Record<string, number[]> = {
+${row(4)}
 }
 `
       )

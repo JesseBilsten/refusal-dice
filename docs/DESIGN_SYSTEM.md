@@ -196,10 +196,15 @@ links. Components:
   bark) with a player-count picker, from the generated `seat-odds.ts`. On
   the Games page's Bark card and the Barking page. With `hands` (the
   Barking page) it adds `BarkHands`: every roll ranked by its chance of the
-  pencil with its best call, worst first, against the bark as a tick on
-  each `ProbabilityBar`, at the same table size, from the generated
-  `hammer-odds.ts`; a "My table refuses 10-4" chip swaps in the best other
-  call.
+  pencil with the recommended call (`chooseCall`), worst first, against the
+  bark as a tick on each `ProbabilityBar`, at the same table size, from the
+  generated `hammer-odds.ts`; a "My table refuses 10-4" chip swaps in the
+  best other call, and a row notes a decoy that does better against the
+  bots. `BarkCase` (above it on the Barking page) makes the case: the worst
+  roll at every table size against a bark, why, and what the numbers assume.
+  `UnheldCalls` (also on the Barking page): calling a game you don't have,
+  with exact make odds (one roll vs three) and how often it beats the best
+  game you hold (`heldOrNot` in `bark.ts`).
 - `StrengthTag`: how strong a roll is for a call, as a graded tag (Strong,
   Good, Fair, Weak) with the number beside it, from `callLoss()` (the
   generated `call-odds.ts`). Fair still beats an even share. On the Games

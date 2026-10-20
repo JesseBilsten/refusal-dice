@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react'
 import { Link } from 'gatsby'
 import Layout from '../components/layout'
 import Page, { NextStep, PageHeader, Panel, Stat } from '../components/Page'
-import { BarkCase, BarkOdds, ProbabilityBar } from '../components/Odds'
+import { BarkCase, BarkOdds, ProbabilityBar, UnheldCalls } from '../components/Odds'
 import SituationCard from '../components/OddsLab/SituationCard'
 import { SITUATIONS, situationPath } from '../components/OddsLab/situations-catalog'
 import { freshMakeChance } from '../strategy'
@@ -400,6 +400,15 @@ const GameDetailTemplate = ({ pageContext }) => {
             description="The worst roll at each table size, called against barked, and the reasoning behind the answer."
           >
             <BarkCase />
+          </Panel>
+        )}
+        {gameId === 'barking' && (
+          <Panel
+            className="mb-8"
+            title="Calling a game you don’t have"
+            description="The other way out of a bad roll: call a game nobody may make. How the odds work, and when it beats a bad game you do hold."
+          >
+            <UnheldCalls />
           </Panel>
         )}
         {gameId === 'barking' && (

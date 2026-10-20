@@ -10,6 +10,8 @@ import {
   bossHand,
   compareBoss,
   evaluateKickerHand,
+  isKickerGame,
+  makesGame,
   razzleScore,
   bottomTarget,
   bottomTurn,
@@ -57,19 +59,28 @@ export function callLoss(dice: Dice, call: Call): number {
 /** 0–1: how happy a player would be to play `call` with these dice (the chance of not losing it) */
 export const callScore = (dice: Dice, call: Call): number => 1 - callLoss(dice, call)
 
-/** The call a bot Hammer makes; `except` is the refused game on a second call */
+/**
+ * Calls this close to the best (in chance of the pencil) are a toss-up:
+ * call-odds.ts is good to about ±2 points per figure
+ */
+export const CALL_TIE = 0.03
+
+/** Whether `dice` already make the game called (every roll plays a specialty game) */
+export const makesCall = (dice: Dice, call: Call): boolean => !isKickerGame(call.game) || makesGame(dice, call.game)
+
+/**
+ * The call a bot Hammer makes; `except` is the refused game on a second
+ * call. The call the roll loses least when everyone plays it, but among
+ * calls within CALL_TIE of that, one the roll already makes: a game you
+ * hold beats one you'd still have to make when the odds can't tell them
+ * apart.
+ */
 export function chooseCall(dice: Dice, except?: string): Call {
-  let best = ALL_CALLS[0]
-  let bestScore = -1
-  for (const call of ALL_CALLS) {
-    if (call.game === except) continue
-    const s = callScore(dice, call)
-    if (s > bestScore) {
-      best = call
-      bestScore = s
-    }
-  }
-  return best
+  const ranked = ALL_CALLS.filter((c) => c.game !== except)
+    .map((call) => ({ call, loss: callLoss(dice, call) }))
+    .sort((a, b) => a.loss - b.loss)
+  const close = ranked.filter((o) => o.loss - ranked[0].loss <= CALL_TIE)
+  return (close.find((o) => makesCall(dice, o.call)) ?? ranked[0]).call
 }
 
 /** An even share of the pencil at the table the call odds were played at */

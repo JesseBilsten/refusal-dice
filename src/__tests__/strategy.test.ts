@@ -28,12 +28,16 @@ import {
   CALL_ODDS_CALLS,
   HAMMER_ALT_CALL,
   HAMMER_ALT_LOSS,
+  HAMMER_ANY_CALL,
+  HAMMER_ANY_LOSS,
   HAMMER_CALL,
   HAMMER_LOSS,
   HAMMER_ODDS_CALLS,
   HAMMER_ODDS_SIZES,
   barkTable,
   hammerCall,
+  heldOrNot,
+  makesCall,
   rollWays,
 } from '../strategy'
 
@@ -338,7 +342,7 @@ describe('Hammer odds table (call or bark)', () => {
   test('covers every roll at 2–8 players', () => {
     expect(HAMMER_ODDS_CALLS).toEqual(CALL_ODDS_CALLS)
     expect(HAMMER_ODDS_SIZES).toEqual([2, 3, 4, 5, 6, 7, 8])
-    ;[HAMMER_LOSS, HAMMER_CALL, HAMMER_ALT_LOSS, HAMMER_ALT_CALL].forEach((table) => {
+    ;[HAMMER_LOSS, HAMMER_CALL, HAMMER_ALT_LOSS, HAMMER_ALT_CALL, HAMMER_ANY_LOSS, HAMMER_ANY_CALL].forEach((table) => {
       expect(Object.keys(table)).toHaveLength(252)
       Object.values(table).forEach((row) => expect(row).toHaveLength(7))
     })
@@ -350,6 +354,20 @@ describe('Hammer odds table (call or bark)', () => {
     )
   })
 
+  test('each roll’s call is the one the site recommends (chooseCall), with and without 10-4', () => {
+    const key = (c: { game: string; variant?: string }) => `${c.game} ${c.variant ?? ''}`
+    Object.keys(HAMMER_CALL).forEach((k) => {
+      const dice = k.split('').map(Number) as Dice
+      HAMMER_ODDS_SIZES.forEach((players) => {
+        expect(key(hammerCall(dice, players).call)).toBe(key(chooseCall(dice)))
+        expect(key(hammerCall(dice, players, { except104: true }).call)).toBe(key(chooseCall(dice, '10-4')))
+      })
+    })
+    // 2-2-3-5-6 makes 10-3 High (2+3+5) and no 10-2; 2-2-4-4-5 is two pair
+    expect(hammerCall([2, 2, 3, 5, 6], 3).call).toEqual({ game: '10-3', variant: 'high' })
+    expect(hammerCall([2, 2, 4, 4, 5], 3).call).toEqual({ game: 'pairs', variant: 'high' })
+  })
+
   test('the 10-4-free call is the best call whenever the best call isn’t 10-4', () => {
     const dice: Dice = [2, 2, 3, 5, 6]
     for (const players of HAMMER_ODDS_SIZES) {
@@ -357,6 +375,21 @@ describe('Hammer odds table (call or bark)', () => {
       const alt = hammerCall(dice, players, { except104: true })
       if (best.call.game !== '10-4') expect(alt).toEqual(best)
     }
+  })
+
+  test('held or not: each roll’s best call it makes against its best call it doesn’t', () => {
+    for (const secondCall of [false, true]) {
+      const rows = heldOrNot({ secondCall })
+      expect(rows).toHaveLength(252)
+      rows.forEach((r) => {
+        expect(makesCall(r.dice, r.held.call)).toBe(true)
+        expect(makesCall(r.dice, r.unheld.call)).toBe(false)
+        if (secondCall) expect(r.held.call.game).not.toBe(chooseCall(r.dice).game)
+      })
+    }
+    // 2-2-4-4-5 holds Pairs (two pair) and 10-3 (2+4+4), not 10-4
+    expect(makesCall([2, 2, 4, 4, 5], { game: 'pairs', variant: 'high' })).toBe(true)
+    expect(makesCall([2, 2, 4, 4, 5], { game: '10-4', variant: 'low' })).toBe(false)
   })
 
   test('every roll is ranked, most likely to take the pencil first, and the ways add up to 7,776', () => {

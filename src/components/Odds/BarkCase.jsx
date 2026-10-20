@@ -9,7 +9,7 @@ const worstBy = (rows, pick) => rows.reduce((w, r) => (pick(r).loss > pick(w).lo
 
 /**
  * The case for calling over barking, from the generated hammer-odds.ts and
- * seat-odds.ts: at every table size, the worst roll's best call against a
+ * seat-odds.ts: at every table size, the worst roll's recommended call against a
  * bark, with and without 10-4; then why, and what the numbers don't cover.
  */
 export default function BarkCase({ className }) {
@@ -32,6 +32,10 @@ export default function BarkCase({ className }) {
   const closest = sizes.reduce((c, s) => (s.worst.best.loss / s.bark > c.worst.best.loss / c.bark ? s : c))
   const closestAlt = sizes.reduce((c, s) => (s.worstAlt.alt.loss / s.bark > c.worstAlt.alt.loss / c.bark ? s : c))
   const swapped = barkTable(closestAlt.players).filter((r) => r.best.call.game === '10-4')
+  // Decoys at 3 players: rolls where another first call does a point or more better against the bots
+  const decoys = barkTable(3)
+    .map((r) => r.best.loss - r.bots.loss)
+    .filter((gain) => gain >= 0.01)
   const altCalls = Object.entries(
     swapped.reduce((n, r) => ({ ...n, [formatCallLabel(r.alt.call)]: (n[formatCallLabel(r.alt.call)] || 0) + 1 }), {})
   ).sort((a, b) => b[1] - a[1])
@@ -140,6 +144,17 @@ export default function BarkCase({ className }) {
             : 'Without 10-4, barking beats calling with a few rolls: see the table.'}
         </li>
         <li>
+          <strong>The call the site recommends, not a decoy.</strong> Each roll’s call is the game it loses least when
+          everyone plays it, as in the hints and the Strategy Assistant. Against the bots, a different first call
+          sometimes does better: a weaker game, called to be refused, so your real game comes as the second call, which
+          can’t be refused.{' '}
+          {decoys.length > 0
+            ? `At 3 players that’s ${decoys.length} of 252 rolls, by ${fmtPct(Math.max(...decoys), 1)} at most. `
+            : ''}
+          Real refusers can see a decoy coming, so it isn’t the advice here; the list notes it where it applies. A decoy
+          only makes calling look better still.
+        </li>
+        <li>
           <strong>Nobody else barks.</strong> The bots never bark, so after your bark the new Hammer always calls. At a
           table where others bark too, the bark figures would shift; that isn’t measured here.
         </li>
@@ -149,8 +164,8 @@ export default function BarkCase({ className }) {
         </li>
         <li>
           <strong>Simulated, so a little noisy.</strong> Each calling figure is{' '}
-          {HAMMER_ODDS_SAMPLES.toLocaleString()} rounds, and each bark figure {SEAT_ODDS_SAMPLES.toLocaleString()}. The
-          best call was picked on separate rounds, so picking it doesn’t flatter calling.
+          {HAMMER_ODDS_SAMPLES.toLocaleString()} rounds, and each bark figure {SEAT_ODDS_SAMPLES.toLocaleString()}. Differences of a point or two are within
+          that noise.
         </li>
       </ul>
     </div>

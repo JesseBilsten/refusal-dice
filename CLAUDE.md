@@ -81,8 +81,9 @@ src/strategy/
   bots.ts        "Solid" bot: call, refuse and play decisions for every game (botAction); calls and refusals read call-odds.ts
   call-odds.ts   GENERATED (npm run generate:call-odds): per roll and call, the Hammer's chance of the pencil when everyone plays it
   seat-odds.ts   GENERATED (npm run generate:seat-odds): each seat's chance of the pencil with random dice, 2–8 players (a bark = the last seat)
-  hammer-odds.ts GENERATED (npm run generate:hammer-odds): per roll and table size (2–8), the Hammer's best call (and best non-10-4 call)
-                 and its chance of the pencil, refusals played out; bark.ts reads it (hammerCall, barkTable) to set calling against a bark
+  hammer-odds.ts GENERATED (npm run generate:hammer-odds): per roll and table size (2–8), the recommended call's (chooseCall's)
+                 chance of the pencil, refusals played out; also without 10-4, and the call that does best against the bots
+                 (often a decoy, called to be refused); bark.ts reads it (hammerCall, barkTable) to set calling against a bark
   simulate.ts    Seeded Monte Carlo through the engine: your chance of the pencil per decision
                  (simulateHammer, simulateRefusal); common random numbers across options
 ```
