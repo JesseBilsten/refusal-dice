@@ -5,17 +5,17 @@ import { keepOptions, tresAwayExpected, tresAwayPutOut } from '../../strategy'
 import { Hand } from '../Dice'
 import { fmtPct } from '../Odds'
 import { Panel } from '../Page'
-import { goalFor, lockedPositions, optionLabel, rerollsFor, situationRules, situationWhy } from './keep-model'
+import { goalFor, lockedPositions, optionLabel, rerollsFor, situationRules } from './keep-model'
+import SituationWhy from './SituationWhy'
 import { useHouseRules } from '../Settings/house-rules'
-import { SITUATIONS, situationPath } from './situations-catalog'
+import { situationPath } from './situations-catalog'
 
 /**
- * A game page's "question from the table": the situation, the exact best
- * answer and the options the question asked about, with a link to work it
- * through in the Odds Lab.
+ * A game page's "question from the table" (situations-catalog.js): the
+ * situation, the exact best answer and the options the question asked
+ * about, with a link to work it through in the Odds Lab.
  */
-export default function SituationCard({ gameId, className }) {
-  const situation = SITUATIONS[gameId]
+export default function SituationCard({ situation, className }) {
   const [rules] = useHouseRules()
   const s = situation?.s
   const dice = s ? s.roll.split('').map(Number) : null
@@ -54,10 +54,7 @@ export default function SituationCard({ gameId, className }) {
       ].join(' · '),
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gameId, rules.montereyLoneKeep])
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const why = useMemo(() => situationWhy(situation, rules, (p) => fmtPct(p, 1)), [gameId, rules.montereyLoneKeep])
+  }, [situation, rules.montereyLoneKeep])
 
   if (!situation) return null
   return (
@@ -67,14 +64,10 @@ export default function SituationCard({ gameId, className }) {
       <p className="mt-4">
         <strong>{answer.best}.</strong> <span className="text-muted-foreground">{answer.line}.</span>
       </p>
-      {why && (
+      {situation.why && (
         <>
           <p className="mt-4 font-medium">{situation.whyTitle}</p>
-          {why.map((para) => (
-            <p key={para} className="mt-2 text-muted-foreground">
-              {para}
-            </p>
-          ))}
+          <SituationWhy situation={situation} rules={rules} />
         </>
       )}
       <Link

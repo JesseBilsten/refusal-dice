@@ -7,7 +7,8 @@ import { COUNT_WORDS, DiceGroup, Hand, RollInput, razzleName } from '../Dice'
 import { Disclosure, OddsDecision, Questions, fmtPct } from '../Odds'
 import { Chip, Panel } from '../Page'
 import { SITUATIONS } from './situations-catalog'
-import { goalFor, lockedPositions, optionLabel, rerollsFor, situationWhy } from './keep-model'
+import { goalFor, lockedPositions, optionLabel, rerollsFor } from './keep-model'
+import SituationWhy from './SituationWhy'
 import { useHouseRules } from '../Settings/house-rules'
 
 /**
@@ -152,11 +153,6 @@ export default function KeepAdvisor() {
   const example = exampleShown(s, dice, beat)
   // A question that assumes a house rule this table hasn't turned on
   const needsRule = example?.rules && Object.entries(example.rules).some(([k, v]) => rules[k] !== v)
-  const why = useMemo(
-    () => situationWhy(example, rules, (p) => fmtPct(p, 1)),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [example, rules.montereyLoneKeep]
-  )
   const kicker = isKickerGame(s.game)
   const name = getGameName(s.game)
   const kickerDice = { '10-2': 3, '10-3': 2, '10-4': 1 }[s.game] ?? (s.game === 'vegas' || s.game === 'pairs' ? 1 : 2)
@@ -380,11 +376,9 @@ export default function KeepAdvisor() {
                   ],
                 }))}
               />
-              {why && (
+              {example?.why && (
                 <Disclosure title={example.whyTitle}>
-                  {why.map((para) => (
-                    <p key={para}>{para}</p>
-                  ))}
+                  <SituationWhy situation={example} rules={rules} />
                 </Disclosure>
               )}
               <Disclosure title="How this is worked out">

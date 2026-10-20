@@ -236,11 +236,12 @@ way to show "every roll this counts": the unique rolls as a dice grid
 `src/strategy/situations.ts`, which only offers keeps the rules allow.
 With one roll left in a kicker game, KeepAdvisor asks which dice you kept
 last roll, since every option has to hold them. Table questions live in
-`OddsLab/situations-catalog.js`, at most one per game; add new ones there.
-Only questions players really ask, or whose answer isn't common sense: a
-game with no real keep decision (the 10s, Monterey, Pairs) has none. Each
-must ask about legal keeps, and its optional `why` quotes only computed
-odds (`keepOdds`); tests check both.
+`OddsLab/situations-catalog.js`; a game page shows each of its game's
+questions. Only questions players really ask, or whose answer isn't common
+sense, and best of all a fine line: where one choice flips to the other.
+Pairs, 10-3 and 10-4 have none. Each must ask about legal keeps, and its
+optional `why` (and `table` of where it flips, rendered by `SituationWhy`)
+quotes only computed odds (`keepOdds`); tests check both.
 
 The rules are in `.claude/skills/explain-odds/SKILL.md`. Reference screens:
 the tutorial's take-the-tie step, and the Strategy Assistant's

@@ -13,6 +13,9 @@
  * it's made, one connector in Ship Captain Crew or Monterey, one pair in
  * 7's or Pairs, never a kicker die. A test checks each question's keeps.
  *
+ * Keyed by question; `s.game` is its game, and a game page shows every
+ * question for its game (situationsFor).
+ *
  * s: the KeepAdvisor state. `ask` lists keeps (dice, sorted; '' rolls all
  * five) the question is about, so they're always shown even when they're
  * not the best; a keep the house rules don't allow is left out. `kept`:
@@ -22,8 +25,44 @@
  * `why` (optional): the reasoning in short paragraphs, under `whyTitle`. It gets `odds(keep,
  * rerolls)`, a keep's exact { win, tie } in this situation ('' rolls all
  * five; rerolls defaults to the situation's), and `pct` to format them, so
- * every figure is computed (see keepOdds in keep-model.js).
+ * every figure is computed (see keepOdds in keep-model.js). odds' third
+ * argument changes the situation, to show where the answer flips.
+ *
+ * `table` (optional): where the answer flips, as { caption, head, rows }
+ * of strings, from the same `odds` and `pct`.
  */
+
+/** Worth of an option when a tie is a replay: half a win */
+const worth = (o) => o.win + o.tie / 2
+
+/** 5-5 and a three-dice kicker of `total` (never 4 and 6 together, a second 10) */
+function tenTwoRoll(total) {
+  for (let a = 1; a <= 6; a++)
+    for (let b = a; b <= 6; b++) {
+      const c = total - a - b
+      if (c >= b && c <= 6 && !([a, b, c].includes(4) && [a, b, c].includes(6))) return `55${a}${b}${c}`
+    }
+  return null
+}
+
+/** 10-2: what re-rolling the kicker is worth when tied at `total` */
+const tieRoll = (odds, variant, total, rerolls) =>
+  worth(odds('55', rerolls, { roll: tenTwoRoll(total), variant, total }))
+
+/** 10-2: the kicker totals (3 to 18) where taking the tie beats re-rolling */
+const takeTieAt = (odds, variant, rerolls) =>
+  Array.from({ length: 16 }, (_, i) => i + 3).filter((total) => tieRoll(odds, variant, total, rerolls) < 0.5)
+
+/** Chance that `n` dice sum to `total` or less (or more, `atLeast`) */
+function kickerChance(n, total, atLeast = false) {
+  let hits = 0
+  const rec = (k, sum) => {
+    if (!k) return void (hits += atLeast ? sum >= total : sum <= total)
+    for (let v = 1; v <= 6; v++) rec(k - 1, sum + v)
+  }
+  rec(n, 0)
+  return hits / 6 ** n
+}
 export const SITUATIONS = {
   '10-2': {
     label: '10-2 High, tied at a kicker of 12 on your last roll: take the tie, or re-roll the kicker?',
@@ -40,8 +79,34 @@ export const SITUATIONS = {
         `With two rolls left it tips the other way: rolling is worth ${pct(worth(odds('55', 2)))}, since a miss on ` +
           `the first roll gets a second try, and a tie after it can still be taken. So roll then, and take the tie ` +
           `on your last roll.`,
+        (() => {
+          const [hiLast, hiTwo] = [1, 2].map((r) => Math.min(...takeTieAt(odds, 'high', r)))
+          const [loLast, loTwo] = [1, 2].map((r) => Math.max(...takeTieAt(odds, 'low', r)))
+          return (
+            `Where it flips: in 10-2 High, take a tie at ${hiLast} or more on your last roll, ${hiTwo} or more ` +
+            `with two rolls left, and roll below that. 10-2 Low is the mirror image: take a tie at ${loLast} or ` +
+            `less on your last roll, ${loTwo} or less with two left.`
+          )
+        })(),
+        `How good is a 10-2 kicker? Three dice spread wider than two, so the same total means less. A Low kicker ` +
+          `of 6 or less comes up ${pct(kickerChance(3, 6))} of the time, about as rarely as a Monterey Low kicker ` +
+          `of 3 or less (${pct(kickerChance(2, 3))}). In High, 15 or more (${pct(kickerChance(3, 15, true))}) ` +
+          `matches a Monterey High 11 or 12 (${pct(kickerChance(2, 11, true))}).`,
       ]
     },
+    table: ({ odds, pct }) => ({
+      caption:
+        '10-2 High, tied: take the tie or roll, and what rolling the kicker is worth (the chance to beat it, plus ' +
+        'half the chance of tying again), against 50% for the tie.',
+      head: ['Tied at', 'Last roll', 'Two rolls left'],
+      rows: [9, 10, 11, 12, 13, 14].map((total) => [
+        String(total),
+        ...[1, 2].map((r) => {
+          const w = tieRoll(odds, 'high', total, r)
+          return `${w < 0.5 ? 'Take the tie' : 'Roll'} · ${pct(w)}`
+        }),
+      ]),
+    }),
   },
   'ship-captain-crew': {
     label: 'Ship Captain Crew Low, a kicker of 4 to beat: keep the 1-2 or the 5-6?',
@@ -57,6 +122,26 @@ export const SITUATIONS = {
       `Over both rolls the 1-2 wins a hair more often (${pct(odds('12').win)} against ${pct(odds('56').win)}), but ` +
         `the 5-6 ties ${pct(odds('56').tie)} against ${pct(odds('12').tie)}, and a tie is a replay, not the pencil. ` +
         `Make it with a kicker that's too high and you re-roll just those two dice, the same for either keep.`,
+      `In High it's the other way round: keep the 1-2. Keep the end whose missing number sits away from the ` +
+        `kicker you want.`,
+    ],
+  },
+  'ship-captain-crew-high': {
+    label: 'Ship Captain Crew High, a kicker of 10 to beat: keep the 1-2 or the 5-6?',
+    s: { game: 'ship-captain-crew', roll: '12566', rolls: 2, goal: 'kicker', variant: 'high', total: 10, ask: ['12', '56'] },
+    whyTitle: 'Why does the 1-2 come out ahead?',
+    why: ({ odds, pct }) => [
+      `It's the Low question turned around. To beat 10 the kicker needs 11 or 12: a 5-6 (in either order) or a ` +
+        `6-6. Alongside the 3 the 1-2 needs, or the 4 the 5-6 needs, that's just as likely: ` +
+        `${pct(odds('12', 1).win)} on one roll.`,
+      `The difference is the tie at 10, a kicker of 4-6 or 5-5. Keep the 5-6 and you need a 4, which the 4-6 ` +
+        `kicker repeats: 4-4-6 lands only 3 ways. Keep the 1-2 and you need a 3; a 3, a 4 and a 6 land 6 ways. So ` +
+        `the 1-2 ties ${pct(odds('12', 1).tie)} of the time on one roll, against ${pct(odds('56', 1).tie)}.`,
+      `Over both rolls the 5-6 wins a hair more often (${pct(odds('56').win)} against ${pct(odds('12').win)}), ` +
+        `but the 1-2 ties ${pct(odds('12').tie)} against ${pct(odds('56').tie)}, and a tie is a replay.`,
+      `The rule of thumb: keep the end whose missing number sits away from the kicker you want. In High that's ` +
+        `the 1-2, which needs a 3; in Low, the 5-6, which needs a 4. At every kicker, with one roll left or two, ` +
+        `it's never worse.`,
     ],
   },
   monterey: {
@@ -92,11 +177,35 @@ export const SITUATIONS = {
     label: 'Boss: hold the 6, or roll all five?',
     s: { game: 'boss', roll: '64215', beat: '33125', ask: ['6', ''] },
   },
+  'boss-two-pair': {
+    label: 'Boss, your last roll: two pair (6-6-3-3) against three 2s. Go for the full house, or break up the two pair?',
+    s: { game: 'boss', roll: '66331', beat: '22254', ask: ['3366', '66'] },
+    whyTitle: 'Why break up the two pair?',
+    why: ({ odds, pct }) => {
+      const low = { roll: '33221', beat: '44421' }
+      return [
+        `Going for the full house leaves one die to roll: a 3 or a 6 makes it, ${pct(odds('3366').win)} of the ` +
+          `time.`,
+        `Keep the 6-6 and roll three instead. One more 6 makes three 6s, which beat three 2s (a full house if the ` +
+          `other two pair up), and three of a kind among the three makes a full house: ${pct(odds('66').win)}. Keeping the 3-3 does as well ` +
+          `(${pct(odds('33').win)}), since three 3s beat three 2s too.`,
+        `It flips when both your pairs rank below their three of a kind. With 3-3-2-2 against three 4s, three 3s ` +
+          `still lose, so breaking up needs a full house or better anyway: ${pct(odds('33', 1, low).win)}, against ` +
+          `${pct(odds('2233', 1, low).win)} going for the full house. Go for it then, and against a full house too.`,
+        `Against a better two pair, say 6-6-4-4, break up: keeping the 6-6 wins ` +
+          `${pct(odds('66', 1, { beat: '66442' }).win)}, against ${pct(odds('3366', 1, { beat: '66442' }).win)} ` +
+          `going for the full house.`,
+      ]
+    },
+  },
   'tres-away': {
     label: 'Tres Away: put out the 1 too?',
     s: { game: 'tres-away', roll: '33152' },
   },
 }
+
+/** A game's questions, in catalog order */
+export const situationsFor = (gameId) => Object.values(SITUATIONS).filter((q) => q.s.game === gameId)
 
 /** The Odds Lab link that opens a situation */
 export function situationPath(s) {
