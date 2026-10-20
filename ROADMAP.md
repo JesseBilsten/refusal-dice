@@ -82,6 +82,8 @@ Build it once and every later phase gets cheaper.
 
 ### House rules system (after the engine; before Phase 2's odds tables)
 
+✅ _Started 2026-10-19: the first rule, Monterey's lone 3 or 4 keep (`montereyLoneKeep`), is a switch under House rules in Settings (`useHouseRules`). The engine, bots, exact keep odds, simulations and every generated table follow it; the tables are generated for both settings. Next: ante, parity money and barking as settings._
+
 - **Owner requirement:** house rules are selectable site-wide (header or user preferences), and changing them recalculates every probability on the site. See `docs/RULES.md` section 5.
 - **Engine and data:** the engine takes a `HouseRules` object; every rule and odds function is parameterized by it. Precomputed tables are generated for the default rules, and other rule sets are computed on demand (or a small set of common presets is precomputed).
 - **Game detail pages** explain common variations and show the odds for each, e.g. a Monterey table that only requires keeping a 3 or 4.
@@ -202,4 +204,6 @@ Build it once and every later phase gets cheaper.
 | 2026-10-15 | Keep-or-roll advice is exact (`strategy/situations.ts`), not simulated | Every keep can be enumerated; simulation is kept for decisions involving other players |
 | 2026-10-16 | Bots choose calls and refusals from a generated table of each call's chance of losing (`strategy/call-odds.ts`), not hand-tuned scores | The hand-tuned scores weren't comparable across games (33356 called Razzle over Boss) |
 | 2026-10-16 | Re-run the bark, decoy-call and Tres Away findings once the bots play like strong players | Owner request; today's findings are against "solid" bots |
+| 2026-10-19 | Only dice toward the game may be kept, and kept dice stay kept (`docs/RULES.md` §3.1) | Owner ruling: the 10s come in one roll; Ship Captain Crew keeps 1-2 or 5-6; Monterey a connector; 7's and Pairs one pair |
+| 2026-10-19 | House-rule odds are generated for each setting, not computed on demand | Simulated tables take minutes to hours; one rule doubles them, which is affordable |
 | 2026-10-14 | Odds Lab ships ahead of Phase 0 | Self-contained (`roll-query.js` is pure and tested), so it doesn't block or depend on the engine split |

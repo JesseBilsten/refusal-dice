@@ -12,6 +12,7 @@ import {
 } from '../Odds'
 import { Hand } from '../Dice'
 import { refusalView } from './odds'
+import { useHouseRules } from '../Settings/house-rules'
 
 /**
  * Accept or refuse, on the odds-decision pattern
@@ -28,6 +29,7 @@ export default function RefusalDecision({
   position,
   players,
 }) {
+  const [rules] = useHouseRules()
   const view = refusalView({
     estimate,
     dice,
@@ -35,6 +37,7 @@ export default function RefusalDecision({
     position,
     players,
     name: formatCallLabel,
+    rules,
   })
   const callName = formatCallLabel(call)
   const samples = estimate.accept.samples

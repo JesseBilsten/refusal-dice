@@ -17,16 +17,16 @@ const sameCall = (a, b) => a.game === b.game && a.variant === b.variant
  * and seat-odds.ts. "My table refuses 10-4" swaps in each roll's best call
  * that isn't 10-4. A row notes a decoy that does better against the bots.
  */
-export default function BarkHands({ players, className }) {
+export default function BarkHands({ players, rules, className }) {
   const [no104, setNo104] = useState(false)
   const [all, setAll] = useState(false)
-  const bark = barkOdds(players)
+  const bark = barkOdds(players, rules)
   const rows = useMemo(() => {
     const pick = (r) => (no104 ? r.alt : r.best)
-    return barkTable(players)
+    return barkTable(players, rules)
       .map((r) => ({ ...r, pick: pick(r) }))
       .sort((a, b) => b.pick.loss - a.pick.loss)
-  }, [players, no104])
+  }, [players, no104, rules])
   const worst = rows[0]
   const barkBetter = rows.filter((r) => r.pick.loss > bark)
   const barkShare = barkBetter.reduce((s, r) => s + r.ways, 0) / 7776

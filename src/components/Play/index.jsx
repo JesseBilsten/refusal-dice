@@ -8,7 +8,7 @@ import {
   bottomTarget,
   evaluateKickerHand,
   isKickerGame,
-  keepsKickers,
+  keepProblem,
   rankBest,
   razzleScore,
   refusalSeats,
@@ -39,6 +39,7 @@ import Seat from '../Table/Seat'
 import TableFelt from '../Table/TableFelt'
 import HintCard from './HintCard'
 import { hintStats } from './hint-stats'
+import { useHouseRules } from '../Settings/house-rules'
 import Standings from '../Table/Standings'
 import {
   BOT_NAMES,
@@ -60,6 +61,17 @@ import {
 const BOT_DELAY = 750
 const ZERO = [0, 0, 0, 0, 0]
 const label = (call) => formatCallLabel(call)
+
+/** What you may keep before the game is made (docs/RULES.md §3.1) */
+const KEEP_TIPS = {
+  '10-2': 'Make 10-2 in one roll: roll all five until you have it.',
+  '10-3': 'Make 10-3 in one roll: roll all five until you have it.',
+  '10-4': 'Make 10-4 in one roll: roll all five until you have it.',
+  'ship-captain-crew': 'Keep 1-2 or 5-6 (pick one), or roll all five.',
+  monterey: 'Keep 2-3, 3-4 or 4-5, or roll all five.',
+  vegas: 'Keep a pair that sums to 7 or 11, or roll all five.',
+  pairs: 'Keep a pair, or roll all five.',
+}
 
 /** A hand in words: "three 2s", "a kicker of 9", "no 10-3", "a score of 7", "a full house" */
 function handText(dice, call) {
@@ -225,6 +237,14 @@ function Setup({ onStart }) {
   )
 }
 
+/** Your dice already kept at the start of your move: the Boss's hand, or a kicker game's committed keep */
+function startingKeep(g) {
+  const ph = g.phase
+  if (ph.kind === 'boss' && ph.stage === 'bossRoll' && ph.boss === YOU) return [...ph.mustKeep]
+  if (ph.kind === 'play' && isKickerGame(ph.call.game) && ph.rolling[YOU]) return [...ph.rolling[YOU].kept]
+  return []
+}
+
 export default function Play() {
   const [game, setGame] = useState(null)
   const [rollIds, setRollIds] = useState({})
@@ -235,10 +255,11 @@ export default function Play() {
   // The piddle's ranking shows before the first deal
   const [dealt, setDealt] = useState(false)
   const [prefs] = useDicePrefs()
+  const [tableRules] = useHouseRules()
   const prev = useRef(null)
 
   const start = (bots) => {
-    const g = newTable(bots, Math.floor(Math.random() * 2 ** 31))
+    const g = newTable(bots, Math.floor(Math.random() * 2 ** 31), tableRules)
     setRollIds(Object.fromEntries(g.seats.map((s) => [s.id, ZERO.map(() => 1)])))
     setGame(g)
     setDealt(!g.log.some((e) => e.type === 'piddle'))
@@ -263,7 +284,7 @@ export default function Play() {
       }
       setError(null)
       // Your selection is spent once you act (Tres Away keeps it your turn across put-out and roll)
-      if (action.player === YOU) setKeep([])
+      if (action.player === YOU) setKeep(next.phase.kind === 'tresAway' ? [] : startingKeep(next))
       const rolled = rolledPositions(next.log.slice(g.log.length))
       // A new deal (next round, or a bark) re-rolls everyone
       if (next.round !== g.round) {
@@ -302,8 +323,7 @@ export default function Play() {
     const key = `${game.round}:${game.phase.kind}:${who}`
     if (prev.current === key) return
     prev.current = key
-    const ph = game.phase
-    setKeep(ph.kind === 'boss' && ph.stage === 'bossRoll' && ph.boss === YOU ? [...ph.mustKeep] : [])
+    setKeep(startingKeep(game))
   }, [game, who])
 
   const view = useMemo(() => (game ? viewFor(game, YOU) : null), [game])
@@ -388,6 +408,8 @@ export default function Play() {
 
   const toggleKeep = (i) => {
     if (phase.kind === 'boss' && phase.stage === 'bossRoll' && phase.mustKeep.includes(i)) return
+    // Kicker games: dice kept last roll stay kept
+    if (phase.kind === 'play' && isKickerGame(phase.call.game) && phase.rolling[YOU]?.kept.includes(i)) return
     // Dice already put out in Tres Away are final
     if (phase.kind === 'tresAway' && phase.hands[YOU].out.includes(i)) return
     setKeep((k) => {
@@ -458,7 +480,7 @@ export default function Play() {
       </p>
     )
     // Lead with the calls these dice suit best; the rest are a tap away (fewer choices, faster decisions)
-    const ranked = ALL_CALLS.filter((c) => callAllowed(game, c)).sort((a, b) => callScore(myDice, b) - callScore(myDice, a))
+    const ranked = ALL_CALLS.filter((c) => callAllowed(game, c)).sort((a, b) => callScore(myDice, b, game.rules) - callScore(myDice, a, game.rules))
     const callButton = (c) => {
       const suggested = hints && suggestion?.type === 'call' && suggestion.call.game === c.game && suggestion.call.variant === c.variant
       return (
@@ -511,7 +533,7 @@ export default function Play() {
     const left = 3 - r.rollsUsed
     const kicker = isKickerGame(call.game)
     const hand = kicker ? evaluateKickerHand(myDice, call.game, call.variant) : null
-    const badKeep = Boolean(kicker && keep.length && keepsKickers(keep.map((i) => myDice[i]), call.game))
+    const badKeep = kicker ? keepProblem(keep.map((i) => myDice[i]), call.game, [], game.rules) : null
     const must = wouldLoseIfStopped(game, YOU)
     const target = bottomTarget(game, YOU)
     const targetDice = game.dice[target]
@@ -533,18 +555,24 @@ export default function Play() {
           )}
         </p>
         <p className="text-muted-foreground">
-          Tap dice to keep them, then roll the rest.
-          {kicker && hand?.made && ' You’ve made the game: the kicker is rolled whole, so keep just the game dice.'}
+          {kicker
+            ? hand?.made
+              ? 'You’ve made the game: keep just the game dice and roll the kicker whole, or stand.'
+              : call.game === 'monterey' && game.rules.montereyLoneKeep
+                ? 'Keep 2-3, 3-4, 4-5, or a lone 3 or 4, or roll all five.'
+                : KEEP_TIPS[call.game]
+            : 'Tap dice to keep them, then roll the rest.'}
+          {kicker && r.kept.length > 0 && ' Dice you kept stay kept.'}
         </p>
       </>
     )
     controls = (
       <div className="flex flex-wrap items-center gap-2">
-        <RollButton disabled={keep.length === 5 || badKeep} onClick={() => act({ type: 'reroll', player: YOU, keep })}>
+        <RollButton disabled={keep.length === 5 || Boolean(badKeep)} onClick={() => act({ type: 'reroll', player: YOU, keep })}>
           Roll {5 - keep.length}
         </RollButton>
         {!must && <Button variant="outline" onClick={() => act({ type: 'stand', player: YOU })}>Take the tie</Button>}
-        {badKeep && <span className="text-sm text-destructive">Keep only the game dice: the kicker is rolled whole.</span>}
+        {badKeep && keep.length > 0 && <span className="text-sm text-destructive">{badKeep}.</span>}
       </div>
     )
     // The Odds Lab: your exact keep options for beating that hand
@@ -556,7 +584,8 @@ export default function Play() {
       const theirs = evaluateKickerHand(targetDice, call.game, call.variant)
       goal = theirs.made ? `&goal=kicker&variant=${call.variant}&total=${theirs.kickerTotal}` : '&goal=make'
     }
-    labLink = `/odds-lab/?tab=keep&game=${call.game}&roll=${myDice.join('')}&rolls=${left}${goal}`
+    const keptDigits = kicker ? r.kept.map((i) => myDice[i]).sort((a, b) => a - b).join('') : ''
+    labLink = `/odds-lab/?tab=keep&game=${call.game}&roll=${myDice.join('')}&rolls=${left}${goal}${keptDigits ? `&kept=${keptDigits}` : ''}`
   } else if (phase.kind === 'tresAway') {
     const h = phase.hands[YOU]
     const most = tresAwayMaxPutOut(phase, YOU)
@@ -768,7 +797,9 @@ export default function Play() {
                           ? tres.out
                           : isYou && phase.kind === 'boss' && phase.stage === 'bossRoll' && phase.boss === YOU
                             ? phase.mustKeep
-                            : undefined
+                            : isYou && phase.kind === 'play' && isKickerGame(phase.call.game) && phase.rolling[YOU]?.kept.length
+                              ? phase.rolling[YOU].kept
+                              : undefined
                       }
                       onToggleKeep={isYou && canKeep ? toggleKeep : undefined}
                     />

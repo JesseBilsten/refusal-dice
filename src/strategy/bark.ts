@@ -1,14 +1,6 @@
-import { Call, Dice } from '../engine'
+import { Call, Dice, KeepRules } from '../engine'
 import { ALL_CALLS, callLoss, chooseCall, makesCall } from './bots'
-import {
-  HAMMER_ALT_CALL,
-  HAMMER_ALT_LOSS,
-  HAMMER_ANY_CALL,
-  HAMMER_ANY_LOSS,
-  HAMMER_CALL,
-  HAMMER_LOSS,
-  HAMMER_ODDS_SIZES,
-} from './hammer-odds'
+import { HAMMER_ODDS_SIZES, HAMMER_TABLES } from './hammer-odds'
 
 /**
  * Call or bark, from the generated hammer-odds.ts and seat-odds.ts: what
@@ -44,6 +36,13 @@ export function rollWays(dice: Dice): number {
   return counts.reduce((n, c) => n / FACT[c], 120)
 }
 
+/** The generated figures for these house rules */
+const tables = (rules?: KeepRules) =>
+  HAMMER_TABLES[rules?.montereyLoneKeep ? 'lone-keep' : 'standard']
+
+/** Every distinct roll, dice sorted low to high */
+const ROLLS = Object.keys(HAMMER_TABLES.standard.loss)
+
 function column(players: number): number {
   const i = HAMMER_ODDS_SIZES.indexOf(players)
   if (i < 0) throw new Error(`No Hammer odds for ${players} players`)
@@ -58,35 +57,34 @@ function column(players: number): number {
 export function hammerCall(
   dice: Dice,
   players: number,
-  options: { except104?: boolean; vsBots?: boolean } = {}
+  options: { except104?: boolean; vsBots?: boolean; rules?: KeepRules } = {}
 ): HammerCall {
   const k = key(dice)
   const i = column(players)
+  const t = tables(options.rules)
   const [calls, losses] = options.vsBots
-    ? [HAMMER_ANY_CALL, HAMMER_ANY_LOSS]
+    ? [t.anyCall, t.anyLoss]
     : options.except104
-      ? [HAMMER_ALT_CALL, HAMMER_ALT_LOSS]
-      : [HAMMER_CALL, HAMMER_LOSS]
-  if (!calls[k]) throw new Error(`No Hammer odds for ${k}: run npm run generate:hammer-odds`)
+      ? [t.altCall, t.altLoss]
+      : [t.call, t.loss]
+  if (!calls[k])
+    throw new Error(`No Hammer odds for ${k}: run npm run generate:hammer-odds`)
   return { call: ALL_CALLS[calls[k][i]], loss: losses[k][i] / 1000 }
 }
 
 /** Every roll at a table of `players`, the one most likely to take the pencil first */
-export function barkTable(players: number): BarkRow[] {
-  return Object.keys(HAMMER_LOSS)
-    .map((k) => {
-      const dice = k.split('').map(Number) as Dice
-      return {
-        dice,
-        ways: rollWays(dice),
-        best: hammerCall(dice, players),
-        alt: hammerCall(dice, players, { except104: true }),
-        bots: hammerCall(dice, players, { vsBots: true }),
-      }
-    })
-    .sort((a, b) => b.best.loss - a.best.loss)
+export function barkTable(players: number, rules?: KeepRules): BarkRow[] {
+  return ROLLS.map((k) => {
+    const dice = k.split('').map(Number) as Dice
+    return {
+      dice,
+      ways: rollWays(dice),
+      best: hammerCall(dice, players, { rules }),
+      alt: hammerCall(dice, players, { except104: true, rules }),
+      bots: hammerCall(dice, players, { vsBots: true, rules }),
+    }
+  }).sort((a, b) => b.best.loss - a.best.loss)
 }
-
 
 /** A roll's best call it already makes against its best call it doesn't, when everyone plays the call */
 export interface HeldOrNot {
@@ -104,20 +102,23 @@ export interface HeldOrNot {
  * the biggest edge for the call it doesn't hold first. `secondCall`: the
  * recommended call was refused, so that game is out.
  */
-export function heldOrNot(options: { secondCall?: boolean } = {}): HeldOrNot[] {
-  return Object.keys(HAMMER_LOSS)
-    .map((k) => {
-      const dice = k.split('').map(Number) as Dice
-      const except = options.secondCall ? chooseCall(dice).game : undefined
-      const ranked = ALL_CALLS.filter((c) => c.game !== except)
-        .map((call) => ({ call, loss: callLoss(dice, call) }))
-        .sort((a, b) => a.loss - b.loss)
-      return {
-        dice,
-        ways: rollWays(dice),
-        held: ranked.find((o) => makesCall(dice, o.call))!,
-        unheld: ranked.find((o) => !makesCall(dice, o.call))!,
-      }
-    })
-    .sort((a, b) => b.held.loss - b.unheld.loss - (a.held.loss - a.unheld.loss))
+export function heldOrNot(
+  options: { secondCall?: boolean; rules?: KeepRules } = {}
+): HeldOrNot[] {
+  const { rules } = options
+  return ROLLS.map((k) => {
+    const dice = k.split('').map(Number) as Dice
+    const except = options.secondCall
+      ? chooseCall(dice, undefined, rules).game
+      : undefined
+    const ranked = ALL_CALLS.filter((c) => c.game !== except)
+      .map((call) => ({ call, loss: callLoss(dice, call, rules) }))
+      .sort((a, b) => a.loss - b.loss)
+    return {
+      dice,
+      ways: rollWays(dice),
+      held: ranked.find((o) => makesCall(dice, o.call))!,
+      unheld: ranked.find((o) => !makesCall(dice, o.call))!,
+    }
+  }).sort((a, b) => b.held.loss - b.unheld.loss - (a.held.loss - a.unheld.loss))
 }

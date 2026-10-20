@@ -37,14 +37,22 @@ Each rule is tagged by where it came from:
 ### 3.1 Default: kicker games (10-2, 10-3, 10-4, Ship Captain Crew, Monterey, 7's, Pairs)
 
 - **Up to 3 rolls total.** The initial hidden roll is roll 1. [confirmed]
-- Between rolls a player keeps whatever dice they choose and re-rolls the rest. Re-rolling is optional, and a player can stop at any time. [confirmed]
-  - **No rule forces a player to keep dice.** A player may re-roll any dice, including all five, even dice that already made the game. New players sometimes do this by accident. In practice nobody breaks up a made game, and the table might object, but there's no hard rule against it. The engine allows it. Strategy tools should flag it as almost always a mistake (to be checked case by case with the owner). [confirmed]
+- Between rolls a player may keep some dice and re-roll the rest, or stop at any time. Re-rolling is optional. [confirmed]
+- **Only dice toward the game may be kept** (ruled 2026-10-19). [confirmed]
+  - **10-2, 10-3, 10-4:** nothing until the game is made. A 10 has to come in **one roll**, so each roll is a fresh try with all five dice. Once made, keep the dice that make it.
+  - **Ship Captain Crew:** keep **1-2 or 5-6**, never both, or the made 1-2-3 / 4-5-6.
+  - **Monterey:** keep a connector, **2-3, 3-4 or 4-5**, or the made 2-3-4 / 3-4-5. Some tables also allow a lone 3 or 4 (§5).
+  - **7's:** keep **one pair** summing to 7 or 11 (1-6, 2-5, 3-4, 5-6), or both pairs once made. Not three dice toward two pairs (e.g. not 1-5-6).
+  - **Pairs:** keep **one pair**, or both pairs once made. Never a kicker die.
+  - A player who holds nothing to keep re-rolls all five.
+- **Kept dice stay kept.** Once kept, a player is committed to those dice for the rest of their rolls: every later keep holds them (e.g. keep 1-2 in Ship Captain Crew and you can't switch to 5-6 or re-roll all five). Dice that made the game by luck but were never kept may still be re-rolled. [confirmed]
+- The engine enforces both (`keepProblem` in `src/engine/rules/kicker-games.ts`; the committed dice are `rolling[player].kept`). Razzle, Boss and Tres Away have their own keep rules (§3.2–3.4).
 - **The worst hand rolls first** (§4), not in seat order: only the player at the bottom rolls, until they climb off it or run out of rolls. [confirmed]
 - **Dice are visible to everyone** from the start of play onward; only the initial roll is hidden (until play starts). [confirmed]
 - A player tries to **make the game** and then get a kicker that beats the worst kicker at the table (e.g. in 10-3, roll until you have the game and a better kicker than the worst player). [confirmed]
 - **Terminology: "the kicker" is all the remaining dice together** (one die in 10-4, three in 10-2), not each die. Say "a kicker of 6+1", never "kickers 6 and 1" or "a good kicker and a bad one". [confirmed]
 - **The kicker is rolled whole.** Once the dice a player keeps make the game, only those dice stay on the table: the player re-rolls the **whole** kicker or stops. They can't keep part of the kicker (e.g. with 10-3 made by 2+4+4 and a kicker of 6+1, they re-roll both the 6 and the 1). This is what makes 10-2 interesting: its three-dice kicker is re-rolled as a block, so a total near the top or bottom of the range is very hard to beat. [confirmed]
-  - The engine rejects a keep that holds a set making the game plus extra dice. Breaking up a made game, or keeping dice toward a game not yet made, is still allowed.
+  - The engine rejects a keep that holds a set making the game plus extra dice.
 - **The kicker** is the dice not used to make the game, scored as an **additive total**:
   - **High:** higher total wins; **Low:** lower total wins.
   - Example: a kicker of 5+6 = 11 beats 5+5 = 10 in High. [confirmed]
@@ -122,7 +130,7 @@ Known variations to support:
 
 - **Ante** amount; extra money added at **parity** (all remaining players have 2 pencils); some groups reset pencils at parity. [site]
 - **Barking** allowed or not. [site]
-- **Monterey keep requirement:** some tables only require keeping a 3 or 4, rather than 2-3 / 3-4 / 4-5 partials. [confirmed, example given by owner]
+- **Monterey keep requirement** (`montereyLoneKeep`, built): some tables let a player keep a lone 3 or 4, not only 2-3 / 3-4 / 4-5. Off by default. Visitors set it under House rules in Settings; every odds figure follows it, using tables generated for both rule sets. [confirmed, example given by owner]
 - More will be collected as they come up; each needs a precise definition here before it's implemented.
 
 ## 6. Open questions
@@ -138,4 +146,4 @@ Engine choices made without a ruling yet (the engine does the [inferred] thing u
 
 ## Resolved questions (2026-10-14)
 
-Players who miss the game cycle until there's one loser; dice are visible during play (except Tres Away/Boss); the initial roll counts after a second call; re-rolling is unrestricted except in Tres Away; Boss re-rolls once keeping their hand, others keep anything, and the Boss can lose; Razzle 1s are wild for any number; only the kicker breaks ties. Boss: a tie for the best initial hand means no Boss and a new game; Razzle: face value breaks equal counts; 2-player table: both missing is a tie (no pencil, Hammer passes); with 2 players there's only a 1st refusal, and a refusal goes straight to the second call.
+Players who miss the game cycle until there's one loser; dice are visible during play (except Tres Away/Boss); the initial roll counts after a second call; re-rolling was unrestricted except in Tres Away (superseded 2026-10-19: only dice toward the game may be kept, and kept dice stay kept, §3.1); Boss re-rolls once keeping their hand, others keep anything, and the Boss can lose; Razzle 1s are wild for any number; only the kicker breaks ties. Boss: a tie for the best initial hand means no Boss and a new game; Razzle: face value breaks equal counts; 2-player table: both missing is a tie (no pencil, Hammer passes); with 2 players there's only a 1st refusal, and a refusal goes straight to the second call.

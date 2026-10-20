@@ -1,5 +1,5 @@
 import { DiceSource, rollDice } from '../dice-source'
-import { isKickerGame, keepsKickers } from '../rules/kicker-games'
+import { isKickerGame, keepProblem } from '../rules/kicker-games'
 import { compareKickerHands, resolveKickerCycle } from '../rules/resolve'
 import {
   bestHands,
@@ -45,6 +45,8 @@ export interface PlayerRolls {
   rollsUsed: number
   /** Finished rolling (stood, or used every roll) */
   done: boolean
+  /** Positions kept at the last roll. Kicker games: committed, so every later keep holds them (§3.1) */
+  kept: number[]
 }
 
 /**
@@ -335,7 +337,7 @@ function enterPlay(state: GameState, call: Call, cycle: number, players: PlayerI
   }
 
   const rolling: Record<PlayerId, PlayerRolls> = {}
-  players.forEach((id) => (rolling[id] = { rollsUsed: 1, done: false }))
+  players.forEach((id) => (rolling[id] = { rollsUsed: 1, done: false, kept: [] }))
   return { ...state, phase: { kind: 'play', call, cycle, rolling } }
 }
 
@@ -686,8 +688,13 @@ export function applyAction(state: GameState, action: Action): GameState {
         const keep = action.keep
         if (!validIndices(keep)) throw new EngineError('Keep must be distinct die positions 0–4')
         const call = phase.call
-        if (isKickerGame(call.game) && keepsKickers(keep.map((i) => state.dice[action.player][i]), call.game)) {
-          throw new EngineError('Kickers are rolled together: keep only the dice that make the game, or stand')
+        if (isKickerGame(call.game)) {
+          const dice = state.dice[action.player]
+          const committed = (rolls.kept ?? []).every((i) => keep.includes(i))
+          const problem = committed
+            ? keepProblem(keep.map((i) => dice[i]), call.game, [], state.rules)
+            : 'Kept dice stay kept: you’re committed to the dice you kept last roll'
+          if (problem) throw new EngineError(problem)
         }
         const rolled = rollPositions(state, action.player, [0, 1, 2, 3, 4].filter((i) => !keep.includes(i)))
         const dice = rolled.dice[action.player]
@@ -697,7 +704,7 @@ export function applyAction(state: GameState, action: Action): GameState {
           ...rolled,
           phase: {
             ...phase,
-            rolling: { ...phase.rolling, [action.player]: { rollsUsed, done: rollsUsed >= MAX_ROLLS } },
+            rolling: { ...phase.rolling, [action.player]: { rollsUsed, done: rollsUsed >= MAX_ROLLS, kept: [...keep] } },
           },
         }
         return maybeResolve(log(next, { type: 'rolled', player: action.player, dice, kept: [...keep] }))

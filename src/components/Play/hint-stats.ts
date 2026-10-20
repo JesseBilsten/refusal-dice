@@ -68,7 +68,7 @@ export function hintStats(state: GameState, me: string, action: Action, names: H
   if (phase.kind === 'call' || phase.kind === 'secondCall') {
     const except = phase.kind === 'secondCall' ? phase.refused.game : undefined
     const ranked = ALL_CALLS.filter((c) => c.game !== except)
-      .map((call) => ({ call, loss: callLoss(dice, call) }))
+      .map((call) => ({ call, loss: callLoss(dice, call, state.rules) }))
       .sort((a, b) => a.loss - b.loss)
     const pick = action.type === 'call' ? action.call : ranked[0].call
     const rows: HintRow[] = ranked.slice(0, 4).map((o) => ({
@@ -78,7 +78,7 @@ export function hintStats(state: GameState, me: string, action: Action, names: H
     }))
     const players = Math.min(8, Math.max(2, activeSeats(state).length))
     const canBark = phase.kind === 'call' && state.rules.barking
-    const bark = barkOdds(players)
+    const bark = barkOdds(players, state.rules)
     if (canBark) rows.push({ label: 'Bark', value: bark, best: action.type === 'bark' })
     const best = ranked[0]
     let why =
@@ -87,7 +87,7 @@ export function hintStats(state: GameState, me: string, action: Action, names: H
     if (except) why = `Your first call was refused, so ${names.call({ game: except } as Call)} is out. ${why}`
     if (canBark) {
       // At this table size, with refusals played out (hammer-odds.ts)
-      const here = hammerCall(dice, players)
+      const here = hammerCall(dice, players, { rules: state.rules })
       why +=
         bark > here.loss
           ? ` A bark passes the Hammer left and you sit last: ${pct(bark)} with any hand. At ${players} players your best call, ${names.call(here.call)}, takes the pencil ${pct(here.loss)} of the time, so calling is better.`
@@ -98,7 +98,7 @@ export function hintStats(state: GameState, me: string, action: Action, names: H
 
   // A refusal: how often you'd lose the call against an even share of the table
   if (phase.kind === 'refusal') {
-    const loss = callLoss(dice, phase.call)
+    const loss = callLoss(dice, phase.call, state.rules)
     const even = 1 / CALL_ODDS_PLAYERS
     const accept = loss <= even
     return {
@@ -122,7 +122,9 @@ export function hintStats(state: GameState, me: string, action: Action, names: H
     const rollsLeft = 3 - phase.rolling[me].rollsUsed
     const goal = bottomGoal(phase.call, target)
     const mustRoll = wouldLoseIfStopped(state, me)
-    const options = keepOptions(dice, rollsLeft, goal).filter((o) => !(o.stand && mustRoll))
+    const options = keepOptions(dice, rollsLeft, goal, { locked: phase.rolling[me].kept, rules: state.rules }).filter(
+      (o) => !(o.stand && mustRoll)
+    )
     const chosen = (o: (typeof options)[number]) =>
       action.type === 'stand' ? o.stand : action.type === 'reroll' && !o.stand && diceText(o.keep.map((i) => dice[i])) === diceText(action.keep.map((i) => dice[i]))
     const rows: HintRow[] = options.slice(0, 4).map((o) => ({

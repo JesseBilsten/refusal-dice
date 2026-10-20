@@ -35,7 +35,7 @@ const PATH = [
     step: 3,
     icon: FlaskConical,
     title: 'Settle the arguments',
-    text: 'Hold the 6 in Boss, or roll all five? Keep 2-3 in Monterey, or just the 3? The Odds Lab works it out exactly.',
+    text: 'Hold the 6 in Boss, or roll all five? Keep the 1-6 or the 5-6 in 7’s? The Odds Lab works it out exactly.',
     to: '/odds-lab/',
     cta: 'Ask the Odds Lab',
   },

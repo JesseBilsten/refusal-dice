@@ -4,6 +4,7 @@ import { ToggleGroup, ToggleGroupItem } from '../ui/toggle-group'
 import { DiceSettings } from '../Dice'
 import { cn } from '../../lib/utils'
 import { useTheme } from './theme'
+import HouseRuleSettings from './HouseRuleSettings'
 
 const THEME_OPTIONS = [
   { id: 'light', label: 'Light', icon: Sun },
@@ -12,7 +13,7 @@ const THEME_OPTIONS = [
 ]
 
 /**
- * Every site-wide setting: theme, 3D dice and sound. Saved per browser.
+ * Every site-wide setting: theme, 3D dice, sound and house rules. Saved per browser.
  * Shown in the header's settings menu and the mobile menu.
  */
 const Settings = ({ className }) => {
@@ -43,6 +44,7 @@ const Settings = ({ className }) => {
         </ToggleGroup>
       </div>
       <DiceSettings stacked />
+      <HouseRuleSettings className="border-t border-border pt-4" />
     </div>
   )
 }

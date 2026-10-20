@@ -5,7 +5,8 @@ import { keepOptions, tresAwayExpected, tresAwayPutOut } from '../../strategy'
 import { Hand } from '../Dice'
 import { fmtPct } from '../Odds'
 import { Panel } from '../Page'
-import { goalFor, optionLabel, rerollsFor } from './keep-model'
+import { goalFor, lockedPositions, optionLabel, rerollsFor } from './keep-model'
+import { useHouseRules } from '../Settings/house-rules'
 import { SITUATIONS, situationPath } from './situations-catalog'
 
 /**
@@ -15,6 +16,7 @@ import { SITUATIONS, situationPath } from './situations-catalog'
  */
 export default function SituationCard({ gameId, className }) {
   const situation = SITUATIONS[gameId]
+  const [rules] = useHouseRules()
   const s = situation?.s
   const dice = s ? s.roll.split('').map(Number) : null
 
@@ -33,7 +35,7 @@ export default function SituationCard({ gameId, className }) {
       }
     }
     const beat = s.beat ? s.beat.split('').map(Number) : null
-    const opts = keepOptions(dice, rerollsFor(s), goalFor(s, beat))
+    const opts = keepOptions(dice, rerollsFor(s), goalFor(s, beat), { locked: lockedPositions(dice, s.kept), rules })
     const best = opts[0]
     const others = (s.ask || [])
       .map((d) => opts.find((o) => !o.stand && o.dice.join('') === d))
@@ -48,7 +50,7 @@ export default function SituationCard({ gameId, className }) {
       ].join(' · '),
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gameId])
+  }, [gameId, rules.montereyLoneKeep])
 
   if (!situation) return null
   return (

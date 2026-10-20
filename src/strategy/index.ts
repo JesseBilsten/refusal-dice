@@ -1,6 +1,6 @@
 /**
  * Strategy and odds built on the engine (src/engine). Pure TypeScript.
- * - make-odds: exact chance of making a kicker game with optimal keeps
+ * - make-odds: exact chance of making a kicker game with the best legal keeps
  * - kicker-odds: exact kicker re-roll odds, e.g. take the tie or roll
  * - situations: exact keep-or-roll choices for any goal
  * - tres-away: exact best put-out in Tres Away

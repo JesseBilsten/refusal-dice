@@ -2,6 +2,7 @@ import {
   Call,
   GameEvent,
   GameState,
+  HouseRules,
   PlayerId,
   createGame,
   seeded,
@@ -17,8 +18,8 @@ export const YOU: PlayerId = 'you'
 
 export const BOT_NAMES = ['Ava', 'Ben', 'Cass', 'Dev', 'Eli', 'Fran', 'Gus']
 
-/** A new game: you plus `bots` opponents, seated in order, with a fresh piddle */
-export function newTable(bots: number, seed: number): GameState {
+/** A new game: you plus `bots` opponents, seated in order, with a fresh piddle, playing `rules` */
+export function newTable(bots: number, seed: number, rules: Partial<HouseRules> = {}): GameState {
   const players = [
     { id: YOU, name: 'You' },
     ...BOT_NAMES.slice(0, bots).map((name) => ({
@@ -26,7 +27,7 @@ export function newTable(bots: number, seed: number): GameState {
       name,
     })),
   ]
-  return createGame({ players, source: seeded(seed) })
+  return createGame({ players, source: seeded(seed), rules })
 }
 
 /** Who must act now, or null between rounds and at the end */

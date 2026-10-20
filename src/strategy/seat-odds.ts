@@ -8,17 +8,30 @@ export const SEAT_ODDS_SAMPLES = 20000
  * tenths of a percent. Index 0 is the Hammer, then each seat to their left.
  */
 export const SEAT_ODDS: Record<number, number[]> = {
-  2: [284, 575],
-  3: [134, 438, 426],
-  4: [60, 308, 301, 330],
-  5: [32, 228, 229, 256, 255],
-  6: [19, 181, 182, 210, 202, 204],
-  7: [13, 149, 148, 179, 174, 167, 169],
-  8: [9, 128, 124, 151, 153, 146, 145, 144],
+  2: [261, 618],
+  3: [111, 450, 438],
+  4: [46, 307, 302, 345],
+  5: [25, 226, 226, 261, 261],
+  6: [14, 179, 184, 208, 207, 207],
+  7: [10, 149, 147, 169, 176, 176, 173],
+  8: [8, 128, 124, 149, 152, 146, 150, 142],
+}
+
+/** The same when a lone 3 or 4 may be kept in Monterey (docs/RULES.md §5) */
+export const SEAT_ODDS_LONE_KEEP: Record<number, number[]> = {
+  2: [262, 617],
+  3: [112, 451, 436],
+  4: [47, 306, 301, 345],
+  5: [25, 226, 224, 260, 264],
+  6: [15, 179, 184, 209, 206, 206],
+  7: [10, 149, 146, 169, 177, 175, 173],
+  8: [8, 128, 124, 150, 151, 148, 149, 141],
 }
 
 /** Each seat's chance of the pencil (0–1) at a table of `players`, Hammer first */
-export const seatOdds = (players: number): number[] => SEAT_ODDS[players].map((x) => x / 1000)
+export const seatOdds = (players: number, rules?: { montereyLoneKeep?: boolean }): number[] =>
+  (rules?.montereyLoneKeep ? SEAT_ODDS_LONE_KEEP : SEAT_ODDS)[players].map((x) => x / 1000)
 
 /** Your chance of the pencil after you bark: the last seat's */
-export const barkOdds = (players: number): number => seatOdds(players)[players - 1]
+export const barkOdds = (players: number, rules?: { montereyLoneKeep?: boolean }): number =>
+  seatOdds(players, rules)[players - 1]

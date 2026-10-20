@@ -14,21 +14,22 @@ const BAR = 'grid-cols-[minmax(0,7.5rem)_1fr_auto] gap-2 sm:grid-cols-[minmax(0,
  * game within three rolls, so it almost never beats the best game you hold.
  * Exact make odds (make-odds.ts), then how often it wins (call-odds.ts).
  */
-export default function UnheldCalls({ className }) {
-  const first = heldOrNot()
-  const second = heldOrNot({ secondCall: true })
+export default function UnheldCalls({ rules, className }) {
+  const first = heldOrNot({ rules })
+  const second = heldOrNot({ secondCall: true, rules })
+  const make = (g, rolls) => freshMakeChance(g, rolls, rules)
   const edge = (r) => r.held.loss - r.unheld.loss
   const firstWins = first.filter((r) => edge(r) > 0).length
   const secondWins = second.filter((r) => edge(r) > 0).length
   const example = second[0]
-  const hard = [...KICKER_GAMES].sort((a, b) => freshMakeChance(a) - freshMakeChance(b))[0]
+  const hard = [...KICKER_GAMES].sort((a, b) => make(a, 3) - make(b, 3))[0]
 
   return (
     <div className={className}>
       <p>
         <strong>Almost never worth it.</strong> “Nobody will have it” is true on the first roll, not by the third.{' '}
-        {getGameName(hard)} is made {fmtPct(freshMakeChance(hard, 1))} of the time on the first roll, but{' '}
-        {fmtPct(freshMakeChance(hard, 3))} within three.
+        {getGameName(hard)} is made {fmtPct(make(hard, 1))} of the time on the first roll, but{' '}
+        {fmtPct(make(hard, 3))} within three.
       </p>
       <div className="mt-3 overflow-x-auto">
         <table className="w-full text-sm">
@@ -44,8 +45,8 @@ export default function UnheldCalls({ className }) {
             {KICKER_GAMES.map((g) => (
               <tr key={g} className="border-t border-border">
                 <th scope="row" className="py-1.5 pr-3 text-left font-medium">{getGameName(g)}</th>
-                <td className="py-1.5 pr-3 text-right">{fmtPct(freshMakeChance(g, 1), 1)}</td>
-                <td className="py-1.5 text-right font-semibold">{fmtPct(freshMakeChance(g, 3), 1)}</td>
+                <td className="py-1.5 pr-3 text-right">{fmtPct(make(g, 1), 1)}</td>
+                <td className="py-1.5 text-right font-semibold">{fmtPct(make(g, 3), 1)}</td>
               </tr>
             ))}
           </tbody>
@@ -70,7 +71,7 @@ export default function UnheldCalls({ className }) {
           <figcaption className="flex flex-wrap items-center gap-2">
             <span className="text-muted-foreground">The closest case:</span>
             <Hand dice={example.dice} size="sm" game={example.held.call.game} variant={example.held.call.variant} />
-            <span className="text-muted-foreground">after {formatCallLabel(chooseCall(example.dice))} is refused</span>
+            <span className="text-muted-foreground">after {formatCallLabel(chooseCall(example.dice, undefined, rules))} is refused</span>
           </figcaption>
           <div className="mt-3 space-y-2">
             <ProbabilityBar className={BAR} label={`${formatCallLabel(example.held.call)} (held)`} p={example.held.loss} tone="lose" />

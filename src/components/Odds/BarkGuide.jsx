@@ -8,6 +8,7 @@ import BarkHands from './BarkHands'
 import { Disclosure } from './Explain'
 import ProbabilityBar from './ProbabilityBar'
 import UnheldCalls from './UnheldCalls'
+import { useHouseRules } from '../Settings/house-rules'
 
 const BAR = 'grid-cols-[minmax(0,8.5rem)_1fr_auto] gap-2 sm:grid-cols-[minmax(0,11rem)_1fr_auto] sm:gap-3'
 
@@ -19,8 +20,9 @@ const BAR = 'grid-cols-[minmax(0,8.5rem)_1fr_auto] gap-2 sm:grid-cols-[minmax(0,
  */
 export default function BarkGuide({ className }) {
   const [players, setPlayers] = useState(3)
-  const bark = barkOdds(players)
-  const rows = barkTable(players)
+  const [rules] = useHouseRules()
+  const bark = barkOdds(players, rules)
+  const rows = barkTable(players, rules)
   const worst = rows[0]
   const barkWins = rows.filter((r) => r.best.loss > bark).length
 
@@ -55,24 +57,24 @@ export default function BarkGuide({ className }) {
 
       <div className="mt-6 space-y-2">
         <Disclosure title="See every roll, worst first">
-          <BarkHands players={players} />
+          <BarkHands players={players} rules={rules} />
         </Disclosure>
         <Disclosure title="Why does calling win?">
           <BarkWhy />
-          <BarkRings players={players} />
+          <BarkRings players={players} rules={rules} />
           <p className="text-xs text-muted-foreground">
             Each seat’s chance of the pencil with random dice. The Hammer’s is lowest; a bark gives it to the player on
             your left.
           </p>
         </Disclosure>
         <Disclosure title="What about calling a game I don’t have?">
-          <UnheldCalls />
+          <UnheldCalls rules={rules} />
         </Disclosure>
         <Disclosure title="Does the table size change it?">
-          <BarkSizes />
+          <BarkSizes rules={rules} />
         </Disclosure>
         <Disclosure title="What do these numbers assume?">
-          <BarkAssumptions />
+          <BarkAssumptions rules={rules} />
         </Disclosure>
       </div>
     </div>

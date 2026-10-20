@@ -3,6 +3,7 @@ import { Link } from 'gatsby'
 import { Chip } from '../Page'
 import SeatRing from '../Table/SeatRing'
 import { SEAT_ODDS_SAMPLES, seatOdds } from '../../strategy'
+import { useHouseRules } from '../Settings/house-rules'
 
 const pct = (p) => `${Math.round(p * 100)}%`
 
@@ -11,8 +12,8 @@ const pct = (p) => `${Math.round(p * 100)}%`
  * after you bark (the Hammer passes left and you sit last). Each seat shows
  * its chance of the pencil with random dice, from seat-odds.ts.
  */
-export function BarkRings({ players }) {
-  const odds = seatOdds(players)
+export function BarkRings({ players, rules }) {
+  const odds = seatOdds(players, rules)
   const even = 1 / players
   // Seats clockwise from yours. Calling: you're the Hammer, seat i is i to your left.
   const call = odds.map((value, i) => ({ value, hammer: i === 0, you: i === 0 }))
@@ -69,7 +70,8 @@ export function PlayersPicker({ players, onChange, className }) {
  */
 export default function BarkOdds({ className }) {
   const [players, setPlayers] = useState(3)
-  const odds = seatOdds(players)
+  const [rules] = useHouseRules()
+  const odds = seatOdds(players, rules)
   const even = 1 / players
   const others = odds.slice(1)
   const low = Math.min(...others)
@@ -77,7 +79,7 @@ export default function BarkOdds({ className }) {
   return (
     <div className={className}>
       <PlayersPicker players={players} onChange={setPlayers} className="mb-4 flex flex-wrap items-center gap-1.5" />
-      <BarkRings players={players} />
+      <BarkRings players={players} rules={rules} />
       <p className="mt-4 text-sm">
         Each seat shows its chance of the pencil when everyone holds a random hand. The Hammer picks the game to
         suit their dice, so they take the pencil only {pct(odds[0])} of the time; every other seat takes it{' '}

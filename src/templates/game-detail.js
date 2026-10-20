@@ -7,6 +7,7 @@ import SituationCard from '../components/OddsLab/SituationCard'
 import { SITUATIONS, situationPath } from '../components/OddsLab/situations-catalog'
 import { freshMakeChance } from '../strategy'
 import { isKickerGame } from '../engine'
+import { useHouseRules } from '../components/Settings/house-rules'
 import { Badge } from '../components/ui/badge'
 import { Button, buttonVariants } from '../components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table'
@@ -26,42 +27,42 @@ const GAME_CONTENT = {
   '10-2': {
     subtitle: 'high or low',
     description: '2 dice add up to 10 and the remaining 3 dice are either high or low.',
-    partialKeep: 'Keep the two dice that make 10. The kicker is rolled whole, so to improve it you re-roll all three dice at once. With a three-dice kicker, totals near the top or bottom of the range are very hard to beat.',
+    partialKeep: 'There’s nothing to keep until you have it: 10-2 has to come in one roll, so roll all five each time. Once you have it, keep the two dice that make 10 and re-roll the kicker whole (all three dice at once), or stand. With a three-dice kicker, totals near the top or bottom of the range are very hard to beat.',
   },
   '10-3': {
     subtitle: 'high or low',
     description: '3 dice add up to 10 and the remaining 2 dice are either high or low.',
     aka: 'Frankie',
-    partialKeep: 'Keep the three dice that make 10. The kicker is rolled whole, so to improve it you re-roll both dice at once.',
+    partialKeep: 'There’s nothing to keep until you have it: 10-3 has to come in one roll, so roll all five each time. Once you have it, keep the three dice that make 10 and re-roll the kicker whole (both dice at once), or stand.',
   },
   '10-4': {
     subtitle: 'high or low',
     description: '4 dice add up to 10 and the remaining die is either high or low.',
     aka: 'Shotgun',
-    partialKeep: 'Keep small dice that can still reach 10 with one more. Watch for the trap: 1-3-6 (or any three dice that already make 10) can never be part of 10-4, so keeping them wastes a roll. Once you have it, the kicker is the one die left.',
+    partialKeep: 'There’s nothing to keep until you have it: 10-4 has to come in one roll, so roll all five each time, which makes it the hardest game to make. Once you have it, keep the four dice that make 10; the kicker is the one die left.',
   },
   'ship-captain-crew': {
     subtitle: 'high or low',
     description: '3 dice make up an outside straight (4-5-6 or 1-2-3) and the remaining 2 dice are either high or low.',
     aka: 'Outside straight, Crew',
-    partialKeep: 'You can keep portions of the straight and re-roll for the missing values: (1) Keep [6,5] and roll for [4], (2) Keep [1,2] and roll for [3]. With 2 remaining rolls and 3 dice to re-roll, you have much better odds than re-rolling all 5 dice. Once complete, the remaining 2 dice are your kicker. If you don\'t complete the straight after 3 rolls and you\'re the only player without the game, you get a pencil.',
+    partialKeep: 'Keep 1-2 or 5-6 and roll the other three for the missing 3 or 4. Pick one: you can’t hold both, and once kept you’re committed to it. You can only keep the connector or the made straight, nothing else. Once you have it, the other two dice are your kicker, re-rolled together.',
   },
   monterey: {
     subtitle: 'high or low',
     description: '3 dice make up an inside straight (2-3-4 or 3-4-5) and the remaining 2 dice are either high or low.',
     aka: 'Inside straight',
-    partialKeep: 'Keep 3-4 if you have it: a 2 or a 5 finishes either straight. Holding 2-3 needs exactly a 4. With two rolls left, a lone 3 can even beat holding 2-3, because the 3 is in both straights; with one roll left, 2-3 is better.',
+    partialKeep: 'Keep a connector: 3-4 if you have it, since a 2 or a 5 finishes a straight; 2-3 or 4-5 need exactly one number. Once kept, you’re committed to it. Some tables also let you keep a lone 3 or 4; turn that on under House rules in Settings and the odds follow.',
   },
   vegas: {
     subtitle: 'high or low',
     description: '2 sets of 2 dice add up to 7 and/or 11 and the remaining die is either high or low.',
     aka: '7-11, 7 and/or 11\'s, Vegas',
-    partialKeep: 'If you roll one pair that sums to 7 (or 11), you can keep that pair and re-roll the remaining 3 dice to find another pair. This partial-keep strategy improves your chances of completing the game.',
+    partialKeep: 'Keep one pair that sums to 7 or 11 (1-6, 2-5, 3-4 or 5-6) and roll the other three for a second. Only that pair: no third die toward the next pair, and once kept you’re committed to it. Once you have both pairs, the last die is your kicker.',
   },
   pairs: {
     subtitle: 'high or low',
     description: '2 sets of 2 dice are matching pairs and the remaining die is either high or low.',
-    partialKeep: 'If you don\'t have 2 pairs yet but have 1 pair, keep that pair and re-roll the remaining 3 dice to find a second pair. With 2 remaining rolls, this partial-keep strategy significantly increases your chances of getting the game compared to re-rolling all 5 dice.',
+    partialKeep: 'Keep one pair and roll the other three for a second. Never keep a kicker die: you can only keep the pairs. Once you have two pairs, the last die is your kicker, re-rolled on its own.',
   },
   razzle: {
     description: 'Most amount of any one number with aces being wild. Equal counts go to the higher face: four 6s beat four 4s.',
@@ -326,6 +327,7 @@ const GameDetailTemplate = ({ pageContext }) => {
   const gameMeta = GAMES_MAP[gameId] || { name: gameId, emoji: '🎲' }
 
   const [variant, setVariant] = useState('all')
+  const [houseRules] = useHouseRules()
 
   const singleRollProb = useMemo(() => calcSingleRollProb(gameId), [gameId])
   const gameRolls = useMemo(() => getRollsForGame(gameId), [gameId])
@@ -413,15 +415,23 @@ const GameDetailTemplate = ({ pageContext }) => {
               <Panel
                 className="mb-6"
                 title={`Chance of making ${gameMeta.name}`}
-                description="Keeping the right dice between rolls, exact over every roll."
+                description={
+                  gameId.startsWith('10-')
+                    ? 'It has to come in one roll, so each roll is a fresh try at all five dice. Exact over every roll.'
+                    : 'Keeping only dice toward the game, as the rules allow. Exact over every roll.'
+                }
               >
                 <div className="max-w-xl space-y-3">
                   {[1, 2, 3].map((n) => (
-                    <ProbabilityBar key={n} label={`${n} roll${n > 1 ? 's' : ''}`} p={freshMakeChance(gameId, n)} />
+                    <ProbabilityBar
+                      key={n}
+                      label={`${n} roll${n > 1 ? 's' : ''}`}
+                      p={freshMakeChance(gameId, n, houseRules)}
+                    />
                   ))}
                 </div>
                 <p className="mt-4 text-sm text-muted-foreground">
-                  Not sure what to keep from a roll?{' '}
+                  {gameId.startsWith('10-') ? 'Made it, and wondering whether to re-roll the kicker?' : 'Not sure what to keep from a roll?'}{' '}
                   <Link to={`/odds-lab/?tab=keep&game=${gameId}`} className="font-medium text-primary hover:underline">
                     Ask the Odds Lab
                   </Link>

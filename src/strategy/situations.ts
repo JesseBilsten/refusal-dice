@@ -1,11 +1,13 @@
 import {
+  DEFAULT_HOUSE_RULES,
   Dice,
   Die,
+  KeepRules,
   KickerGameId,
   Variant,
   compareBoss,
   evaluateKickerHand,
-  keepsKickers,
+  isLegalKeep,
   makesGame,
   razzleScore,
 } from '../engine'
@@ -16,8 +18,12 @@ import {
  * you play the remaining rolls as well as possible. Works on sorted hands
  * (dice order doesn't matter) and the exact distribution of re-rolled dice.
  *
+ * Kicker games only allow legal keeps (docs/RULES.md §3.1): the dice that
+ * make the game, or a start toward it (none in the 10s), and kept dice stay
+ * kept, so the solver tracks what's locked. Razzle and Boss keep anything.
+ *
  * Answers questions like "Boss: hold a 6 or roll all five?" or "Monterey:
- * hold 2-3, or just the 3?".
+ * hold 2-3 or 3-4?".
  */
 
 export type Goal =
@@ -33,7 +39,7 @@ export type Goal =
 export type Outcome = 'win' | 'tie' | 'lose'
 
 export interface KeepOption {
-  /** Positions kept (all five when standing) */
+  /** Positions kept (all five when standing), sorted */
   keep: number[]
   /** The kept dice, sorted */
   dice: number[]
@@ -135,10 +141,12 @@ export function judge(dice: Dice, goal: Goal): Outcome {
   }
 }
 
-/** Kicker games: the kicker is rolled whole, so a keep can't hold a made game plus extra dice */
-const allowed = (keep: Counts, goal: Goal) =>
+const covers = (keep: Counts, locked: Counts) => locked.every((n, f) => keep[f] >= n)
+
+/** May `keep` be kept, holding `locked` from last roll? Kicker games follow the keep rules; Razzle and Boss keep anything */
+const allowed = (keep: Counts, locked: Counts, goal: Goal, rules: KeepRules) =>
   goal.kind === 'make' || goal.kind === 'kicker'
-    ? !keepsKickers(toDice(keep), goal.game)
+    ? covers(keep, locked) && isLegalKeep(toDice(keep), goal.game, toDice(locked), rules)
     : true
 
 interface Value {
@@ -149,20 +157,23 @@ const score = (v: Value) => v.win + TIE_WEIGHT * v.tie
 
 /** Solvers are pure per goal; bots ask the same few goals over and over, so keep them */
 const SOLVERS = new Map<string, ReturnType<typeof makeSolver>>()
-const goalKey = (g: Goal) =>
-  g.kind === 'boss' ? `boss:${[...g.hand].sort().join('')}` : JSON.stringify(g)
-function solver(goal: Goal) {
-  const k = goalKey(goal)
+const goalKey = (g: Goal, rules: KeepRules) =>
+  (g.kind === 'boss' ? `boss:${[...g.hand].sort().join('')}` : JSON.stringify(g)) +
+  (rules.montereyLoneKeep ? ':lone' : '')
+function solver(goal: Goal, rules: KeepRules) {
+  const k = goalKey(goal, rules)
   let s = SOLVERS.get(k)
   if (!s) {
     if (SOLVERS.size > 500) SOLVERS.clear()
-    s = makeSolver(goal)
+    s = makeSolver(goal, rules)
     SOLVERS.set(k, s)
   }
   return s
 }
 
-function makeSolver(goal: Goal) {
+const KEYS = 6 ** 6
+
+function makeSolver(goal: Goal, rules: KeepRules) {
   const judged = new Map<number, Value>()
   const finish = (c: Counts): Value => {
     const k = key(c)
@@ -175,13 +186,17 @@ function makeSolver(goal: Goal) {
     return v
   }
 
+  /** The legal keeps from `c` holding `locked` (keeping all five is standing, not a keep) */
+  const keepsFrom = (c: Counts, locked: Counts) =>
+    subsets(c).filter((keep) => size(keep) < 5 && allowed(keep, locked, goal, rules))
+
   /** The value of rolling everything but `keep`, with `rerolls` rolls left after this one */
   const roll = (keep: Counts, rerolls: number): Value => {
     const m = 5 - size(keep)
     let win = 0
     let tie = 0
     for (const o of OUTCOMES[m]) {
-      const v = best(add(keep, o.counts), rerolls)
+      const v = best(add(keep, o.counts), keep, rerolls)
       win += o.p * v.win
       tie += o.p * v.tie
     }
@@ -189,15 +204,14 @@ function makeSolver(goal: Goal) {
   }
 
   const memo = new Map<number, Value>()
-  /** The best you can do holding `c` with `rerolls` rolls left: stand, or keep some and roll */
-  function best(c: Counts, rerolls: number): Value {
-    const k = key(c) * 4 + rerolls
+  /** The best you can do holding `c`, committed to `locked`, with `rerolls` rolls left: stand, or keep some and roll */
+  function best(c: Counts, locked: Counts, rerolls: number): Value {
+    const k = (key(c) + KEYS * key(locked)) * 4 + rerolls
     const hit = memo.get(k)
     if (hit) return hit
     let v = finish(c)
     if (rerolls > 0 && v.win < 1) {
-      for (const keep of subsets(c)) {
-        if (size(keep) === 5 || !allowed(keep, goal)) continue
+      for (const keep of keepsFrom(c, locked)) {
         const r = roll(keep, rerolls - 1)
         if (score(r) > score(v) + 1e-12) v = r
       }
@@ -206,43 +220,53 @@ function makeSolver(goal: Goal) {
     return v
   }
 
-  return { finish, roll, best }
+  return { finish, roll, best, keepsFrom }
 }
 
-/** Positions in `dice` that hold the multiset `keep` */
-function positions(dice: readonly number[], keep: Counts): number[] {
+/** Positions in `dice` that hold the multiset `keep`, the `locked` positions first */
+function positions(dice: readonly number[], keep: Counts, locked: number[]): number[] {
   const want = [...keep]
   const out: number[] = []
-  dice.forEach((d, i) => {
-    if (want[d] > 0) {
+  const order = [...locked, ...dice.map((_, i) => i).filter((i) => !locked.includes(i))]
+  order.forEach((i) => {
+    if (want[dice[i]] > 0) {
       out.push(i)
-      want[d]--
+      want[dice[i]]--
     }
   })
-  return out
+  return out.sort((a, b) => a - b)
+}
+
+export interface KeepContext {
+  /** Positions kept at the last roll: committed in kicker games, so every keep must hold them */
+  locked?: number[]
+  /** House rules that change what may be kept */
+  rules?: KeepRules
 }
 
 /**
- * Every choice from this roll, best first: stand, or keep some dice and roll
- * the rest. `rerolls` is how many rolls you have left (1 or 2; Boss's last
- * roll is 1). Ties count half when ranking: a tie is a replay, not a loss.
+ * Every legal choice from this roll, best first: stand, or keep some dice
+ * and roll the rest. `rerolls` is how many rolls you have left (1 or 2;
+ * Boss's last roll is 1). Ties count half when ranking: a tie is a replay,
+ * not a loss.
  */
 export function keepOptions(
   dice: Dice,
   rerolls: number,
-  goal: Goal
+  goal: Goal,
+  { locked = [], rules = DEFAULT_HOUSE_RULES }: KeepContext = {}
 ): KeepOption[] {
-  const s = solver(goal)
+  const s = solver(goal, rules)
   const c = toCounts(dice)
+  const lockedCounts = toCounts(locked.map((i) => dice[i]))
   const options: KeepOption[] = []
   const now = s.finish(c)
   options.push({ keep: [0, 1, 2, 3, 4], dice: [...dice].sort(), stand: true, ...now })
   if (rerolls > 0) {
-    for (const keep of subsets(c)) {
-      if (size(keep) === 5 || !allowed(keep, goal)) continue
+    for (const keep of s.keepsFrom(c, lockedCounts)) {
       const v = s.roll(keep, rerolls - 1)
       options.push({
-        keep: positions(dice, keep),
+        keep: positions(dice, keep, locked),
         dice: toDice(keep),
         stand: false,
         ...v,
@@ -255,4 +279,11 @@ export function keepOptions(
     // On equal chances, prefer standing, then keeping more dice
     return Number(b.stand) - Number(a.stand) || b.dice.length - a.dice.length
   })
+}
+
+/** Exact chance of reaching `goal` from `dice` with `rerolls` rolls left, playing every roll well */
+export function reachChance(dice: Dice, rerolls: number, goal: Goal, context: KeepContext = {}): number {
+  const s = solver(goal, context.rules ?? DEFAULT_HOUSE_RULES)
+  const locked = context.locked ?? []
+  return s.best(toCounts(dice), toCounts(locked.map((i) => dice[i])), rerolls).win
 }

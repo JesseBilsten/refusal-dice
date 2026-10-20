@@ -157,7 +157,27 @@ const RulesPage = () => (
           </p>
           <ul className="list-disc space-y-1.5 pl-5">
             <li>
-              After each roll, <strong>keep any dice</strong> you like and re-roll the rest, or stop.
+              After each roll, keep some dice and re-roll the rest, or stop. <strong>Only dice toward the game</strong>{' '}
+              can be kept:
+              <ul className="mt-1.5 list-[circle] space-y-1 pl-5">
+                <li>
+                  <strong>10-2, 10-3, 10-4:</strong> nothing until you have it. A 10 has to come in one roll, so roll all
+                  five each time.
+                </li>
+                <li>
+                  <strong>Ship Captain Crew:</strong> 1-2 or 5-6, not both.
+                </li>
+                <li>
+                  <strong>Monterey:</strong> 2-3, 3-4 or 4-5 (some tables allow a lone 3 or 4).
+                </li>
+                <li>
+                  <strong>7’s:</strong> one pair that sums to 7 or 11. <strong>Pairs:</strong> one pair.
+                </li>
+              </ul>
+            </li>
+            <li>
+              <strong>Kept dice stay kept.</strong> Once you keep dice you’re committed to them: keep 1-2 and you can’t
+              switch to 5-6 on your next roll.
             </li>
             <li>
               Try to <strong>make the game</strong>, then improve your <L to="/glossary#kicker">kicker</L>: all the

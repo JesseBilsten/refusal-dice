@@ -7,6 +7,7 @@ import {
   KICKER_GAMES,
   applyAction,
   createGame,
+  isLegalKeep,
   makesGame,
   seeded,
 } from '../engine'
@@ -26,13 +27,11 @@ import {
   simulateRefusal,
   CALL_ODDS,
   CALL_ODDS_CALLS,
-  HAMMER_ALT_CALL,
-  HAMMER_ALT_LOSS,
-  HAMMER_ANY_CALL,
-  HAMMER_ANY_LOSS,
-  HAMMER_CALL,
-  HAMMER_LOSS,
+  CALL_ODDS_LONE_KEEP,
+  HAMMER_TABLES,
   HAMMER_ODDS_CALLS,
+  freshMakeChance,
+  keepOptions,
   HAMMER_ODDS_SIZES,
   barkTable,
   hammerCall,
@@ -54,7 +53,7 @@ const allRolls = (n: number): Dice[] => {
   return out
 }
 
-/** Brute force: best chance of making `game` with one re-roll, over every keep */
+/** Brute force: best chance of making `game` with one re-roll, over every legal keep */
 function bruteOneReroll(
   dice: Dice,
   game: (typeof KICKER_GAMES)[number]
@@ -63,6 +62,7 @@ function bruteOneReroll(
   let best = 0
   for (let mask = 0; mask < 31; mask++) {
     const keep = [0, 1, 2, 3, 4].filter((i) => mask & (1 << i))
+    if (!isLegalKeep(keep.map((i) => dice[i]) as Dice, game)) continue
     const rerolled = [0, 1, 2, 3, 4].filter((i) => !keep.includes(i))
     const outcomes = allRolls(rerolled.length)
     const made = outcomes.filter((o) => {
@@ -105,6 +105,39 @@ describe('exact make odds', () => {
         makeChance(dice, game, 1)
       )
     }
+  })
+
+  test('the 10s come in one roll: each roll is a fresh try at all five', () => {
+    for (const game of ['10-2', '10-3', '10-4'] as const) {
+      const one = freshMakeChance(game, 1)
+      expect(freshMakeChance(game, 3)).toBeCloseTo(1 - (1 - one) ** 3, 10)
+    }
+  })
+
+  test('only legal keeps are offered, and kept dice stay kept', () => {
+    const keeps = (dice: Dice, game: (typeof KICKER_GAMES)[number], locked: number[] = []) =>
+      keepOptions(dice, 2, { kind: 'make', game }, { locked })
+        .filter((o) => !o.stand)
+        .map((o) => o.dice.join(''))
+        .sort()
+    // 10-4 with 1-3-6: nothing toward it can be kept
+    expect(keeps([1, 3, 6, 5, 5], '10-4')).toEqual([''])
+    // Ship Captain Crew: 1-2 or 5-6, never both
+    expect(keeps([1, 2, 5, 6, 6], 'ship-captain-crew')).toEqual(['', '12', '56'])
+    // Monterey: connectors only, unless the house rule allows a lone 3 or 4
+    expect(keeps([2, 3, 6, 6, 1], 'monterey')).toEqual(['', '23'])
+    expect(
+      keepOptions([2, 3, 6, 6, 1], 2, { kind: 'make', game: 'monterey' }, { rules: { montereyLoneKeep: true } })
+        .filter((o) => !o.stand)
+        .map((o) => o.dice.join(''))
+        .sort()
+    ).toEqual(['', '23', '3'])
+    // 7's: one pair summing to 7 or 11, not 1-5-6
+    expect(keeps([1, 6, 5, 3, 3], 'vegas')).toEqual(['', '16', '56'])
+    // Pairs: a pair, never a kicker die
+    expect(keeps([6, 6, 4, 2, 3], 'pairs')).toEqual(['', '66'])
+    // Kept 5-6 last roll: every option holds it
+    expect(keeps([5, 6, 1, 2, 3], 'ship-captain-crew', [0, 1])).toEqual(['56'])
   })
 
   test('the best keep holds on to useful dice', () => {
@@ -335,6 +368,9 @@ describe('call odds table', () => {
       expect(row).toHaveLength(ALL_CALLS.length)
       row.forEach((x) => expect(x >= 0 && x <= 1000).toBe(true))
     })
+    // Monterey High and Low again, under the lone 3 or 4 house rule
+    expect(Object.keys(CALL_ODDS_LONE_KEEP)).toEqual(Object.keys(CALL_ODDS))
+    Object.values(CALL_ODDS_LONE_KEEP).forEach((row) => expect(row).toHaveLength(2))
   })
 })
 
@@ -342,29 +378,36 @@ describe('Hammer odds table (call or bark)', () => {
   test('covers every roll at 2–8 players', () => {
     expect(HAMMER_ODDS_CALLS).toEqual(CALL_ODDS_CALLS)
     expect(HAMMER_ODDS_SIZES).toEqual([2, 3, 4, 5, 6, 7, 8])
-    ;[HAMMER_LOSS, HAMMER_CALL, HAMMER_ALT_LOSS, HAMMER_ALT_CALL, HAMMER_ANY_LOSS, HAMMER_ANY_CALL].forEach((table) => {
-      expect(Object.keys(table)).toHaveLength(252)
-      Object.values(table).forEach((row) => expect(row).toHaveLength(7))
-    })
-    Object.keys(HAMMER_LOSS).forEach((k) =>
-      HAMMER_ODDS_SIZES.forEach((_, i) => {
-        expect(HAMMER_LOSS[k][i] >= 0 && HAMMER_LOSS[k][i] <= 1000).toBe(true)
-        expect(ALL_CALLS[HAMMER_ALT_CALL[k][i]].game).not.toBe('10-4')
+    expect(Object.keys(HAMMER_TABLES).sort()).toEqual(['lone-keep', 'standard'])
+    Object.values(HAMMER_TABLES).forEach((t) => {
+      Object.values(t).forEach((table) => {
+        expect(Object.keys(table)).toHaveLength(252)
+        Object.values(table).forEach((row) => expect(row).toHaveLength(7))
       })
-    )
+      Object.keys(t.loss).forEach((k) =>
+        HAMMER_ODDS_SIZES.forEach((_, i) => {
+          expect(t.loss[k][i] >= 0 && t.loss[k][i] <= 1000).toBe(true)
+          expect(ALL_CALLS[t.altCall[k][i]].game).not.toBe('10-4')
+        })
+      )
+    })
   })
 
   test('each roll’s call is the one the site recommends (chooseCall), with and without 10-4', () => {
     const key = (c: { game: string; variant?: string }) => `${c.game} ${c.variant ?? ''}`
-    Object.keys(HAMMER_CALL).forEach((k) => {
-      const dice = k.split('').map(Number) as Dice
-      HAMMER_ODDS_SIZES.forEach((players) => {
-        expect(key(hammerCall(dice, players).call)).toBe(key(chooseCall(dice)))
-        expect(key(hammerCall(dice, players, { except104: true }).call)).toBe(key(chooseCall(dice, '10-4')))
+    for (const rules of [{ montereyLoneKeep: false }, { montereyLoneKeep: true }]) {
+      Object.keys(HAMMER_TABLES.standard.call).forEach((k) => {
+        const dice = k.split('').map(Number) as Dice
+        HAMMER_ODDS_SIZES.forEach((players) => {
+          expect(key(hammerCall(dice, players, { rules }).call)).toBe(key(chooseCall(dice, undefined, rules)))
+          expect(key(hammerCall(dice, players, { except104: true, rules }).call)).toBe(
+            key(chooseCall(dice, '10-4', rules))
+          )
+        })
       })
-    })
-    // 2-2-3-5-6 makes 10-3 High (2+3+5) and no 10-2; 2-2-4-4-5 is two pair
-    expect(hammerCall([2, 2, 3, 5, 6], 3).call).toEqual({ game: '10-3', variant: 'high' })
+    }
+    // 2-2-3-5-6 has no 10-2, so it calls a game it plays; 2-2-4-4-5 is two pair
+    expect(makesCall([2, 2, 3, 5, 6], hammerCall([2, 2, 3, 5, 6], 3).call)).toBe(true)
     expect(hammerCall([2, 2, 4, 4, 5], 3).call).toEqual({ game: 'pairs', variant: 'high' })
   })
 

@@ -863,7 +863,7 @@ const calculateNormalizedStrength = (rawStrength, gameOdds, dampeningExponent = 
 
 /**
  * Calculate tie/beat probability for kicker-based games
- * Accounts for multi-roll mechanics with partial keepers
+ * Accounts for multi-roll mechanics with the keep rules
  * 
  * @param {number} rawStrength - Hand strength (0-100)
  * @param {string} game - Game type
@@ -876,16 +876,16 @@ const calculateKickerGameTieProbability = (rawStrength, game, handDetails = {}) 
     Object.entries(SINGLE_ROLL_ODDS).map(([id, pct]) => [id, pct / 100])
   )
   
-  // With partial keepers over 3 rolls, probability increases
-  // Improvement factor accounts for keeper rules
+  // Keeping a start toward the game raises the 3-roll chance (docs/RULES.md §3.1).
+  // Heuristic factors; the exact figures are freshMakeChance in src/strategy/make-odds.ts
   const improvementFactors = {
-    '10-2': 1.4,              // Can keep any 2 dice summing to 10
-    '10-3': 1.4,              // Can keep any 3 dice summing to 10
-    '10-4': 1.3,              // Can keep 4 dice summing to 10
-    'ship-captain-crew': 1.5, // Can keep [12xxx] or [65xxx]
-    'monterey': 1.5,          // Can keep [23xxx], [34xxx], [45xxx]
-    'vegas': 1.4,             // Can keep partial 7/11 combos
-    'pairs': 1.6              // Can keep any solo pair
+    '10-2': 1,                // Nothing can be kept: three fresh tries at one roll
+    '10-3': 1,                // Nothing can be kept: three fresh tries at one roll
+    '10-4': 1,                // Nothing can be kept: three fresh tries at one roll
+    'ship-captain-crew': 1.5, // Can keep 1-2 or 5-6 (one, not both)
+    'monterey': 1.5,          // Can keep 2-3, 3-4 or 4-5
+    'vegas': 1.4,             // Can keep one pair summing to 7 or 11
+    'pairs': 1.6              // Can keep one pair
   }
   
   const p1 = singleRollOdds[game] || 0.3

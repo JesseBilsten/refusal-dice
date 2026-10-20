@@ -4,6 +4,7 @@ import {
   Dice,
   GameState,
   KICKER_GAMES,
+  KeepRules,
   KickerGameId,
   SPECIALTY_GAMES,
   activeSeats,
@@ -20,7 +21,7 @@ import {
   tresAwayScore,
   wouldLoseIfStopped,
 } from '../engine'
-import { CALL_ODDS, CALL_ODDS_CALLS, CALL_ODDS_PLAYERS } from './call-odds'
+import { CALL_ODDS, CALL_ODDS_CALLS, CALL_ODDS_LONE_KEEP, CALL_ODDS_PLAYERS } from './call-odds'
 import { Goal, keepOptions } from './situations'
 import { tresAwayPutOut } from './tres-away'
 
@@ -47,17 +48,20 @@ const callKey = (c: Call) => (c.variant ? `${c.game} ${c.variant}` : c.game)
 
 /**
  * The chance the Hammer holding `dice` takes the pencil when everyone plays
- * `call` (3 players), from the generated table in call-odds.ts.
+ * `call` (3 players), from the generated table in call-odds.ts. Monterey
+ * has its own figures when a lone 3 or 4 may be kept (`rules`).
  */
-export function callLoss(dice: Dice, call: Call): number {
-  const row = CALL_ODDS[[...dice].sort((a, b) => a - b).join('')]
+export function callLoss(dice: Dice, call: Call, rules?: KeepRules): number {
+  const roll = [...dice].sort((a, b) => a - b).join('')
+  const row = CALL_ODDS[roll]
   const i = CALL_ODDS_CALLS.indexOf(callKey(call))
   if (!row || i < 0) throw new Error(`No call odds for ${dice.join('')} ${callKey(call)}: run npm run generate:call-odds`)
+  if (rules?.montereyLoneKeep && call.game === 'monterey') return CALL_ODDS_LONE_KEEP[roll][call.variant === 'high' ? 0 : 1] / 1000
   return row[i] / 1000
 }
 
 /** 0–1: how happy a player would be to play `call` with these dice (the chance of not losing it) */
-export const callScore = (dice: Dice, call: Call): number => 1 - callLoss(dice, call)
+export const callScore = (dice: Dice, call: Call, rules?: KeepRules): number => 1 - callLoss(dice, call, rules)
 
 /**
  * Calls this close to the best (in chance of the pencil) are a toss-up:
@@ -75,9 +79,9 @@ export const makesCall = (dice: Dice, call: Call): boolean => !isKickerGame(call
  * hold beats one you'd still have to make when the odds can't tell them
  * apart.
  */
-export function chooseCall(dice: Dice, except?: string): Call {
+export function chooseCall(dice: Dice, except?: string, rules?: KeepRules): Call {
   const ranked = ALL_CALLS.filter((c) => c.game !== except)
-    .map((call) => ({ call, loss: callLoss(dice, call) }))
+    .map((call) => ({ call, loss: callLoss(dice, call, rules) }))
     .sort((a, b) => a.loss - b.loss)
   const close = ranked.filter((o) => o.loss - ranked[0].loss <= CALL_TIE)
   return (close.find((o) => makesCall(dice, o.call)) ?? ranked[0]).call
@@ -90,8 +94,8 @@ const ACCEPT_LOSS = 1 / CALL_ODDS_PLAYERS
  * A refuser bot accepts a call it would lose less often than an even share
  * of the table: refusing hands the Hammer a second call of their choosing.
  */
-export const wouldAccept = (dice: Dice, call: Call): boolean =>
-  callLoss(dice, call) <= ACCEPT_LOSS
+export const wouldAccept = (dice: Dice, call: Call, rules?: KeepRules): boolean =>
+  callLoss(dice, call, rules) <= ACCEPT_LOSS
 
 /* ── Playing ── */
 
@@ -108,7 +112,10 @@ function bottomAction(state: GameState): Action {
   const player = bottomTurn(state)!
   const dice = state.dice[player]
   const target = state.dice[bottomTarget(state, player)!]
-  const options = keepOptions(dice, 3 - phase.rolling[player].rollsUsed, bottomGoal(phase.call, target))
+  const options = keepOptions(dice, 3 - phase.rolling[player].rollsUsed, bottomGoal(phase.call, target), {
+    locked: phase.rolling[player].kept,
+    rules: state.rules,
+  })
   if (!wouldLoseIfStopped(state, player) && (activeSeats(state).length === 2 || options[0].stand))
     return { type: 'stand', player }
   return { type: 'reroll', player, keep: options.find((o) => !o.stand)!.keep }
@@ -132,13 +139,13 @@ export function botAction(state: GameState): Action {
       return {
         type: 'call',
         player: state.hammer,
-        call: chooseCall(state.dice[state.hammer]),
+        call: chooseCall(state.dice[state.hammer], undefined, state.rules),
       }
     case 'refusal': {
       const seats = refusalSeats(state)
       const player = phase.seat === 1 ? seats.first : seats.second!
       return {
-        type: wouldAccept(state.dice[player], phase.call) ? 'accept' : 'refuse',
+        type: wouldAccept(state.dice[player], phase.call, state.rules) ? 'accept' : 'refuse',
         player,
       }
     }
@@ -146,7 +153,7 @@ export function botAction(state: GameState): Action {
       return {
         type: 'call',
         player: state.hammer,
-        call: chooseCall(state.dice[state.hammer], phase.refused.game),
+        call: chooseCall(state.dice[state.hammer], phase.refused.game, state.rules),
       }
     case 'play':
       return bottomAction(state)

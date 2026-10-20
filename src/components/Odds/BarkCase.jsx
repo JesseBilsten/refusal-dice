@@ -12,10 +12,10 @@ const worstBy = (rows, pick) => rows.reduce((w, r) => (pick(r).loss > pick(w).lo
  */
 
 /** Every table size: the worst roll's call against a bark, with and without 10-4 */
-export function BarkSizes() {
+export function BarkSizes({ rules }) {
   const sizes = HAMMER_ODDS_SIZES.map((players) => {
-    const rows = barkTable(players)
-    return { players, bark: barkOdds(players), worst: rows[0], worstAlt: worstBy(rows, (r) => r.alt) }
+    const rows = barkTable(players, rules)
+    return { players, bark: barkOdds(players, rules), worst: rows[0], worstAlt: worstBy(rows, (r) => r.alt) }
   })
   const [few, many] = [sizes[0], sizes[sizes.length - 1]]
   return (
@@ -86,8 +86,8 @@ export function BarkWhy() {
 }
 
 /** What the numbers assume, briefly */
-export function BarkAssumptions() {
-  const decoys = barkTable(3)
+export function BarkAssumptions({ rules }) {
+  const decoys = barkTable(3, rules)
     .map((r) => r.best.loss - r.bots.loss)
     .filter((gain) => gain >= 0.01)
   return (

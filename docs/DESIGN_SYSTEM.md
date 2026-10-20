@@ -120,13 +120,19 @@ caps the content column, **left-aligned**. Pages never set their own
 ## Settings: `src/components/Settings/`
 
 Every site-wide setting, saved per browser: theme (`useTheme`), 3D dice and
-sound (`useDicePrefs`). Each setting is one hook, so every place that shows
-it stays in sync.
+sound (`useDicePrefs`), and house rules (`useHouseRules`). Each setting is
+one hook, so every place that shows it stays in sync.
+
+House rules change the odds: any figure that depends on one reads
+`useHouseRules()` and passes it to the strategy function (`rules`), and
+`useSimulation` passes it to every simulation. Today that's the Monterey
+lone 3 or 4 keep.
 
 | Component | Use it for |
 |---|---|
 | `Settings` | All the settings as one block. Add a new site-wide setting here and it appears everywhere. |
 | `SettingsMenu` | The header's gear button: `Settings` in a popover (desktop). The mobile menu shows `Settings` directly. |
+| `HouseRuleSettings` | The house-rule switches, inside `Settings`. Each gets a one-line hint saying what "off" means. |
 
 ## Primitives: `src/components/ui/`
 
@@ -167,6 +173,10 @@ covered by tests.
   - Tapping a die keeps it: it lifts and shows a lock badge
     (`aria-pressed`).
   - Tapping again releases it.
+  - `locked` positions can't be tapped: dice put out in Tres Away, the
+    Boss's hand, and in kicker games the dice kept last roll (kept dice stay
+    kept). Play explains an illegal keep under the Roll button and disables
+    it.
 - **Showing a game:** always use `Hand`, or `DiceGroup` for authored
   examples, so the game's dice are outlined and labeled.
 
@@ -221,8 +231,11 @@ way to show "every roll this counts": the unique rolls as a dice grid
 
 **What should I keep?** `KeepAdvisor` (Odds Lab) and `SituationCard`
 (game pages) rank keep options exactly with `keepOptions()` in
-`src/strategy/situations.ts`. Table questions live in
-`OddsLab/situations-catalog.js`, one per game; add new ones there.
+`src/strategy/situations.ts`, which only offers keeps the rules allow.
+With one roll left in a kicker game, KeepAdvisor asks which dice you kept
+last roll, since every option has to hold them. Table questions live in
+`OddsLab/situations-catalog.js`, one per game; add new ones there. Each
+must ask about legal keeps: a test checks.
 
 The rules are in `.claude/skills/explain-odds/SKILL.md`. Reference screens:
 the tutorial's take-the-tie step, and the Strategy Assistant's

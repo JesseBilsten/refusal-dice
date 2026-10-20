@@ -1,7 +1,9 @@
 import {
   Call,
+  DEFAULT_HOUSE_RULES,
   Dice,
   GameState,
+  HouseRules,
   PlayerId,
   applyAction,
   createGame,
@@ -70,7 +72,8 @@ function deal(
   players: number,
   mySeat: number,
   dice: Dice,
-  seed: number
+  seed: number,
+  rules: Partial<HouseRules> = {}
 ): GameState {
   const ids = seatIds(players, mySeat)
   const g = createGame({
@@ -78,7 +81,7 @@ function deal(
     hammer: ids[0],
     source: seeded(seed),
     // Nobody is eliminated mid-simulation; only this round's pencil matters
-    rules: { pencilsToLose: 1000 },
+    rules: { ...rules, pencilsToLose: 1000 },
   })
   return { ...g, dice: { ...g.dice, [ME]: [...dice] } }
 }
@@ -131,8 +134,10 @@ export function simulateHammer(options: {
   /** Called with the estimate so far every `every` samples (a worker reports progress with it) */
   onProgress?: (partial: HammerOption[], samples: number) => void
   every?: number
+  /** House rules the table plays (the bots follow them too) */
+  rules?: Partial<HouseRules>
 }): HammerOption[] {
-  const { dice, players = 3, samples = 400, seed = 1, onProgress, every = 250 } = options
+  const { dice, players = 3, samples = 400, seed = 1, onProgress, every = 250, rules } = options
   const tally = ALL_CALLS.map(() => ({
     accepted: { n: 0, lost: 0 },
     secondCall: { n: 0, lost: 0, call: undefined as Call | undefined },
@@ -153,7 +158,7 @@ export function simulateHammer(options: {
       return { call, ...estimate(accepted.lost + secondCall.lost, n), paths }
     }).sort((a, b) => a.pencil - b.pencil)
   for (let i = 0; i < samples; i++) {
-    const g = deal(players, 0, dice, sampleSeed(seed, i))
+    const g = deal(players, 0, dice, sampleSeed(seed, i), rules)
     ALL_CALLS.forEach((call, c) => {
       const { loser, state } = playOutRound(
         applyAction(g, { type: 'call', player: ME, call })
@@ -217,8 +222,9 @@ export function simulateSeats(options: {
   players?: number
   samples?: number
   seed?: number
+  rules?: Partial<HouseRules>
 }): Estimate[] {
-  const { players = 3, samples = 2000, seed = 1 } = options
+  const { players = 3, samples = 2000, seed = 1, rules } = options
   const ids = Array.from({ length: players }, (_, i) => `s${i}`)
   const losses = ids.map(() => 0)
   for (let i = 0; i < samples; i++) {
@@ -226,7 +232,7 @@ export function simulateSeats(options: {
       players: ids.map((id) => ({ id, name: id })),
       hammer: ids[0],
       source: seeded(sampleSeed(seed, i)),
-      rules: { pencilsToLose: 1000 },
+      rules: { ...rules, pencilsToLose: 1000 },
     })
     const { loser } = playOutRound(g)
     if (loser) losses[ids.indexOf(loser)]++
@@ -269,8 +275,10 @@ export function simulateRefusal(options: {
   players?: number
   samples?: number
   seed?: number
+  rules?: Partial<HouseRules>
 }): RefusalEstimate {
-  const { dice, call, position, samples = 600, seed = 1 } = options
+  const { dice, call, position, samples = 600, seed = 1, rules } = options
+  const keepRules = { ...DEFAULT_HOUSE_RULES, ...rules }
   const players = Math.max(options.players ?? 3, position === 2 ? 3 : 2)
   let accepted = 0
   let refused = 0
@@ -285,10 +293,10 @@ export function simulateRefusal(options: {
 
   for (let i = 0; i < samples; i++) {
     const s = sampleSeed(seed, i)
-    let g = deal(players, position, dice, s)
+    let g = deal(players, position, dice, s, rules)
     const hammer = g.seats[0].id
     const hammerDice = conditionedDice(s ^ 0x51ed27, (d) =>
-      sameCall(chooseCall(d), call)
+      sameCall(chooseCall(d, undefined, keepRules), call)
     )
     g = { ...g, dice: { ...g.dice, [hammer]: hammerDice } }
     if (position === 2) {
@@ -299,7 +307,7 @@ export function simulateRefusal(options: {
           ...g.dice,
           [first]: conditionedDice(
             s ^ 0x2c1b3c6d,
-            (d) => !wouldAccept(d, call)
+            (d) => !wouldAccept(d, call, keepRules)
           ),
         },
       }

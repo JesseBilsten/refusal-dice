@@ -17,6 +17,8 @@ module.exports = {
     // Strip the ESM export so Node/Jest can load it as CJS.
     'game-validation\\.js$': '<rootDir>/jest-strip-esm-export.js',
     '\\.ts$': ['babel-jest', tsBabel],
+    // The Odds Lab's question catalog is plain ESM, checked against the keep rules
+    'OddsLab/(situations-catalog|keep-model)\\.js$': ['babel-jest', tsBabel],
   },
   // Don't ignore src/lib since our code lives there
   transformIgnorePatterns: ['/node_modules/'],

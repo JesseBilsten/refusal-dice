@@ -22,9 +22,9 @@ test('making a game: the best option matches the exact make odds', () => {
         )
 })
 
-test('Monterey 2-3-6-6-1: hold just the 3 with two rolls left, 2-3 with one', () => {
+test('Monterey 2-3-6-6-1, where a lone 3 may be kept: the 3 with two rolls left, 2-3 with one', () => {
   const pick = (r: number, kept: string) =>
-    keepOptions([2, 3, 6, 6, 1], r, { kind: 'make', game: 'monterey' }).find(
+    keepOptions([2, 3, 6, 6, 1], r, { kind: 'make', game: 'monterey' }, { rules: { montereyLoneKeep: true } }).find(
       (o) => !o.stand && o.dice.join('') === kept
     )!.win
   // A lone 3 keeps both 2-3-4 and 3-4-5 open, which pays off over two rolls
@@ -66,4 +66,11 @@ test('Razzle: three 5s beats three 4s and ties three 5s', () => {
   expect(judge([5, 5, 1, 2, 3], { kind: 'razzle', count: 3, face: 4 })).toBe('win')
   expect(judge([5, 5, 1, 2, 3], { kind: 'razzle', count: 3, face: 5 })).toBe('tie')
   expect(judge([5, 5, 2, 2, 3], { kind: 'razzle', count: 3, face: 4 })).toBe('lose')
+})
+
+test('7’s 1-6-5-3-3: keeping the 5-6 makes it more often than the 1-6', () => {
+  const opts = keepOptions([1, 6, 5, 3, 3], 2, { kind: 'make', game: 'vegas' })
+  const win = (kept: string) => opts.find((o) => !o.stand && o.dice.join('') === kept)!.win
+  expect(win('56')).toBeGreaterThan(win('16'))
+  expect(opts.some((o) => o.dice.join('') === '156')).toBe(false)
 })

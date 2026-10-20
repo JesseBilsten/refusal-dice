@@ -1,7 +1,8 @@
 /**
  * Generates src/strategy/seat-odds.ts: each seat's chance of the pencil
  * with random dice, Hammer first, for 2–8 players. A bark is worth the last
- * seat's number. Played out by the engine with the bots (simulateSeats).
+ * seat's number. Played out by the engine with the bots (simulateSeats),
+ * by the standard keep rules and with the Monterey lone 3 or 4 house rule.
  *
  *   npm run generate:seat-odds
  */
@@ -12,10 +13,11 @@ import { simulateSeats } from '../strategy/simulate'
 const SAMPLES = 20000
 const OUT = join(__dirname, '../strategy/seat-odds.ts')
 
-const rows = [2, 3, 4, 5, 6, 7, 8].map((players) => {
-  const seats = simulateSeats({ players, samples: SAMPLES })
-  return `  ${players}: [${seats.map((s) => Math.round(s.pencil * 1000)).join(', ')}],`
-})
+const rows = (montereyLoneKeep: boolean) =>
+  [2, 3, 4, 5, 6, 7, 8].map((players) => {
+    const seats = simulateSeats({ players, samples: SAMPLES, rules: { montereyLoneKeep } })
+    return `  ${players}: [${seats.map((s) => Math.round(s.pencil * 1000)).join(', ')}],`
+  })
 
 writeFileSync(
   OUT,
@@ -29,14 +31,21 @@ export const SEAT_ODDS_SAMPLES = ${SAMPLES}
  * tenths of a percent. Index 0 is the Hammer, then each seat to their left.
  */
 export const SEAT_ODDS: Record<number, number[]> = {
-${rows.join('\n')}
+${rows(false).join('\n')}
+}
+
+/** The same when a lone 3 or 4 may be kept in Monterey (docs/RULES.md §5) */
+export const SEAT_ODDS_LONE_KEEP: Record<number, number[]> = {
+${rows(true).join('\n')}
 }
 
 /** Each seat's chance of the pencil (0–1) at a table of \`players\`, Hammer first */
-export const seatOdds = (players: number): number[] => SEAT_ODDS[players].map((x) => x / 1000)
+export const seatOdds = (players: number, rules?: { montereyLoneKeep?: boolean }): number[] =>
+  (rules?.montereyLoneKeep ? SEAT_ODDS_LONE_KEEP : SEAT_ODDS)[players].map((x) => x / 1000)
 
 /** Your chance of the pencil after you bark: the last seat's */
-export const barkOdds = (players: number): number => seatOdds(players)[players - 1]
+export const barkOdds = (players: number, rules?: { montereyLoneKeep?: boolean }): number =>
+  seatOdds(players, rules)[players - 1]
 `
 )
 console.log(`Wrote seat odds for 2–8 players to ${OUT}`)

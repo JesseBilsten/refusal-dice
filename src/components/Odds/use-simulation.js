@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { mergeHammerOptions } from '../../strategy'
+import { useHouseRules } from '../Settings/house-rules'
 
 /**
  * Run a strategy simulation in Web Workers (src/strategy/simulate.worker.ts)
@@ -9,6 +10,8 @@ import { mergeHammerOptions } from '../../strategy'
  * A Hammer simulation is split across one worker per spare CPU core (each
  * with its own seed) and merged, and reports its estimate as it goes.
  *
+ * The table plays the visitor's house rules (Settings), bots included.
+ *
  * Returns { result, samples, running }: `samples` simulated so far.
  */
 const workerCount = () =>
@@ -16,8 +19,10 @@ const workerCount = () =>
 
 const spawn = () => new Worker(new URL('../../strategy/simulate.worker.ts', import.meta.url))
 
-export function useSimulation(request) {
+export function useSimulation(asked) {
   const [state, setState] = useState({ result: null, samples: 0, running: false })
+  const [rules] = useHouseRules()
+  const request = asked && { ...asked, options: { ...asked.options, rules } }
   const key = request ? JSON.stringify(request) : null
 
   useEffect(() => {

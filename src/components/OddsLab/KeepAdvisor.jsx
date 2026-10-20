@@ -7,7 +7,8 @@ import { COUNT_WORDS, DiceGroup, Hand, RollInput, razzleName } from '../Dice'
 import { Disclosure, OddsDecision, Questions, fmtPct } from '../Odds'
 import { Chip, Panel } from '../Page'
 import { SITUATIONS } from './situations-catalog'
-import { goalFor, optionLabel, rerollsFor } from './keep-model'
+import { goalFor, lockedPositions, optionLabel, rerollsFor } from './keep-model'
+import { useHouseRules } from '../Settings/house-rules'
 
 /**
  * "What should I keep?": pick a game, enter your dice and what you need,
@@ -31,6 +32,17 @@ function bossName(dice) {
     'five-of-a-kind': `five ${f}s`,
   }[h.category]
 }
+/** What each kicker game lets you keep before it's made (docs/RULES.md §3.1) */
+const KEEP_RULE = {
+  '10-2': '10-2 has to come in one roll: nothing can be kept until you have it.',
+  '10-3': '10-3 has to come in one roll: nothing can be kept until you have it.',
+  '10-4': '10-4 has to come in one roll: nothing can be kept until you have it.',
+  'ship-captain-crew': 'In Ship Captain Crew you may keep 1-2 or 5-6, one or the other, toward the straight.',
+  monterey: 'In Monterey you may keep 2-3, 3-4 or 4-5 toward the straight (a lone 3 or 4 too, if your table allows it: see House rules in Settings).',
+  vegas: 'In 7’s you may keep one pair that sums to 7 or 11 toward the second.',
+  pairs: 'In Pairs you may keep one pair toward the second.',
+}
+
 const EMPTY = ['', '', '', '', '']
 const toValues = (digits) =>
   /^[1-6]{5}$/.test(digits || '') ? digits.split('') : [...EMPTY]
@@ -38,7 +50,7 @@ const toValues = (digits) =>
 /** Questions people actually ask at the table, one click away */
 const EXAMPLES = Object.values(SITUATIONS)
 
-const DEFAULT = { game: 'monterey', roll: '', rolls: 2, goal: 'make', variant: 'high', total: 7, count: 3, face: 5, beat: '', ask: [] }
+const DEFAULT = { game: 'monterey', roll: '', rolls: 2, goal: 'make', variant: 'high', total: 7, count: 3, face: 5, beat: '', kept: '', ask: [] }
 
 function readUrl() {
   const p = new URLSearchParams(window.location.search)
@@ -54,6 +66,7 @@ function readUrl() {
     count: num('count', DEFAULT.count),
     face: num('face', DEFAULT.face),
     beat: p.get('beat') || '',
+    kept: /^[1-6]{1,4}$/.test(p.get('kept') || '') ? p.get('kept') : '',
     ask: p.get('ask') !== null ? p.get('ask').split(',') : [],
   }
 }
@@ -83,6 +96,7 @@ const NumberSelect = ({ value, onChange, options, label }) => (
 
 export default function KeepAdvisor() {
   const [s, setS] = useState(DEFAULT)
+  const [rules] = useHouseRules()
   const [dice, setDice] = useState([...EMPTY])
   const [beat, setBeat] = useState([...EMPTY])
   const hydrated = useRef(false)
@@ -103,6 +117,7 @@ export default function KeepAdvisor() {
     if (roll.length === 5) p.set('roll', roll)
     if (isKickerGame(s.game) || s.game === 'razzle') p.set('rolls', s.rolls)
     if (isKickerGame(s.game)) {
+      if (s.rolls === 1 && s.kept) p.set('kept', s.kept)
       p.set('goal', s.goal)
       if (s.goal === 'kicker') {
         p.set('variant', s.variant)
@@ -117,7 +132,7 @@ export default function KeepAdvisor() {
     window.history.replaceState(null, '', `${window.location.pathname}?${p}`)
   }, [s, dice, beat])
 
-  const update = (patch) => setS((cur) => ({ ...cur, ask: [], ...patch }))
+  const update = (patch) => setS((cur) => ({ ...cur, ask: [], kept: '', ...patch }))
   const load = (example) => {
     setS({ ...DEFAULT, ...example.s })
     setDice(toValues(example.s.roll))
@@ -145,10 +160,23 @@ export default function KeepAdvisor() {
           : { outcome: `beat ${bossName(goal.hand)}`, win: 'beat it', tie: 'tie: replay' }
 
   const rerolls = rerollsFor(s)
-  const options = useMemo(
-    () => (roll && goal ? keepOptions(roll, rerolls, goal) : null),
+  // Kicker games, last roll next: the dice kept last roll stay kept. The choices are the legal keeps in this roll
+  const lockChoices = useMemo(() => {
+    if (!roll || !kicker || s.rolls !== 1) return []
+    const seen = new Set()
+    return keepOptions(roll, 1, { kind: 'make', game: s.game }, { rules })
+      .filter((o) => !o.stand && o.dice.length > 0)
+      .map((o) => o.dice.join(''))
+      .filter((d) => !seen.has(d) && seen.add(d))
+      .sort((a, b) => a.length - b.length || a.localeCompare(b))
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [roll && roll.join(''), rerolls, JSON.stringify(goal)]
+  }, [roll && roll.join(''), kicker, s.rolls, s.game, rules.montereyLoneKeep])
+  const kept = lockChoices.includes(s.kept) ? s.kept : ''
+  const locked = useMemo(() => lockedPositions(roll, kept), [roll, kept])
+  const options = useMemo(
+    () => (roll && goal ? keepOptions(roll, rerolls, goal, { locked, rules }) : null),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [roll && roll.join(''), rerolls, JSON.stringify(goal), kept, rules.montereyLoneKeep]
   )
 
   // Options with identical chances are one choice: show the first, list the rest as "same odds"
@@ -213,6 +241,18 @@ export default function KeepAdvisor() {
                   {[2, 1].map((n) => (
                     <Chip key={n} active={s.rolls === n} onClick={() => update({ rolls: n })}>
                       {n === 2 ? '2 (this is your first roll)' : '1 (your last roll is next)'}
+                    </Chip>
+                  ))}
+                </div>
+              </Field>
+            )}
+
+            {lockChoices.length > 0 && (
+              <Field label="Dice you kept last roll" hint="Kept dice stay kept, so every option holds them.">
+                <div className="flex flex-wrap gap-1.5">
+                  {['', ...lockChoices].map((d) => (
+                    <Chip key={d || 'none'} active={kept === d} onClick={() => setS((cur) => ({ ...cur, kept: d }))}>
+                      {d ? d.split('').join('-') : 'None'}
                     </Chip>
                   ))}
                 </div>
@@ -322,7 +362,7 @@ export default function KeepAdvisor() {
                   Every way the dice you throw can land is counted exactly. After this roll, you're assumed to keep the
                   best dice each time{rerolls > 1 ? ', so later rolls are played as well as possible too' : ''}.
                   {kicker &&
-                    ' Once your dice make the game, the kicker is rolled whole: you can’t keep part of it.'}
+                    ' Only keeps the rules allow are counted: dice toward the game, never a kicker die, and dice you keep stay kept.'}
                 </p>
                 {target.tie && (
                   <p>A tie is a replay, so it counts as half a win when the options are ranked.</p>
@@ -335,10 +375,14 @@ export default function KeepAdvisor() {
               <Disclosure title="Questions">
                 <Questions
                   items={[
-                    {
-                      q: 'Why can keeping fewer dice be better?',
-                      a: 'Dice you keep are dice you can’t re-roll. A die that fits only one way to make the hand can close off others: in Monterey a lone 3 fits both 2-3-4 and 3-4-5, so with two rolls left it can beat holding 2-3.',
-                    },
+                    ...(kicker
+                      ? [
+                          {
+                            q: 'Why can’t I keep any dice I like?',
+                            a: `${KEEP_RULE[s.game]} Once you keep dice you’re committed to them, and after you make the game only the kicker is re-rolled, all of it at once.`,
+                          },
+                        ]
+                      : []),
                     {
                       q: 'Why does the answer change with the rolls left?',
                       a: 'With one roll left you need the hand now, so the most direct keep wins. With two, a keep that leaves more ways open has time to pay off.',

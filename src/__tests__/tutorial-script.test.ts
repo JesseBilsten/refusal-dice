@@ -89,7 +89,7 @@ test('the odds say take the tie with 5+5, even counting both rolls', () => {
   // The replay: making 10-3 from fresh dice within 1, 2 and 3 rolls
   expect(freshMakeChance('10-3', 1)).toBeCloseTo(0.6385, 4)
   expect(freshMakeChance('10-3', 2)).toBeGreaterThan(freshMakeChance('10-3', 1))
-  expect(freshMakeChance('10-3')).toBeCloseTo(0.9805, 4)
+  expect(freshMakeChance('10-3')).toBeCloseTo(1 - (1 - 0.6385) ** 3, 3) // one roll at a time: three fresh tries
   expect(freshMakeChance('10-3', 3)).toBe(freshMakeChance('10-3'))
 })
 
@@ -129,7 +129,7 @@ test('the take-the-tie screen: every figure it shows', () => {
   expect(MISS_TWICE + LOSE_VIA_TIE).toBeCloseTo(TIE_ODDS.loseIfRoll, 12)
   expect(TIE_ODDS.loseIfTie).toBe(0.5)
   expect(MAKE[1]).toBeCloseTo(0.6385, 4)
-  expect(MAKE[3]).toBeCloseTo(0.9805, 4)
+  expect(MAKE[3]).toBeCloseTo(0.9528, 4)
   // Roll when tied at 8 or lower: 45% at 8, 62% at 9, vs the replay's 50%
   expect(ROLL_UP_TO).toBe(8)
   expect(AT_THE_LINE[0].loseIfRoll).toBeLessThan(0.5)

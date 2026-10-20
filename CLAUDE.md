@@ -38,7 +38,8 @@ src/
   components/       App components; ui/ = shadcn primitives; nav-items.js = site navigation
                     Page/ = the page kit: Page (reading | tool | wide), PageHeader, Panel, Stat, PageTabs, Chip
                     Table/ = Seat, one player at the table (tutorial and Play); Standings, the ranking pattern; SeatRing, the table from above
-                    Settings/ = site-wide settings (theme, 3D dice, sound): Settings block, SettingsMenu (header gear)
+                    Settings/ = site-wide settings (theme, 3D dice, sound, house rules): Settings block, SettingsMenu (header gear);
+                                useHouseRules() feeds the visitor's house rules to every odds figure that depends on them
                     Play/ = full games against bots (play-model.ts is the pure side)
                     Home/ = the home page's animated round (RoundStory)
                     OddsLab/ = the Odds Lab tools: KeepAdvisor, GameOdds, EveryPossibility, the roll builder; situations-catalog.js
@@ -60,9 +61,9 @@ src/
 
 ```
 src/engine/
-  types.ts         Die, Call, HouseRules, EngineError
+  types.ts         Die, Call, HouseRules (incl. montereyLoneKeep), EngineError
   dice-source.ts   Seeded (mulberry32) or scripted dice; pure
-  rules/           Kicker games (making the game, kicker totals, a cycle's loser) and
+  rules/           Kicker games (making the game, kicker totals, legal keeps: keepProblem / isLegalKeep, a cycle's loser) and
                    specialty-games.ts (Tres Away score, Razzle score, Boss poker hands)
   round/game.ts    Full game: createGame / applyAction (reducer) / viewFor (hidden info)
   round/standings.ts  The table ranked from public info: bottom, all day (out of rolls), in the cup (safe)
@@ -75,15 +76,19 @@ All ten games are playable. Kicker games and Razzle use the `play` phase, played
 
 ```
 src/strategy/
-  make-odds.ts   Exact chance of making a kicker game with optimal keeps (DP over the 252 sorted hands)
-  situations.ts  Exact keep-or-roll odds for any goal (make a game, beat a kicker, Razzle and Boss hands)
+  make-odds.ts   Exact chance of making a kicker game with the best legal keeps (situations.ts's solver)
+  situations.ts  Exact keep-or-roll odds for any goal (make a game, beat a kicker, Razzle and Boss hands);
+                 only legal keeps, tracking the dice already kept (locked), under the house rules given
   tres-away.ts   Exact best Tres Away put-out (lowest expected score)
   bots.ts        "Solid" bot: call, refuse and play decisions for every game (botAction); calls and refusals read call-odds.ts
-  call-odds.ts   GENERATED (npm run generate:call-odds): per roll and call, the Hammer's chance of the pencil when everyone plays it
-  seat-odds.ts   GENERATED (npm run generate:seat-odds): each seat's chance of the pencil with random dice, 2–8 players (a bark = the last seat)
+  call-odds.ts   GENERATED (npm run generate:call-odds): per roll and call, the Hammer's chance of the pencil when everyone plays it;
+                 Monterey again under the lone 3 or 4 house rule (CALL_ODDS_LONE_KEEP)
+  seat-odds.ts   GENERATED (npm run generate:seat-odds): each seat's chance of the pencil with random dice, 2–8 players (a bark = the last seat),
+                 for both rule sets
   hammer-odds.ts GENERATED (npm run generate:hammer-odds): per roll and table size (2–8), the recommended call's (chooseCall's)
                  chance of the pencil, refusals played out; also without 10-4, and the call that does best against the bots
-                 (often a decoy, called to be refused); bark.ts reads it (hammerCall, barkTable) to set calling against a bark
+                 (often a decoy, called to be refused), for both rule sets (HAMMER_TABLES); bark.ts reads it (hammerCall,
+                 barkTable) to set calling against a bark
   simulate.ts    Seeded Monte Carlo through the engine: your chance of the pencil per decision
                  (simulateHammer, simulateRefusal); common random numbers across options
 ```
@@ -124,6 +129,7 @@ When a pattern repeats, extract it into a kit instead of copying it.
 - **The engine is pure.** No React, DOM, Gatsby, network or `Math.random()`. Randomness comes from an injected, seedable RNG so games are reproducible in tests and replays. The same engine will run on the server for online play.
 - **The engine is TypeScript** (`.ts`, `strict`). Gatsby compiles it natively. Jest compiles it with `babel-jest` using an **inline** config in `jest.config.js`. Don't add a project-level `babel.config.js` or `.babelrc`, because Gatsby would pick it up and change how the site builds. Engine tests are `src/__tests__/engine-*.test.ts`.
 - **Model the game as an explicit state machine:** `(state, action) → state`, with per-player views that hide other players' dice. UI, bots and the server all go through the same action interface.
+- **House rules reach every figure.** Strategy functions that depend on a house rule take it as an argument (`rules`); UI reads it with `useHouseRules()`, the engine from `state.rules`. A rule that changes generated odds needs those tables generated for each setting (see `RULE_SETS` in `generate-hammer-odds.ts`).
 - **Rules changes need tests.** Any change to game matching, kicker comparison, tie handling or round flow gets a Jest test with concrete dice. Add the test first if you can.
 - **Present decision odds with the odds-decision pattern** (`src/components/Odds`). Follow the `explain-odds` skill (`.claude/skills/explain-odds/SKILL.md`). Improve the pattern there rather than building a one-off. Link to the Odds Lab (`OddsLabLink`, prefilled through `oddsLabPath` in `roll-query.js`) wherever the odds are more involved than the screen shows.
 - **Odds shown to users must be computed, not guessed.** Prefer exact enumeration (252 sorted rolls / 7,776 ordered) or seeded Monte Carlo with stated sample size. Label anything heuristic as such in the UI.
@@ -140,7 +146,7 @@ When a pattern repeats, extract it into a kit instead of copying it.
 - Precomputed odds tables (Phase 2) follow the same pattern: generator script + hash check + committed output.
 - `src/strategy/call-odds.ts` is generated by `src/data/generate-call-odds.ts` (`npm run generate:call-odds`, ~9 minutes on all cores; too slow for the build). Regenerate and commit it whenever the engine's rules or the bots' **play** change. A test checks it covers every roll and call.
 - `src/strategy/seat-odds.ts` likewise (`npm run generate:seat-odds`, about a minute); it also depends on the bots' **calls and refusals**, so regenerate it after `call-odds.ts`.
-- `src/strategy/hammer-odds.ts` likewise (`npm run generate:hammer-odds`, about half an hour on all cores); it depends on everything the bots do, so regenerate it last, after `seat-odds.ts`.
+- `src/strategy/hammer-odds.ts` likewise (`npm run generate:hammer-odds`, about an hour on all cores, both rule sets); it depends on everything the bots do, so regenerate it last, after `seat-odds.ts`.
 
 ## Game domain cheat sheet
 
@@ -155,6 +161,7 @@ When a pattern repeats, extract it into a kit instead of copying it.
   4. If either accepts, everyone plays the call. If both refuse, the Hammer makes a **second call**: a *different game* (not just another variant), with no refusals.
   5. Reveal. The worst hand/**kickers** takes a **pencil** and gets the Hammer next.
 - **Kicker** (singular): all the dice left after making the game, as one total. It's re-rolled whole, never in part. Write "a kicker of 6+1", not "kickers".
+- **Keeping:** only dice toward the game, and kept dice stay kept (RULES.md §3.1). The 10s come in one roll (nothing to keep until made); Ship Captain Crew keeps 1-2 or 5-6; Monterey 2-3, 3-4 or 4-5 (a lone 3 or 4 under the house rule); 7's and Pairs one pair.
 - **Ties:** with 3+ players, the tied losers replay; with 2 players, no pencil is taken and the Hammer passes.
 - **End:** 3 pencils = out; last player standing wins the pot.
 - **Games** (ids from `games-config.js`):

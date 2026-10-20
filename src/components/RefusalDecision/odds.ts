@@ -1,4 +1,4 @@
-import type { Call, Dice } from '../../engine'
+import type { Call, Dice, KeepRules } from '../../engine'
 import { isKickerGame } from '../../engine'
 import { makeChance, RefusalEstimate } from '../../strategy'
 import { fmtPct, Option } from '../Odds/model'
@@ -36,8 +36,10 @@ export function refusalView(options: {
   position: 1 | 2
   players: number
   name: (call: Call) => string
+  /** House rules that change the chance of making the call */
+  rules?: KeepRules
 }): RefusalView {
-  const { estimate, dice, call, position, players, name } = options
+  const { estimate, dice, call, position, players, name, rules } = options
   const { accept, refuse, refusePaths, secondCalls } = estimate
   const nextAccepts = refusePaths.find((p) => p.path === 'nextAccepts')
   const second = refusePaths.find((p) => p.path === 'secondCall')
@@ -122,7 +124,7 @@ export function refusalView(options: {
         total: true,
       },
     ],
-    makeIt: isKickerGame(call.game) ? makeChance(dice, call.game, 2) : null,
+    makeIt: isKickerGame(call.game) ? makeChance(dice, call.game, 2, { rules }) : null,
     nextCanAccept: position === 1 && players >= 3,
   }
 }

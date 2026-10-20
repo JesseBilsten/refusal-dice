@@ -14,6 +14,7 @@ import { cn } from '../lib/utils'
 import rollGameMatrix from '../data/roll-game-matrix.json'
 import { bossHand, razzleScore, tresAwayScore } from '../engine'
 import { callLoss } from '../strategy'
+import { useHouseRules } from '../components/Settings/house-rules'
 
 /**
  * Every game in one place: what makes it, what it looks like, how often it
@@ -206,6 +207,7 @@ function GameSection({ section, oneRoll, playable, loss, dimmed }) {
 
 const GamesPage = () => {
   const [diceValues, setDiceValues] = useState(['', '', '', '', ''])
+  const [houseRules] = useHouseRules()
   const oneRoll = useMemo(madeOnOneRoll, [])
 
   useEffect(() => {
@@ -225,7 +227,7 @@ const GamesPage = () => {
 
   const playableIds = SECTIONS.filter((s) => playableCall(s.id)).map((s) => s.id)
   // Your roll's chance of the pencil calling each game it plays (call-odds.ts)
-  const lossOf = (id) => callLoss(roll, playableCall(id))
+  const lossOf = (id) => callLoss(roll, playableCall(id), houseRules)
   // Games your roll plays rise to the top, strongest first; the rest keep their order
   const ordered = roll
     ? [
@@ -313,7 +315,7 @@ const GamesPage = () => {
             </Link>
           </Panel>
         </div>
-        <NextStep to="/odds-lab/" title="Settle the arguments in the Odds Lab" text="Hold the 6 or roll all five? Keep 2-3 or just the 3? Exact answers for any roll." />
+        <NextStep to="/odds-lab/" title="Settle the arguments in the Odds Lab" text="Hold the 6 or roll all five? Keep the 1-6 or the 5-6? Exact answers for any roll." />
       </Page>
     </Layout>
   )

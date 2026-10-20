@@ -3,37 +3,35 @@
  * Lab's "What should I keep?" (KeepAdvisor). Game pages show their game's
  * question; the Odds Lab offers them all as one-click examples.
  *
- * s: the KeepAdvisor state. `ask` lists keeps (dice, sorted) the question
- * is about, so they're always shown even when they're not the best.
+ * Every keep must be legal (docs/RULES.md §3.1): nothing toward a 10 until
+ * it's made, one connector in Ship Captain Crew or Monterey, one pair in
+ * 7's or Pairs, never a kicker die. A test checks each question's keeps.
+ *
+ * s: the KeepAdvisor state. `ask` lists keeps (dice, sorted; '' rolls all
+ * five) the question is about, so they're always shown even when they're
+ * not the best; a keep the house rules don't allow is left out. `kept`:
+ * dice kept last roll, committed.
  */
 export const SITUATIONS = {
   '10-2': {
-    label: '10-2 High: re-roll a kicker of 3+1+2 to beat 10?',
-    s: { game: '10-2', roll: '55312', rolls: 1, goal: 'kicker', variant: 'high', total: 10, ask: ['55'] },
-  },
-  '10-3': {
-    label: '10-3 High: re-roll a kicker of 2+2 to beat 7?',
-    s: { game: '10-3', roll: '13622', rolls: 1, goal: 'kicker', variant: 'high', total: 7, ask: ['136'] },
-  },
-  '10-4': {
-    label: '10-4: you rolled 1-3-6. Keep it?',
-    s: { game: '10-4', roll: '13655', rolls: 2, goal: 'make', ask: ['136', '13'] },
+    label: '10-2 High: a kicker of 3+3+3 to beat 12. Keep the 5-5 and re-roll the kicker?',
+    s: { game: '10-2', roll: '55333', rolls: 2, goal: 'kicker', variant: 'high', total: 12, ask: ['55', ''] },
   },
   'ship-captain-crew': {
-    label: 'Ship, Captain, Crew: hold 1-2 and 5-6?',
-    s: { game: 'ship-captain-crew', roll: '12566', rolls: 2, goal: 'make', ask: ['1256', '56'] },
+    label: 'Ship, Captain, Crew Low, a kicker of 4 to beat: keep the 1-2 or the 5-6? Only one',
+    s: { game: 'ship-captain-crew', roll: '12566', rolls: 2, goal: 'kicker', variant: 'low', total: 4, ask: ['12', '56'] },
   },
   monterey: {
-    label: 'Monterey: hold 2-3, or just the 3?',
-    s: { game: 'monterey', roll: '23661', rolls: 2, goal: 'make', ask: ['23', '3'] },
+    label: 'Monterey: keep 2-3, or roll all five?',
+    s: { game: 'monterey', roll: '23661', rolls: 2, goal: 'make', ask: ['23', '3', ''] },
   },
   vegas: {
-    label: '7’s: one pair made. Keep the 5 for the next?',
-    s: { game: 'vegas', roll: '16533', rolls: 2, goal: 'make', ask: ['16', '156'] },
+    label: '7’s: keep the 1-6 or the 5-6?',
+    s: { game: 'vegas', roll: '16533', rolls: 2, goal: 'make', ask: ['16', '56'] },
   },
   pairs: {
-    label: 'Pairs: keep a kicker with your pair of 6s?',
-    s: { game: 'pairs', roll: '66423', rolls: 2, goal: 'make', ask: ['66', '466'] },
+    label: 'Pairs: three 6s. Keep a pair, or roll all five?',
+    s: { game: 'pairs', roll: '66623', rolls: 2, goal: 'make', ask: ['66', ''] },
   },
   razzle: {
     label: 'Razzle: four 6s to beat. Keep 1-1-6, or just the 1s?',
@@ -52,7 +50,7 @@ export const SITUATIONS = {
 /** The Odds Lab link that opens a situation */
 export function situationPath(s) {
   const p = new URLSearchParams({ tab: 'keep', game: s.game })
-  ;['roll', 'rolls', 'goal', 'variant', 'total', 'count', 'face', 'beat'].forEach((k) => {
+  ;['roll', 'rolls', 'goal', 'variant', 'total', 'count', 'face', 'beat', 'kept'].forEach((k) => {
     if (s[k] !== undefined && s[k] !== '') p.set(k, s[k])
   })
   if (s.ask?.length) p.set('ask', s.ask.join(','))

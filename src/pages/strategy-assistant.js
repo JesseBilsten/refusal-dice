@@ -14,6 +14,7 @@ import { useSimulation } from '../components/Odds/use-simulation'
 import HammerDecision from '../components/HammerDecision'
 import RefusalDecision from '../components/RefusalDecision'
 import { SEAT_ODDS_SAMPLES, barkOdds } from '../strategy'
+import { useHouseRules } from '../components/Settings/house-rules'
 import { GAMES } from '../lib/games-config'
 
 const TABS = [
@@ -116,9 +117,10 @@ const StrategyAssistantPage = () => {
           }
         : null
   const sim = useSimulation(request)
+  const [houseRules] = useHouseRules()
 
   // Barking doesn't depend on your dice, only the table (seat-odds.ts)
-  const barkPencil = barkOdds(PLAYERS)
+  const barkPencil = barkOdds(PLAYERS, houseRules)
   const bark = {
     pencil: barkPencil,
     error: Math.sqrt((barkPencil * (1 - barkPencil)) / SEAT_ODDS_SAMPLES),

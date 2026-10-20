@@ -14,19 +14,22 @@
  *    which can't be refused. It works on the bots, who never read anything
  *    into a call.
  *
+ * Every figure is generated twice: by the standard keep rules, and with the
+ * Monterey house rule that lets a lone 3 or 4 be kept (docs/RULES.md §5).
+ *
  * Two stages, so picking the lowest of 17 noisy estimates doesn't flatter
  * the best call against the bots: simulateHammer picks it, then each call
  * is measured again on fresh dice.
  *
  *   npm run generate:hammer-odds
  *
- * Forks one worker per spare CPU; takes about half an hour.
+ * Forks one worker per spare CPU; takes about an hour.
  */
 import { fork } from 'child_process'
 import { cpus } from 'os'
 import { writeFileSync } from 'fs'
 import { join } from 'path'
-import { Call, Dice, applyAction, createGame, seeded } from '../engine'
+import { Call, Dice, HouseRules, applyAction, createGame, seeded } from '../engine'
 import { ALL_CALLS, chooseCall } from '../strategy/bots'
 import { playOutRound, simulateHammer } from '../strategy/simulate'
 
@@ -34,6 +37,12 @@ const SIZES = [2, 3, 4, 5, 6, 7, 8]
 const PICK_SAMPLES = 600
 const SAMPLES = 2000
 const OUT = join(__dirname, '../strategy/hammer-odds.ts')
+
+/** The rule sets, as named in HAMMER_TABLES */
+const RULE_SETS: Record<string, Partial<HouseRules>> = {
+  standard: {},
+  'lone-keep': { montereyLoneKeep: true },
+}
 
 const callKey = (c: Call) => (c.variant ? `${c.game} ${c.variant}` : c.game)
 const same = (a: Call, b: Call) => a.game === b.game && a.variant === b.variant
@@ -49,7 +58,7 @@ function hands(): string[] {
 }
 
 /** How often the Hammer holding `dice` takes the pencil calling `call` (in tenths of a percent), on fresh dice */
-function measure(dice: Dice, players: number, call: Call): number {
+function measure(dice: Dice, players: number, call: Call, rules: Partial<HouseRules>): number {
   const ids = Array.from({ length: players }, (_, i) => (i === 0 ? 'me' : `p${i}`))
   let lost = 0
   for (let i = 0; i < SAMPLES; i++) {
@@ -57,7 +66,7 @@ function measure(dice: Dice, players: number, call: Call): number {
       players: ids.map((id) => ({ id, name: id })),
       hammer: 'me',
       source: seeded(1_000_003 + i * 7919),
-      rules: { pencilsToLose: 1000 },
+      rules: { ...rules, pencilsToLose: 1000 },
     })
     const s = applyAction({ ...g, dice: { ...g.dice, me: [...dice] } }, { type: 'call', player: 'me', call })
     if (playOutRound(s).loser === 'me') lost++
@@ -69,37 +78,65 @@ function measure(dice: Dice, players: number, call: Call): number {
  * [recommended call, its loss, recommended call that isn't 10-4, its loss,
  * best call against the bots, its loss]: calls as indexes into ALL_CALLS
  */
-function bestCalls(dice: Dice, players: number): number[] {
-  const best = simulateHammer({ dice, players, samples: PICK_SAMPLES, seed: 1 })[0].call
-  const picks = [chooseCall(dice), chooseCall(dice, '10-4'), best]
+function bestCalls(dice: Dice, players: number, rules: Partial<HouseRules>): number[] {
+  const best = simulateHammer({ dice, players, samples: PICK_SAMPLES, seed: 1, rules })[0].call
+  const keepRules = { montereyLoneKeep: Boolean(rules.montereyLoneKeep) }
+  const picks = [chooseCall(dice, undefined, keepRules), chooseCall(dice, '10-4', keepRules), best]
   const losses = new Map<number, number>()
   return picks.flatMap((call) => {
     const i = ALL_CALLS.findIndex((c) => same(c, call))
-    if (!losses.has(i)) losses.set(i, measure(dice, players, call))
+    if (!losses.has(i)) losses.set(i, measure(dice, players, call, rules))
     return [i, losses.get(i)!]
   })
 }
 
-type Job = [string, number]
+type Job = [string, string, number]
 
 if (process.send) {
   // Worker: score the (roll, table size) pairs it's sent
   process.on('message', (jobs: Job[]) => {
-    const out = jobs.map(([k, players]) => [k, players, ...bestCalls(k.split('').map(Number) as Dice, players)])
+    const out = jobs.map(([set, k, players]) => [
+      set,
+      k,
+      players,
+      ...bestCalls(k.split('').map(Number) as Dice, players, RULE_SETS[set]),
+    ])
     process.send!(out, () => process.exit(0))
   })
 } else {
   const keys = hands()
-  const jobs: Job[] = SIZES.flatMap((players) => keys.map((k): Job => [k, players]))
+  const sets = Object.keys(RULE_SETS)
+  const jobs: Job[] = sets.flatMap((set) => SIZES.flatMap((players) => keys.map((k): Job => [set, k, players])))
   const n = Math.max(1, cpus().length - 1)
-  const result: Record<string, Record<number, number[]>> = {}
+  const result: Record<string, Record<string, Record<number, number[]>>> = {}
   let done = 0
   for (let w = 0; w < n; w++) {
     const child = fork(__filename, [], { execArgv: ['-r', 'sucrase/register/ts'] })
-    child.on('message', (part: [string, number, ...number[]][]) => {
-      part.forEach(([k, players, ...row]) => ((result[k] ??= {})[players] = row))
+    child.on('message', (part: [string, string, number, ...number[]][]) => {
+      part.forEach(([set, k, players, ...row]) => (((result[set] ??= {})[k] ??= {})[players] = row))
       if (++done < n) return
-      const row = (pick: number) => keys.map((k) => `  '${k}': [${SIZES.map((p) => result[k][p][pick]).join(', ')}],`).join('\n')
+      const row = (set: string, pick: number) =>
+        keys.map((k) => `      '${k}': [${SIZES.map((p) => result[set][k][p][pick]).join(', ')}],`).join('\n')
+      const table = (set: string) => `  '${set}': {
+    loss: {
+${row(set, 1)}
+    },
+    call: {
+${row(set, 0)}
+    },
+    altLoss: {
+${row(set, 3)}
+    },
+    altCall: {
+${row(set, 2)}
+    },
+    anyLoss: {
+${row(set, 5)}
+    },
+    anyCall: {
+${row(set, 4)}
+    },
+  },`
       writeFileSync(
         OUT,
         `// Generated by src/data/generate-hammer-odds.ts (npm run generate:hammer-odds). Don't edit by hand.
@@ -108,48 +145,30 @@ if (process.send) {
 export const HAMMER_ODDS_SIZES = [${SIZES.join(', ')}]
 export const HAMMER_ODDS_SAMPLES = ${SAMPLES}
 
-/** The calls, by index in HAMMER_CALL, HAMMER_ALT_CALL and HAMMER_ANY_CALL below */
+/** The calls, by index in the call tables below */
 export const HAMMER_ODDS_CALLS = [${ALL_CALLS.map((c) => `'${callKey(c)}'`).join(', ')}]
 
-/**
- * Per roll (dice sorted low to high), by table size: the Hammer's chance of
- * the pencil making the recommended call (chooseCall), refusals played out,
- * in tenths of a percent.
- */
-export const HAMMER_LOSS: Record<string, number[]> = {
-${row(1)}
+/** One rule set's figures. Per roll (dice sorted low to high), by table size */
+export interface HammerTable {
+  /** The Hammer's chance of the pencil making the recommended call (chooseCall), refusals played out, in tenths of a percent */
+  loss: Record<string, number[]>
+  /** The recommended call (an index into HAMMER_ODDS_CALLS) */
+  call: Record<string, number[]>
+  /** The same for the recommended call that isn't 10-4 */
+  altLoss: Record<string, number[]>
+  altCall: Record<string, number[]>
+  /** The same for the call that does best against the bots, which may be a decoy (called to be refused) */
+  anyLoss: Record<string, number[]>
+  anyCall: Record<string, number[]>
 }
 
-/** Per roll, by table size: the recommended call (an index into HAMMER_ODDS_CALLS) */
-export const HAMMER_CALL: Record<string, number[]> = {
-${row(0)}
-}
-
-/** Per roll, by table size: the same for the recommended call that isn't 10-4 */
-export const HAMMER_ALT_LOSS: Record<string, number[]> = {
-${row(3)}
-}
-
-/** Per roll, by table size: the recommended call that isn't 10-4 */
-export const HAMMER_ALT_CALL: Record<string, number[]> = {
-${row(2)}
-}
-
-/**
- * Per roll, by table size: the same for the call that does best against the
- * bots, which may be a decoy (called to be refused)
- */
-export const HAMMER_ANY_LOSS: Record<string, number[]> = {
-${row(5)}
-}
-
-/** Per roll, by table size: the call that does best against the bots */
-export const HAMMER_ANY_CALL: Record<string, number[]> = {
-${row(4)}
+/** By rule set: standard keeps, or the Monterey house rule that lets a lone 3 or 4 be kept */
+export const HAMMER_TABLES: Record<'standard' | 'lone-keep', HammerTable> = {
+${sets.map(table).join('\n')}
 }
 `
       )
-      console.log(`Wrote ${keys.length} rolls × ${SIZES.length} table sizes to ${OUT}`)
+      console.log(`Wrote ${keys.length} rolls × ${SIZES.length} table sizes × ${sets.length} rule sets to ${OUT}`)
     })
     child.send(jobs.filter((_, i) => i % n === w))
   }

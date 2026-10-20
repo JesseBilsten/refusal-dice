@@ -399,6 +399,47 @@ const GLOSSARY_TERMS = [
       </>
     ),
   },
+  {
+    id: 'keep',
+    term: 'Keep / Kept Dice',
+    emoji: '✋',
+    keywords: ['keep', 'kept', 'hold', 'commit', 'locked', 're-roll'],
+    body: (
+      <>
+        <p className="mb-2">
+          The dice you leave on the table while you re-roll the rest. You can only keep dice toward the called game: nothing
+          in the 10s until you have it (a 10 has to come in one roll), a{' '}
+          <Link to="#connector" className="text-primary hover:underline">connector</Link> in Ship Captain Crew or Monterey,
+          one pair in 7's or Pairs. Never part of your <Link to="#kicker" className="text-primary hover:underline">kicker</Link>.
+        </p>
+        <p className="text-sm text-muted-foreground">
+          <strong>Kept dice stay kept:</strong> once you keep dice you're committed to them for the rest of your rolls.<br/>
+          <strong>See also:</strong> <Link to="/rules" className="text-primary hover:underline">Rules</Link>,{' '}
+          <Link to="/odds-lab/?tab=keep" className="text-primary hover:underline">Odds Lab: what should I keep?</Link>
+        </p>
+      </>
+    ),
+  },
+  {
+    id: 'connector',
+    term: 'Connector',
+    emoji: '🔗',
+    keywords: ['connector', 'straight', 'ship captain crew', 'monterey', 'partial'],
+    body: (
+      <>
+        <p className="mb-2">
+          Two dice in a row that you may keep toward a straight: 1-2 or 5-6 in{' '}
+          <Link to="/games/ship-captain-crew" className="text-primary hover:underline">Ship Captain Crew</Link> (pick one),
+          and 2-3, 3-4 or 4-5 in <Link to="/games/monterey" className="text-primary hover:underline">Monterey</Link>. Some
+          tables also let you keep a lone 3 or 4 in Monterey; set that under House rules in Settings.
+        </p>
+        <p className="text-sm text-muted-foreground">
+          <strong>Usage:</strong> "I've got the connector, keeping 3-4"<br/>
+          <strong>See also:</strong> <Link to="#keep" className="text-primary hover:underline">Keep</Link>
+        </p>
+      </>
+    ),
+  },
 ]
 
 /** A to Z, however the list above is ordered */

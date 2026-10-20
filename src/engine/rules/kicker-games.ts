@@ -1,4 +1,4 @@
-import { Dice, KickerGameId, GameId, Variant } from '../types'
+import { DEFAULT_HOUSE_RULES, Dice, KickerGameId, GameId, HouseRules, Variant } from '../types'
 
 /**
  * Kicker games (docs/RULES.md §3.1): make the game with some of your dice;
@@ -114,6 +114,80 @@ export const makesGame = (dice: Dice, game: KickerGameId): boolean =>
  */
 export const keepsKickers = (kept: Dice, game: KickerGameId): boolean =>
   kept.length > SHAPES[game].size && makesGame(kept, game)
+
+/** The house rules that change what may be kept */
+export type KeepRules = Pick<HouseRules, 'montereyLoneKeep'>
+
+const sameDice = (values: number[], set: number[]) => values.length === set.length && isSet(values, set)
+
+/**
+ * Dice that may be kept toward a game not yet made (docs/RULES.md §3.1).
+ * The 10s have none: they're made in one roll. Ship Captain Crew keeps 1-2
+ * or 5-6; Monterey 2-3, 3-4 or 4-5 (or a lone 3 or 4 under that house
+ * rule); 7's a pair summing to 7 or 11; Pairs a pair.
+ */
+function isStart(values: number[], game: KickerGameId, rules: KeepRules): boolean {
+  switch (game) {
+    case 'ship-captain-crew':
+      return sameDice(values, [1, 2]) || sameDice(values, [5, 6])
+    case 'monterey':
+      return (
+        sameDice(values, [2, 3]) ||
+        sameDice(values, [3, 4]) ||
+        sameDice(values, [4, 5]) ||
+        (rules.montereyLoneKeep && (sameDice(values, [3]) || sameDice(values, [4])))
+      )
+    case 'vegas':
+      return values.length === 2 && (values[0] + values[1] === 7 || values[0] + values[1] === 11)
+    case 'pairs':
+      return values.length === 2 && values[0] === values[1]
+    default:
+      return false
+  }
+}
+
+/**
+ * May a player keep these dice in a kicker game (docs/RULES.md §3.1)?
+ * Only dice that make the game, or a start toward it, never kicker dice.
+ * `locked` are the dice they kept last roll: they're committed to them, so
+ * the new keep must hold them too. Returns why not, or null when it's legal.
+ * (The engine checks positions; this checks values.)
+ */
+export function keepProblem(
+  kept: Dice,
+  game: KickerGameId,
+  locked: Dice = [],
+  rules: KeepRules = DEFAULT_HOUSE_RULES
+): string | null {
+  const left = [...kept]
+  const holdsLocked = locked.every((d) => {
+    const i = left.indexOf(d)
+    if (i < 0) return false
+    left.splice(i, 1)
+    return true
+  })
+  if (!holdsLocked) return 'Kept dice stay kept: you’re committed to the dice you kept last roll'
+  if (kept.length === 0) return null
+  const values = [...kept]
+  if (values.length === SHAPES[game].size && SHAPES[game].makes(values)) return null
+  if (keepsKickers(kept, game)) return 'Kickers are rolled together: keep only the dice that make the game, or stand'
+  if (isStart(values, game, rules)) return null
+  return KEEP_HINTS[game]
+}
+
+const KEEP_HINTS: Record<KickerGameId, string> = {
+  '10-2': '10-2 has to come in one roll: keep nothing until you have it, then only the two dice that make it',
+  '10-3': '10-3 has to come in one roll: keep nothing until you have it, then only the three dice that make it',
+  '10-4': '10-4 has to come in one roll: keep nothing until you have it, then only the four dice that make it',
+  'ship-captain-crew': 'In Ship Captain Crew keep 1-2 or 5-6 (not both), or the made 1-2-3 or 4-5-6',
+  monterey: 'In Monterey keep 2-3, 3-4 or 4-5, or the made 2-3-4 or 3-4-5',
+  vegas: 'In 7’s keep one pair that sums to 7 or 11, or both pairs once you have them',
+  pairs: 'In Pairs keep one pair, or both pairs once you have them: never a kicker die',
+}
+
+/** Is keeping `kept` (after `locked` last roll) legal? See keepProblem */
+export const isLegalKeep = (kept: Dice, game: KickerGameId, locked: Dice = [], rules?: KeepRules): boolean =>
+  keepProblem(kept, game, locked, rules) === null
 
 /** How many dice make the game (the rest are kickers) */
 export const gameSize = (game: KickerGameId): number => SHAPES[game].size

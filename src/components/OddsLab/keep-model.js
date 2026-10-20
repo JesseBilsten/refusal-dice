@@ -23,5 +23,20 @@ export function optionLabel(o) {
   return `Keep ${o.dice.join('-')}, roll ${5 - o.dice.length}`
 }
 
+/**
+ * Positions in `dice` holding the digits `kept` (the dice kept last roll),
+ * or [] when the roll doesn't hold them all
+ */
+export function lockedPositions(dice, kept) {
+  if (!dice || !kept) return []
+  const out = []
+  for (const d of kept.split('').map(Number)) {
+    const i = dice.findIndex((v, j) => v === d && !out.includes(j))
+    if (i < 0) return []
+    out.push(i)
+  }
+  return out
+}
+
 /** Rolls left after this one: Boss's come-up is a single last roll */
 export const rerollsFor = (s) => (s.game === 'boss' ? 1 : s.rolls || 2)
