@@ -449,6 +449,15 @@ describe('playing and scoring (§3.1, §4)', () => {
     expect(evaluateKickerHand([2, 3, 4, 3, 5], 'monterey', 'low', [0, 1])).toMatchObject({ made: true, kickerTotal: 8 })
   })
 
+  test('7’s: freshly rolled dice pair up any way that suits the call (§3.1)', () => {
+    // A fresh 2-5-6-1-5: Low plays 2-5 and 5-6 (kicker 1), High 6-1 and 2-5 (kicker 5)
+    expect(evaluateKickerHand([2, 5, 6, 1, 5], 'vegas', 'low')).toMatchObject({ made: true, kickerTotal: 1 })
+    expect(evaluateKickerHand([2, 5, 6, 1, 5], 'vegas', 'high')).toMatchObject({ made: true, kickerTotal: 5 })
+    // Kept 1-6, rolled 2-5-6: High plays 2-5 (kicker 6), Low 5-6 (kicker 2)
+    expect(evaluateKickerHand([1, 6, 2, 5, 6], 'vegas', 'high', [0, 1])).toMatchObject({ made: true, kickerTotal: 6 })
+    expect(evaluateKickerHand([1, 6, 2, 5, 6], 'vegas', 'low', [0, 1])).toMatchObject({ made: true, kickerTotal: 2 })
+  })
+
   test('a made game can’t be re-rolled (§3.1): keep its dice, or stand', () => {
     expect(keepProblem([], '10-2', { hand: [5, 5, 3, 3, 3] })).toMatch(/made the game/)
     expect(keepProblem([5, 5], '10-2', { hand: [5, 5, 3, 3, 3] })).toBeNull()
