@@ -493,15 +493,13 @@ const GameDetailTemplate = ({ pageContext }) => {
               />
             </CollapsibleSection>
 
-            {/* Second Call Distribution (shared component) */}
+            {/* The comeback: second calls, exact (shared with the Strategy Assistant) */}
             <div className="mb-6">
               <SecondCallDistribution
                 gameId={gameId}
-                hasVariants={gameMeta.hasVariants}
-                numOpponents={0}
                 showTabs={gameMeta.hasVariants}
-                title="Second call distribution"
-                description={`When the hammer calls ${gameMeta.name}, what other games are most likely as a second call?`}
+                title="The comeback"
+                description={`If both refusals turn down ${gameMeta.name}, what does the Hammer call instead?`}
               />
             </div>
 

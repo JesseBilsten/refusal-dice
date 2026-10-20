@@ -1,206 +1,114 @@
-import React, { useMemo } from 'react'
+import React, { useMemo, useState } from 'react'
 import { Badge } from './ui/badge'
 import { Panel } from './Page'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table'
 import VariantSelector from './VariantSelector'
-import { analyzeSecondCallDistribution, checkGame, getKickerStrength } from '../lib/game-validation'
-import uniqueRollsData from '../data/unique-rolls.json'
-import { GAMES_MAP, formatCallLabel } from '../lib/games-config'
+import { GAMES_MAP, formatCallLabel, getGameName } from '../lib/games-config'
+import { fmtPct } from './Odds'
+import { comebackOf, comebacksAfter } from '../strategy'
+import { useHouseRules } from './Settings/house-rules'
 import { Hand } from './Dice'
 
+const callKey = (c) => `${c.game}:${c.variant ?? ''}`
+
+/** The comebacks after any of `firsts` together, most likely first */
+function merged(firsts) {
+  const total = firsts.reduce((s, f) => s + f.ways, 0)
+  const byCall = new Map()
+  firsts.forEach((f) =>
+    f.comebacks.forEach((c) => {
+      const m = byCall.get(callKey(c.call)) ?? { ...c, ways: 0, examples: [] }
+      m.ways += c.ways
+      m.examples = [...m.examples, ...c.examples].slice(0, 3)
+      byCall.set(callKey(c.call), m)
+    })
+  )
+  return [...byCall.values()].map((c) => ({ ...c, share: c.ways / total })).sort((a, b) => b.ways - a.ways)
+}
 
 /**
- * SecondCallDistribution Component
- * 
- * Displays second call distribution analysis for a given game and variant.
- * Uses the same calculation method as the 2nd Call Predictor page.
- * 
- * @param {Object} props
- * @param {string} props.gameId - The game identifier
- * @param {boolean} props.hasVariants - Whether the game has kicker variants
- * @param {number} props.numOpponents - Number of opponents (default: 2)
- * @param {boolean} props.showTabs - If true and hasVariants, show tabs for All/High/Low
- * @param {string} props.variant - If provided and !showTabs, only show this variant
+ * The Hammer's comeback: when both refusals turn down a call of `gameId`,
+ * what do they call instead? Exact over every roll (src/strategy/comebacks.ts),
+ * for a Hammer who calls the site's recommended call both times. Then the
+ * other way round: after which first calls is this game the comeback?
+ *
+ * `variant` fixes the first call's variant; `showTabs` lets the reader pick
+ * All, High or Low instead.
  */
-const SecondCallDistribution = ({ 
-  gameId, 
-  hasVariants = false, 
-  numOpponents = 2,
-  showTabs = false,
-  variant = null,
-  title = "Other Games Playable on Same Rolls",
-  description = null
-}) => {
-  // Calculate distributions
-  const distributions = useMemo(() => {
-    if (hasVariants && showTabs) {
-      // For tabs view: pre-filter rolls by game, then by variant
-      // Start with all rolls that can play this game
-      const allGameRolls = uniqueRollsData.uniqueRolls.filter(rollData => {
-        return checkGame(rollData.roll, gameId)
-      })
-      
-      // Filter to only HIGH variant rolls
-      const highRolls = allGameRolls.filter(rollData => {
-        const strength = getKickerStrength(rollData.roll, gameId)
-        return strength === 'high'
-      })
-      
-      // Filter to only LOW variant rolls
-      const lowRolls = allGameRolls.filter(rollData => {
-        const strength = getKickerStrength(rollData.roll, gameId)
-        return strength === 'low'
-      })
-      
-      // Pass pre-filtered rolls and NULL variant (we've already filtered)
-      return {
-        all: analyzeSecondCallDistribution(gameId, null, allGameRolls, numOpponents),
-        high: analyzeSecondCallDistribution(gameId, null, highRolls, numOpponents),
-        low: analyzeSecondCallDistribution(gameId, null, lowRolls, numOpponents)
-      }
-    } else {
-      // For single view: also pre-filter by game and variant
-      if (hasVariants && variant) {
-        // Pre-filter to game + specific variant
-        const gameRolls = uniqueRollsData.uniqueRolls.filter(rollData => {
-          if (!checkGame(rollData.roll, gameId)) return false
-          const strength = getKickerStrength(rollData.roll, gameId)
-          return strength === variant
-        })
-        return {
-          selected: analyzeSecondCallDistribution(gameId, null, gameRolls, numOpponents)
-        }
-      } else {
-        // No variant or no variants for this game - just filter by game
-        const gameRolls = uniqueRollsData.uniqueRolls.filter(rollData => {
-          return checkGame(rollData.roll, gameId)
-        })
-        return {
-          selected: analyzeSecondCallDistribution(gameId, null, gameRolls, numOpponents)
-        }
-      }
-    }
-  }, [gameId, hasVariants, numOpponents, showTabs, variant])
+export default function SecondCallDistribution({ gameId, variant = null, showTabs = false, title, description }) {
+  const [rules] = useHouseRules()
+  const [picked, setPicked] = useState('all')
+  const hasVariants = GAMES_MAP[gameId]?.hasVariants
+  const shown = showTabs && hasVariants ? picked : variant
+  const name = getGameName(gameId)
 
-  // Render distribution table
-  const renderDistributionTable = (analysis) => {
-    if (!analysis || analysis.error) {
-      return (
-        <p className="text-center text-muted-foreground py-8">
-          {analysis?.error || 'No data available'}
-        </p>
-      )
-    }
+  const rows = useMemo(() => {
+    const variants = !hasVariants ? [undefined] : shown && shown !== 'all' ? [shown] : ['high', 'low']
+    const firsts = variants.map((v) => comebacksAfter({ game: gameId, ...(v ? { variant: v } : {}) }, rules)).filter(Boolean)
+    return firsts.length ? merged(firsts) : []
+  }, [gameId, hasVariants, shown, rules])
 
-    const distribution = analysis.secondCallDistribution || []
-
-    if (distribution.length === 0) {
-      return (
-        <p className="text-center text-muted-foreground py-8">
-          No alternative calls found
-        </p>
-      )
-    }
-
-    return (
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-[50px]">Rank</TableHead>
-            <TableHead>Second Call</TableHead>
-            <TableHead className="text-right">Likelihood</TableHead>
-            <TableHead className="hidden text-right sm:table-cell">Count</TableHead>
-            <TableHead className="hidden text-right md:table-cell">Avg Strength</TableHead>
-            <TableHead className="hidden sm:table-cell">Example Rolls</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {distribution.map((call, idx) => (
-            <TableRow key={idx}>
-              <TableCell>
-                <Badge variant={idx === 0 ? 'default' : 'secondary'}>
-                  #{idx + 1}
-                </Badge>
-              </TableCell>
-              <TableCell className="font-medium">
-                <span className="flex items-center gap-2">
-                  <span aria-hidden>{GAMES_MAP[call.game]?.emoji}</span>
-                  {formatCallLabel({ game: call.game, variant: call.variant })}
-                </span>
-              </TableCell>
-              <TableCell className="text-right">
-                <Badge variant={idx === 0 ? 'default' : 'outline'} className="tabular-nums">
-                  {call.percentage}%
-                </Badge>
-              </TableCell>
-              <TableCell className="hidden text-right tabular-nums sm:table-cell">
-                {call.count}
-              </TableCell>
-              <TableCell className="hidden text-right tabular-nums md:table-cell">
-                {call.avgOffensiveStrength}%
-              </TableCell>
-              <TableCell className="hidden sm:table-cell">
-                <div className="flex flex-wrap items-center gap-2">
-                  {call.examples.slice(0, 3).map((ex, i) => (
-                    <span key={i} title={`Strength: ${ex.strength}%`}>
-                      <Hand
-                        dice={ex.roll.split('').map(Number)}
-                        game={call.game}
-                        variant={call.variant}
-                        size="xs"
-                      />
-                    </span>
-                  ))}
-                  {call.examples.length > 3 && (
-                    <Badge variant="outline" className="text-xs">
-                      +{call.examples.length - 3}
-                    </Badge>
-                  )}
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    )
-  }
-
-  // Auto-generate description if not provided
-  const autoDescription = useMemo(() => {
-    if (description) return description
-    
-    if (showTabs && hasVariants) {
-      return "When you can play this game, what other games are available as your second call?"
-    } else if (hasVariants && variant) {
-      const analysis = distributions.selected
-      return `Based on ${analysis?.totalRolls || 0} unique rolls (${analysis?.totalInstances || 0} total instances) that can make this game`
-    } else {
-      const analysis = distributions.selected
-      return `Based on ${analysis?.totalRolls || 0} unique rolls (${analysis?.totalInstances || 0} total instances) that can make this game`
-    }
-  }, [description, showTabs, hasVariants, variant, distributions])
-
-  const [selectedVariant, setSelectedVariant] = React.useState('all')
-  if (showTabs && hasVariants) {
-    return (
-      <Panel title={title} description={autoDescription}>
-          <VariantSelector
-            selectedVariant={selectedVariant}
-            onChange={setSelectedVariant}
-            className="mb-4"
-          />
-          {selectedVariant === 'all' && renderDistributionTable(distributions.all)}
-          {selectedVariant === 'high' && renderDistributionTable(distributions.high)}
-          {selectedVariant === 'low' && renderDistributionTable(distributions.low)}
-      </Panel>
-    )
-  }
+  const after = useMemo(() => comebackOf(gameId, rules), [gameId, rules])
 
   return (
-    <Panel title={title} description={autoDescription}>
-        {renderDistributionTable(distributions.selected)}
+    <Panel title={title} description={description}>
+      {showTabs && hasVariants && <VariantSelector selectedVariant={picked} onChange={(v) => v && setPicked(v)} className="mb-4" />}
+      {rows.length === 0 ? (
+        <p className="py-8 text-center text-muted-foreground">The site never calls this first.</p>
+      ) : (
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[50px]">Rank</TableHead>
+              <TableHead>Comeback</TableHead>
+              <TableHead className="text-right">Chance</TableHead>
+              <TableHead className="hidden sm:table-cell">Example rolls</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {rows.slice(0, 8).map((c, i) => (
+              <TableRow key={callKey(c.call)}>
+                <TableCell>
+                  <Badge variant={i === 0 ? 'default' : 'secondary'}>#{i + 1}</Badge>
+                </TableCell>
+                <TableCell className="font-medium">
+                  <span className="flex items-center gap-2">
+                    <span aria-hidden>{GAMES_MAP[c.call.game]?.emoji}</span>
+                    {formatCallLabel(c.call)}
+                  </span>
+                </TableCell>
+                <TableCell className="text-right tabular-nums">{fmtPct(c.share, 0)}</TableCell>
+                <TableCell className="hidden sm:table-cell">
+                  <div className="flex flex-wrap items-center gap-2">
+                    {c.examples.map((dice) => (
+                      <Hand key={dice.join('')} dice={dice} game={c.call.game} variant={c.call.variant} size="xs" />
+                    ))}
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
+      <p className="mt-3 text-xs text-muted-foreground">
+        Exact over every roll: the call the site recommends, then its best call once {name} is refused. A Hammer who
+        calls differently changes these. Refusers decide from their own dice, so a refusal doesn’t change the odds.
+      </p>
+
+      {after.length > 0 && (
+        <div className="mt-5">
+          <p className="font-medium">When is {name} the comeback?</p>
+          <ul className="mt-2 space-y-1 text-sm">
+            {after.slice(0, 4).map((x) => (
+              <li key={`${callKey(x.first)}>${callKey(x.comeback.call)}`}>
+                After <strong>{formatCallLabel(x.first)}</strong>: {formatCallLabel(x.comeback.call)}{' '}
+                {fmtPct(x.comeback.share, 0)} of the time
+                {x.top && <span className="text-muted-foreground"> (the likeliest comeback)</span>}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </Panel>
   )
 }
-
-export default SecondCallDistribution

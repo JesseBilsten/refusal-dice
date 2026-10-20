@@ -91,6 +91,8 @@ src/strategy/
                  barkTable) to set calling against a bark
   simulate.ts    Seeded Monte Carlo through the engine: your chance of the pencil per decision
                  (simulateHammer, simulateRefusal); common random numbers across options
+  comebacks.ts   Exact second calls over every roll: the recommended call, then its best call once that game is refused
+                 (comebackTable, comebacksAfter, comebackOf); feeds the comeback tables on game pages and the Strategy Assistant
 ```
 
 Simulated odds mean "against (and as) solid bots". Show the sample size and that assumption wherever they appear. Strategy code may only read what its player could see.
