@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react'
 import { Link } from 'gatsby'
 import Layout from '../components/layout'
 import Page, { NextStep, PageHeader, Panel, Stat } from '../components/Page'
-import { BarkCase, BarkOdds, ProbabilityBar, UnheldCalls } from '../components/Odds'
+import { BarkGuide, ProbabilityBar } from '../components/Odds'
 import SituationCard from '../components/OddsLab/SituationCard'
 import { SITUATIONS, situationPath } from '../components/OddsLab/situations-catalog'
 import { freshMakeChance } from '../strategy'
@@ -78,7 +78,7 @@ const GAME_CONTENT = {
     partialKeep: 'After each roll put out at least one die. Put out every 3; a 1 joins them only beside three 3s. With no 3s, put out just your lowest die and roll the rest.',
   },
   barking: {
-    description: 'Instead of calling, the Hammer can bark: the Hammer passes to the player on the left and everyone rolls again. Is a bad roll ever worth passing on?',
+    description: 'Barking is passing instead of calling: the Hammer moves to the player on your left and everyone rolls again.',
     isStrategy: true,
   },
 }
@@ -394,26 +394,8 @@ const GameDetailTemplate = ({ pageContext }) => {
         {/*  Barking-specific content        */}
         {/* ──────────────────────────────── */}
         {gameId === 'barking' && (
-          <Panel
-            className="mb-8"
-            title="Should you ever bark?"
-            description="The worst roll at each table size, called against barked, and the reasoning behind the answer."
-          >
-            <BarkCase />
-          </Panel>
-        )}
-        {gameId === 'barking' && (
-          <Panel
-            className="mb-8"
-            title="Calling a game you don’t have"
-            description="The other way out of a bad roll: call a game nobody may make. How the odds work, and when it beats a bad game you do hold."
-          >
-            <UnheldCalls />
-          </Panel>
-        )}
-        {gameId === 'barking' && (
-          <Panel className="mb-8" title="What a bark is worth">
-            <BarkOdds hands />
+          <Panel className="mb-8" title="Should you bark?">
+            <BarkGuide />
           </Panel>
         )}
 

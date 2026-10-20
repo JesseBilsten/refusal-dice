@@ -41,24 +41,21 @@ export default function BarkHands({ players, className }) {
         </Chip>
         <span className="text-xs text-muted-foreground">
           {no104
-            ? `${swapped} rolls whose best call is 10-4 call something else`
-            : 'Tap if your table refuses a 10-4 call on sight'}
+            ? `${swapped} rolls whose call is 10-4 call something else`
+            : 'For tables that turn down a 10-4 on sight'}
         </span>
       </div>
-      <p className="mb-4 text-sm" aria-live="polite">
+      <p className="mb-4" aria-live="polite">
         {barkBetter.length === 0 ? (
           <>
-            At {players} players, <strong>every roll does better calling</strong>. The worst roll to hold the Hammer
-            with,{' '}
-            <Hand dice={worst.dice} size="xs" game={worst.pick.call.game} variant={worst.pick.call.variant} className="inline-flex align-middle" />,
-            takes the pencil {fmtPct(worst.pick.loss, 1)} of the time calling {formatCallLabel(worst.pick.call)}; a
-            bark, {fmtPct(bark, 1)}.
+            <strong>No bar reaches the tick</strong> (a bark, {fmtPct(bark, 1)}), so every roll does better calling.
           </>
         ) : (
           <>
-            At {players} players, <strong>barking beats calling with {barkBetter.length} {barkBetter.length === 1 ? 'roll' : 'rolls'}</strong>{' '}
-            ({fmtPct(barkShare, 1)} of hands): {fmtPct(bark, 1)} for a bark against {fmtPct(worst.pick.loss, 1)} for
-            the worst roll.
+            <strong>
+              {barkBetter.length} {barkBetter.length === 1 ? 'roll does' : 'rolls do'} better barking
+            </strong>{' '}
+            ({fmtPct(barkShare, 1)} of hands): their bars pass the tick.
           </>
         )}
       </p>
@@ -93,8 +90,8 @@ export default function BarkHands({ players, className }) {
               />
               {decoy && (
                 <p className="col-start-2 text-xs text-muted-foreground sm:col-start-3">
-                  Against the bots, calling {formatCallLabel(decoy.call)} first does better ({fmtPct(decoy.loss, 1)}): a
-                  decoy, see “What the numbers assume”.
+                  Decoy: {formatCallLabel(decoy.call)} first does {fmtPct(decoy.loss, 1)} against the bots (see the
+                  assumptions).
                 </p>
               )}
             </li>
@@ -107,9 +104,9 @@ export default function BarkHands({ players, className }) {
         </button>
       )}
       <p className="mt-3 text-xs text-muted-foreground">
-        Bars: the Hammer’s chance of the pencil with the recommended call (the game the roll loses least when everyone plays it); the tick is a bark. Each figure is{' '}
-        {HAMMER_ODDS_SAMPLES.toLocaleString()} rounds against solid bots, refusals and second calls played out, so
-        it’s good to about ±{fmtPct(1.96 * Math.sqrt((worst.pick.loss * (1 - worst.pick.loss)) / HAMMER_ODDS_SAMPLES), 1)}.
+        Bar: your chance of the pencil with the recommended call, refusals played out. Tick: a bark.{' '}
+        {HAMMER_ODDS_SAMPLES.toLocaleString()} rounds each against solid bots, good to about ±
+        {fmtPct(1.96 * Math.sqrt((worst.pick.loss * (1 - worst.pick.loss)) / HAMMER_ODDS_SAMPLES), 1)}.
       </p>
     </div>
   )
