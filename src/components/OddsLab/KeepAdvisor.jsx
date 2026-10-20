@@ -104,7 +104,7 @@ const NumberSelect = ({ value, onChange, options, label }) => (
 
 export default function KeepAdvisor() {
   const [s, setS] = useState(DEFAULT)
-  const [rules] = useHouseRules()
+  const [rules, setRules] = useHouseRules()
   const [dice, setDice] = useState([...EMPTY])
   const [beat, setBeat] = useState([...EMPTY])
   const hydrated = useRef(false)
@@ -150,6 +150,8 @@ export default function KeepAdvisor() {
   const roll = dice.every(Boolean) ? dice.map(Number) : null
   const hand = beat.every(Boolean) ? beat.map(Number) : null
   const example = exampleShown(s, dice, beat)
+  // A question that assumes a house rule this table hasn't turned on
+  const needsRule = example?.rules && Object.entries(example.rules).some(([k, v]) => rules[k] !== v)
   const why = useMemo(
     () => situationWhy(example, rules, (p) => fmtPct(p, 1)),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -348,9 +350,16 @@ export default function KeepAdvisor() {
             <Empty>Enter the hand you need to beat.</Empty>
           ) : (
             <div className="space-y-4">
+              {needsRule && (
+                <div className="flex flex-wrap items-center gap-2 rounded-md border border-border bg-muted/40 p-3 text-sm">
+                  <span>This question is for tables that let you keep a lone 3 or 4 in Monterey.</span>
+                  <Chip onClick={() => setRules(example.rules)}>Use that house rule</Chip>
+                </div>
+              )}
               <Hand dice={roll} game={s.game} variant={kicker ? s.variant : null} />
               <OddsDecision
-                outcome={target.outcome}
+                // The bars stack wins and ties, so with ties in play they measure "beat or tie"
+                outcome={shown.some((o) => o.tie > 0) ? target.outcome.replace(/^beat /, 'beat or tie ') : target.outcome}
                 lowerIsBetter={false}
                 options={shown.map((o, i) => ({
                   id: String(i),

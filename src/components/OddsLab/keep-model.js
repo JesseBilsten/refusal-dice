@@ -19,7 +19,7 @@ export function goalFor(s, beatDice) {
 
 /** "Keep 2-3, roll 3" */
 export function optionLabel(o) {
-  if (o.stand) return 'Stand: keep all five'
+  if (o.stand) return o.tie === 1 ? 'Take the tie (stand)' : 'Stand: keep all five'
   if (!o.dice.length) return 'Roll all five'
   return `Keep ${o.dice.join('-')}, roll ${5 - o.dice.length}`
 }
@@ -58,6 +58,9 @@ export function keepOdds(s, rules) {
   }
 }
 
+/** The rules a question is answered under: the table's, plus any house rule the question assumes */
+export const situationRules = (situation, rules) => ({ ...rules, ...situation?.rules })
+
 /** A question's reasoning as paragraphs, every figure computed (null when it has none) */
 export const situationWhy = (situation, rules, pct) =>
-  situation?.why ? situation.why({ odds: keepOdds(situation.s, rules), pct }) : null
+  situation?.why ? situation.why({ odds: keepOdds(situation.s, situationRules(situation, rules)), pct }) : null

@@ -5,7 +5,7 @@ import { keepOptions, tresAwayExpected, tresAwayPutOut } from '../../strategy'
 import { Hand } from '../Dice'
 import { fmtPct } from '../Odds'
 import { Panel } from '../Page'
-import { goalFor, lockedPositions, optionLabel, rerollsFor, situationWhy } from './keep-model'
+import { goalFor, lockedPositions, optionLabel, rerollsFor, situationRules, situationWhy } from './keep-model'
 import { useHouseRules } from '../Settings/house-rules'
 import { SITUATIONS, situationPath } from './situations-catalog'
 
@@ -35,17 +35,21 @@ export default function SituationCard({ gameId, className }) {
       }
     }
     const beat = s.beat ? s.beat.split('').map(Number) : null
-    const opts = keepOptions(dice, rerollsFor(s), goalFor(s, beat), { locked: lockedPositions(dice, s.kept), rules })
+    const opts = keepOptions(dice, rerollsFor(s), goalFor(s, beat), {
+      locked: lockedPositions(dice, s.kept),
+      rules: situationRules(situation, rules),
+    })
     const best = opts[0]
     const others = (s.ask || [])
       .map((d) => opts.find((o) => !o.stand && o.dice.join('') === d))
       .filter((o) => o && o !== best)
-    const pct = (o) => `${fmtPct(o.win, 1)}${o.tie > 0 ? ` (+${fmtPct(o.tie, 1)} ties)` : ''}`
+    const pct = (o) =>
+      o.tie === 1 ? 'a sure tie (a replay)' : `${fmtPct(o.win, 1)}${o.tie > 0 ? ` (+${fmtPct(o.tie, 1)} ties)` : ''}`
     const same = (o) => Math.abs(o.win - best.win) < 1e-9 && Math.abs(o.tie - best.tie) < 1e-9
     return {
       best: optionLabel(best),
       line: [
-        `${pct(best)} to get what you need`,
+        best.tie === 1 ? 'A sure tie (a replay)' : `${pct(best)} to get what you need`,
         ...others.map((o) => `${optionLabel(o).toLowerCase()}: ${same(o) ? 'the same odds' : pct(o)}`),
       ].join(' · '),
     }
