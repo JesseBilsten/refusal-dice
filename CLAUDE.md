@@ -176,6 +176,10 @@ When a pattern repeats, extract it into a kit instead of copying it.
 - Commit messages: Conventional Commits, matching history (`feat:`, `fix:`, `refactor:`, `chore(deps):`, …).
 - Don't commit `/public`, `.cache` or `node_modules`.
 - Keep commits small and mapped to a roadmap item where possible.
+- **Sessions:** start with `/session-start`, end with `/handoff` (personal skills in `~/.claude/skills`, synced by chezmoi; the ground-truth script is configured in `.claude/ground-truth.conf`). This project's settings for them:
+  - **Trackers:** open work is `ROADMAP.md` (in place of `BACKLOG.md`). Questions for the user go in its "Open questions", game-rule questions in `docs/RULES.md` §6 (in place of `questions.md`); rulings go in its "Decision log", game-rule rulings into `docs/RULES.md` itself, with the date.
+  - **Handoff rule:** commit the handoff to master; push only with the user's OK, since pushing deploys refusaldice.com.
+  - **Extra check:** master is the live site, so the latest CI run on master should be green (`gh run list -L 1`).
 
 ## Infrastructure direction (Phase 4, not built yet)
 
