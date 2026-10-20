@@ -39,7 +39,7 @@ const KEEP_RULE = {
   '10-4': '10-4 has to come in one roll: nothing can be kept until you have it.',
   'ship-captain-crew': 'In Ship Captain Crew you may keep 1-2 or 5-6, one or the other, toward the straight.',
   monterey: 'In Monterey you may keep 2-3, 3-4 or 4-5 toward the straight (a lone 3 or 4 too, if your table allows it: see House rules in Settings).',
-  vegas: 'In 7’s you may keep one pair that sums to 7 or 11 toward the second.',
+  vegas: 'In 7’s you may keep one pair that sums to 7 or 11 toward the second. The kept pair stays a pair: the second has to come from the dice you roll.',
   pairs: 'In Pairs you may keep one pair toward the second.',
 }
 
@@ -379,7 +379,7 @@ export default function KeepAdvisor() {
                       ? [
                           {
                             q: 'Why can’t I keep any dice I like?',
-                            a: `${KEEP_RULE[s.game]} Once you keep dice you’re committed to them, and after you make the game only the kicker is re-rolled, all of it at once.`,
+                            a: `${KEEP_RULE[s.game]} Once you keep dice you’re committed to them and they’re part of your game. Once you’ve made the game its dice can’t be re-rolled: only the kicker is, all of it at once.`,
                           },
                         ]
                       : []),

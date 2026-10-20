@@ -4,6 +4,7 @@ import { compareKickerHands, resolveKickerCycle } from '../rules/resolve'
 import {
   bestHands,
   bossHand,
+  bossKeepProblem,
   compareBoss,
   compareRazzle,
   compareTresAway,
@@ -65,7 +66,7 @@ export interface TresHand {
 }
 
 export type BossStage =
-  /** The Boss rolls once more (hidden), keeping the dice that made them Boss */
+  /** The Boss rolls once more (hidden), keeping a hand that still beats the table */
   | 'bossRoll'
   /** The Boss says "come up" or "don't come up" */
   | 'decide'
@@ -91,7 +92,7 @@ export type Phase =
       hands: Record<PlayerId, TresHand>
       turn: PlayerId
     }
-  /** Boss: `mustKeep` are the Boss's hand dice; `hidden` the dice the Boss re-rolled in secret; `waiting` who still gets a last roll */
+  /** Boss: `bossDice` are the dice that made the Boss's hand; `hidden` the dice the Boss re-rolled in secret; `waiting` who still gets a last roll */
   | {
       kind: 'boss'
       call: Call
@@ -99,7 +100,7 @@ export type Phase =
       players: PlayerId[]
       boss: PlayerId
       stage: BossStage
-      mustKeep: number[]
+      bossDice: number[]
       hidden: number[]
       waiting: PlayerId[]
     }
@@ -327,7 +328,7 @@ function enterPlay(state: GameState, call: Call, cycle: number, players: PlayerI
           players,
           boss,
           stage: 'bossRoll',
-          mustKeep: bossHand(state.dice[boss]).handDice,
+          bossDice: bossHand(state.dice[boss]).handDice,
           hidden: [],
           waiting: [],
         },
@@ -399,18 +400,43 @@ function scorePencil(state: GameState, call: Call, loser: PlayerId): GameState {
   return { ...next, hammer, phase: { kind: 'roundOver', call, loser } }
 }
 
-/** How the play phase ranks hands (negative when `a` is worse): Razzle scores, or the kicker game's hands */
-export function playCompare(call: Call): (a: Dice, b: Dice) => number {
+/**
+ * How the play phase ranks hands (negative when `a` is worse): Razzle
+ * scores, or the kicker game's hands, holding the positions each player
+ * kept at their last roll (`keptA`, `keptB`; see keptAt).
+ */
+export function playCompare(call: Call): (a: Dice, b: Dice, keptA?: number[], keptB?: number[]) => number {
   if (call.game === 'razzle') return compareRazzle
   if (!isKickerGame(call.game) || !call.variant) throw new EngineError('Unsupported call in play')
   const { game, variant } = call
-  return (a, b) => compareKickerHands(a, b, game, variant)
+  return (a, b, keptA, keptB) => compareKickerHands(a, b, game, variant, keptA, keptB)
+}
+
+/**
+ * The positions `player` kept at their last roll of this cycle: in a
+ * kicker game they're committed, part of the game (§3.1). Read from the
+ * play phase, or after the round from the log.
+ */
+export function keptAt(state: GameState, player: PlayerId): number[] {
+  const { phase } = state
+  if (phase.kind === 'play') return phase.rolling[player]?.kept ?? []
+  for (let i = state.log.length - 1; i >= 0; i--) {
+    const e = state.log[i]
+    if (e.type === 'called' || (e.type === 'cycle' && e.players.includes(player))) return []
+    if (e.type === 'rolled' && e.player === player && !e.hidden) return e.kept
+  }
+  return []
 }
 
 const playWorst = (state: GameState, ids: PlayerId[]): PlayerId[] => {
   const { phase } = state
   if (phase.kind !== 'play') return []
-  return seatOrderFrom(state, state.hammer, worstHands(ids, (id) => state.dice[id], playCompare(phase.call)))
+  const cmp = playCompare(phase.call)
+  return seatOrderFrom(
+    state,
+    state.hammer,
+    worstHands(ids, (id) => id, (a, b) => cmp(state.dice[a], state.dice[b], keptAt(state, a), keptAt(state, b)))
+  )
 }
 
 /**
@@ -474,8 +500,12 @@ function maybeResolve(state: GameState): GameState {
   if (!isKickerGame(call.game) || !call.variant) throw new EngineError('Unsupported call in play')
 
   const hands: Record<PlayerId, Dice> = {}
-  players.forEach((id) => (hands[id] = state.dice[id]))
-  const result = resolveKickerCycle(hands, call.game, call.variant)
+  const kept: Record<PlayerId, number[]> = {}
+  players.forEach((id) => {
+    hands[id] = state.dice[id]
+    kept[id] = phase.rolling[id].kept
+  })
+  const result = resolveKickerCycle(hands, call.game, call.variant, kept)
 
   if (result.kind === 'loser') return scorePencil(state, call, result.loser)
   if (result.kind === 'tie') return settleWorst(state, call, phase.cycle, result.players)
@@ -560,9 +590,10 @@ function bossAction(state: GameState, action: Action): GameState {
     assertActor(action.player, phase.boss, 'roll as Boss')
     if (action.type === 'stand') return { ...state, phase: { ...phase, stage: 'decide' } }
     if (!validIndices(action.keep)) throw new EngineError('Keep must be distinct die positions 0–4')
-    if (phase.mustKeep.some((i) => !action.keep.includes(i))) {
-      throw new EngineError('The Boss must keep the dice that made them Boss')
-    }
+    const dice = state.dice[action.player]
+    const others = phase.players.filter((id) => id !== phase.boss).map((id) => state.dice[id])
+    const problem = bossKeepProblem(action.keep.map((i) => dice[i]), others)
+    if (problem) throw new EngineError(problem)
     const positions = [0, 1, 2, 3, 4].filter((i) => !action.keep.includes(i))
     const next = rollPositions(state, action.player, positions)
     return log(
@@ -690,9 +721,14 @@ export function applyAction(state: GameState, action: Action): GameState {
         const call = phase.call
         if (isKickerGame(call.game)) {
           const dice = state.dice[action.player]
-          const committed = (rolls.kept ?? []).every((i) => keep.includes(i))
+          const locked = rolls.kept ?? []
+          const committed = locked.every((i) => keep.includes(i))
           const problem = committed
-            ? keepProblem(keep.map((i) => dice[i]), call.game, [], state.rules)
+            ? keepProblem(keep.map((i) => dice[i]), call.game, {
+                locked: locked.map((i) => dice[i]),
+                hand: dice,
+                rules: state.rules,
+              })
             : 'Kept dice stay kept: you’re committed to the dice you kept last roll'
           if (problem) throw new EngineError(problem)
         }

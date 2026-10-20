@@ -7,6 +7,7 @@ import {
   GameState,
   applyAction,
   bossHand,
+  bossKeepProblem,
   compareBoss,
   compareRazzle,
   createGame,
@@ -238,17 +239,26 @@ describe('Boss', () => {
   // a pair of 6s (Boss) · b pair of 5s · c high card
   const deal = [6, 6, 2, 4, 5, 5, 5, 1, 2, 3, 2, 3, 4, 5, 1]
 
-  test('the best hand is Boss and must keep it; others come up in order; the worst hand loses', () => {
+  test('the Boss may pick up any dice, but not ones that would make someone else the Boss (§3.3)', () => {
+    // Full house 6-6-6-2-2: picking up the 2s leaves three 6s
+    expect(bossKeepProblem([6, 6, 6], [[5, 5, 5, 1, 2], [4, 4, 3, 1, 2]])).toBeNull()
+    expect(bossKeepProblem([6, 6, 6], [[3, 3, 3, 4, 4]])).toMatch(/someone else the Boss/)
+    // Matching another hand isn't beating it: no kickers on the kept dice
+    expect(bossKeepProblem([6, 6], [[6, 6, 2, 1, 3]])).not.toBeNull()
+    expect(bossKeepProblem([], [[1, 2, 3, 4, 6]])).not.toBeNull()
+  })
+
+  test('the best hand is Boss and keeps a hand that still beats the table; others come up in order; the worst hand loses', () => {
     let g = called('boss', deal, [1, 1, 2, /* c: */ 2, 2, 2, 3, 3])
     expect(g.phase).toMatchObject({
       kind: 'boss',
       boss: 'a',
       stage: 'bossRoll',
-      mustKeep: [0, 1],
+      bossDice: [0, 1],
     })
     expect(() =>
       applyAction(g, { type: 'reroll', player: 'a', keep: [0] })
-    ).toThrow(/keep the dice/)
+    ).toThrow(/someone else the Boss/)
 
     g = applyAction(g, { type: 'reroll', player: 'a', keep: [0, 1] })
     expect(g.dice.a).toEqual([6, 6, 1, 1, 2])

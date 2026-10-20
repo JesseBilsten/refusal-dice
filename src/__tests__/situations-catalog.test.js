@@ -18,10 +18,11 @@ test.each(Object.entries(SITUATIONS).filter(([, q]) => isKickerGame(q.s.game)))(
     // Legal by the standard rules, or (a lone 3 or 4) only under the Monterey house rule
     ;(s.ask || []).forEach((digits) => {
       const kept = digits.split('').map(Number)
-      expect(isLegalKeep(kept, s.game, locked) || isLegalKeep(kept, s.game, locked, LONE_KEEP)).toBe(true)
+      const check = { locked, hand: dice }
+      expect(isLegalKeep(kept, s.game, check) || isLegalKeep(kept, s.game, { ...check, rules: LONE_KEEP })).toBe(true)
     })
     keepOptions(dice, s.rolls, goalFor(s, null), { locked: lockedAt })
       .filter((o) => !o.stand)
-      .forEach((o) => expect(isLegalKeep(o.dice, s.game, locked)).toBe(true))
+      .forEach((o) => expect(isLegalKeep(o.dice, s.game, { locked, hand: dice })).toBe(true))
   }
 )

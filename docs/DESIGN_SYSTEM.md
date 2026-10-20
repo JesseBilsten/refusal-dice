@@ -173,10 +173,12 @@ covered by tests.
   - Tapping a die keeps it: it lifts and shows a lock badge
     (`aria-pressed`).
   - Tapping again releases it.
-  - `locked` positions can't be tapped: dice put out in Tres Away, the
-    Boss's hand, and in kicker games the dice kept last roll (kept dice stay
-    kept). Play explains an illegal keep under the Roll button and disables
-    it.
+  - `locked` positions can't be tapped: dice put out in Tres Away, and in
+    kicker games the dice kept last roll (kept dice stay kept). Play explains
+    an illegal keep (including a Boss keep that would make someone else the
+    Boss) under the Roll button and disables it.
+  - `committed`: in kicker games, the positions kept last roll, so the
+    outline shows the game made with them (a kept pair stays a pair).
 - **Showing a game:** always use `Hand`, or `DiceGroup` for authored
   examples, so the game's dice are outlined and labeled.
 

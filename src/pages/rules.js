@@ -177,7 +177,12 @@ const RulesPage = () => (
             </li>
             <li>
               <strong>Kept dice stay kept.</strong> Once you keep dice you’re committed to them: keep 1-2 and you can’t
-              switch to 5-6 on your next roll.
+              switch to 5-6 on your next roll. They’re part of your game, too: keep 5-6 in 7’s and the other 7 or 11
+              has to come from the three dice you roll (the 5 can’t pair with a rolled 2).
+            </li>
+            <li>
+              <strong>A made game can’t be re-rolled.</strong> Once you have it, keep the dice that make it or stand:
+              in 10-2 you can’t pick up your 5-5 and roll it again.
             </li>
             <li>
               Try to <strong>make the game</strong>, then improve your <L to="/glossary#kicker">kicker</L>: all the
@@ -212,7 +217,7 @@ const RulesPage = () => (
               </li>
               <li>
                 <GameLink id="boss" />: poker hands without straights. The best first roll is the Boss, who rolls
-                once more in secret (keeping the hand that made them Boss). Then the Boss says <em>“come up”</em>{' '}
+                once more in secret, picking up any dice as long as what they keep still beats everyone. Then the Boss says <em>“come up”</em>{' '}
                 (everyone else gets one last roll, and the worst hand loses, even if that’s the Boss) or{' '}
                 <em>“don’t come up”</em> (no loser). A tie for the best first roll means no Boss: no loser, and the
                 Hammer passes left.

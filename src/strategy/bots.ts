@@ -9,6 +9,7 @@ import {
   SPECIALTY_GAMES,
   activeSeats,
   bossHand,
+  bossKeepProblem,
   compareBoss,
   evaluateKickerHand,
   isKickerGame,
@@ -111,8 +112,9 @@ function bottomAction(state: GameState): Action {
   if (phase.kind !== 'play') throw new Error('not in play')
   const player = bottomTurn(state)!
   const dice = state.dice[player]
-  const target = state.dice[bottomTarget(state, player)!]
-  const options = keepOptions(dice, 3 - phase.rolling[player].rollsUsed, bottomGoal(phase.call, target), {
+  const targetId = bottomTarget(state, player)!
+  const goal = bottomGoal(phase.call, state.dice[targetId], phase.rolling[targetId].kept)
+  const options = keepOptions(dice, 3 - phase.rolling[player].rollsUsed, goal, {
     locked: phase.rolling[player].kept,
     rules: state.rules,
   })
@@ -121,11 +123,15 @@ function bottomAction(state: GameState): Action {
   return { type: 'reroll', player, keep: options.find((o) => !o.stand)!.keep }
 }
 
-/** What the worst hand needs: beat `target` (Razzle or a kicker), or make the game when `target` missed too */
-export function bottomGoal(call: Call, target: Dice): Goal {
+/**
+ * What the worst hand needs: beat `target` (Razzle or a kicker), or make
+ * the game when `target` missed too. `targetKept`: the positions the target
+ * kept at their last roll, committed to their game.
+ */
+export function bottomGoal(call: Call, target: Dice, targetKept: number[] = []): Goal {
   if (call.game === 'razzle') return { kind: 'razzle', ...razzleScore(target) }
   const game = call.game as KickerGameId
-  const them = evaluateKickerHand(target, game, call.variant!)
+  const them = evaluateKickerHand(target, game, call.variant!, targetKept)
   return them.made
     ? { kind: 'kicker', game, variant: call.variant!, total: them.kickerTotal }
     : { kind: 'make', game }
@@ -177,9 +183,13 @@ export function botAction(state: GameState): Action {
     case 'boss': {
       if (phase.stage === 'bossRoll') {
         const dice = state.dice[phase.boss]
-        const weak = [0, 1, 2, 3, 4].filter(
-          (i) => !phase.mustKeep.includes(i) && dice[i] <= 3
-        )
+        const others = phase.players.filter((id) => id !== phase.boss).map((id) => state.dice[id])
+        // Re-roll the low dice outside the hand, highest first back into the keep until what's kept still beats the table
+        let weak = [0, 1, 2, 3, 4]
+          .filter((i) => !phase.bossDice.includes(i) && dice[i] <= 3)
+          .sort((a, b) => dice[a] - dice[b])
+        const kept = () => [0, 1, 2, 3, 4].filter((i) => !weak.includes(i)).map((i) => dice[i])
+        while (weak.length && bossKeepProblem(kept(), others)) weak = weak.slice(0, -1)
         return weak.length
           ? {
               type: 'reroll',

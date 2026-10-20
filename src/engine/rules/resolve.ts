@@ -16,10 +16,12 @@ export type CycleResult =
 export function resolveKickerCycle(
   hands: Record<PlayerId, Dice>,
   game: KickerGameId,
-  variant: Variant
+  variant: Variant,
+  /** Positions each player kept at their last roll: committed to the game (§3.1) */
+  kept: Record<PlayerId, number[]> = {}
 ): CycleResult {
   const players = Object.keys(hands)
-  const evaluated = players.map((id) => ({ id, hand: evaluateKickerHand(hands[id], game, variant) }))
+  const evaluated = players.map((id) => ({ id, hand: evaluateKickerHand(hands[id], game, variant, kept[id]) }))
 
   const missed = evaluated.filter((e) => !e.hand.made).map((e) => e.id)
   if (missed.length === 1) return { kind: 'loser', loser: missed[0] }
@@ -35,10 +37,18 @@ export function resolveKickerCycle(
 /**
  * Order two hands in a kicker game, worst first: missing the game is worst
  * (all misses are level), then the kicker decides by the call's variant.
+ * `keptA`/`keptB`: the positions each kept at their last roll.
  */
-export function compareKickerHands(a: Dice, b: Dice, game: KickerGameId, variant: Variant): number {
-  const x = evaluateKickerHand(a, game, variant)
-  const y = evaluateKickerHand(b, game, variant)
+export function compareKickerHands(
+  a: Dice,
+  b: Dice,
+  game: KickerGameId,
+  variant: Variant,
+  keptA: number[] = [],
+  keptB: number[] = []
+): number {
+  const x = evaluateKickerHand(a, game, variant, keptA)
+  const y = evaluateKickerHand(b, game, variant, keptB)
   if (!x.made || !y.made) return (x.made ? 1 : 0) - (y.made ? 1 : 0)
   return compareKickerTotals(x.kickerTotal, y.kickerTotal, variant)
 }

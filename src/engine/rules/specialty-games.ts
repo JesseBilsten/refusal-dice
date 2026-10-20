@@ -84,7 +84,7 @@ export interface BossHand {
   category: BossCategory
   /** Faces in poker tie-break order: bigger groups first, then higher faces */
   ranks: Die[]
-  /** Indices of the dice that make the hand (the Boss must keep these) */
+  /** Indices of the dice that make the hand (the Boss's default keep) */
   handDice: number[]
 }
 
@@ -140,13 +140,25 @@ export function compareBoss(a: Dice, b: Dice): number {
   return 0
 }
 
+/**
+ * May the Boss keep these dice for their extra roll (§3.3)? They may pick
+ * up anything, as long as the dice they keep still beat every other
+ * player's hand on their own: picking up dice can't make someone else the
+ * Boss. (Kept dice are ranked as they stand, with no kickers, so matching
+ * another hand isn't enough.) Returns why not, or null when it's legal.
+ */
+export function bossKeepProblem(kept: Dice, others: Dice[]): string | null {
+  if (kept.length > 0 && others.every((o) => compareBoss(kept, o) > 0)) return null
+  return 'The Boss can’t pick up dice that would leave someone else the Boss: keep a hand that still beats the table'
+}
+
 /* ── Shared ── */
 
 /** The worst hand(s) among `ids` under `compare` (several when tied). */
-export function worstHands<T extends string>(
+export function worstHands<T extends string, H = Dice>(
   ids: T[],
-  hand: (id: T) => Dice,
-  compare: (a: Dice, b: Dice) => number
+  hand: (id: T) => H,
+  compare: (a: H, b: H) => number
 ): T[] {
   let worst: T[] = []
   for (const id of ids) {

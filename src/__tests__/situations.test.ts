@@ -68,9 +68,16 @@ test('Razzle: three 5s beats three 4s and ties three 5s', () => {
   expect(judge([5, 5, 2, 2, 3], { kind: 'razzle', count: 3, face: 4 })).toBe('lose')
 })
 
-test('7’s 1-6-5-3-3: keeping the 5-6 makes it more often than the 1-6', () => {
+test('7’s 1-6-5-3-3: a kept pair stays a pair, so 1-6 and 5-6 are level, both ahead of rolling all five', () => {
   const opts = keepOptions([1, 6, 5, 3, 3], 2, { kind: 'make', game: 'vegas' })
   const win = (kept: string) => opts.find((o) => !o.stand && o.dice.join('') === kept)!.win
-  expect(win('56')).toBeGreaterThan(win('16'))
+  expect(win('56')).toBeCloseTo(win('16'), 12)
+  expect(win('56')).toBeCloseTo(0.75, 12)
+  expect(win('56')).toBeGreaterThan(win(''))
   expect(opts.some((o) => o.dice.join('') === '156')).toBe(false)
+})
+
+test('a made game’s dice can’t be re-rolled: 10-2 5-5-3-3-3 keeps the 5-5 or stands', () => {
+  const opts = keepOptions([5, 5, 3, 3, 3], 2, { kind: 'kicker', game: '10-2', variant: 'high', total: 12 })
+  expect(opts.filter((o) => !o.stand).map((o) => o.dice.join(''))).toEqual(['55'])
 })

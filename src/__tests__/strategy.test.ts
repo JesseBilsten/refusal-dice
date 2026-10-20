@@ -62,13 +62,14 @@ function bruteOneReroll(
   let best = 0
   for (let mask = 0; mask < 31; mask++) {
     const keep = [0, 1, 2, 3, 4].filter((i) => mask & (1 << i))
-    if (!isLegalKeep(keep.map((i) => dice[i]) as Dice, game)) continue
+    if (!isLegalKeep(keep.map((i) => dice[i]) as Dice, game, { hand: dice })) continue
     const rerolled = [0, 1, 2, 3, 4].filter((i) => !keep.includes(i))
     const outcomes = allRolls(rerolled.length)
     const made = outcomes.filter((o) => {
       const d = [...dice]
       rerolled.forEach((i, j) => (d[i] = o[j]))
-      return makesGame(d, game)
+      // The kept dice are committed: part of the game, a kept pair one of the pairs
+      return makesGame(d, game, keep)
     }).length
     best = Math.max(best, made / outcomes.length)
   }

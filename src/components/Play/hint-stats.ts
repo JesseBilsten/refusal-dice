@@ -120,7 +120,7 @@ export function hintStats(state: GameState, me: string, action: Action, names: H
     if (!targetId) return null
     const target = state.dice[targetId]
     const rollsLeft = 3 - phase.rolling[me].rollsUsed
-    const goal = bottomGoal(phase.call, target)
+    const goal = bottomGoal(phase.call, target, phase.rolling[targetId].kept)
     const mustRoll = wouldLoseIfStopped(state, me)
     const options = keepOptions(dice, rollsLeft, goal, { locked: phase.rolling[me].kept, rules: state.rules }).filter(
       (o) => !(o.stand && mustRoll)
@@ -195,7 +195,7 @@ export function hintStats(state: GameState, me: string, action: Action, names: H
   if (phase.kind === 'boss') {
     let why = ''
     if (phase.stage === 'bossRoll')
-      why = 'You must keep the dice that made you Boss. Re-roll any other die of 3 or lower for a chance at a better hand; keep the high ones.'
+      why = 'Keep the dice that made you Boss and re-roll any other die of 3 or lower for a chance at a better hand. You may pick up more, as long as what you keep still beats everyone.'
     else if (phase.stage === 'decide') {
       const strong = compareBoss(dice, [2, 2, 1, 1, 3]) >= 0
       why = strong

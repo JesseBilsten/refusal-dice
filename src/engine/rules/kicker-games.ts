@@ -27,21 +27,21 @@ const isSet = (values: number[], set: number[]) => {
   return sorted.every((v, i) => v === set[i])
 }
 
-/** Four values that split into two pairs, each summing to one of `targets` */
-const twoPairsSumming = (targets: number[]) => (v: number[]) => {
-  const ok = (a: number, b: number) => targets.includes(a + b)
-  return (
-    (ok(v[0], v[1]) && ok(v[2], v[3])) ||
-    (ok(v[0], v[2]) && ok(v[1], v[3])) ||
-    (ok(v[0], v[3]) && ok(v[1], v[2]))
-  )
-}
+/** Four values that split into two pairs, each one `ok` */
+const twoPairs = (ok: (a: number, b: number) => boolean) => (v: number[]) =>
+  (ok(v[0], v[1]) && ok(v[2], v[3])) ||
+  (ok(v[0], v[2]) && ok(v[1], v[3])) ||
+  (ok(v[0], v[3]) && ok(v[1], v[2]))
+
+const sevenOrEleven = (a: number, b: number) => a + b === 7 || a + b === 11
 
 interface GameShape {
   /** How many dice make the game */
   size: number
   /** Do exactly these dice make the game? */
   makes: (values: number[]) => boolean
+  /** Two-pair games: is this one of the pairs? A kept pair stays a pair */
+  pair?: (a: number, b: number) => boolean
 }
 
 const SHAPES: Record<KickerGameId, GameShape> = {
@@ -50,14 +50,24 @@ const SHAPES: Record<KickerGameId, GameShape> = {
   '10-4': { size: 4, makes: (v) => sum(v) === 10 },
   'ship-captain-crew': { size: 3, makes: (v) => isSet(v, [1, 2, 3]) || isSet(v, [4, 5, 6]) },
   monterey: { size: 3, makes: (v) => isSet(v, [2, 3, 4]) || isSet(v, [3, 4, 5]) },
-  vegas: { size: 4, makes: twoPairsSumming([7, 11]) },
-  pairs: {
-    size: 4,
-    makes: (v) => {
-      const s = [...v].sort((a, b) => a - b)
-      return s[0] === s[1] && s[2] === s[3]
-    },
-  },
+  vegas: { size: 4, makes: twoPairs(sevenOrEleven), pair: sevenOrEleven },
+  pairs: { size: 4, makes: twoPairs((a, b) => a === b), pair: (a, b) => a === b },
+}
+
+/**
+ * Do the dice at `gameDice` make the game, holding the dice kept at the
+ * last roll (`locked`)? Kept dice are committed (docs/RULES.md §3.1): they
+ * must be part of the game, and a kept pair is one of the two pairs, so the
+ * other pair comes from the dice rolled.
+ */
+function makesHolding(dice: Dice, gameDice: number[], game: KickerGameId, locked: number[]): boolean {
+  const shape = SHAPES[game]
+  if (!locked.every((i) => gameDice.includes(i))) return false
+  if (shape.pair && locked.length === 2) {
+    const rest = gameDice.filter((i) => !locked.includes(i))
+    return shape.pair(dice[locked[0]], dice[locked[1]]) && shape.pair(dice[rest[0]], dice[rest[1]])
+  }
+  return shape.makes(gameDice.map((i) => dice[i]))
 }
 
 function combinations(n: number, k: number): number[][] {
@@ -88,12 +98,19 @@ export type KickerHand =
 /**
  * Evaluate a hand for a kicker game. When several sets of dice make the
  * game, the one with the best kicker total for the variant is used.
+ * `locked`: positions kept at the last roll, which must be in the game
+ * (see makesHolding).
  */
-export function evaluateKickerHand(dice: Dice, game: KickerGameId, variant: Variant): KickerHand {
+export function evaluateKickerHand(
+  dice: Dice,
+  game: KickerGameId,
+  variant: Variant,
+  locked: number[] = []
+): KickerHand {
   const shape = SHAPES[game]
   let best: KickerHand = { made: false }
   for (const gameDice of combinations(dice.length, shape.size)) {
-    if (!shape.makes(gameDice.map((i) => dice[i]))) continue
+    if (!makesHolding(dice, gameDice, game, locked)) continue
     const kickerDice = dice.map((_, i) => i).filter((i) => !gameDice.includes(i))
     const kickerTotal = sum(kickerDice.map((i) => dice[i]))
     if (!best.made || compareKickerTotals(kickerTotal, best.kickerTotal, variant) > 0) {
@@ -103,8 +120,25 @@ export function evaluateKickerHand(dice: Dice, game: KickerGameId, variant: Vari
   return best
 }
 
-export const makesGame = (dice: Dice, game: KickerGameId): boolean =>
-  evaluateKickerHand(dice, game, 'high').made
+export const makesGame = (dice: Dice, game: KickerGameId, locked: number[] = []): boolean =>
+  evaluateKickerHand(dice, game, 'high', locked).made
+
+/** Values with the `locked` ones moved to the front, and their positions there */
+function lockedFirst(values: Dice, locked: Dice): { dice: Dice; locked: number[] } | null {
+  const rest = [...values]
+  for (const d of locked) {
+    const i = rest.indexOf(d)
+    if (i < 0) return null
+    rest.splice(i, 1)
+  }
+  return { dice: [...locked, ...rest], locked: locked.map((_, i) => i) }
+}
+
+/** Do these values make the game, holding the `locked` values kept last roll? */
+export function makesGameHolding(values: Dice, game: KickerGameId, locked: Dice = []): boolean {
+  const ordered = lockedFirst(values, locked)
+  return ordered !== null && makesGame(ordered.dice, game, ordered.locked)
+}
 
 /**
  * Kickers are rolled together (docs/RULES.md §3.1): once the dice a player
@@ -146,32 +180,38 @@ function isStart(values: number[], game: KickerGameId, rules: KeepRules): boolea
   }
 }
 
+export interface KeepCheck {
+  /** The dice kept last roll: committed, so the new keep must hold them */
+  locked?: Dice
+  /** The whole hand being kept from: once it makes the game, those dice can't be re-rolled */
+  hand?: Dice
+  rules?: KeepRules
+}
+
 /**
  * May a player keep these dice in a kicker game (docs/RULES.md §3.1)?
  * Only dice that make the game, or a start toward it, never kicker dice.
- * `locked` are the dice they kept last roll: they're committed to them, so
- * the new keep must hold them too. Returns why not, or null when it's legal.
- * (The engine checks positions; this checks values.)
+ * Kept dice stay kept (`locked`), and once the hand makes the game the
+ * player keeps the dice that make it or stands: they can't be re-rolled.
+ * Returns why not, or null when it's legal. (The engine checks positions;
+ * this checks values.)
  */
 export function keepProblem(
   kept: Dice,
   game: KickerGameId,
-  locked: Dice = [],
-  rules: KeepRules = DEFAULT_HOUSE_RULES
+  { locked = [], hand, rules = DEFAULT_HOUSE_RULES }: KeepCheck = {}
 ): string | null {
-  const left = [...kept]
-  const holdsLocked = locked.every((d) => {
-    const i = left.indexOf(d)
-    if (i < 0) return false
-    left.splice(i, 1)
-    return true
-  })
-  if (!holdsLocked) return 'Kept dice stay kept: you’re committed to the dice you kept last roll'
+  if (!lockedFirst(kept, locked)) return 'Kept dice stay kept: you’re committed to the dice you kept last roll'
+  const makes = kept.length === SHAPES[game].size && makesGameHolding(kept, game, locked)
+  if (makes) return null
+  if (hand && makesGameHolding(hand, game, locked)) {
+    return keepsKickers(kept, game)
+      ? 'Kickers are rolled together: keep only the dice that make the game, or stand'
+      : 'You’ve made the game: keep the dice that make it, or stand. They can’t be re-rolled'
+  }
   if (kept.length === 0) return null
-  const values = [...kept]
-  if (values.length === SHAPES[game].size && SHAPES[game].makes(values)) return null
   if (keepsKickers(kept, game)) return 'Kickers are rolled together: keep only the dice that make the game, or stand'
-  if (isStart(values, game, rules)) return null
+  if (isStart(kept, game, rules)) return null
   return KEEP_HINTS[game]
 }
 
@@ -185,9 +225,9 @@ const KEEP_HINTS: Record<KickerGameId, string> = {
   pairs: 'In Pairs keep one pair, or both pairs once you have them: never a kicker die',
 }
 
-/** Is keeping `kept` (after `locked` last roll) legal? See keepProblem */
-export const isLegalKeep = (kept: Dice, game: KickerGameId, locked: Dice = [], rules?: KeepRules): boolean =>
-  keepProblem(kept, game, locked, rules) === null
+/** Is keeping `kept` legal? See keepProblem */
+export const isLegalKeep = (kept: Dice, game: KickerGameId, check?: KeepCheck): boolean =>
+  keepProblem(kept, game, check) === null
 
 /** How many dice make the game (the rest are kickers) */
 export const gameSize = (game: KickerGameId): number => SHAPES[game].size

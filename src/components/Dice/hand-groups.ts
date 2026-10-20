@@ -87,7 +87,7 @@ export function handGroups(
   dice: Dice,
   game?: string | null,
   variant?: Variant | null,
-  options: { putOut?: number[] } = {}
+  options: { putOut?: number[]; kept?: number[] } = {}
 ): HandGroup[] {
   const all = dice.map((_, i) => i)
   // No game, or dice not rolled yet: just the dice
@@ -95,7 +95,7 @@ export function handGroups(
     return [{ tone: 'plain', label: null, indices: all }]
   if (!isKickerGame(game as GameId))
     return specialtyGroups(dice, game, options.putOut)
-  const hand = evaluateKickerHand(dice, game as never, variant || 'high')
+  const hand = evaluateKickerHand(dice, game as never, variant || 'high', options.kept)
   if (!hand.made) return [{ tone: 'plain', label: 'miss', indices: all }]
   return [
     { tone: 'game', label: 'game', indices: hand.gameDice },

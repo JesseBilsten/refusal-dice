@@ -45,8 +45,12 @@ Each rule is tagged by where it came from:
   - **7's:** keep **one pair** summing to 7 or 11 (1-6, 2-5, 3-4, 5-6), or both pairs once made. Not three dice toward two pairs (e.g. not 1-5-6).
   - **Pairs:** keep **one pair**, or both pairs once made. Never a kicker die.
   - A player who holds nothing to keep re-rolls all five.
-- **Kept dice stay kept.** Once kept, a player is committed to those dice for the rest of their rolls: every later keep holds them (e.g. keep 1-2 in Ship Captain Crew and you can't switch to 5-6 or re-roll all five). Dice that made the game by luck but were never kept may still be re-rolled. [confirmed]
-- The engine enforces both (`keepProblem` in `src/engine/rules/kicker-games.ts`; the committed dice are `rolling[player].kept`). Razzle, Boss and Tres Away have their own keep rules (§3.2–3.4).
+- **Kept dice stay kept.** Once kept, a player is committed to those dice for the rest of their rolls: every later keep holds them (e.g. keep 1-2 in Ship Captain Crew and you can't switch to 5-6 or re-roll all five). [confirmed]
+- **Kept dice are part of the game** (ruled 2026-10-20). The game has to be made with the kept dice in it, the rest coming from the dice rolled. [confirmed]
+  - 7's and Pairs: a kept pair stays one of the two pairs. Keep 5-6 and the other 7 or 11 has to come from the three dice rolled: the 5 can't pair with a rolled 2, nor the 6 with a rolled 1.
+  - Ship Captain Crew: keep 1-2 and only a 3 makes it; a rolled 4-5-6 doesn't. Monterey: keep 2-3 and the game is 2-3-4.
+- **A made game can't be re-rolled** (ruled 2026-10-20). Once a player's dice make the game, they keep the dice that make it and re-roll the whole kicker, or stand: e.g. in 10-2, a 5-5 can't be picked up and rolled again. Only Razzle and Boss let a player pick up the dice that make their hand (§3.2, §3.3). [confirmed]
+- The engine enforces all of these (`keepProblem` and `evaluateKickerHand` in `src/engine/rules/kicker-games.ts`; the committed dice are `rolling[player].kept`, read back with `keptAt`). Razzle, Boss and Tres Away have their own keep rules (§3.2–3.4).
 - **The worst hand rolls first** (§4), not in seat order: only the player at the bottom rolls, until they climb off it or run out of rolls. [confirmed]
 - **Dice are visible to everyone** from the start of play onward; only the initial roll is hidden (until play starts). [confirmed]
 - A player tries to **make the game** and then get a kicker that beats the worst kicker at the table (e.g. in 10-3, roll until you have the game and a better kicker than the worst player). [confirmed]
@@ -56,7 +60,7 @@ Each rule is tagged by where it came from:
 - **The kicker** is the dice not used to make the game, scored as an **additive total**:
   - **High:** higher total wins; **Low:** lower total wins.
   - Example: a kicker of 5+6 = 11 beats 5+5 = 10 in High. [confirmed]
-  - When several dice combinations make the game, the player uses the combination that gives the best kicker total for the called variant. [inferred]
+  - When several dice combinations make the game, the player uses the combination that gives the best kicker total for the called variant, among those holding their kept dice. [inferred]
 - **Only the kicker** decides between players who made the game. The dice that made the game never matter (e.g. in Pairs, 6-6-5-5 and 2-2-3-3 are equal before the kicker; in SCC, 1-2-3 and 4-5-6 are equal). A player only has a kicker once they've made the game. [confirmed]
 
 **Making each game** (any dice order): [site] (matches `checkGame` in `game-validation.js`)
@@ -89,7 +93,7 @@ Each rule is tagged by where it came from:
 - **Hands** (high to low), poker-style without straights or flushes: five of a kind, four of a kind, full house, three of a kind, two pair, pair, high card. Ties use poker tie-breaks (e.g. 6s-over-2s beats 5s-over-4s). [site]
 - **Flow:** [confirmed] [site]
   1. Everyone reveals their initial roll. The best hand is the **Boss**. If two or more players tie for the best hand, there's **no Boss**: the game ends with no loser, the Hammer passes left, and a new game starts. [confirmed]
-  2. The Boss rolls **once more**, **hidden** from the table, and **must keep the dice that made them the Boss** (e.g. no dice from a full house may be picked up). Breaking the hand would mean they're no longer the Boss.
+  2. The Boss rolls **once more**, **hidden** from the table. They may pick up any dice, **except dice that would make someone else the Boss** (ruled 2026-10-20): the dice they keep must still beat every other player's hand on their own. E.g. with a full house they may pick up the pair only if three of a kind still beats the table. The kept dice are ranked as they stand, with no kicker, so matching another hand isn't enough. [confirmed] (`bossKeepProblem` in `src/engine/rules/specialty-games.ts`)
   3. Then the Boss chooses:
      - **"Come up":** every other player gets **one last roll** to avoid losing. They may keep any dice or re-roll all five, and each result is shown as soon as it's rolled. Then **the worst hand at the table loses, and that can be the Boss.** For example, a Boss who calls everyone up on two pair loses if everyone else rolls three of a kind.
      - **"Don't come up"** (also "pick them up"): the game ends with **no loser**, and play passes left.
@@ -139,11 +143,10 @@ Engine choices made without a ruling yet (the engine does the [inferred] thing u
 
 1. **Tres Away replay: who sets the pace?** When tied highest scores replay, the caller may not be among them. [inferred: the tied player nearest the caller, going left, starting with the caller]
 2. **Boss replay: a tie for the best hand.** When tied worst hands replay Boss and two of them tie for the best hand, the main-game rule (no Boss, no loser) would let them all off. [inferred: the replaying players start over with fresh rolls]
-3. **Boss on high card: which dice must the Boss keep?** [inferred: the single highest die. For other hands, the dice of the pairs/sets]
-4. **Boss: may the Boss skip the extra roll?** [inferred: yes, standing is allowed]
-5. **Tied at the bottom: who rolls first?** [inferred: the tied player nearest the Hammer, going left; they can't take the tie while another tied player can still roll]
-6. **Boss "come up": strict order?** [inferred: the engine enforces order from the Boss's left, since in online play waiting can be an advantage]
+3. **Boss: may the Boss skip the extra roll?** [inferred: yes, standing is allowed]
+4. **Tied at the bottom: who rolls first?** [inferred: the tied player nearest the Hammer, going left; they can't take the tie while another tied player can still roll]
+5. **Boss "come up": strict order?** [inferred: the engine enforces order from the Boss's left, since in online play waiting can be an advantage]
 
 ## Resolved questions (2026-10-14)
 
-Players who miss the game cycle until there's one loser; dice are visible during play (except Tres Away/Boss); the initial roll counts after a second call; re-rolling was unrestricted except in Tres Away (superseded 2026-10-19: only dice toward the game may be kept, and kept dice stay kept, §3.1); Boss re-rolls once keeping their hand, others keep anything, and the Boss can lose; Razzle 1s are wild for any number; only the kicker breaks ties. Boss: a tie for the best initial hand means no Boss and a new game; Razzle: face value breaks equal counts; 2-player table: both missing is a tie (no pencil, Hammer passes); with 2 players there's only a 1st refusal, and a refusal goes straight to the second call.
+Players who miss the game cycle until there's one loser; dice are visible during play (except Tres Away/Boss); the initial roll counts after a second call; re-rolling was unrestricted except in Tres Away (superseded 2026-10-19: only dice toward the game may be kept, and kept dice stay kept; 2026-10-20: kept dice are part of the game and a made game can't be re-rolled, §3.1); Boss re-rolls once keeping their hand (2026-10-20: any keep that still beats the table, §3.3), others keep anything, and the Boss can lose; Razzle 1s are wild for any number; only the kicker breaks ties. Boss: a tie for the best initial hand means no Boss and a new game; Razzle: face value breaks equal counts; 2-player table: both missing is a tie (no pencil, Hammer passes); with 2 players there's only a 1st refusal, and a refusal goes straight to the second call.

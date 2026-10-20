@@ -6,6 +6,9 @@
 import {
   Action,
   Dice,
+  bossKeepProblem,
+  evaluateKickerHand,
+  makesGame,
   EngineError,
   GameState,
   KICKER_GAMES,
@@ -300,13 +303,13 @@ describe('playing and scoring (§3.1, §4)', () => {
     expect(bottomTarget(g, 'b')).toBe('a')
   })
 
-  test('dice that made the game but were never kept may all be re-rolled', () => {
+  test('a made game’s dice can’t be re-rolled: keep them and roll the kicker, or stand', () => {
     const g = play(
       start([6, 1, 1, 4, 1, 1, 1, 1, 1, 1]),
-      { type: 'reroll', player: 'c', keep: [] }, // made, kicker 3: still worst
-      { type: 'reroll', player: 'c', keep: [] }
+      { type: 'reroll', player: 'c', keep: [] } // made, kicker 3: still worst
     )
-    expect(dice(g, 'c')).toEqual([1, 1, 1, 1, 1])
+    expect(() => applyAction(g, { type: 'reroll', player: 'c', keep: [] })).toThrow(/made the game/)
+    expect(dice(applyAction(g, { type: 'reroll', player: 'c', keep: [0, 3] }), 'c')).toEqual([6, 1, 1, 4, 1])
   })
 
   test('two players miss: they cycle with fresh rolls while the maker is safe', () => {
@@ -397,7 +400,7 @@ describe('playing and scoring (§3.1, §4)', () => {
     // only the dice that make the game may be kept
     expect(() =>
       applyAction(g, { type: 'reroll', player: 'c', keep: [1, 2] })
-    ).toThrow(/only the two dice/)
+    ).toThrow(/made the game/)
   })
 
   test('the keep rules (§3.1): 10s come in one roll; other games keep a start toward the game', () => {
@@ -414,15 +417,15 @@ describe('playing and scoring (§3.1, §4)', () => {
     expect(keepProblem([6], 'ship-captain-crew')).not.toBeNull()
     expect(keepProblem([4, 5, 6], 'ship-captain-crew')).toBeNull()
     // Committed: kept 1-2 last roll, so 5-6 can't replace it
-    expect(keepProblem([5, 6], 'ship-captain-crew', [1, 2])).toMatch(/stay kept/)
-    expect(keepProblem([1, 2, 3], 'ship-captain-crew', [1, 2])).toBeNull()
+    expect(keepProblem([5, 6], 'ship-captain-crew', { locked: [1, 2] })).toMatch(/stay kept/)
+    expect(keepProblem([1, 2, 3], 'ship-captain-crew', { locked: [1, 2] })).toBeNull()
     // Monterey: 2-3, 3-4 or 4-5; a lone 3 or 4 only under the house rule; never a die that doesn't fit
     expect(keepProblem([3, 4], 'monterey')).toBeNull()
     expect(keepProblem([3, 6], 'monterey')).not.toBeNull()
     expect(keepProblem([3], 'monterey')).not.toBeNull()
-    expect(keepProblem([3], 'monterey', [], { montereyLoneKeep: true })).toBeNull()
-    expect(keepProblem([4], 'monterey', [], { montereyLoneKeep: true })).toBeNull()
-    expect(keepProblem([2], 'monterey', [], { montereyLoneKeep: true })).not.toBeNull()
+    expect(keepProblem([3], 'monterey', { rules: { montereyLoneKeep: true } })).toBeNull()
+    expect(keepProblem([4], 'monterey', { rules: { montereyLoneKeep: true } })).toBeNull()
+    expect(keepProblem([2], 'monterey', { rules: { montereyLoneKeep: true } })).not.toBeNull()
     // 7's: one pair summing to 7 or 11, not three dice toward two pairs
     expect(keepProblem([5, 6], 'vegas')).toBeNull()
     expect(keepProblem([1, 6], 'vegas')).toBeNull()
@@ -432,6 +435,28 @@ describe('playing and scoring (§3.1, §4)', () => {
     expect(keepProblem([6, 6], 'pairs')).toBeNull()
     expect(keepProblem([4, 6, 6], 'pairs')).not.toBeNull()
     expect(keepProblem([6, 6, 6], 'pairs')).not.toBeNull()
+  })
+
+  test('kept dice are part of the game (§3.1): a kept pair stays one of the pairs', () => {
+    // Kept 5-6 (11) at the last roll, rolled 1, 2, 4: 5+2 and 6+1 would be two 7s, but the 5-6 is committed
+    expect(makesGame([5, 6, 1, 2, 4], 'vegas')).toBe(true)
+    expect(makesGame([5, 6, 1, 2, 4], 'vegas', [0, 1])).toBe(false)
+    expect(makesGame([5, 6, 1, 4, 3], 'vegas', [0, 1])).toBe(true)
+    // Ship Captain Crew: kept 1-2, so a rolled 4-5-6 doesn't make it
+    expect(makesGame([1, 2, 4, 5, 6], 'ship-captain-crew', [0, 1])).toBe(false)
+    // Monterey Low, kept 2-3, rolled 4-3-5: the game is 2-3-4 (kicker 8), not 3-4-5 with the kept 2 as a kicker (5)
+    expect(evaluateKickerHand([2, 3, 4, 3, 5], 'monterey', 'low')).toMatchObject({ made: true, kickerTotal: 5 })
+    expect(evaluateKickerHand([2, 3, 4, 3, 5], 'monterey', 'low', [0, 1])).toMatchObject({ made: true, kickerTotal: 8 })
+  })
+
+  test('a made game can’t be re-rolled (§3.1): keep its dice, or stand', () => {
+    expect(keepProblem([], '10-2', { hand: [5, 5, 3, 3, 3] })).toMatch(/made the game/)
+    expect(keepProblem([5, 5], '10-2', { hand: [5, 5, 3, 3, 3] })).toBeNull()
+    expect(keepProblem([6, 6], 'pairs', { hand: [6, 6, 3, 3, 1] })).toMatch(/made the game/)
+    expect(keepProblem([6, 6, 3, 3], 'pairs', { hand: [6, 6, 3, 3, 1] })).toBeNull()
+    // Kept 5-6, rolled 1-2: not made, since the 5-6 stays a pair, so 5-6 alone is still a fine keep
+    expect(keepProblem([5, 6], 'vegas', { locked: [5, 6], hand: [5, 6, 1, 2, 4] })).toBeNull()
+    expect(keepProblem([5, 6, 1, 2], 'vegas', { locked: [5, 6], hand: [5, 6, 1, 2, 4] })).not.toBeNull()
   })
 
   test('the Monterey house rule reaches the engine', () => {
@@ -617,8 +642,15 @@ describe('random games always finish and keep invariants', () => {
         const locked = g.phase.rolling[id].kept
         let keep = [0, 1, 2, 3, 4].filter((i) => locked.includes(i) || r() < 0.5)
         const game = g.phase.call.game
-        // Kicker games keep only what the rules allow (§3.1): otherwise just the committed dice
-        if (isKickerGame(game) && keepProblem(keep.map((i) => g.dice[id][i]), game)) keep = [...locked]
+        // Kicker games keep only what the rules allow (§3.1): otherwise the made game's dice, or the committed ones
+        if (isKickerGame(game)) {
+          const dice = g.dice[id]
+          const check = { locked: locked.map((i) => dice[i]), hand: dice }
+          if (keepProblem(keep.map((i) => dice[i]), game, check)) {
+            const hand = evaluateKickerHand(dice, game, g.phase.call.variant!, locked)
+            keep = hand.made ? [...hand.gameDice] : [...locked]
+          }
+        }
         return { type: 'reroll', player: id, keep }
       }
       case 'tresAway': {
@@ -636,15 +668,16 @@ describe('random games always finish and keep invariants', () => {
         }
       }
       case 'boss': {
-        const { boss, stage, mustKeep, waiting } = g.phase
+        const { boss, stage, bossDice, waiting, players: inGame } = g.phase
         if (stage === 'bossRoll') {
-          return r() < 0.2
+          // Any keep that still beats the table (§3.3), else stand
+          const keep = someOf([0, 1, 2, 3, 4])
+          const others = inGame.filter((id) => id !== boss).map((id) => g.dice[id])
+          const legal = (k: number[]) => !bossKeepProblem(k.map((i) => g.dice[boss][i]), others)
+          const choice = [keep, [...new Set([...bossDice, ...keep])], bossDice].find(legal)
+          return r() < 0.2 || !choice
             ? { type: 'stand', player: boss }
-            : {
-                type: 'reroll',
-                player: boss,
-                keep: [...new Set([...mustKeep, ...someOf([0, 1, 2, 3, 4])])],
-              }
+            : { type: 'reroll', player: boss, keep: choice }
         }
         if (stage === 'decide')
           return { type: r() < 0.8 ? 'comeUp' : 'dontComeUp', player: boss }

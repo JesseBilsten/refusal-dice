@@ -161,7 +161,7 @@ When a pattern repeats, extract it into a kit instead of copying it.
   4. If either accepts, everyone plays the call. If both refuse, the Hammer makes a **second call**: a *different game* (not just another variant), with no refusals.
   5. Reveal. The worst hand/**kickers** takes a **pencil** and gets the Hammer next.
 - **Kicker** (singular): all the dice left after making the game, as one total. It's re-rolled whole, never in part. Write "a kicker of 6+1", not "kickers".
-- **Keeping:** only dice toward the game, and kept dice stay kept (RULES.md §3.1). The 10s come in one roll (nothing to keep until made); Ship Captain Crew keeps 1-2 or 5-6; Monterey 2-3, 3-4 or 4-5 (a lone 3 or 4 under the house rule); 7's and Pairs one pair.
+- **Keeping:** only dice toward the game, and kept dice stay kept (RULES.md §3.1). The 10s come in one roll (nothing to keep until made); Ship Captain Crew keeps 1-2 or 5-6; Monterey 2-3, 3-4 or 4-5 (a lone 3 or 4 under the house rule); 7's and Pairs one pair. Kept dice are part of the game (a kept pair stays a pair: pass the kept positions to `evaluateKickerHand`/`makesGame`, `keptAt` reads them back), and a made game's dice can't be re-rolled. Boss may pick up any dice that still leave a hand beating the table (`bossKeepProblem`, §3.3).
 - **Ties:** with 3+ players, the tied losers replay; with 2 players, no pencil is taken and the Hammer passes.
 - **End:** 3 pencils = out; last player standing wins the pot.
 - **Games** (ids from `games-config.js`):

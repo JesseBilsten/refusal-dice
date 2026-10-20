@@ -27,25 +27,25 @@ const GAME_CONTENT = {
   '10-2': {
     subtitle: 'high or low',
     description: '2 dice add up to 10 and the remaining 3 dice are either high or low.',
-    partialKeep: 'There’s nothing to keep until you have it: 10-2 has to come in one roll, so roll all five each time. Once you have it, keep the two dice that make 10 and re-roll the kicker whole (all three dice at once), or stand. With a three-dice kicker, totals near the top or bottom of the range are very hard to beat.',
+    partialKeep: 'There’s nothing to keep until you have it: 10-2 has to come in one roll, so roll all five each time. Once you have it, keep the two dice that make 10 (they can’t be re-rolled) and re-roll the kicker whole (all three dice at once), or stand. With a three-dice kicker, totals near the top or bottom of the range are very hard to beat.',
   },
   '10-3': {
     subtitle: 'high or low',
     description: '3 dice add up to 10 and the remaining 2 dice are either high or low.',
     aka: 'Frankie',
-    partialKeep: 'There’s nothing to keep until you have it: 10-3 has to come in one roll, so roll all five each time. Once you have it, keep the three dice that make 10 and re-roll the kicker whole (both dice at once), or stand.',
+    partialKeep: 'There’s nothing to keep until you have it: 10-3 has to come in one roll, so roll all five each time. Once you have it, keep the three dice that make 10 (they can’t be re-rolled) and re-roll the kicker whole (both dice at once), or stand.',
   },
   '10-4': {
     subtitle: 'high or low',
     description: '4 dice add up to 10 and the remaining die is either high or low.',
     aka: 'Shotgun',
-    partialKeep: 'There’s nothing to keep until you have it: 10-4 has to come in one roll, so roll all five each time, which makes it the hardest game to make. Once you have it, keep the four dice that make 10; the kicker is the one die left.',
+    partialKeep: 'There’s nothing to keep until you have it: 10-4 has to come in one roll, so roll all five each time, which makes it the hardest game to make. Once you have it, keep the four dice that make 10 (they can’t be re-rolled); the kicker is the one die left.',
   },
   'ship-captain-crew': {
     subtitle: 'high or low',
     description: '3 dice make up an outside straight (4-5-6 or 1-2-3) and the remaining 2 dice are either high or low.',
     aka: 'Outside straight, Crew',
-    partialKeep: 'Keep 1-2 or 5-6 and roll the other three for the missing 3 or 4. Pick one: you can’t hold both, and once kept you’re committed to it. You can only keep the connector or the made straight, nothing else. Once you have it, the other two dice are your kicker, re-rolled together.',
+    partialKeep: 'Keep 1-2 or 5-6 and roll the other three for the missing 3 or 4: it has to come from those three, since your kept dice are part of the straight. Pick one: you can’t hold both, and once kept you’re committed to it. You can only keep the connector or the made straight, nothing else. Once you have it, the other two dice are your kicker, re-rolled together.',
   },
   monterey: {
     subtitle: 'high or low',
@@ -57,7 +57,7 @@ const GAME_CONTENT = {
     subtitle: 'high or low',
     description: '2 sets of 2 dice add up to 7 and/or 11 and the remaining die is either high or low.',
     aka: '7-11, 7 and/or 11\'s, Vegas',
-    partialKeep: 'Keep one pair that sums to 7 or 11 (1-6, 2-5, 3-4 or 5-6) and roll the other three for a second. Only that pair: no third die toward the next pair, and once kept you’re committed to it. Once you have both pairs, the last die is your kicker.',
+    partialKeep: 'Keep one pair that sums to 7 or 11 (1-6, 2-5, 3-4 or 5-6) and roll the other three for a second. The kept pair stays a pair, so the second has to come from those three (a kept 5 can’t pair with a rolled 2), and any pair is as good to keep as another. Only that pair: no third die toward the next pair, and once kept you’re committed to it. Once you have both pairs, the last die is your kicker.',
   },
   pairs: {
     subtitle: 'high or low',
@@ -70,7 +70,7 @@ const GAME_CONTENT = {
   },
   boss: {
     description: 'Poker-style hands without straights or flushes. All players reveal their dice, and the highest hand becomes the "Boss." A tie for the best hand means no Boss: no loser, and the Hammer passes left.',
-    strategy: 'Call with two pair or better; three of a kind is a strong call. If you’re the Boss you get one more roll in secret, keeping the dice that made you Boss, then decide whether to call everyone up.',
+    strategy: 'Call with two pair or better; three of a kind is a strong call. If you’re the Boss you get one more roll in secret: pick up any dice, as long as what you keep still beats everyone, then decide whether to call everyone up.',
     partialKeep: 'On your last roll after “come up”, you only need to beat the worst hand showing. From 6-4-2-1-5 against a pair of 3s, holding the 6 (80%) is close to holding 5-6 (81%), and both beat rolling all five (74%): see the question below.',
   },
   'tres-away': {

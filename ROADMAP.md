@@ -205,5 +205,6 @@ Build it once and every later phase gets cheaper.
 | 2026-10-16 | Bots choose calls and refusals from a generated table of each call's chance of losing (`strategy/call-odds.ts`), not hand-tuned scores | The hand-tuned scores weren't comparable across games (33356 called Razzle over Boss) |
 | 2026-10-16 | Re-run the bark, decoy-call and Tres Away findings once the bots play like strong players | Owner request; today's findings are against "solid" bots |
 | 2026-10-19 | Only dice toward the game may be kept, and kept dice stay kept (`docs/RULES.md` §3.1) | Owner ruling: the 10s come in one roll; Ship Captain Crew keeps 1-2 or 5-6; Monterey a connector; 7's and Pairs one pair |
+| 2026-10-20 | Kept dice are part of the game, a made game can't be re-rolled, and the Boss may pick up dice that still leave them the Boss (`docs/RULES.md` §3.1, §3.3) | Owner ruling: a kept 7's pair stays one of the pairs; 10-2's 5-5 can't be rolled again; only Razzle and Boss let you pick up a made hand |
 | 2026-10-19 | House-rule odds are generated for each setting, not computed on demand | Simulated tables take minutes to hours; one rule doubles them, which is affordable |
 | 2026-10-14 | Odds Lab ships ahead of Phase 0 | Self-contained (`roll-query.js` is pure and tested), so it doesn't block or depend on the engine split |

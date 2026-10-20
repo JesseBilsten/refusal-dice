@@ -14,8 +14,8 @@
  */
 export const SITUATIONS = {
   '10-2': {
-    label: '10-2 High: a kicker of 3+3+3 to beat 12. Keep the 5-5 and re-roll the kicker?',
-    s: { game: '10-2', roll: '55333', rolls: 2, goal: 'kicker', variant: 'high', total: 12, ask: ['55', ''] },
+    label: '10-2 High: a kicker of 3+3+3 to beat 12. Re-roll the kicker, or stand?',
+    s: { game: '10-2', roll: '55333', rolls: 2, goal: 'kicker', variant: 'high', total: 12, ask: ['55'] },
   },
   'ship-captain-crew': {
     label: 'Ship, Captain, Crew Low, a kicker of 4 to beat: keep the 1-2 or the 5-6? Only one',
@@ -26,8 +26,8 @@ export const SITUATIONS = {
     s: { game: 'monterey', roll: '23661', rolls: 2, goal: 'make', ask: ['23', '3', ''] },
   },
   vegas: {
-    label: '7’s: keep the 1-6 or the 5-6?',
-    s: { game: 'vegas', roll: '16533', rolls: 2, goal: 'make', ask: ['16', '56'] },
+    label: '7’s: keep the 1-6 or the 5-6, or roll all five?',
+    s: { game: 'vegas', roll: '16533', rolls: 2, goal: 'make', ask: ['16', '56', ''] },
   },
   pairs: {
     label: 'Pairs: three 6s. Keep a pair, or roll all five?',

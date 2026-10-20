@@ -1,6 +1,6 @@
 import { compareBoss, compareTresAway, tresAwayScore } from '../rules/specialty-games'
 import { Dice, PlayerId } from '../types'
-import { GameState, MAX_ROLLS, activeSeats, bottomHands, playCompare, seatOrderFrom } from './game'
+import { GameState, MAX_ROLLS, activeSeats, bottomHands, keptAt, playCompare, seatOrderFrom } from './game'
 
 /**
  * The table ranked, best hand first, from what everyone can see: who's at
@@ -67,9 +67,10 @@ export function standings(state: GameState): Standing[] {
     const bottom = bottomHands(state)
     // A finished hand that's already worse than yours puts you in the cup
     const final = ids.filter((id) => phase.rolling[id].done)
-    const ranked: Standing[] = rankBest(ids, (a, b) => cmp(hand(a), hand(b))).map(({ id, rank }) => {
+    const order = (a: PlayerId, b: PlayerId) => cmp(hand(a), hand(b), keptAt(state, a), keptAt(state, b))
+    const ranked: Standing[] = rankBest(ids, order).map(({ id, rank }) => {
       const left = MAX_ROLLS - phase.rolling[id].rollsUsed
-      const safe = final.some((y) => y !== id && cmp(hand(y), hand(id)) < 0)
+      const safe = final.some((y) => y !== id && order(y, id) < 0)
       return {
         player: id,
         rank,
@@ -129,10 +130,10 @@ export function standings(state: GameState): Standing[] {
       ? last.players
       : state.seats.filter((s) => !s.out || s.id === phase.loser).map((s) => s.id)
     const { call } = phase
-    const cmp: (a: Dice, b: Dice) => number =
+    const cmp: (a: Dice, b: Dice, keptA?: number[], keptB?: number[]) => number =
       call.game === 'tres-away' ? compareTresAway : call.game === 'boss' ? compareBoss : playCompare(call)
     const ranked: Standing[] = rankBest(seatOrderFrom(state, state.hammer, ids), (a, b) =>
-      cmp(state.dice[a], state.dice[b])
+      cmp(state.dice[a], state.dice[b], keptAt(state, a), keptAt(state, b))
     ).map(({ id, rank }) => ({
       player: id,
       rank,

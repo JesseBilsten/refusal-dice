@@ -413,7 +413,9 @@ const GLOSSARY_TERMS = [
           one pair in 7's or Pairs. Never part of your <Link to="#kicker" className="text-primary hover:underline">kicker</Link>.
         </p>
         <p className="text-sm text-muted-foreground">
-          <strong>Kept dice stay kept:</strong> once you keep dice you're committed to them for the rest of your rolls.<br/>
+          <strong>Kept dice stay kept:</strong> once you keep dice you're committed to them for the rest of your rolls,
+          and they're part of your game (a kept pair stays a pair). Once you've made the game its dice can't be
+          re-rolled; only Razzle and Boss let you pick those up.<br/>
           <strong>See also:</strong> <Link to="/rules" className="text-primary hover:underline">Rules</Link>,{' '}
           <Link to="/odds-lab/?tab=keep" className="text-primary hover:underline">Odds Lab: what should I keep?</Link>
         </p>

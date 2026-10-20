@@ -16,6 +16,8 @@ import { handGroups } from './hand-groups'
  *   slides there instead of rolling again
  * - `kept` / `onToggleKeep(i)`: tap a die to keep it (modeled games)
  * - `locked`: positions that can't be tapped (dice put out, or a Boss's hand)
+ * - `committed`: kicker games, the positions kept at the last roll, which
+ *   must be part of the game (a kept pair stays one of the pairs)
  * - `dimension`: '3d' or 'flat', overriding the player's 3D setting
  * - `putOut`: Tres Away, the positions put out so far (default: the best
  *   first put-out from this roll, labeled "put out first")
@@ -35,11 +37,12 @@ export default function Hand({
   putOut,
   dimension,
   locked,
+  committed,
   className,
 }) {
   // Small sizes are compact (outlines, no labels) unless `labels` says otherwise
   const compact = !(labels ?? !(size === 'xs' || size === 'sm'))
-  const groups = handGroups(dice, game, variant, { putOut })
+  const groups = handGroups(dice, game, variant, { putOut, kept: committed })
   // The roll each position last showed, so a die that only changed groups doesn't roll again
   const shown = useRef({})
   useEffect(() => {
