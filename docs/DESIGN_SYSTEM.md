@@ -16,8 +16,8 @@ Pages are ordered as a path, and link forward along it:
 
 1. **Learn** (`/learn`): one guided round.
 2. **Rules** and **Games** (`/rules`, `/games`, `/games/<id>`): how each
-   game is made, its quirks, and one real "question from the table" with
-   its exact answer.
+   game is made, its quirks, and, where the game has one, a real "question
+   from the table" with its exact answer.
 3. **Odds Lab** (`/odds-lab`): answer your own questions. *What should I
    keep?* (exact keep-or-roll odds), *Every game's odds*, *Build any roll*.
 4. **Strategy** (`/strategy-assistant`): your roll and seat, simulated;
@@ -236,8 +236,11 @@ way to show "every roll this counts": the unique rolls as a dice grid
 `src/strategy/situations.ts`, which only offers keeps the rules allow.
 With one roll left in a kicker game, KeepAdvisor asks which dice you kept
 last roll, since every option has to hold them. Table questions live in
-`OddsLab/situations-catalog.js`, one per game; add new ones there. Each
-must ask about legal keeps: a test checks.
+`OddsLab/situations-catalog.js`, at most one per game; add new ones there.
+Only questions players really ask, or whose answer isn't common sense: a
+game with no real keep decision (the 10s, Monterey, Pairs) has none. Each
+must ask about legal keeps, and its optional `why` quotes only computed
+odds (`keepOdds`); tests check both.
 
 The rules are in `.claude/skills/explain-odds/SKILL.md`. Reference screens:
 the tutorial's take-the-tie step, and the Strategy Assistant's

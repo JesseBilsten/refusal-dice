@@ -7,7 +7,7 @@ import { COUNT_WORDS, DiceGroup, Hand, RollInput, razzleName } from '../Dice'
 import { Disclosure, OddsDecision, Questions, fmtPct } from '../Odds'
 import { Chip, Panel } from '../Page'
 import { SITUATIONS } from './situations-catalog'
-import { goalFor, lockedPositions, optionLabel, rerollsFor } from './keep-model'
+import { goalFor, lockedPositions, optionLabel, rerollsFor, situationWhy } from './keep-model'
 import { useHouseRules } from '../Settings/house-rules'
 
 /**
@@ -49,6 +49,14 @@ const toValues = (digits) =>
 
 /** Questions people actually ask at the table, one click away */
 const EXAMPLES = Object.values(SITUATIONS)
+
+/** The example question on screen, untouched (null once anything is edited) */
+const exampleShown = (s, dice, beat) =>
+  EXAMPLES.find((e) =>
+    Object.entries(e.s).every(([k, v]) =>
+      k === 'roll' ? dice.join('') === v : k === 'beat' ? beat.join('') === v : k === 'ask' ? s.ask.join() === v.join() : s[k] === v
+    )
+  ) ?? null
 
 const DEFAULT = { game: 'monterey', roll: '', rolls: 2, goal: 'make', variant: 'high', total: 7, count: 3, face: 5, beat: '', kept: '', ask: [] }
 
@@ -141,6 +149,12 @@ export default function KeepAdvisor() {
 
   const roll = dice.every(Boolean) ? dice.map(Number) : null
   const hand = beat.every(Boolean) ? beat.map(Number) : null
+  const example = exampleShown(s, dice, beat)
+  const why = useMemo(
+    () => situationWhy(example, rules, (p) => fmtPct(p, 1)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [example, rules.montereyLoneKeep]
+  )
   const kicker = isKickerGame(s.game)
   const name = getGameName(s.game)
   const kickerDice = { '10-2': 3, '10-3': 2, '10-4': 1 }[s.game] ?? (s.game === 'vegas' || s.game === 'pairs' ? 1 : 2)
@@ -357,6 +371,13 @@ export default function KeepAdvisor() {
                   ],
                 }))}
               />
+              {why && (
+                <Disclosure title={example.whyTitle}>
+                  {why.map((para) => (
+                    <p key={para}>{para}</p>
+                  ))}
+                </Disclosure>
+              )}
               <Disclosure title="How this is worked out">
                 <p>
                   Every way the dice you throw can land is counted exactly. After this roll, you're assumed to keep the

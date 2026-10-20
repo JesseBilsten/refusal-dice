@@ -530,9 +530,9 @@ const GameDetailTemplate = ({ pageContext }) => {
             </div>
           </>
         )}
-        {SITUATIONS[gameId] && (
+        {gameId !== 'barking' && (
           <NextStep
-            to={situationPath(SITUATIONS[gameId].s)}
+            to={SITUATIONS[gameId] ? situationPath(SITUATIONS[gameId].s) : `/odds-lab/?tab=keep&game=${gameId}`}
             title="Work out your own situations"
             text={`Enter any ${gameMeta.name} roll in the Odds Lab and see exactly what to keep.`}
           />

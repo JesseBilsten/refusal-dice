@@ -26,3 +26,26 @@ test.each(Object.entries(SITUATIONS).filter(([, q]) => isKickerGame(q.s.game)))(
       .forEach((o) => expect(isLegalKeep(o.dice, s.game, { locked, hand: dice })).toBe(true))
   }
 )
+
+const { situationWhy } = require('../components/OddsLab/keep-model')
+
+test.each(Object.entries(SITUATIONS).filter(([, q]) => q.why))(
+  '%s: the reasoning computes every figure it quotes',
+  (_, q) => {
+    expect(q.whyTitle).toBeTruthy()
+    const text = situationWhy(q, { montereyLoneKeep: false }, (p) => `${(p * 100).toFixed(1)}%`).join(' ')
+    expect(text).toMatch(/\d+\.\d%/)
+    expect(text).not.toMatch(/undefined|NaN/)
+  }
+)
+
+test('Ship Captain Crew Low vs 4: the keeps win alike on one roll; the 5-6 ties more and comes out ahead', () => {
+  const { keepOdds } = require('../components/OddsLab/keep-model')
+  const odds = keepOdds(SITUATIONS['ship-captain-crew'].s, { montereyLoneKeep: false })
+  expect(odds('12', 1).win).toBeCloseTo(9 / 216, 12)
+  expect(odds('56', 1).win).toBeCloseTo(9 / 216, 12)
+  expect(odds('12', 1).tie).toBeCloseTo(6 / 216, 12)
+  expect(odds('56', 1).tie).toBeCloseTo(9 / 216, 12)
+  const score = (o) => o.win + o.tie / 2
+  expect(score(odds('56'))).toBeGreaterThan(score(odds('12')))
+})

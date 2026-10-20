@@ -1,4 +1,5 @@
 import { isKickerGame } from '../../engine'
+import { keepOptions } from '../../strategy'
 
 /**
  * Shared by KeepAdvisor and SituationCard: a situation's goal for the
@@ -40,3 +41,23 @@ export function lockedPositions(dice, kept) {
 
 /** Rolls left after this one: Boss's come-up is a single last roll */
 export const rerollsFor = (s) => (s.game === 'boss' ? 1 : s.rolls || 2)
+
+/**
+ * The exact odds of each keep in situation `s`: odds('56', 1) is { win,
+ * tie } for keeping 5-6 with one roll left ('' rolls all five; rerolls
+ * defaults to the situation's). For a question's `why` (situations-catalog.js).
+ */
+export function keepOdds(s, rules) {
+  const dice = s.roll.split('').map(Number)
+  const beat = s.beat ? s.beat.split('').map(Number) : null
+  const context = { locked: lockedPositions(dice, s.kept), rules }
+  return (digits, rerolls = rerollsFor(s)) => {
+    const o = keepOptions(dice, rerolls, goalFor(s, beat), context).find((x) => !x.stand && x.dice.join('') === digits)
+    if (!o) throw new Error(`No keep ${digits || 'none'} in ${s.game} ${s.roll}`)
+    return o
+  }
+}
+
+/** A question's reasoning as paragraphs, every figure computed (null when it has none) */
+export const situationWhy = (situation, rules, pct) =>
+  situation?.why ? situation.why({ odds: keepOdds(situation.s, rules), pct }) : null

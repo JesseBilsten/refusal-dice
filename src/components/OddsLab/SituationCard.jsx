@@ -5,7 +5,7 @@ import { keepOptions, tresAwayExpected, tresAwayPutOut } from '../../strategy'
 import { Hand } from '../Dice'
 import { fmtPct } from '../Odds'
 import { Panel } from '../Page'
-import { goalFor, lockedPositions, optionLabel, rerollsFor } from './keep-model'
+import { goalFor, lockedPositions, optionLabel, rerollsFor, situationWhy } from './keep-model'
 import { useHouseRules } from '../Settings/house-rules'
 import { SITUATIONS, situationPath } from './situations-catalog'
 
@@ -52,6 +52,9 @@ export default function SituationCard({ gameId, className }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameId, rules.montereyLoneKeep])
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const why = useMemo(() => situationWhy(situation, rules, (p) => fmtPct(p, 1)), [gameId, rules.montereyLoneKeep])
+
   if (!situation) return null
   return (
     <Panel tone="tool" title="A question from the table" className={className}>
@@ -60,6 +63,16 @@ export default function SituationCard({ gameId, className }) {
       <p className="mt-4">
         <strong>{answer.best}.</strong> <span className="text-muted-foreground">{answer.line}.</span>
       </p>
+      {why && (
+        <>
+          <p className="mt-4 font-medium">{situation.whyTitle}</p>
+          {why.map((para) => (
+            <p key={para} className="mt-2 text-muted-foreground">
+              {para}
+            </p>
+          ))}
+        </>
+      )}
       <Link
         to={situationPath(s)}
         className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-primary hover:underline"
