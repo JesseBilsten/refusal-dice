@@ -181,6 +181,7 @@ When a pattern repeats, extract it into a kit instead of copying it.
   - **Trackers:** open work is `ROADMAP.md` (in place of `BACKLOG.md`). Questions for the user go in its "Open questions", game-rule questions in `docs/RULES.md` §6 (in place of `questions.md`); rulings go in its "Decision log", game-rule rulings into `docs/RULES.md` itself, with the date.
   - **Handoff rule:** commit the handoff to master; push only with the user's OK, since pushing deploys refusaldice.com.
   - **Extra check:** master is the live site, so the latest CI run on master should be green (`gh run list -L 1`).
+  - **Handoff and lessons:** `notes/handoff.md` (live), `notes/handoff-archive.md`, and @notes/lessons.md.
 
 ## Infrastructure direction (Phase 4, not built yet)
 
