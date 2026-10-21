@@ -356,7 +356,11 @@ export default function KeepAdvisor() {
               <Hand dice={roll} game={s.game} variant={kicker ? s.variant : null} />
               <OddsDecision
                 // The bars stack wins and ties, so with ties in play they measure "beat or tie"
-                outcome={shown.some((o) => o.tie > 0) ? target.outcome.replace(/^beat /, 'beat or tie ') : target.outcome}
+                // With two rolls left, every option's odds run to your last roll, not just this one
+                outcome={
+                  (shown.some((o) => o.tie > 0) ? target.outcome.replace(/^beat /, 'beat or tie ') : target.outcome) +
+                  (rerolls > 1 ? ' by your last roll' : '')
+                }
                 lowerIsBetter={false}
                 options={shown.map((o, i) => ({
                   id: String(i),
