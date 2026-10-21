@@ -197,7 +197,7 @@ const GLOSSARY_TERMS = [
     id: 'second-call',
     term: 'Second Call',
     emoji: '2️⃣',
-    keywords: ['second call', '2nd call', 'different game', 'everyone plays'],
+    keywords: ['second call', '2nd call', 'come back', 'comeback', 'different game', 'everyone plays'],
     body: (
       <>
         <p className="mb-2">
@@ -212,6 +212,31 @@ const GLOSSARY_TERMS = [
         <p className="text-sm text-muted-foreground">
           <strong>See also:</strong> <Link to="/rules#refusal" className="text-primary hover:underline">Rules: Second Call</Link>,{' '}
           <Link to="/strategy-assistant/?tab=second" className="text-primary hover:underline">predict the second call</Link>
+        </p>
+      </>
+    ),
+  },
+  {
+    id: 'come-back',
+    term: 'Come Back / Come Back Roll',
+    emoji: '↩️',
+    keywords: ['come back', 'comeback', 'come back roll', 'coming back', 'second call', '2nd call'],
+    body: (
+      <>
+        <p className="mb-2">
+          The <Link to="#hammer" className="text-primary hover:underline">Hammer</Link>'s{' '}
+          <Link to="#second-call" className="text-primary hover:underline">Second Call</Link>: the game they call if
+          both refusals turn down the first. Nobody can refuse it.
+        </p>
+        <p className="text-sm text-muted-foreground mb-2">
+          <em>"I may not have 10-3 Low, but I might have the come back."</em> ·{' '}
+          <em>"What are you coming back with?"</em> (what's your second call going to be?)
+        </p>
+        <p className="text-sm text-muted-foreground">
+          <strong>See also:</strong>{' '}
+          <Link to="/strategy-assistant/?tab=second" className="text-primary hover:underline">
+            the likeliest come back after each call
+          </Link>
         </p>
       </>
     ),
