@@ -12,8 +12,9 @@ import { analyzeRoll } from '../lib/game-validation'
 import { formatCallLabel, GAMES_MAP } from '../lib/games-config'
 import { cn } from '../lib/utils'
 import rollGameMatrix from '../data/roll-game-matrix.json'
-import { bossHand, razzleScore, tresAwayScore } from '../engine'
+import { tresAwayScore } from '../engine'
 import { CALL_ODDS_PLAYERS, callLoss } from '../strategy'
+import { SPECIALTY_CALLS, specialtyCalls, worthCalling } from '../components/OddsLab/specialty-calls'
 import { useHouseRules } from '../components/Settings/house-rules'
 
 /**
@@ -33,7 +34,15 @@ const share = (test) => {
   return n / 7776
 }
 
-const STRONG_BOSS = ['two-pair', 'three-of-a-kind', 'full-house', 'four-of-a-kind', 'five-of-a-kind']
+/** "Worth calling with three of a kind or better: 21.3% of rolls.", worked out from the call odds */
+const worthLine = (game) => {
+  const { good } = specialtyCalls(game)
+  const { orBetter, also } = SPECIALTY_CALLS[game]
+  return `Worth calling with ${orBetter(good)}${also ? `, ${also}` : ''}: ${fmtPct(
+    share((d) => worthCalling(game, d)),
+    1
+  )} of rolls.`
+}
 
 const SECTIONS = [
   {
@@ -102,25 +111,14 @@ const SECTIONS = [
   {
     id: 'razzle',
     made: 'The most of any one number, with 1s wild. Equal counts go to the higher number.',
-    callLine: () =>
-      `Worth calling with three or more wild 6s (1s and 6s), or five of anything: ${fmtPct(
-        share((d) => {
-          const sixes = d.filter((x) => x === 1 || x === 6).length
-          return sixes >= 3 || razzleScore(d).count === 5
-        }),
-        1
-      )} of rolls.`,
+    callLine: () => worthLine('razzle'),
     examples: [{ dice: [1, 6, 6, 2, 4] }, { dice: [1, 5, 1, 1, 3] }, { dice: [1, 1, 1, 1, 6] }],
   },
   {
     id: 'boss',
     made: 'Poker hands without straights or flushes. The best first roll is the Boss.',
     note: 'The Boss gets one more roll, in secret, then says “come up” (everyone else gets one last roll, and the worst hand loses: it can be the Boss) or “don’t come up” (no loser).',
-    callLine: () =>
-      `Worth calling with two pair or better: ${fmtPct(
-        share((d) => STRONG_BOSS.includes(bossHand(d).category)),
-        1
-      )} of rolls.`,
+    callLine: () => worthLine('boss'),
     examples: [{ dice: [5, 5, 5, 5, 2] }, { dice: [4, 4, 4, 3, 3] }, { dice: [6, 6, 4, 4, 1] }],
   },
   {

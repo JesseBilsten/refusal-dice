@@ -1812,7 +1812,7 @@ const calculatePartialMatch = (roll, game, variant) => {
 /* ══════════════════════════════════════════════════════════════════
  * SPECIALTY GAME CLASSIFICATION
  * Single source of truth for competitive-hand thresholds.
- * Thresholds are defined in games-config.js (SPECIALTY_THRESHOLDS).
+ * Thresholds come from callThresholds() (OddsLab/specialty-calls.js).
  * These functions consume those thresholds so every page shows
  * consistent numbers.
  * ══════════════════════════════════════════════════════════════════ */
@@ -1821,13 +1821,11 @@ const calculatePartialMatch = (roll, game, variant) => {
  * Classify a roll against all specialty filter tiers for a given game.
  * Returns an object mapping filter IDs ('competitive', 'strong') to booleans.
  *
- * Thresholds (from games-config.js SPECIALTY_THRESHOLDS):
- *   Razzle  – competitive: 3+ wild sixes (1s or 6s) OR 5-of-a-kind
- *           – strong:      4+ wild sixes OR 5-of-a-kind
- *   Boss    – competitive: Two Pair+ (rank ≥ 3)
- *           – strong:      Trips+    (rank ≥ 4)
- *   Tres    – competitive: score ≤ 10
- *           – strong:      score ≤ 7
+ * Thresholds (callThresholds() in OddsLab/specialty-calls.js, which works
+ * Razzle's and Boss's out from the call odds):
+ *   Razzle  – wildSixesGood/Strong wild sixes (1s or 6s) OR 5-of-a-kind
+ *   Boss    – rank ≥ rankGood/rankStrong (1 = high card)
+ *   Tres    – score ≤ scoreGood/scoreStrong
  */
 function classifySpecialtyRoll(roll, gameId, thresholds) {
   if (gameId === 'razzle') {

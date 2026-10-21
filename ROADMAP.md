@@ -130,7 +130,6 @@ Build it once and every later phase gets cheaper.
 6. ✅ _Done 2026-10-14._ **Fix the refuser model's assumption.** The old model (`evaluateRefuserPosition`, `REFUSER_STRATEGY.md`) assumed a refuser re-rolls. It's deleted; refusal advice is now simulated on the engine, where refusers keep their dice (`simulateRefusal` in `src/strategy/simulate.ts`).
 7. Retire or re-base the heuristic thresholds in `strategy/` once the computed odds exist. Keep the heuristics only as the "novice/solid" bot policies.
 8. **Finish the odds audit** (every figure shown is computed since 2026-10-21; these are what's left):
-   - Advice that names a minimum hand to call disagrees with the computed when-to-call table (`OddsLab/specialty-calls.js`): Boss says "two pair or better" (two pair stays off the pencil 66%, under an even share of 67%; the table says three of a kind); Razzle says "three or more wilds" (two wilds already beat an even share). Derive the thresholds from `specialtyCalls(game).firstAbove`.
    - GameOdds' barking rule of thumb still uses the heuristic `analyzeRoll`.
    - Dead code: `RollAnalysis.jsx`'s default export (`generateHammerStrategy`) and the typed `gameOddsMap` in `lib/game-validation.js` it feeds; the old `analyzeSecondCallDistribution`.
    - `docs/RULES.md` has a worked example with typed figures (a doc, not on the site).

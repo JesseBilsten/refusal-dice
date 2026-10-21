@@ -6,6 +6,7 @@ import { BarkGuide, ProbabilityBar, STRENGTH_GRADES, StrengthTag, fmtPct, streng
 import SituationCard from '../components/OddsLab/SituationCard'
 import { SITUATIONS, situationPath, situationsFor } from '../components/OddsLab/situations-catalog'
 import { bossName, keepOdds } from '../components/OddsLab/keep-model'
+import { callAdvice, callThresholds } from '../components/OddsLab/specialty-calls'
 import { CALL_ODDS_PLAYERS, callLoss, freshMakeChance } from '../strategy'
 import { isKickerGame } from '../engine'
 import { useHouseRules } from '../components/Settings/house-rules'
@@ -15,7 +16,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import VariantSelector from '../components/VariantSelector'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import { analyzeRoll, isCompetitiveSpecialtyHand } from '../lib/game-validation'
-import { GAMES_MAP, isSpecialtyGame, SPECIALTY_THRESHOLDS, getGamePath } from '../lib/games-config'
+import { GAMES_MAP, isSpecialtyGame, getGamePath } from '../lib/games-config'
 import SecondCallDistribution from '../components/SecondCallDistribution'
 import rollGameMatrix from '../data/roll-game-matrix.json'
 import { Hand } from '../components/Dice'
@@ -66,11 +67,12 @@ const GAME_CONTENT = {
   },
   razzle: {
     description: 'Most amount of any one number with aces being wild. Equal counts go to the higher face: four 6s beat four 4s.',
-    strategy: 'Call with three or more wild 6s (1s count as 6s), or five of any number. Equal counts go to the higher number, so 6s are the ones to chase.',
+    // Worked out from the call odds (specialty-calls.js)
+    strategy: () => `${callAdvice('razzle', fmtPct)} Equal counts go to the higher number, so 6s are the ones to chase.`,
   },
   boss: {
     description: 'Poker-style hands without straights or flushes. All players reveal their dice, and the highest hand becomes the "Boss." A tie for the best hand means no Boss: no loser, and the Hammer passes left.',
-    strategy: 'Call with two pair or better; three of a kind is a strong call. If you’re the Boss you get one more roll in secret: pick up any dice, as long as what you keep still beats everyone, then decide whether to call everyone up.',
+    strategy: () => `${callAdvice('boss', fmtPct)} If you’re the Boss you get one more roll in secret: pick up any dice, as long as what you keep still beats everyone, then decide whether to call everyone up.`,
     // Computed from the Boss question (situations-catalog.js), so the odds follow the rules
     partialKeep: () => {
       const { s } = SITUATIONS.boss
@@ -106,7 +108,7 @@ const calcSingleRollProb = (gameId) => {
   let count = 0
   if (isSpecialtyGame(gameId)) {
     Object.values(rollGameMatrix).forEach(rd => {
-      if (isCompetitiveSpecialtyHand(rd.roll, gameId, SPECIALTY_THRESHOLDS)) count += rd.count || 0
+      if (isCompetitiveSpecialtyHand(rd.roll, gameId, callThresholds())) count += rd.count || 0
     })
   } else {
     Object.values(rollGameMatrix).forEach(rd => {
@@ -121,7 +123,7 @@ const getRollsForGame = (gameId) => {
   const add = (rd) => rolls.push({ roll: rd.roll, count: rd.count, analysis: analyzeRoll(rd.roll) })
   if (isSpecialtyGame(gameId)) {
     Object.values(rollGameMatrix).forEach(rd => {
-      if (isCompetitiveSpecialtyHand(rd.roll, gameId, SPECIALTY_THRESHOLDS)) add(rd)
+      if (isCompetitiveSpecialtyHand(rd.roll, gameId, callThresholds())) add(rd)
     })
   } else {
     Object.values(rollGameMatrix).forEach(rd => {
@@ -387,7 +389,7 @@ const GameDetailTemplate = ({ pageContext }) => {
           <div className={`mb-8 grid gap-3 sm:gap-4 ${content.strategy && content.partialKeep ? 'sm:grid-cols-2' : ''}`}>
             {content.strategy && (
               <Panel tone="note" title="When to call it">
-                <p className="text-sm">{content.strategy}</p>
+                <p className="text-sm">{typeof content.strategy === 'function' ? content.strategy() : content.strategy}</p>
               </Panel>
             )}
             {content.partialKeep && (

@@ -3,12 +3,11 @@
 Read by /session-start. Open work: `ROADMAP.md`. Decisions and rulings: `ROADMAP.md` "Decision log", `docs/RULES.md`. Rewritten at each /handoff.
 
 ## Next (task of the day, in order)
-1. [refusal-dice] Push `c3bc03d` "fix(odds): compute every figure the site shows" once Jesse OKs it (pushing deploys refusaldice.com). Then confirm the CI run's headSha equals HEAD and it goes green (`gh run list -L 1`).
-2. [refusal-dice] Finish the odds audit, `ROADMAP.md` Phase 2 item 8. Start with the Boss and Razzle call thresholds: derive them from `specialtyCalls(game).firstAbove` (`src/components/OddsLab/specialty-calls.js`). Done when no advice names a threshold the data contradicts.
+1. [refusal-dice] Push the Boss/Razzle call-threshold commit once Jesse OKs it (pushing deploys refusaldice.com), then confirm CI on that headSha is green.
+2. [refusal-dice] Rest of the odds audit, `ROADMAP.md` Phase 2 item 8 (barking rule of thumb, dead code).
 
 ## Waiting for the user
-- OK to push `c3bc03d` live.
-- Whether the Boss/Razzle "call with … or better" advice should be derived from the data (asked 2026-10-21; recommended yes).
+- OK to push the call-threshold commit.
 
 ## Running in the background
 | What | Unit / process | Ends | Check | Stop |

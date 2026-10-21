@@ -11,7 +11,6 @@ import rollGameMatrix from '../../data/roll-game-matrix.json'
 import {
   GAMES, GAMES_MAP, getGameName,
   isSpecialtyGame, SPECIALTY_GAME_IDS,
-  SPECIALTY_THRESHOLDS, SPECIALTY_FILTERS,
 } from '../../lib/games-config'
 import {
   checkGame,
@@ -24,7 +23,7 @@ import { ToggleGroup, ToggleGroupItem } from '../ui/toggle-group'
 import { Hand } from '../Dice'
 import EveryPossibility from './EveryPossibility'
 import { OddsLabLink, ProbabilityBar, fmtPct } from '../Odds'
-import { specialtyCalls } from './specialty-calls'
+import { callFilters, callThresholds, specialtyCalls } from './specialty-calls'
 import { PRESETS } from '../../lib/roll-query'
 
 /* ─────────────────────────── helpers ─────────────────────────── */
@@ -70,13 +69,13 @@ const GAME_ODDS = (() => {
     }
     if (isSpecialtyGame(g.id)) {
       // Compute specialty distribution counts using shared thresholds
-      const filters = SPECIALTY_FILTERS[g.id] || []
+      const filters = callFilters()[g.id] || []
       const specialty = {}
       filters.forEach(f => { specialty[f.id] = 0 })
 
       let competitiveCount = 0
       allRolls.forEach(roll => {
-        const cls = classifySpecialtyRoll(roll, g.id, SPECIALTY_THRESHOLDS)
+        const cls = classifySpecialtyRoll(roll, g.id, callThresholds())
         Object.keys(cls).forEach(k => { if (cls[k]) specialty[k]++ })
         if (cls.competitive) competitiveCount++
       })
@@ -203,7 +202,7 @@ const GameOddsCard = ({ game, isSelected, onClick }) => {
 
       {game.specialty && (
         <div className="flex flex-col gap-0.5 mt-2 text-[10px] text-muted-foreground">
-          {SPECIALTY_FILTERS[game.id]?.map(f => (
+          {callFilters()[game.id]?.map(f => (
             <div key={f.id} className="flex justify-between">
               <span>{f.label}</span>
               <span className="tabular-nums font-medium">
@@ -229,7 +228,7 @@ const CoPlayableGames = ({ matchingRolls, currentGameId, variant }) => {
         if (seen.has(key)) return
         // For specialty games, only count if the roll meets competitive threshold
         if (isSpecialtyGame(v.game)) {
-          const cls = classifySpecialtyRoll(r.roll, v.game, SPECIALTY_THRESHOLDS)
+          const cls = classifySpecialtyRoll(r.roll, v.game, callThresholds())
           if (!cls.competitive) return
         }
         seen.add(key)
@@ -349,7 +348,7 @@ const OddsDashboard = () => {
       if (variant) return getKickerStrength(r.roll, selectedId) === variant
       if (isSpecialtyGame(selectedId)) {
         // Always apply at least the competitive threshold for specialty games
-        const cls = classifySpecialtyRoll(r.roll, selectedId, SPECIALTY_THRESHOLDS)
+        const cls = classifySpecialtyRoll(r.roll, selectedId, callThresholds())
         const tier = specialtyFilter || 'competitive'
         return cls[tier] === true
       }
@@ -429,13 +428,13 @@ const OddsDashboard = () => {
                       onChange={v => setVariant(v)}
                     />
                   )}
-                  {SPECIALTY_FILTERS[selectedId] && (
+                  {callFilters()[selectedId] && (
                     <ToggleGroup
                       type="single"
                       value={specialtyFilter || 'competitive'}
                       onValueChange={v => setSpecialtyFilter(v === 'competitive' ? null : v)}
                     >
-                      {SPECIALTY_FILTERS[selectedId].map(f => (
+                      {callFilters()[selectedId].map(f => (
                         <ToggleGroupItem key={f.id} value={f.id}>
                           {f.label}
                           {selectedGame.specialty?.[f.id] != null && (

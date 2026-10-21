@@ -34,34 +34,17 @@ const SPECIALTY_GAME_IDS = ['razzle', 'boss', 'tres-away']
 const isSpecialtyGame = (id) => SPECIALTY_GAME_IDS.includes(id)
 
 /* ── Competitive thresholds ──
- * Each specialty game is technically playable on every roll, but these
- * thresholds define a "competitive hand" where a player would feel
- * confident calling the game at the table.
+ * Each specialty game is technically playable on every roll; these define
+ * a "competitive hand" worth calling, in two tiers: Competitive (the main
+ * odds displays) and Strong (premium hands).
  *
- * Two tiers per game:
- *   Competitive — the primary threshold shown in odds displays.
- *   Strong      — a higher bar for premium hands.
- *
- * Razzle  competitive: 3+ wild sixes →  21.0%  (1632 / 7776)
- *         strong:      4+ wild sixes →   4.5%  ( 352 / 7776)
- * Boss    competitive: Two Pair+     →  44.4%  (3456 / 7776)
- *         strong:      Trips+        →  21.3%  (1656 / 7776)
- * Tres    competitive: Score ≤ 10    →  18.2%  (1413 / 7776)
- *         strong:      Score ≤ 7     →   6.1%  ( 477 / 7776)
+ * Razzle and Boss aren't here: their thresholds are worked out from the
+ * call odds (callThresholds() in OddsLab/specialty-calls.js), which fills
+ * them in. Tres Away's are by score, which the call odds don't group by:
+ *   Tres    competitive: Score ≤ 10    →  18.2%  (1413 / 7776)
+ *           strong:      Score ≤ 7     →   6.1%  ( 477 / 7776)
  */
 const SPECIALTY_THRESHOLDS = {
-  razzle: {
-    /** Minimum wild sixes (1s + 6s) for a competitive Razzle hand */
-    wildSixesGood: 3,
-    /** Strong threshold — very confident call */
-    wildSixesStrong: 4,
-  },
-  boss: {
-    /** Minimum Boss rank for a competitive hand (3 = Two Pair) */
-    rankGood: 3,
-    /** Strong threshold — Trips or better (rank 4) */
-    rankStrong: 4,
-  },
   'tres-away': {
     /** Maximum Tres Away score (sum of non-3 dice) for competitive */
     scoreGood: 10,
@@ -79,14 +62,7 @@ const SPECIALTY_THRESHOLDS = {
  * 'strong' is the premium tier for the best hands.
  */
 const SPECIALTY_FILTERS = {
-  razzle: [
-    { id: 'competitive', label: '3+ Sixes' },
-    { id: 'strong', label: '4+ / 5-Kind' },
-  ],
-  boss: [
-    { id: 'competitive', label: 'Two Pair+' },
-    { id: 'strong', label: 'Trips+' },
-  ],
+  // Razzle and Boss: callFilters() in OddsLab/specialty-calls.js
   'tres-away': [
     { id: 'competitive', label: 'Score ≤ 10' },
     { id: 'strong', label: 'Score ≤ 7' },
