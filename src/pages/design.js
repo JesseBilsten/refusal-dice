@@ -19,7 +19,10 @@ import {
   OutcomeGrid,
   ProbabilityBar,
   Questions,
+  fmtPct,
 } from '../components/Odds'
+import { LOSE_VIA_TIE, MISS_TWICE, TIE_ODDS } from '../components/Tutorial/tie-odds'
+import { makesGame } from '../engine'
 import { Settings } from '../components/Settings'
 import Seat from '../components/Table/Seat'
 import SeatRing from '../components/Table/SeatRing'
@@ -29,6 +32,24 @@ import { PRESETS } from '../lib/roll-query'
 import { seatOdds } from '../strategy'
 import { Badge } from '../components/ui/badge'
 import { Button } from '../components/ui/button'
+
+/** The Stat sample: 10-2's figures, computed over every roll of five */
+const SAMPLE = (() => {
+  let rolls = 0
+  const patterns = new Set()
+  const rec = (dice) => {
+    if (dice.length === 5) {
+      if (makesGame(dice, '10-2')) {
+        rolls++
+        patterns.add([...dice].sort().join(''))
+      }
+      return
+    }
+    for (let v = 1; v <= 6; v++) rec([...dice, v])
+  }
+  rec([])
+  return { rolls, patterns: patterns.size }
+})()
 
 /**
  * The design system on one page (docs/DESIGN_SYSTEM.md): every shared
@@ -126,9 +147,9 @@ const DesignPage = () => {
               <Chip active={false}>Off</Chip>
             </div>
             <div className="grid gap-3 sm:grid-cols-3">
-              <Stat value="63.9%" label="Made on one roll" sub="exact" />
-              <Stat value="4,965" label="Rolls that make it" sub="of 7,776" />
-              <Stat value="114" label="Unique patterns" />
+              <Stat value={fmtPct(SAMPLE.rolls / 7776, 1)} label="10-2 made on one roll" sub="exact" />
+              <Stat value={SAMPLE.rolls.toLocaleString()} label="Rolls that make it" sub="of 7,776" />
+              <Stat value={String(SAMPLE.patterns)} label="Unique patterns" />
             </div>
             <Panel title="Panel" description="The default box for a section.">
               <p className="text-sm">Never put a Panel inside a Panel.</p>
@@ -246,10 +267,11 @@ const DesignPage = () => {
               <BarkOdds />
             </Panel>
             <div className="max-w-xl space-y-3">
-              <ProbabilityBar label="1 roll" p={0.639} />
-              <ProbabilityBar label="Safe" p={0.42} tone="safe" />
-              <ProbabilityBar label="Coin flip" p={0.17} tone="coin" />
-              <ProbabilityBar label="Lose" p={0.08} tone="lose" />
+              <ProbabilityBar label="1 roll" p={SAMPLE.rolls / 7776} />
+              {/* Tone swatches, not odds */}
+              <ProbabilityBar label="Safe (tone)" p={0.42} tone="safe" />
+              <ProbabilityBar label="Coin flip (tone)" p={0.17} tone="coin" />
+              <ProbabilityBar label="Lose (tone)" p={0.08} tone="lose" />
             </div>
             <OddsDecision
               outcome="take the pencil"
@@ -257,14 +279,14 @@ const DesignPage = () => {
                 {
                   id: 'tie',
                   label: 'Take the tie',
-                  segments: [{ p: 0.5, label: 'lose the replay', kind: 'coin' }],
+                  segments: [{ p: TIE_ODDS.loseIfTie, label: 'lose the replay', kind: 'coin' }],
                 },
                 {
                   id: 'roll',
                   label: 'Roll',
                   segments: [
-                    { p: 0.72, label: 'miss twice', kind: 'lose' },
-                    { p: 0.05, label: 'tie, then lose the replay', kind: 'coin' },
+                    { p: MISS_TWICE, label: 'miss twice', kind: 'lose' },
+                    { p: LOSE_VIA_TIE, label: 'tie, then lose the replay', kind: 'coin' },
                   ],
                 },
               ]}

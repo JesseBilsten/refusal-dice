@@ -1,4 +1,4 @@
-import { isKickerGame } from '../../engine'
+import { bossHand, isKickerGame } from '../../engine'
 import { keepOptions } from '../../strategy'
 
 /**
@@ -15,6 +15,21 @@ export function goalFor(s, beatDice) {
   if (s.game === 'razzle') return { kind: 'razzle', count: s.count, face: s.face }
   if (s.game === 'boss' && beatDice) return { kind: 'boss', hand: beatDice }
   return null
+}
+
+/** A Boss hand in words: "a pair of 3s", "two pair", "a high 6" */
+export function bossName(dice) {
+  const h = bossHand(dice)
+  const f = dice[h.handDice[0]]
+  return {
+    'high-card': `a high ${f}`,
+    pair: `a pair of ${f}s`,
+    'two-pair': 'two pair',
+    'three-of-a-kind': `three ${f}s`,
+    'full-house': 'a full house',
+    'four-of-a-kind': `four ${f}s`,
+    'five-of-a-kind': `five ${f}s`,
+  }[h.category]
 }
 
 /** "Keep 2-3, roll 3" */

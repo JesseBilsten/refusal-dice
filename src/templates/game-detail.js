@@ -2,10 +2,11 @@ import React, { useState, useMemo } from 'react'
 import { Link } from 'gatsby'
 import Layout from '../components/layout'
 import Page, { NextStep, PageHeader, Panel, Stat } from '../components/Page'
-import { BarkGuide, ProbabilityBar } from '../components/Odds'
+import { BarkGuide, ProbabilityBar, STRENGTH_GRADES, StrengthTag, fmtPct, strengthGrade } from '../components/Odds'
 import SituationCard from '../components/OddsLab/SituationCard'
-import { situationPath, situationsFor } from '../components/OddsLab/situations-catalog'
-import { freshMakeChance } from '../strategy'
+import { SITUATIONS, situationPath, situationsFor } from '../components/OddsLab/situations-catalog'
+import { bossName, keepOdds } from '../components/OddsLab/keep-model'
+import { CALL_ODDS_PLAYERS, callLoss, freshMakeChance } from '../strategy'
 import { isKickerGame } from '../engine'
 import { useHouseRules } from '../components/Settings/house-rules'
 import { Badge } from '../components/ui/badge'
@@ -15,7 +16,6 @@ import VariantSelector from '../components/VariantSelector'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import { analyzeRoll, isCompetitiveSpecialtyHand } from '../lib/game-validation'
 import { GAMES_MAP, isSpecialtyGame, SPECIALTY_THRESHOLDS, getGamePath } from '../lib/games-config'
-import { StrengthBar } from '../components/RollAnalysis'
 import SecondCallDistribution from '../components/SecondCallDistribution'
 import rollGameMatrix from '../data/roll-game-matrix.json'
 import { Hand } from '../components/Dice'
@@ -71,7 +71,17 @@ const GAME_CONTENT = {
   boss: {
     description: 'Poker-style hands without straights or flushes. All players reveal their dice, and the highest hand becomes the "Boss." A tie for the best hand means no Boss: no loser, and the Hammer passes left.',
     strategy: 'Call with two pair or better; three of a kind is a strong call. If you’re the Boss you get one more roll in secret: pick up any dice, as long as what you keep still beats everyone, then decide whether to call everyone up.',
-    partialKeep: 'On your last roll after “come up”, you only need to beat the worst hand showing. From 6-4-2-1-5 against a pair of 3s, holding the 6 (80%) is close to holding 5-6 (81%), and both beat rolling all five (74%): see the question below.',
+    // Computed from the Boss question (situations-catalog.js), so the odds follow the rules
+    partialKeep: () => {
+      const { s } = SITUATIONS.boss
+      const odds = keepOdds(s, {})
+      const pct = (keep) => fmtPct(odds(keep).win)
+      return (
+        `On your last roll after “come up”, you only need to beat the worst hand showing. From ` +
+        `${s.roll.split('').join('-')} against ${bossName(s.beat.split('').map(Number))}, holding the 6 wins ` +
+        `${pct('6')}, holding 5-6 ${pct('56')}, and rolling all five ${pct('')}: see the question below.`
+      )
+    },
   },
   'tres-away': {
     description: 'Just like golf, lowest score wins. Each die is worth its face value except for 3\'s which are worth 0 points.',
@@ -121,12 +131,20 @@ const getRollsForGame = (gameId) => {
   return rolls
 }
 
-/** Classify a roll for variant / strength display */
-const classifyRoll = (roll, gameId) => {
+/**
+ * A roll's call in this game: the variant it plays best (or `variant`),
+ * its kicker, and `loss`, the Hammer's chance of the pencil calling it
+ * (call-odds.ts, from rounds played by solid bots)
+ */
+const classifyRoll = (roll, gameId, variant, rules) => {
   const analysis = analyzeRoll(roll)
   const v = analysis.variants?.find(vv => vv.game === gameId)
   if (!v) return null
-  return { variant: v.variant, strength: v.rawStrength, kicker: v.kicker, details: v.details }
+  const variants = GAMES_MAP[gameId].hasVariants ? (variant && variant !== 'all' ? [variant] : ['high', 'low']) : [null]
+  const best = variants
+    .map(vr => ({ variant: vr, loss: callLoss(roll, { game: gameId, ...(vr ? { variant: vr } : {}) }, rules) }))
+    .sort((a, b) => a.loss - b.loss)[0]
+  return { variant: best.variant, loss: best.loss, kicker: v.kicker }
 }
 
 /* ────────────────────────────────────────────────────────────── */
@@ -159,46 +177,37 @@ const CollapsibleSection = ({ title, description, defaultOpen = false, children,
 }
 
 /* ────────────────────────────────────────────────────────────── */
-/*  Strength Distribution (from real data, not simulation)       */
+/*  Strength: every roll that makes it, by grade (call-odds.ts)   */
 /* ────────────────────────────────────────────────────────────── */
-const StrengthDistributionChart = ({ rolls, gameId, variant }) => {
+const StrengthDistributionChart = ({ rolls, gameId, variant, rules }) => {
   const data = useMemo(() => {
-    const buckets = new Array(10).fill(0)
+    const counts = STRENGTH_GRADES.map(() => 0)
     let total = 0
     rolls.forEach(r => {
-      const info = classifyRoll(r.roll, gameId)
+      const info = classifyRoll(r.roll, gameId, variant, rules)
       if (!info) return
-      if (variant && variant !== 'all' && info.variant !== variant) return
-      const idx = Math.min(Math.floor(info.strength / 10), 9)
-      buckets[idx] += r.count
+      counts[STRENGTH_GRADES.indexOf(strengthGrade(info.loss))] += r.count
       total += r.count
     })
-    return buckets.map((count, i) => ({
-      range: `${i * 10}–${(i + 1) * 10}`,
-      count,
-      pct: total > 0 ? (count / total * 100) : 0,
-    }))
-  }, [rolls, gameId, variant])
-
-  const maxPct = Math.max(...data.map(d => d.pct), 1)
+    return STRENGTH_GRADES.map((g, i) => ({ grade: g, prev: STRENGTH_GRADES[i - 1], p: total ? counts[i] / total : 0 }))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rolls, gameId, variant, rules.montereyLoneKeep])
 
   return (
-    <div className="space-y-1.5">
-      {data.map((d, i) => (
-        <div key={i} className="flex items-center gap-3 text-sm">
-          <span className="w-14 text-right text-muted-foreground tabular-nums">{d.range}%</span>
-          <div className="flex-1 bg-muted rounded-full h-5 relative overflow-hidden">
-            <div
-              className={`h-full rounded-full transition-all ${
-                i >= 7 ? 'bg-odds-safe' : i >= 4 ? 'bg-odds-coin' : 'bg-odds-lose'
-              }`}
-              style={{ width: `${(d.pct / maxPct) * 100}%` }}
-            />
-          </div>
-          <span className="w-16 text-right tabular-nums text-muted-foreground">
-            {d.count > 0 ? `${d.pct.toFixed(1)}%` : '—'}
-          </span>
-        </div>
+    <div className="space-y-2">
+      {data.map(({ grade, prev, p }) => (
+        <ProbabilityBar
+          key={grade.label}
+          label={grade.label}
+          sublabel={
+            <span className="text-muted-foreground">
+              {grade.max === Infinity ? `over ${fmtPct(prev.max)}` : `${fmtPct(grade.max)} or less`}
+            </span>
+          }
+          p={p}
+          digits={1}
+          className="grid-cols-[minmax(0,9rem)_1fr_auto]"
+        />
       ))}
     </div>
   )
@@ -207,17 +216,17 @@ const StrengthDistributionChart = ({ rolls, gameId, variant }) => {
 /* ────────────────────────────────────────────────────────────── */
 /*  Sample Rolls Table                                           */
 /* ────────────────────────────────────────────────────────────── */
-const SampleRollsTable = ({ rolls, gameId, variant, hasVariants }) => {
+const SampleRollsTable = ({ rolls, gameId, variant, hasVariants, rules }) => {
   const [showAll, setShowAll] = useState(false)
 
   const filtered = useMemo(() => {
-    let result = rolls.map(r => ({ ...r, info: classifyRoll(r.roll, gameId) })).filter(r => r.info)
-    if (variant && variant !== 'all' && hasVariants) {
-      result = result.filter(r => r.info.variant === variant)
-    }
-    result.sort((a, b) => b.info.strength - a.info.strength)
+    const result = rolls
+      .map(r => ({ ...r, info: classifyRoll(r.roll, gameId, hasVariants ? variant : null, rules) }))
+      .filter(r => r.info)
+    result.sort((a, b) => a.info.loss - b.info.loss)
     return result
-  }, [rolls, gameId, variant, hasVariants])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rolls, gameId, variant, hasVariants, rules.montereyLoneKeep])
 
   const display = showAll ? filtered : filtered.slice(0, 20)
 
@@ -249,10 +258,7 @@ const SampleRollsTable = ({ rolls, gameId, variant, hasVariants }) => {
                 </TableCell>
               )}
               <TableCell>
-                <div className="flex items-center gap-2">
-                  <StrengthBar value={r.info.strength} className="w-16" />
-                  <span className="text-xs tabular-nums">{r.info.strength.toFixed(0)}%</span>
-                </div>
+                <StrengthTag loss={r.info.loss} />
               </TableCell>
               <TableCell className="font-mono text-xs text-muted-foreground hidden sm:table-cell">
                 {r.info.kicker?.length > 0 ? `[${r.info.kicker.join(', ')}]` : '—'}
@@ -386,7 +392,9 @@ const GameDetailTemplate = ({ pageContext }) => {
             )}
             {content.partialKeep && (
               <Panel tone="note" title="What to keep">
-                <p className="text-sm">{content.partialKeep}</p>
+                <p className="text-sm">
+                  {typeof content.partialKeep === 'function' ? content.partialKeep() : content.partialKeep}
+                </p>
               </Panel>
             )}
           </div>
@@ -486,12 +494,13 @@ const GameDetailTemplate = ({ pageContext }) => {
             {/* Strength Distribution */}
             <CollapsibleSection
               title="Strength distribution"
-              description={`How strong are ${gameMeta.name} hands? Distribution of raw strength across all qualifying rolls.`}
+              description={`How strong are ${gameMeta.name} hands? Every roll that makes it, graded by the Hammer’s chance of the pencil calling it at a ${CALL_ODDS_PLAYERS}-player table (from rounds played by solid bots).`}
             >
               <StrengthDistributionChart
                 rolls={gameRolls}
                 gameId={gameId}
                 variant={gameMeta.hasVariants ? variant : null}
+                rules={houseRules}
               />
             </CollapsibleSection>
 
@@ -508,7 +517,7 @@ const GameDetailTemplate = ({ pageContext }) => {
             {/* Sample Rolls */}
             <CollapsibleSection
               title="Sample rolls"
-              description={`${gameRolls.length} unique roll patterns for ${gameMeta.name}, sorted by strength.`}
+              description={`${gameRolls.length} unique roll patterns for ${gameMeta.name}, strongest first: the Hammer’s chance of the pencil calling it.`}
               badge={<Badge variant="outline" className="text-xs">{gameRolls.length}</Badge>}
             >
               <SampleRollsTable
@@ -516,6 +525,7 @@ const GameDetailTemplate = ({ pageContext }) => {
                 gameId={gameId}
                 variant={variant}
                 hasVariants={gameMeta.hasVariants}
+                rules={houseRules}
               />
             </CollapsibleSection>
 

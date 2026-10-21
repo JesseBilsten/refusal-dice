@@ -49,7 +49,6 @@ src/
   lib/
     games-config.js     SINGLE SOURCE OF TRUTH for the game list and metadata (CommonJS; also used by gatsby-node.js and generators)
     game-validation.js  Rules + heuristic strategy (being split up, see below)
-    roll-strength.js    Rarity/strength classification
     roll-query.js       Odds Lab query engine: exact odds for any dice requirement, plus share-link encoding/oddsLabPath (pure, CommonJS)
     utils.js            cn() class merger
   data/             Generated JSON + the generator scripts

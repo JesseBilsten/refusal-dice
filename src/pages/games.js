@@ -5,7 +5,7 @@ import Layout from '../components/layout'
 import Page, { PageHeader, Panel, NextStep } from '../components/Page'
 import { Hand, RollInput } from '../components/Dice'
 import { motion, useReducedMotion } from 'framer-motion'
-import { BarkOdds, StrengthTag, fmtPct } from '../components/Odds'
+import { BarkOdds, STRENGTH_GRADES, StrengthTag, fmtPct } from '../components/Odds'
 import { Badge } from '../components/ui/badge'
 import { buttonVariants } from '../components/ui/button'
 import { analyzeRoll } from '../lib/game-validation'
@@ -13,7 +13,7 @@ import { formatCallLabel, GAMES_MAP } from '../lib/games-config'
 import { cn } from '../lib/utils'
 import rollGameMatrix from '../data/roll-game-matrix.json'
 import { bossHand, razzleScore, tresAwayScore } from '../engine'
-import { callLoss } from '../strategy'
+import { CALL_ODDS_PLAYERS, callLoss } from '../strategy'
 import { useHouseRules } from '../components/Settings/house-rules'
 
 /**
@@ -277,7 +277,9 @@ const GamesPage = () => {
                   </div>
                   <p className="text-xs text-muted-foreground">
                     Strength is your chance of taking the pencil if you call it with this roll, from rounds played out
-                    by solid bots at a 3-player table: Strong is 15% or less, Fair is still under an even share (33%).
+                    by solid bots at a {CALL_ODDS_PLAYERS}-player table: {STRENGTH_GRADES[0].label} is{' '}
+                    {fmtPct(STRENGTH_GRADES[0].max)} or less, {STRENGTH_GRADES[2].label} is still no more than an even
+                    share ({fmtPct(1 / CALL_ODDS_PLAYERS)}).
                   </p>
                   <Link
                     to="/strategy-assistant"

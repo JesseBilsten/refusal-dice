@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
-import { bossHand, isKickerGame, tresAwayScore } from '../../engine'
+import { isKickerGame, tresAwayScore } from '../../engine'
 import { keepOptions, tresAwayExpected, tresAwayPutOut } from '../../strategy'
 import { CALLABLE_GAMES, getGameName } from '../../lib/games-config'
 import { cn } from '../../lib/utils'
@@ -7,7 +7,7 @@ import { COUNT_WORDS, DiceGroup, Hand, RollInput, razzleName } from '../Dice'
 import { Disclosure, OddsDecision, Questions, fmtPct } from '../Odds'
 import { Chip, Panel } from '../Page'
 import { SITUATIONS } from './situations-catalog'
-import { goalFor, lockedPositions, optionLabel, rerollsFor, situationRules } from './keep-model'
+import { bossName, goalFor, lockedPositions, optionLabel, rerollsFor, situationRules } from './keep-model'
 import SituationWhy from './SituationWhy'
 import { useHouseRules } from '../Settings/house-rules'
 
@@ -19,20 +19,6 @@ import { useHouseRules } from '../Settings/house-rules'
  */
 
 
-/** A Boss hand in words: "a pair of 3s", "two pair", "a high 6" */
-function bossName(dice) {
-  const h = bossHand(dice)
-  const f = dice[h.handDice[0]]
-  return {
-    'high-card': `a high ${f}`,
-    pair: `a pair of ${f}s`,
-    'two-pair': 'two pair',
-    'three-of-a-kind': `three ${f}s`,
-    'full-house': 'a full house',
-    'four-of-a-kind': `four ${f}s`,
-    'five-of-a-kind': `five ${f}s`,
-  }[h.category]
-}
 /** What each kicker game lets you keep before it's made (docs/RULES.md §3.1) */
 const KEEP_RULE = {
   '10-2': '10-2 has to come in one roll: nothing can be kept until you have it.',

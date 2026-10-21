@@ -86,3 +86,9 @@ test('Boss two pair: break it up against lower trips; go for the full house when
   expect(odds('2233', 1, low).win).toBeGreaterThan(odds('33', 1, low).win)
   expect(odds('66', 1, { beat: '66442' }).win).toBeGreaterThan(odds('3366', 1, { beat: '66442' }).win)
 })
+
+test('the Boss page tip quotes keeps its question has: the 6, the 5-6 and rolling all five', () => {
+  const { keepOdds } = require('../components/OddsLab/keep-model')
+  const odds = keepOdds(SITUATIONS.boss.s, {})
+  ;['6', '56', ''].forEach((keep) => expect(odds(keep).win).toBeGreaterThan(0))
+})

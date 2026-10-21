@@ -23,43 +23,20 @@ import {
 import { ToggleGroup, ToggleGroupItem } from '../ui/toggle-group'
 import { Hand } from '../Dice'
 import EveryPossibility from './EveryPossibility'
-import { OddsLabLink } from '../Odds'
+import { OddsLabLink, ProbabilityBar, fmtPct } from '../Odds'
+import { specialtyCalls } from './specialty-calls'
 import { PRESETS } from '../../lib/roll-query'
 
 /* ─────────────────────────── helpers ─────────────────────────── */
 
 const TOTAL = 7776
 
-/* ── Strategy insight text for specialty games ──
- * Based on Monte Carlo simulation of full multi-roll gameplay.
- * P(not last) = probability of NOT finishing last in a 3-player game.
- */
+/* ── When to call a specialty game, computed (specialty-calls.js) ── */
 
-const STRATEGY_INSIGHTS = {
-  razzle: {
-    title: <><GameLink id="razzle">Razzle</GameLink>: When to Call</>,
-    lines: [
-      `After all 3 rolls (keeping 1s and 6s), the average opponent finishes with 3.5 wild sixes. Razzle is always a safe call \u2014 even with zero initial wilds you have a 59% chance of not being last.`,
-      `With 2+ initial wild sixes your expected finish (3.7) beats the opponent average, giving you 83%+ survival. At 3+ wilds it jumps to 93%.`,
-      `Bottom line: always callable, but 2+ initial 1s/6s is where you gain a real edge over the table.`,
-    ],
-  },
-  boss: {
-    title: <><GameLink id="boss">Boss</GameLink>: When to Call</>,
-    lines: [
-      `After 2 rolls with optimal play, the average opponent finishes between two-pair and three-of-a-kind (rank 3.7). Starting with just high card gives you only a 52% survival rate \u2014 barely a coin flip.`,
-      `A pair bumps you to 72%. Two-pair reaches 82%. Three-of-a-kind or better is the premium threshold at 95%+ survival.`,
-      `Bottom line: pair is the minimum for comfort. Trips or better makes Boss a strong call.`,
-    ],
-  },
-  'tres-away': {
-    title: <><GameLink id="tres-away">Tres Away</GameLink>: When to Call</>,
-    lines: [
-      `After optimal play (keeping 1s, 2s, and 3s each round), the average opponent finishes with a score of 7.3. If your initial roll has zero dice \u2264 3, your survival drops to 43% \u2014 the only specialty scenario below 50%.`,
-      `With at least one low die (1, 2, or 3) you jump to 71%+ survival. Multiple 3s are a huge advantage: 3+ threes gives you 93% survival.`,
-      `Bottom line: don\u2019t call Tres Away with all high dice. One low die is the minimum; 3s are premium.`,
-    ],
-  },
+const CALLOUT_TITLES = {
+  razzle: <><GameLink id="razzle">Razzle</GameLink>: when to call</>,
+  boss: <><GameLink id="boss">Boss</GameLink>: when to call</>,
+  'tres-away': <><GameLink id="tres-away">Tres Away</GameLink>: when to call</>,
 }
 
 /** Precompute game odds + specialty breakdowns (runs once at module load) */
@@ -140,17 +117,38 @@ const pctBarBg = () => 'bg-primary'
 
 /* ───────────────────── sub-components ────────────────────────── */
 
-/** Clickable info callout for specialty game strategy */
+/** When to call a specialty game: the Hammer's chance of staying off the pencil, by starting hand */
 const StrategyCallout = ({ gameId }) => {
-  const [open, setOpen] = useState(false)
-  const insight = STRATEGY_INSIGHTS[gameId]
-  if (!insight) return null
-
+  const calls = useMemo(() => specialtyCalls(gameId), [gameId])
+  if (!calls) return null
   return (
-    <Panel tone="note" title={insight.title} className="space-y-2">
-      {insight.lines.map((line, i) => (
-        <p key={i} className="text-sm leading-relaxed">{line}</p>
-      ))}
+    <Panel tone="note" title={CALLOUT_TITLES[gameId]} className="space-y-3">
+      <p className="text-sm leading-relaxed">
+        How often the Hammer stays off the pencil calling {getGameName(gameId)} with each kind of roll, everyone
+        playing, at a {calls.players}-player table. An even share is {fmtPct(calls.even)}.
+      </p>
+      <div className="space-y-2">
+        {calls.rows.map((r) => (
+          <ProbabilityBar
+            key={r.key}
+            label={r.label}
+            p={r.safe}
+            digits={0}
+            tone={r.safe > calls.even ? 'safe' : 'lose'}
+            mark={calls.even}
+            markLabel={`an even share, ${fmtPct(calls.even)}`}
+            className="grid-cols-[minmax(0,10rem)_1fr_auto]"
+          />
+        ))}
+      </div>
+      {calls.firstAbove && (
+        <p className="text-sm leading-relaxed">
+          With {calls.firstAbove}, you do better than an even share.
+        </p>
+      )}
+      <p className="text-xs text-muted-foreground">
+        From rounds played out by solid bots, good to about ±2 points. Each kind of roll counts as often as it comes up.
+      </p>
     </Panel>
   )
 }
@@ -502,7 +500,7 @@ const OddsDashboard = () => {
             )}
 
             {/* Strategy Insight for specialty games */}
-            {STRATEGY_INSIGHTS[selectedId] && (
+            {CALLOUT_TITLES[selectedId] && (
               <StrategyCallout gameId={selectedId} />
             )}
 

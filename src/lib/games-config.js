@@ -75,21 +75,21 @@ const SPECIALTY_THRESHOLDS = {
 /**
  * Toggle filter configs for the specialty game drill-down panels.
  * Each entry maps a game ID to an array of filter options.
- * 'competitive' is the default tier (~20% threshold).
+ * 'competitive' is the default tier.
  * 'strong' is the premium tier for the best hands.
  */
 const SPECIALTY_FILTERS = {
   razzle: [
-    { id: 'competitive', label: '3+ Sixes', description: 'Competitive (~21%)' },
-    { id: 'strong', label: '4+ / 5-Kind', description: 'Strong (~4.5%)' },
+    { id: 'competitive', label: '3+ Sixes' },
+    { id: 'strong', label: '4+ / 5-Kind' },
   ],
   boss: [
-    { id: 'competitive', label: 'Two Pair+', description: 'Competitive (~44%)' },
-    { id: 'strong', label: 'Trips+', description: 'Strong (~21%)' },
+    { id: 'competitive', label: 'Two Pair+' },
+    { id: 'strong', label: 'Trips+' },
   ],
   'tres-away': [
-    { id: 'competitive', label: 'Score ≤ 10', description: 'Competitive (~18%)' },
-    { id: 'strong', label: 'Score ≤ 7', description: 'Strong (~6%)' },
+    { id: 'competitive', label: 'Score ≤ 10' },
+    { id: 'strong', label: 'Score ≤ 7' },
   ],
 }
 
