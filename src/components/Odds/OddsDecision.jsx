@@ -46,14 +46,18 @@ export function Swatch({ kind, className }) {
 
 const lower = (s) => s.charAt(0).toLowerCase() + s.slice(1)
 
-const label = (o) => (
+const label = (o, digits) => (
   <>
-    <strong>{fmtPct(o.total)}</strong> if you {lower(o.label)}
+    <strong>{fmtPct(o.total, digits)}</strong> if you {lower(o.label)}
   </>
 )
 
+/** Whole percents, unless two options would read the same: then one decimal */
+const digitsFor = (ranked) => (new Set(ranked.map((o) => Math.round(o.total * 100))).size < ranked.length ? 1 : 0)
+
 function Verdict({ ranked, outcome, lowerIsBetter }) {
   const best = ranked.filter((o) => o.best)
+  const digits = digitsFor(ranked)
   if (best.length !== 1)
     return (
       <p className="text-base">
@@ -61,7 +65,7 @@ function Verdict({ ranked, outcome, lowerIsBetter }) {
         {best.map((o, i) => (
           <React.Fragment key={o.id}>
             {i > 0 && (i === best.length - 1 ? ', or ' : ', ')}
-            {label(o)}
+            {label(o, digits)}
           </React.Fragment>
         ))}
         : too close to call.
@@ -73,12 +77,12 @@ function Verdict({ ranked, outcome, lowerIsBetter }) {
   return (
     <p className="text-base">
       <strong>{pick.label}.</strong> You {outcome}{' '}
-      <strong>{fmtPct(pick.total)}</strong> of the time,{' '}
+      <strong>{fmtPct(pick.total, digits)}</strong> of the time,{' '}
       {lowerIsBetter ? 'instead of' : 'compared with'}{' '}
       {others.map((o, i) => (
         <React.Fragment key={o.id}>
           {i > 0 && ', or '}
-          {label(o)}
+          {label(o, digits)}
         </React.Fragment>
       ))}
       .

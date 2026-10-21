@@ -7,7 +7,7 @@ import { COUNT_WORDS, DiceGroup, Hand, RollInput, razzleName } from '../Dice'
 import { Disclosure, OddsDecision, Questions, fmtPct } from '../Odds'
 import { Chip, Panel } from '../Page'
 import { SITUATIONS } from './situations-catalog'
-import { goalFor, lockedPositions, optionLabel, rerollsFor } from './keep-model'
+import { goalFor, lockedPositions, optionLabel, rerollsFor, situationRules } from './keep-model'
 import SituationWhy from './SituationWhy'
 import { useHouseRules } from '../Settings/house-rules'
 
@@ -105,7 +105,7 @@ const NumberSelect = ({ value, onChange, options, label }) => (
 
 export default function KeepAdvisor() {
   const [s, setS] = useState(DEFAULT)
-  const [rules, setRules] = useHouseRules()
+  const [tableRules, setRules] = useHouseRules()
   const [dice, setDice] = useState([...EMPTY])
   const [beat, setBeat] = useState([...EMPTY])
   const hydrated = useRef(false)
@@ -151,8 +151,9 @@ export default function KeepAdvisor() {
   const roll = dice.every(Boolean) ? dice.map(Number) : null
   const hand = beat.every(Boolean) ? beat.map(Number) : null
   const example = exampleShown(s, dice, beat)
-  // A question that assumes a house rule this table hasn't turned on
-  const needsRule = example?.rules && Object.entries(example.rules).some(([k, v]) => rules[k] !== v)
+  // A question that assumes a house rule this table hasn't turned on is still answered under it
+  const needsRule = example?.rules && Object.entries(example.rules).some(([k, v]) => tableRules[k] !== v)
+  const rules = example ? situationRules(example, tableRules) : tableRules
   const kicker = isKickerGame(s.game)
   const name = getGameName(s.game)
   const kickerDice = { '10-2': 3, '10-3': 2, '10-4': 1 }[s.game] ?? (s.game === 'vegas' || s.game === 'pairs' ? 1 : 2)
@@ -348,8 +349,8 @@ export default function KeepAdvisor() {
             <div className="space-y-4">
               {needsRule && (
                 <div className="flex flex-wrap items-center gap-2 rounded-md border border-border bg-muted/40 p-3 text-sm">
-                  <span>This question is for tables that let you keep a lone 3 or 4 in Monterey.</span>
-                  <Chip onClick={() => setRules(example.rules)}>Use that house rule</Chip>
+                  <span>This question is about a house rule: keeping a lone 3 or 4 in Monterey.</span>
+                  <Chip onClick={() => setRules(example.rules)}>Use that rule at my table</Chip>
                 </div>
               )}
               <Hand dice={roll} game={s.game} variant={kicker ? s.variant : null} />
