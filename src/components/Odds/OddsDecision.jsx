@@ -2,6 +2,7 @@ import React from 'react'
 import { Badge } from '../ui/badge'
 import { cn } from '../../lib/utils'
 import { fmtPct, inWords, rankOptions } from './model'
+import RollsPct, { rollsLeft } from './RollsPct'
 
 /**
  * The odds-decision pattern: lead with the answer, then show each option's
@@ -13,7 +14,10 @@ import { fmtPct, inWords, rankOptions } from './model'
  *   title: a node to head the option's row instead of label (e.g. a CallName)
  *   visual: a picture of the option, e.g. the dice it keeps
  *   error: standard error of a simulated total, shown as ± points
+ *   rolls: rolls left the total covers, said under it; with `over(n)`, the
+ *     total with n rolls left, tapping the total compares them (RollsPct)
  * outcome: what the bars measure, as a verb phrase ('take the pencil')
+ * when: when the chances hold, leading the verdict ('With 2 rolls left')
  * tieMargin: totals this close to the best are a toss-up (default 0.5 pts;
  *   pass about 2 × the error for simulated odds)
  */
@@ -55,13 +59,14 @@ const label = (o, digits) => (
 /** Whole percents, unless two options would read the same: then one decimal */
 const digitsFor = (ranked) => (new Set(ranked.map((o) => Math.round(o.total * 100))).size < ranked.length ? 1 : 0)
 
-function Verdict({ ranked, outcome, lowerIsBetter }) {
+function Verdict({ ranked, outcome, lowerIsBetter, when }) {
+  const you = when ? `${when}, you` : 'You'
   const best = ranked.filter((o) => o.best)
   const digits = digitsFor(ranked)
   if (best.length !== 1)
     return (
       <p className="text-base">
-        <strong>It's a toss-up.</strong> You {outcome}{' '}
+        <strong>It's a toss-up.</strong> {you} {outcome}{' '}
         {best.map((o, i) => (
           <React.Fragment key={o.id}>
             {i > 0 && (i === best.length - 1 ? ', or ' : ', ')}
@@ -76,7 +81,7 @@ function Verdict({ ranked, outcome, lowerIsBetter }) {
   const others = ranked.filter((o) => !o.best)
   return (
     <p className="text-base">
-      <strong>{pick.label}.</strong> You {outcome}{' '}
+      <strong>{pick.label}.</strong> {you} {outcome}{' '}
       <strong>{fmtPct(pick.total, digits)}</strong> of the time,{' '}
       {lowerIsBetter ? 'instead of' : 'compared with'}{' '}
       {others.map((o, i) => (
@@ -95,6 +100,7 @@ export default function OddsDecision({
   options,
   lowerIsBetter = true,
   tieMargin,
+  when,
 }) {
   const ranked = rankOptions(options, lowerIsBetter, tieMargin)
   return (
@@ -103,6 +109,7 @@ export default function OddsDecision({
         ranked={ranked}
         outcome={outcome}
         lowerIsBetter={lowerIsBetter}
+        when={when}
       />
       <figure>
         <figcaption className="sr-only">Chance you {outcome}</figcaption>
@@ -124,10 +131,15 @@ export default function OddsDecision({
                   {o.visual}
                 </div>
                 <span className="text-right">
-                  <span className="text-xl font-semibold tabular-nums">
-                    {fmtPct(o.total)}
-                  </span>
+                  <RollsPct
+                    p={o.total}
+                    rolls={o.rolls}
+                    over={o.over}
+                    what={o.label}
+                    className="text-xl font-semibold"
+                  />
                   <span className="block text-xs text-muted-foreground">
+                    {o.rolls != null && <>{rollsLeft(o.rolls)} · </>}
                     {inWords(o.total)}
                     {o.error != null && o.total > 0 && o.total < 1 && (
                       <> · ±{(o.error * 100).toFixed(1)} pts</>

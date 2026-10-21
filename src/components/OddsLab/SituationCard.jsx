@@ -3,7 +3,7 @@ import { Link } from 'gatsby'
 import { ArrowRight } from 'lucide-react'
 import { keepOptions, tresAwayExpected, tresAwayPutOut } from '../../strategy'
 import { Hand } from '../Dice'
-import { fmtPct } from '../Odds'
+import { RollsPct, fmtPct, rollsLeft } from '../Odds'
 import { Panel } from '../Page'
 import { goalFor, lockedPositions, optionLabel, rerollsFor, situationRules } from './keep-model'
 import SituationWhy from './SituationWhy'
@@ -35,23 +35,55 @@ export default function SituationCard({ situation, className }) {
       }
     }
     const beat = s.beat ? s.beat.split('').map(Number) : null
-    const opts = keepOptions(dice, rerollsFor(s), goalFor(s, beat), {
-      locked: lockedPositions(dice, s.kept),
-      rules: situationRules(situation, rules),
-    })
+    const rolls = rerollsFor(s)
+    const solve = (n) =>
+      keepOptions(dice, n, goalFor(s, beat), {
+        locked: lockedPositions(dice, s.kept),
+        rules: situationRules(situation, rules),
+      })
+    const opts = solve(rolls)
     const best = opts[0]
     const others = (s.ask || [])
       .map((d) => opts.find((o) => !o.stand && o.dice.join('') === d))
       .filter((o) => o && o !== best)
+    // A keep's chance with n rolls left, to compare (Boss's come-up is always one roll)
+    const over = (o) =>
+      s.game === 'boss'
+        ? null
+        : (n) => (n === rolls ? o.win : solve(n).find((x) => !x.stand && x.dice.join('') === o.dice.join(''))?.win ?? null)
     const pct = (o) =>
-      o.tie === 1 ? 'a sure tie (a replay)' : `${fmtPct(o.win, 1)}${o.tie > 0 ? ` (+${fmtPct(o.tie, 1)} ties)` : ''}`
+      o.tie === 1 ? (
+        'a sure tie (a replay)'
+      ) : (
+        <>
+          <RollsPct
+            p={o.win}
+            digits={1}
+            rolls={rolls}
+            over={o.stand ? null : over(o)}
+            what={optionLabel(o)}
+            note={o.tie > 0 ? 'Wins only: a tie, a replay, isn’t counted.' : null}
+          />
+          {o.tie > 0 ? ` (+${fmtPct(o.tie, 1)} ties)` : ''}
+        </>
+      )
     const same = (o) => Math.abs(o.win - best.win) < 1e-9 && Math.abs(o.tie - best.tie) < 1e-9
     return {
       best: optionLabel(best),
       line: [
-        best.tie === 1 ? 'A sure tie (a replay)' : `${pct(best)} to get what you need`,
-        ...others.map((o) => `${optionLabel(o).toLowerCase()}: ${same(o) ? 'the same odds' : pct(o)}`),
-      ].join(' · '),
+        best.tie === 1 ? (
+          'A sure tie (a replay)'
+        ) : (
+          <>
+            {pct(best)} to get what you need, with {rollsLeft(rolls)}
+          </>
+        ),
+        ...others.map((o) => (
+          <>
+            {optionLabel(o).toLowerCase()}: {same(o) ? 'the same odds' : pct(o)}
+          </>
+        )),
+      ],
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [situation, rules.montereyLoneKeep])
@@ -62,7 +94,18 @@ export default function SituationCard({ situation, className }) {
       <p className="mb-3 font-medium">{situation.label}</p>
       <Hand dice={dice} game={s.game} variant={s.variant} />
       <p className="mt-4">
-        <strong>{answer.best}.</strong> <span className="text-muted-foreground">{answer.line}.</span>
+        <strong>{answer.best}.</strong>{' '}
+        <span className="text-muted-foreground">
+          {typeof answer.line === 'string'
+            ? answer.line
+            : answer.line.map((part, i) => (
+                <React.Fragment key={i}>
+                  {i > 0 && ' · '}
+                  {part}
+                </React.Fragment>
+              ))}
+          .
+        </span>
       </p>
       {situation.why && (
         <>

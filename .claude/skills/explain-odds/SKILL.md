@@ -21,6 +21,12 @@ screen (`src/components/RefusalDecision`, numbers in `odds.ts`).
 3. **Comparison bars** (`OddsDecision`): one row per option with its total,
    a natural frequency ("about 3 in 4"), and a 0–100% bar split into the ways
    it happens. The best option gets a highlighted border and a **Best** badge.
+   **Always say how many rolls a chance covers.** When it runs over more
+   than one roll, `OddsDecision`'s `when` leads the verdict ("With 2 rolls
+   left, you make Monterey **67%**…"). An option's `rolls` puts "2 rolls
+   left" under its total, and with `over(n)` tapping the total compares
+   1 and 2 rolls left (`RollsPct`). Use `RollsPct` for such a figure in
+   running text too.
 4. **Outcome visual**: show the dice concretely, or, when other players'
    choices drive the odds, use `Branches` to show what happens next
    ("If you refuse: what happens next"). Each row gives how often a branch

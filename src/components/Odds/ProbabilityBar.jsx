@@ -7,6 +7,7 @@ const FILL = {
   safe: 'bg-odds-safe',
   coin: 'bg-odds-coin',
   lose: 'bg-odds-lose',
+  muted: 'bg-muted-foreground/40',
 }
 
 const clamp = (p) => Math.min(1, Math.max(0, p))
@@ -15,13 +16,16 @@ const clamp = (p) => Math.min(1, Math.max(0, p))
  * One chance as a labeled bar: "2 rolls ▇▇▇▇▇▇░░ 90.9%". For comparing
  * options in a decision, use OddsDecision instead.
  *
- * tone: primary (a plain chance), safe, coin or lose (what it means for you)
+ * tone: primary (a plain chance), safe, coin or lose (what it means for you),
+ *   or muted (for comparison)
+ * sublabel: a line under the label
  * mark: a chance to compare against, drawn as a tick across the bar, with
  * `markLabel` naming it (e.g. "Bark 17%")
  */
 export default function ProbabilityBar({
   p,
   label,
+  sublabel,
   tone = 'primary',
   digits = 1,
   mark,
@@ -35,7 +39,10 @@ export default function ProbabilityBar({
         className
       )}
     >
-      <span className="font-medium">{label}</span>
+      <span className="font-medium">
+        {label}
+        {sublabel && <span className="block text-xs font-normal">{sublabel}</span>}
+      </span>
       <span
         role="img"
         aria-label={`${label}: ${fmtPct(p, digits)}${markLabel ? `; ${markLabel}` : ''}`}

@@ -196,6 +196,9 @@ links. Components:
 - `ProbabilityBar`: one chance as a labeled bar (for a single figure;
   compare options with `OddsDecision`). `mark` draws a tick for a chance
   to compare against (e.g. a bark), named by `markLabel`
+- `RollsPct`: a chance that depends on rolls left. Tap it to compare 1
+  and 2 rolls left, from `over(n)`. Every keep's odds use it (Odds Lab,
+  game-page questions); say how many rolls any other chance covers
 - `useSimulation` (`use-simulation.js`): runs a strategy simulation in Web
   Workers (`src/strategy/simulate.worker.ts`), split across CPU cores, with
   the estimate updating as it goes. Never run a simulation on the main

@@ -208,6 +208,13 @@ export default function KeepAdvisor() {
 
   // The top few, the keeps the question asked about, and "roll all five" (and
   // standing, when it can work) so the obvious choices are always there
+  // A keep's chance with n rolls left, for comparing (RollsPct)
+  const withRolls = (o) => (n) => {
+    if (n === rerolls) return o.win + o.tie
+    const x = keepOptions(roll, n, goal, { locked, rules }).find((y) => !y.stand && y.dice.join('') === o.dice.join(''))
+    return x ? x.win + x.tie : null
+  }
+
   const shown = useMemo(() => {
     const pick = distinct.slice(0, 3)
     const add = (o) => o && !pick.includes(o) && pick.push(o)
@@ -356,15 +363,14 @@ export default function KeepAdvisor() {
               <Hand dice={roll} game={s.game} variant={kicker ? s.variant : null} />
               <OddsDecision
                 // The bars stack wins and ties, so with ties in play they measure "beat or tie"
-                // With two rolls left, every option's odds run to your last roll, not just this one
-                outcome={
-                  (shown.some((o) => o.tie > 0) ? target.outcome.replace(/^beat /, 'beat or tie ') : target.outcome) +
-                  (rerolls > 1 ? ' by your last roll' : '')
-                }
+                outcome={shown.some((o) => o.tie > 0) ? target.outcome.replace(/^beat /, 'beat or tie ') : target.outcome}
+                // Every option's odds run to your last roll: say how many rolls that is
+                when={rerolls > 1 ? `With ${rerolls} rolls left` : 'On your last roll'}
                 lowerIsBetter={false}
                 options={shown.map((o, i) => ({
                   id: String(i),
                   label: optionLabel(o),
+                  ...(o.stand ? {} : { rolls: rerolls, over: s.game === 'boss' ? null : withRolls(o) }),
                   visual: o.stand ? null : (
                     <span className="flex items-center gap-1.5">
                       {o.dice.length > 0 && <DiceGroup compact dice={o.dice} size="xs" />}
