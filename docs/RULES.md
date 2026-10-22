@@ -52,7 +52,7 @@ Each rule is tagged by where it came from:
   - Ship Captain Crew: keep 1-2 and only a 3 makes it; a rolled 4-5-6 doesn't. Monterey: keep 2-3 and the game is 2-3-4.
 - **A made game can't be re-rolled** (ruled 2026-10-20). Once a player's dice make the game, they keep the dice that make it and re-roll the whole kicker, or stand: e.g. in 10-2, a 5-5 can't be picked up and rolled again. Only Razzle and Boss let a player pick up the dice that make their hand (§3.2, §3.3). [confirmed]
 - The engine enforces all of these (`keepProblem` and `evaluateKickerHand` in `src/engine/rules/kicker-games.ts`; the committed dice are `rolling[player].kept`, read back with `keptAt`). Razzle, Boss and Tres Away have their own keep rules (§3.2–3.4).
-- **Making the game: everyone who missed rolls on their own** (ruled 2026-10-21). Anyone who hasn't made the game rolls at the same time as the others who haven't, in any order, until they make it or run out of rolls. Missing is the worst hand, so nobody who made the game rolls meanwhile. [confirmed] (`rollers` in `src/engine/round/game.ts`)
+- **Making the game: everyone who missed rolls on their own** (ruled 2026-10-21). Anyone who hasn't made the game rolls at the same time as the others who haven't, in any order, until they make it or run out of rolls. Missing is the worst hand, so nobody who made the game rolls meanwhile. [confirmed for now: rolling in order, nearest the Hammer first, is also fine; asking players which they prefer (§6 question 6)] (`rollers` in `src/engine/round/game.ts`)
 - **Then the worst hand rolls first** (§4), not in seat order: only the player at the bottom rolls, until they climb off it or run out of rolls. [confirmed]
 - **Showing the game** (ruled 2026-10-21; hard mode in Play). A player shows the dice that make their game, or says they missed it. Show the wrong dice (or claim a miss while holding the game) and they pick up all five and roll them as if they had no game; that uses a roll. With no roll left, the hand misses the game. [confirmed] (the `misread` action; `isGameSet` checks a shown game)
 - **Dice are visible to everyone** from the start of play onward; only the initial roll is hidden (until play starts). [confirmed]
@@ -149,6 +149,7 @@ Engine choices made without a ruling yet (the engine does the [inferred] thing u
 3. ~~**Boss: may the Boss skip the extra roll?**~~ Yes: roll, come up, or pick 'em up (ruled 2026-10-21, §3.3).
 4. **Tied at the bottom: who rolls first?** [inferred: the tied player nearest the Hammer, going left; they can't take the tie while another tied player can still roll]
 5. **Boss "come up": strict order?** [inferred: the engine enforces order from the Boss's left, since in online play waiting can be an advantage]
+6. **Making the game: all at once, or in order?** Everyone who missed rolls at the same time for now (ruled 2026-10-21, §3.1); rolling one at a time from the Hammer's left would also be correct. Asking players which feels better.
 
 ## Resolved questions (2026-10-14)
 
