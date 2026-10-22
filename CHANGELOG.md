@@ -4,6 +4,20 @@ Every release of refusaldice.com, newest first. Versions are
 major.minor.patch ([docs/WORKFLOW.md](docs/WORKFLOW.md)): each pull request
 bumps the version once and adds its entry here.
 
+## 1.3.0 (unreleased)
+
+- **A 404 page that plays along:** a cocked die and a stacked pair, an
+  apology that names the address you asked for, and a way out: the page
+  you most likely meant (a typo like `/rulez` or `/game/10-2`), a re-roll
+  to a random page, or Home.
+- **Unknown games get a 400:** `/games/yahtzee` says "Nobody plays that
+  game" and points to the games list (or the game you nearly typed).
+- **Error pages as table mishaps:** `TableFault` and its catalog (404 cocked,
+  400 unknown game, 500 dice off the table) and `DiceMishap` for the
+  pictures; both proposed on `/design` for approval.
+- **Glossary:** Cocked Die and Stacked Dice (and in docs/RULES.md, marked
+  inferred until confirmed).
+
 ## 1.2.0 (unreleased)
 
 - **Design system site** at `/design`: every foundation, component and

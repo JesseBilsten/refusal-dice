@@ -102,13 +102,14 @@ test('pages set their width with Page, not their own max-w container', () => {
   expect(offenders).toEqual([])
 })
 
-test('pages with content start with a PageHeader (the home page has its hero)', () => {
+test('pages with content start with a PageHeader (the home page has its hero; TableFault renders one)', () => {
   const offenders = pages
     .filter(
       (f) =>
         f.text.includes('<Layout>') &&
         !f.p.endsWith('index.js') &&
-        !f.text.includes('<PageHeader')
+        !f.text.includes('<PageHeader') &&
+        !f.text.includes('<TableFault')
     )
     .map((f) => f.p)
   expect(offenders).toEqual([])

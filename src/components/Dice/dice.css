@@ -93,3 +93,24 @@
     animation: none;
   }
 }
+
+/* A cocked die (error pages): rocks on its corner, never settling */
+@keyframes dice-rock {
+  0%,
+  100% {
+    transform: rotate(var(--turn));
+  }
+  50% {
+    transform: rotate(calc(var(--turn) + 4deg));
+  }
+}
+
+.dice-rock {
+  animation: dice-rock 2.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dice-rock {
+    animation: none;
+  }
+}

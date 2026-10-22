@@ -483,6 +483,15 @@ const DOCS = [
     'The flat SVG face on its own (the logo, and inside Die).'
   ),
   comp(
+    'dice-mishap',
+    'DiceMishap',
+    'Dice',
+    'components/Dice/DiceMishap.jsx',
+    ['DiceMishap'],
+    'Dice that didn’t land right, for error pages: `kind` is `cocked`, `stacked`, `off-table` or `unknown`. Illustration only; the page says what went wrong in words.',
+    { status: P, liveAt: '/404' }
+  ),
+  comp(
     'die-slot',
     'DieSlot',
     'Dice',
@@ -702,6 +711,15 @@ const DOCS = [
   ),
 
   /* ── Patterns ── */
+  pat(
+    'table-fault',
+    'TableFault',
+    'Site',
+    'components/Errors/TableFault.jsx',
+    ['TableFault', 'FAULTS'],
+    'An error page told as a mishap at the table: the dice, the real error name in the eyebrow, what happened, and the way out. `FAULTS` lists them: 404 not found (cocked), 400 unknown game, 500 dice off the table.',
+    { status: P, liveAt: '/404' }
+  ),
   pat(
     'round-story',
     'RoundStory',

@@ -15,6 +15,8 @@ import {
   Term,
   TextLink,
 } from '../components/Page'
+import DiceMishap, { MISHAP_KINDS } from '../components/Dice/DiceMishap'
+import TableFault, { FAULTS } from '../components/Errors/TableFault'
 import {
   DiceGroup,
   DiceSettings,
@@ -102,7 +104,7 @@ import {
 } from '../components/ui/table'
 import { PRESETS } from '../lib/roll-query'
 import { seatOdds } from '../strategy'
-import { Specimen } from './DocKit'
+import { Code, Specimen } from './DocKit'
 
 /**
  * Live examples for each registry entry (registry.js), keyed by id. Each
@@ -566,6 +568,18 @@ export const EXAMPLES = {
       </div>
     </Specimen>
   ),
+  'dice-mishap': () => (
+    <Specimen title="Every kind">
+      <div className="flex flex-wrap items-end gap-8">
+        {MISHAP_KINDS.map((k) => (
+          <div key={k} className="space-y-2">
+            <DiceMishap kind={k} />
+            <Code>kind="{k}"</Code>
+          </div>
+        ))}
+      </div>
+    </Specimen>
+  ),
   'die-slot': () => (
     <Specimen>
       <div className="flex gap-2">
@@ -1000,5 +1014,22 @@ export const EXAMPLES = {
         }}
       />
     </Specimen>
+  ),
+  'table-fault': () => (
+    <>
+      {Object.keys(FAULTS).map((f) => (
+        <Specimen key={f} title={`fault="${f}"`}>
+          <TableFault
+            fault={f}
+            detail={f === 'unknown-game' ? 'yahtzee' : '/rulez'}
+          >
+            <Button size="lg">Go to Rules</Button>
+            <Button size="lg" variant="outline">
+              Re-roll: a random page
+            </Button>
+          </TableFault>
+        </Specimen>
+      ))}
+    </>
   ),
 }

@@ -448,6 +448,43 @@ const GLOSSARY_TERMS = [
     ),
   },
   {
+    id: 'cocked-die',
+    term: 'Cocked Die',
+    emoji: '📐',
+    keywords: ['cocked', 'leaning', 'tilted', 'crooked', 'not flat', 're-roll'],
+    body: (
+      <>
+        <p className="mb-2">
+          A die that doesn't land flat: it leans against the cup, another die or the edge of the
+          table, so you can't say which face is up. A cocked die doesn't count. Pick it up and
+          re-roll it.
+        </p>
+        <p className="text-sm text-muted-foreground">
+          <strong>Usage:</strong> "That one's cocked, roll it again"<br/>
+          <strong>See also:</strong> <TextLink to="#stacked-dice">Stacked Dice</TextLink>
+        </p>
+      </>
+    ),
+  },
+  {
+    id: 'stacked-dice',
+    term: 'Stacked Dice',
+    emoji: '🗼',
+    keywords: ['stacked', 'stack', 'on top', 'tower', 're-roll'],
+    body: (
+      <>
+        <p className="mb-2">
+          A die that lands on top of another. Neither one counts: re-roll both, the same as
+          a <TextLink to="#cocked-die">cocked die</TextLink>.
+        </p>
+        <p className="text-sm text-muted-foreground">
+          <strong>Usage:</strong> "Stacked! Roll them again"<br/>
+          <strong>See also:</strong> <TextLink to="#cocked-die">Cocked Die</TextLink>
+        </p>
+      </>
+    ),
+  },
+  {
     id: 'connector',
     term: 'Connector',
     emoji: '🔗',
