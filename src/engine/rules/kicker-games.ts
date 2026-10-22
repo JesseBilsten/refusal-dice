@@ -123,6 +123,16 @@ export function evaluateKickerHand(
 export const makesGame = (dice: Dice, game: KickerGameId, locked: number[] = []): boolean =>
   evaluateKickerHand(dice, game, 'high', locked).made
 
+/**
+ * Do the dice at `positions` make the game on their own, holding the dice
+ * kept last roll (`locked`)? How a player shows their game when they call
+ * their own hand (hard mode in Play).
+ */
+export const isGameSet = (dice: Dice, positions: number[], game: KickerGameId, locked: number[] = []): boolean =>
+  new Set(positions).size === positions.length &&
+  positions.length === SHAPES[game].size &&
+  makesHolding(dice, positions, game, locked)
+
 /** Values with the `locked` ones moved to the front, and their positions there */
 function lockedFirst(values: Dice, locked: Dice): { dice: Dice; locked: number[] } | null {
   const rest = [...values]

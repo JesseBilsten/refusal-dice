@@ -90,11 +90,15 @@ export function describeEvent(e: GameEvent, names: Names, label: Label): string 
     case 'comeUp':
       return `${who} ${v('say')} “come up”: everyone else gets one last roll.`
     case 'dontComeUp':
-      return `${who} ${v('say')} “don’t come up”: no loser this round.`
+      return `${who} ${v('say')} “pick ’em up”: no loser this round, and the Hammer passes left.`
     case 'revealed':
       return `${who} ${v('show')} the Boss's dice: ${e.dice.join(' ')}.`
     case 'stood':
       return `${who} ${v('stand')}.`
+    case 'misread':
+      return e.dead
+        ? `${who} ${v('show')} the wrong dice with no roll left: no game.`
+        : `${who} ${v('show')} the wrong dice, so ${who === 'You' ? 'you pick' : 'they pick'} them all up and roll five.`
     case 'cycle':
       return e.reason === 'tie'
         ? `${list(e.players, names)} tie for the worst hand and play again.`
@@ -125,19 +129,33 @@ export function rolledPositions(events: GameEvent[]): Record<PlayerId, number[]>
 }
 
 /**
- * How fast the bots play. Online tables give each action its own beat
- * instead of one fixed tick: a call or a pencil is worth a longer look
- * than a refusal. `slow` suits learning, `fast` players who know the game.
+ * How fast the bots play, slowest first, like a video's playback speed.
+ * Online tables give each move its own beat instead of one fixed tick: a
+ * call is worth a longer look than a refusal. `realistic` gives every
+ * decision a few seconds of thinking, a different time each move, as
+ * people take; `instant` plays straight through to your next move.
  */
-export type Pace = 'slow' | 'normal' | 'fast'
+export type Pace = 'verySlow' | 'slow' | 'realistic' | 'normal' | 'fast' | 'instant'
 
 export const PACES: { id: Pace; label: string }[] = [
+  { id: 'verySlow', label: 'Very slow' },
   { id: 'slow', label: 'Slow' },
+  { id: 'realistic', label: 'Realistic' },
   { id: 'normal', label: 'Normal' },
   { id: 'fast', label: 'Fast' },
+  { id: 'instant', label: 'Instant' },
 ]
 
-const PACE_SCALE: Record<Pace, number> = { slow: 1.6, normal: 1, fast: 0.45 }
+/** New players start slow: there's a lot to take in */
+export const DEFAULT_PACE: Pace = 'verySlow'
+
+const PACE_SCALE: Record<Exclude<Pace, 'realistic'>, number> = {
+  verySlow: 2.2,
+  slow: 1.5,
+  normal: 1,
+  fast: 0.45,
+  instant: 0,
+}
 
 /** Milliseconds to read each kind of event at normal pace (a roll includes its ~1s tumble) */
 const READ_MS: Partial<Record<GameEvent['type'], number>> = {
@@ -153,19 +171,34 @@ const READ_MS: Partial<Record<GameEvent['type'], number>> = {
   dontComeUp: 1700,
   revealed: 2000,
   stood: 1200,
+  misread: 2200,
   cycle: 2000,
 }
 
+/** Realistic thinking time, in ms: [least, most] */
+const THINK_MS: [number, number] = [2000, 5000]
+
 /**
- * How long the next bot waits after `last`, the latest event: long enough
- * to see what just happened. Your own moves need less (you know what you
- * did), but still leave the dice time to land. `null`: a fresh deal.
+ * How long a bot waits before its move after `last`, the latest event:
+ * long enough to see what just happened. Your own moves need less (you
+ * know what you did), but still leave the dice time to land. `null`: a
+ * fresh deal. Realistic adds a few seconds of thinking, drawn with `rand`.
  */
-export function paceAfter(last: GameEvent | null, pace: Pace = 'normal'): number {
+export function paceAfter(last: GameEvent | null, pace: Pace = DEFAULT_PACE, rand: () => number = Math.random): number {
   const base = last ? READ_MS[last.type] ?? 1400 : 1600
   const yours = last && 'player' in last && last.player === YOU
-  const ms = yours ? (last.type === 'rolled' ? 1100 : 700) : base
-  return Math.round(ms * PACE_SCALE[pace])
+  const read = yours ? (last.type === 'rolled' ? 1100 : 700) : base
+  if (pace === 'realistic') {
+    const [least, most] = THINK_MS
+    return Math.round(Math.max(read, least + rand() * (most - least)))
+  }
+  return Math.round(read * (PACE_SCALE[pace] ?? 1))
+}
+
+/** How long a moment that only needs reading (a piddle roll, a round's result) stays up */
+export function holdFor(ms: number, pace: Pace = DEFAULT_PACE): number {
+  if (pace === 'instant') return 0
+  return Math.round(ms * (pace === 'realistic' ? 1.5 : PACE_SCALE[pace]))
 }
 
 /** One player's latest move, short enough for their seat: "Calls 10-4 High", "Keeps 2, rolls 3" */
@@ -189,11 +222,13 @@ export function shortEvent(e: GameEvent, label: Label): string | null {
     case 'comeUp':
       return '“Come up”'
     case 'dontComeUp':
-      return '“Don’t come up”'
+      return '“Pick ’em up”'
     case 'revealed':
       return 'Shows the Boss’s dice'
     case 'stood':
       return 'Stands'
+    case 'misread':
+      return e.dead ? 'Wrong dice: no game' : 'Wrong dice: picks up'
     case 'pencil':
       return e.out ? 'Takes a pencil: out' : 'Takes a pencil'
     default:
@@ -219,11 +254,16 @@ export function latestMoves(events: GameEvent[], label: Label): Record<PlayerId,
 }
 
 /**
- * The others in a fixed order, as they sit to your left: your seat stays
- * at the bottom of the table and nobody moves between rounds (online
- * tables keep seats still so players can learn where everyone is).
+ * The table in seat order, starting at `first` (the player who won the
+ * piddle) and going left. It never changes during a game: the Hammer moves
+ * down it as play passes left.
  */
-export function opponentOrder<S extends Pick<Seat, 'id'>>(seats: S[]): S[] {
-  const me = seats.findIndex((s) => s.id === YOU)
-  return [...seats.slice(me + 1), ...seats.slice(0, Math.max(me, 0))]
+export function tableOrder<S extends Pick<Seat, 'id'>>(seats: S[], first: PlayerId): S[] {
+  const i = Math.max(0, seats.findIndex((s) => s.id === first))
+  return [...seats.slice(i), ...seats.slice(0, i)]
+}
+
+/** The piddle, one reveal at a time: each roll (and roll-off), then who holds the Hammer */
+export function piddleSteps(rounds: { player: PlayerId; die: number }[][]): { round: number; done: boolean }[] {
+  return [...rounds.map((_, round) => ({ round, done: false })), { round: rounds.length - 1, done: true }]
 }

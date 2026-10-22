@@ -19,6 +19,7 @@ Each rule is tagged by where it came from:
 ## 2. A round
 
 1. **Roll.** The Hammer says **"coming out"** to start the round, then everyone rolls all 5 dice and keeps them hidden. [confirmed] This roll is everyone's **roll 1** for whatever game ends up being played, including after a second call. [site] [confirmed]
+   - Only the Hammer and the refusals need their dice before the call. Everyone else may leave theirs in the cup until the Hammer calls, then roll for the call; that roll is still their roll 1 (ruled 2026-10-21; Play works this way). [confirmed]
 2. **Call or bark.** The Hammer looks at their dice and either:
    - **calls** a game, including a high/low variant for kicker games (e.g. "10-3 High"), or
    - **barks:** the Hammer passes to the player on the left, everyone picks up, and the round starts over with a fresh roll and the new Hammer calling. [confirmed]
@@ -51,7 +52,9 @@ Each rule is tagged by where it came from:
   - Ship Captain Crew: keep 1-2 and only a 3 makes it; a rolled 4-5-6 doesn't. Monterey: keep 2-3 and the game is 2-3-4.
 - **A made game can't be re-rolled** (ruled 2026-10-20). Once a player's dice make the game, they keep the dice that make it and re-roll the whole kicker, or stand: e.g. in 10-2, a 5-5 can't be picked up and rolled again. Only Razzle and Boss let a player pick up the dice that make their hand (§3.2, §3.3). [confirmed]
 - The engine enforces all of these (`keepProblem` and `evaluateKickerHand` in `src/engine/rules/kicker-games.ts`; the committed dice are `rolling[player].kept`, read back with `keptAt`). Razzle, Boss and Tres Away have their own keep rules (§3.2–3.4).
-- **The worst hand rolls first** (§4), not in seat order: only the player at the bottom rolls, until they climb off it or run out of rolls. [confirmed]
+- **Making the game: everyone who missed rolls on their own** (ruled 2026-10-21). Anyone who hasn't made the game rolls at the same time as the others who haven't, in any order, until they make it or run out of rolls. Missing is the worst hand, so nobody who made the game rolls meanwhile. [confirmed] (`rollers` in `src/engine/round/game.ts`)
+- **Then the worst hand rolls first** (§4), not in seat order: only the player at the bottom rolls, until they climb off it or run out of rolls. [confirmed]
+- **Showing the game** (ruled 2026-10-21; hard mode in Play). A player shows the dice that make their game, or says they missed it. Show the wrong dice (or claim a miss while holding the game) and they pick up all five and roll them as if they had no game; that uses a roll. With no roll left, the hand misses the game. [confirmed] (the `misread` action; `isGameSet` checks a shown game)
 - **Dice are visible to everyone** from the start of play onward; only the initial roll is hidden (until play starts). [confirmed]
 - A player tries to **make the game** and then get a kicker that beats the worst kicker at the table (e.g. in 10-3, roll until you have the game and a better kicker than the worst player). [confirmed]
 - **Terminology: "the kicker" is all the remaining dice together** (one die in 10-4, three in 10-2), not each die. Say "a kicker of 6+1", never "kickers 6 and 1" or "a good kicker and a bad one". [confirmed]
@@ -94,9 +97,9 @@ Each rule is tagged by where it came from:
 - **Flow:** [confirmed] [site]
   1. Everyone reveals their initial roll. The best hand is the **Boss**. If two or more players tie for the best hand, there's **no Boss**: the game ends with no loser, the Hammer passes left, and a new game starts. [confirmed]
   2. The Boss rolls **once more**, **hidden** from the table. They may pick up any dice, **except dice that would make someone else the Boss** (ruled 2026-10-20): the dice they keep must still beat every other player's hand on their own. E.g. with a full house they may pick up the pair only if three of a kind still beats the table. The kept dice are ranked as they stand, with no kicker, so matching another hand isn't enough. [confirmed] (`bossKeepProblem` in `src/engine/rules/specialty-games.ts`)
-  3. Then the Boss chooses:
+  3. Then the Boss chooses. The Boss may also skip the extra roll and choose straight away (ruled 2026-10-21): roll, come up, or pick 'em up. [confirmed]
      - **"Come up":** every other player gets **one last roll** to avoid losing. They may keep any dice or re-roll all five, and each result is shown as soon as it's rolled. Then **the worst hand at the table loses, and that can be the Boss.** For example, a Boss who calls everyone up on two pair loses if everyone else rolls three of a kind.
-     - **"Don't come up"** (also "pick them up"): the game ends with **no loser**, and play passes left.
+     - **"Pick 'em up"** (also "don't come up"): the game ends with **no loser**, and the Hammer passes left.
   - Common strategy debate: holding a single 6, keep it and roll 4 dice, or re-roll all 5?
 - **Tie for worst hand:** the tied players play again, just them. Hands only tie if they match exactly; otherwise poker rules decide (a pair of 6s beats a pair of 5s; 5s over 2s beats 4s over 3s). [confirmed]
 - In principle the other players act in order, but they often roll early when waiting gains them nothing. A player deciding between strategies (e.g. two pair: go for a full house?) may wait to see what the players before them do. [confirmed]
@@ -143,7 +146,7 @@ Engine choices made without a ruling yet (the engine does the [inferred] thing u
 
 1. **Tres Away replay: who sets the pace?** When tied highest scores replay, the caller may not be among them. [inferred: the tied player nearest the caller, going left, starting with the caller]
 2. **Boss replay: a tie for the best hand.** When tied worst hands replay Boss and two of them tie for the best hand, the main-game rule (no Boss, no loser) would let them all off. [inferred: the replaying players start over with fresh rolls]
-3. **Boss: may the Boss skip the extra roll?** [inferred: yes, standing is allowed]
+3. ~~**Boss: may the Boss skip the extra roll?**~~ Yes: roll, come up, or pick 'em up (ruled 2026-10-21, §3.3).
 4. **Tied at the bottom: who rolls first?** [inferred: the tied player nearest the Hammer, going left; they can't take the tie while another tied player can still roll]
 5. **Boss "come up": strict order?** [inferred: the engine enforces order from the Boss's left, since in online play waiting can be an advantage]
 

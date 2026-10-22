@@ -151,9 +151,13 @@ const RulesPage = () => (
             already have counts as the first.
           </p>
           <p>
-            <strong>The worst hand rolls first.</strong> Whoever holds it is the loser right now, so they roll until
-            they climb off the bottom or run out of rolls. Then whoever holds the worst hand rolls. If the worst hand
-            never gets off the bottom, nobody else has to roll at all.
+            <strong>Missed the game? Roll on your own.</strong> Everyone who hasn’t made the game rolls at the same
+            time, until they make it or run out of rolls.
+          </p>
+          <p>
+            <strong>Then the worst hand rolls first.</strong> Whoever holds it is the loser right now, so they roll
+            until they climb off the bottom or run out of rolls. Then whoever holds the worst hand rolls. If the worst
+            hand never gets off the bottom, nobody else has to roll at all.
           </p>
           <ul className="list-disc space-y-1.5 pl-5">
             <li>
@@ -217,9 +221,9 @@ const RulesPage = () => (
               </li>
               <li>
                 <GameLink id="boss" />: poker hands without straights. The best first roll is the Boss, who rolls
-                once more in secret, picking up any dice as long as what they keep still beats everyone. Then the Boss says <em>“come up”</em>{' '}
+                once more in secret, picking up any dice as long as what they keep still beats everyone, or skips the roll. Then the Boss says <em>“come up”</em>{' '}
                 (everyone else gets one last roll, and the worst hand loses, even if that’s the Boss) or{' '}
-                <em>“don’t come up”</em> (no loser). A tie for the best first roll means no Boss: no loser, and the
+                <em>“pick ’em up”</em> (no loser, and the Hammer passes left). A tie for the best first roll means no Boss: no loser, and the
                 Hammer passes left.
               </li>
               <li>

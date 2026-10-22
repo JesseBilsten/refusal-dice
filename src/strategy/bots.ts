@@ -16,8 +16,8 @@ import {
   makesGame,
   razzleScore,
   bottomTarget,
-  bottomTurn,
   refusalSeats,
+  rollers,
   tresAwayMaxPutOut,
   tresAwayScore,
   wouldLoseIfStopped,
@@ -101,16 +101,16 @@ export const wouldAccept = (dice: Dice, call: Call, rules?: KeepRules): boolean 
 /* ── Playing ── */
 
 /**
- * Play from the bottom (§4): whoever must roll holds the worst hand, so
- * roll with the exact best keep for beating the next-worst hand (or just
- * making the game, when that hand missed too). Tied at the bottom with
- * nobody else left to roll, take the tie when that's at least as good as
- * rolling (always with two players left, where a tie means no pencil).
+ * Play from the bottom (§4): whoever may roll holds the worst hand (or, in
+ * a kicker game, hasn't made it yet), so roll with the exact best keep for
+ * beating the next-worst hand (or just making the game, when that hand
+ * missed too). Tied at the bottom with nobody else left to roll, take the
+ * tie when that's at least as good as rolling (always with two players
+ * left, where a tie means no pencil).
  */
-function bottomAction(state: GameState): Action {
+function bottomAction(state: GameState, player: string): Action {
   const phase = state.phase
   if (phase.kind !== 'play') throw new Error('not in play')
-  const player = bottomTurn(state)!
   const dice = state.dice[player]
   const targetId = bottomTarget(state, player)!
   const goal = bottomGoal(phase.call, state.dice[targetId], phase.rolling[targetId].kept)
@@ -135,6 +135,24 @@ export function bottomGoal(call: Call, target: Dice, targetKept: number[] = []):
   return them.made
     ? { kind: 'kicker', game, variant: call.variant!, total: them.kickerTotal }
     : { kind: 'make', game }
+}
+
+/**
+ * Everyone who may act right now: one player, except in a kicker game
+ * while several players are still making the game (they roll at once).
+ * Empty between rounds.
+ */
+export function actors(state: GameState): string[] {
+  const kind = state.phase.kind
+  if (kind === 'roundOver' || kind === 'gameOver') return []
+  if (kind === 'play') return rollers(state)
+  const action = botAction(state)
+  return 'player' in action ? [action.player] : []
+}
+
+/** The bot's action for `player`, who must be one of actors(state) */
+export function botActionFor(state: GameState, player: string): Action {
+  return state.phase.kind === 'play' ? bottomAction(state, player) : botAction(state)
 }
 
 /** The action the bot takes for whoever must act next. */
@@ -162,7 +180,7 @@ export function botAction(state: GameState): Action {
         call: chooseCall(state.dice[state.hammer], phase.refused.game, state.rules),
       }
     case 'play':
-      return bottomAction(state)
+      return bottomAction(state, rollers(state)[0])
     case 'tresAway': {
       const player = phase.turn
       const hand = phase.hands[player]

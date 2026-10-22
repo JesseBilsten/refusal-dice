@@ -112,12 +112,22 @@ caps the content column, **left-aligned**. Pages never set their own
   line). `said` labels the seat with its latest move, the way online tables
   do ("Calls 10-4 High", "Keeps 2, rolls 3"; the table's newest pulses
   once); `compact` and `detail` (the hand in words) suit the other players
-  around your seat. The tutorial and Play both use it.
-- **Play's table layout:** seats never move (the others in table order from
-  your left, your seat last, docked to the bottom of the screen with your
-  buttons so they stay in thumb reach); an announcer above the seats holds
-  the newest move until the next; bots move at a readable pace per kind of
-  move (`paceAfter`), and players can pause and step through them.
+  around your seat; `turn` draws **the turn outline**, one per table, which
+  glides from seat to seat as the turn passes (framer-motion `layoutId`);
+  `footer` holds your move under everything else. The tutorial and Play
+  both use it.
+- `TableOrder`: **the order of play**, fixed for the whole game: from the
+  piddle winner, going left. The 🔨 token slides down it as the Hammer
+  passes; rows show roles, the hand in words, a status chip and pencils.
+- `DiceCup`: dice picked up: a player in the cup (safe), or your dice
+  before you roll for the call.
+- **Play's table:** a video-player style control bar on the felt (Pause/Play,
+  Next, a speed slider from Very slow, the default, to Instant, with
+  Realistic in between: a few seconds of thinking per move, varied), the
+  call in its own placard (emoji, name, 1st or 2nd call), an announcer
+  holding the newest move, the others in order of play, and your seat last,
+  docked to the bottom of the screen when it's your move so your buttons
+  stay in thumb reach. The piddle plays out on the same table.
 
 - `SeatRing`: **the table seen from above** (SVG). Each seat shows a
   chance (of the pencil), tinted better or worse than an even share; your

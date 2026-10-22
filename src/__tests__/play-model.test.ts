@@ -7,8 +7,10 @@ import {
   describeEvent,
   latestMoves,
   newTable,
-  opponentOrder,
+  holdFor,
   paceAfter,
+  piddleSteps,
+  tableOrder,
   rolledPositions,
   shortEvent,
 } from '../components/Play/play-model'
@@ -58,15 +60,25 @@ test('rolled positions skip the kept dice', () => {
 test('the bots pause longer for a call than a refusal, and less after your own move', () => {
   const call = { type: 'called', player: 'ava', call: { game: '10-4', variant: 'high' }, second: false } as const
   const refuse = { type: 'refused', player: 'ava' } as const
-  expect(paceAfter(call)).toBeGreaterThan(paceAfter(refuse))
-  expect(paceAfter({ ...refuse, player: YOU })).toBeLessThan(paceAfter(refuse))
+  expect(paceAfter(call, 'normal')).toBeGreaterThan(paceAfter(refuse, 'normal'))
+  expect(paceAfter({ ...refuse, player: YOU }, 'normal')).toBeLessThan(paceAfter(refuse, 'normal'))
   // A roll leaves the dice time to land (~1s), even your own
-  expect(paceAfter({ type: 'rolled', player: YOU, dice: [1, 2, 3, 4, 5], kept: [] })).toBeGreaterThanOrEqual(1000)
-  expect(paceAfter(call, 'slow')).toBeGreaterThan(paceAfter(call))
-  expect(paceAfter(call, 'fast')).toBeLessThan(paceAfter(call))
-  expect(paceAfter(null)).toBeGreaterThan(0)
+  expect(paceAfter({ type: 'rolled', player: YOU, dice: [1, 2, 3, 4, 5], kept: [] }, 'normal')).toBeGreaterThanOrEqual(1000)
+  // Slowest by default; instant plays straight through
+  expect(paceAfter(call)).toBeGreaterThan(paceAfter(call, 'slow'))
+  expect(paceAfter(call, 'slow')).toBeGreaterThan(paceAfter(call, 'normal'))
+  expect(paceAfter(call, 'fast')).toBeLessThan(paceAfter(call, 'normal'))
+  expect(paceAfter(call, 'instant')).toBe(0)
+  expect(holdFor(1000, 'instant')).toBe(0)
+  expect(paceAfter(null, 'normal')).toBeGreaterThan(0)
 })
 
+test('realistic: every decision takes a few seconds of thinking, a different time each move', () => {
+  const refuse = { type: 'refused', player: 'ava' } as const
+  expect(paceAfter(refuse, 'realistic', () => 0)).toBe(2000)
+  expect(paceAfter(refuse, 'realistic', () => 0.999)).toBeGreaterThan(4900)
+  expect(paceAfter({ ...refuse, player: YOU }, 'realistic', () => 0)).toBeGreaterThanOrEqual(2000)
+})
 test('each seat shows its latest move this round', () => {
   const moves = latestMoves(
     [
@@ -86,8 +98,20 @@ test('each seat shows its latest move this round', () => {
   expect(shortEvent({ type: 'rolled', player: 'ava', dice: [], kept: [], hidden: true }, label)).toBe('Rolls in secret')
 })
 
-test('your opponents sit in a fixed order, starting on your left', () => {
+test('the table runs from the piddle winner, going left, all game', () => {
   const seats = [{ id: 'ava' }, { id: YOU }, { id: 'ben' }, { id: 'cass' }]
-  expect(opponentOrder(seats).map((s) => s.id)).toEqual(['ben', 'cass', 'ava'])
-  expect(opponentOrder(newTable(3, 1).seats).map((s) => s.id)).toEqual(['ava', 'ben', 'cass'])
+  expect(tableOrder(seats, 'ben').map((s) => s.id)).toEqual(['ben', 'cass', 'ava', YOU])
+  expect(tableOrder(seats, 'ava').map((s) => s.id)).toEqual(['ava', YOU, 'ben', 'cass'])
+})
+
+test('the piddle shows each roll, then who holds the Hammer', () => {
+  const rounds = [
+    [{ player: 'ava', die: 6 }, { player: YOU, die: 6 }, { player: 'ben', die: 2 }],
+    [{ player: 'ava', die: 3 }, { player: YOU, die: 5 }],
+  ]
+  expect(piddleSteps(rounds)).toEqual([
+    { round: 0, done: false },
+    { round: 1, done: false },
+    { round: 1, done: true },
+  ])
 })

@@ -1,4 +1,5 @@
 import React from 'react'
+import { motion, useReducedMotion } from 'framer-motion'
 import { Pencil } from 'lucide-react'
 import { Badge } from '../ui/badge'
 import { cn } from '../../lib/utils'
@@ -18,6 +19,9 @@ import { cn } from '../../lib/utils'
  *   replays its entrance
  * - detail: a line under the dice (the hand in words, rolls left)
  * - compact: smaller padding, for the other players around your seat
+ * - footer: below everything else, e.g. your move and its buttons
+ * - turn: draw the turn outline here. There's one outline on the table: it
+ *   glides from seat to seat as the turn passes, pulling the eye along
  */
 export default function Seat({
   name,
@@ -33,13 +37,16 @@ export default function Seat({
   said,
   detail,
   compact,
+  turn,
+  footer,
   children,
   className,
 }) {
+  const reduced = useReducedMotion()
   return (
     <div
       className={cn(
-        'rounded-xl border bg-card shadow-sm transition-shadow',
+        'relative rounded-xl border bg-card shadow-sm transition-shadow',
         compact ? 'p-2.5' : 'p-3',
         you && 'border-primary/60',
         active && 'ring-2 ring-pop ring-offset-2 ring-offset-transparent',
@@ -47,8 +54,16 @@ export default function Seat({
         out && 'opacity-50',
         className
       )}
-      aria-current={active ? 'true' : undefined}
+      aria-current={active || turn ? 'true' : undefined}
     >
+      {turn && (
+        <motion.span
+          layoutId="turn-outline"
+          aria-hidden
+          transition={{ duration: reduced ? 0 : 0.45, ease: 'easeInOut' }}
+          className="pointer-events-none absolute inset-0 z-10 rounded-xl border-[3px] border-pop shadow-[0_0_18px_hsl(var(--color-pop)/0.45)]"
+        />
+      )}
       <div className={cn('flex flex-wrap items-center', compact ? 'mb-1.5 gap-1.5' : 'mb-2 gap-2')}>
         <span className="font-semibold">{name}</span>
         {badges.map((b) => (
@@ -95,6 +110,7 @@ export default function Seat({
       )}
       {detail && <div className="mt-1 text-xs text-muted-foreground">{detail}</div>}
       {status && <div className="mt-2 text-xs text-muted-foreground">{status}</div>}
+      {footer}
     </div>
   )
 }

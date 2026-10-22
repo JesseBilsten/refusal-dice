@@ -297,7 +297,8 @@ const GLOSSARY_TERMS = [
         <p className="mb-2">
           The hand that would lose if play stopped now. Missing the game is worst; then the weakest{' '}
           <Link to="#kicker" className="text-primary hover:underline">kicker</Link> for the call.
-          <strong> The worst hand rolls first</strong>, until it climbs off the bottom or runs out of rolls. If it never
+          In a kicker game everyone who missed rolls on their own until they make it or run out; then
+          <strong> the worst hand rolls first</strong>, until it climbs off the bottom or runs out of rolls. If it never
           gets off the bottom, nobody else has to roll, and it takes the <Link to="#pencil" className="text-primary hover:underline">pencil</Link>.
         </p>
         <p className="text-sm text-muted-foreground">

@@ -117,7 +117,7 @@ const SECTIONS = [
   {
     id: 'boss',
     made: 'Poker hands without straights or flushes. The best first roll is the Boss.',
-    note: 'The Boss gets one more roll, in secret, then says “come up” (everyone else gets one last roll, and the worst hand loses: it can be the Boss) or “don’t come up” (no loser).',
+    note: 'The Boss may roll once more, in secret, then says “come up” (everyone else gets one last roll, and the worst hand loses: it can be the Boss) or “pick ’em up” (no loser, and the Hammer passes left).',
     callLine: () => worthLine('boss'),
     examples: [{ dice: [5, 5, 5, 5, 2] }, { dice: [4, 4, 4, 3, 3] }, { dice: [6, 6, 4, 4, 1] }],
   },

@@ -1,5 +1,5 @@
 import { DiceSource, rollDice } from '../dice-source'
-import { isKickerGame, keepProblem } from '../rules/kicker-games'
+import { evaluateKickerHand, isKickerGame, keepProblem } from '../rules/kicker-games'
 import { compareKickerHands, resolveKickerCycle } from '../rules/resolve'
 import {
   bestHands,
@@ -29,7 +29,8 @@ import {
  * replayed, sent over the network and run identically on a server.
  *
  * Kicker games and Razzle use the `play` phase (up to 3 rolls, played from
- * the bottom: the worst hand rolls first). Tres Away (§3.2) and Boss (§3.3) have their own phases.
+ * the bottom: the worst hand rolls first; in kicker games anyone who hasn't
+ * made the game rolls on their own until they make it or run out). Tres Away (§3.2) and Boss (§3.3) have their own phases.
  */
 
 export const MAX_ROLLS = 3
@@ -128,6 +129,13 @@ export type GameEvent =
   | { type: 'dontComeUp'; player: PlayerId }
   | { type: 'revealed'; player: PlayerId; dice: Dice }
   | { type: 'stood'; player: PlayerId }
+  /**
+   * Kicker games: the player showed the wrong dice for their game (or said
+   * they missed it when they hadn't), so they picked them all up. With a
+   * roll left they roll all five (a `rolled` event follows); without one,
+   * `dead`: the hand counts as missing the game.
+   */
+  | { type: 'misread'; player: PlayerId; dead: boolean }
   | { type: 'cycle'; players: PlayerId[]; reason: 'missed' | 'tie' }
   | { type: 'pencil'; player: PlayerId; pencils: number; out: boolean }
   | { type: 'noPencil'; reason: 'two-player-tie' | 'two-player-miss' | 'no-boss' | 'boss-stayed-down' }
@@ -160,8 +168,10 @@ export type Action =
   | { type: 'putOut'; player: PlayerId; dice: number[] }
   /** Boss: everyone else gets one last roll */
   | { type: 'comeUp'; player: PlayerId }
-  /** Boss: no loser this round */
+  /** Boss: no loser this round ("pick 'em up") */
   | { type: 'dontComeUp'; player: PlayerId }
+  /** Kicker games: a misread hand is picked up and rolled whole (see the `misread` event) */
+  | { type: 'misread'; player: PlayerId }
   | { type: 'nextRound' }
 
 export interface CreateGameOptions {
@@ -423,6 +433,7 @@ export function keptAt(state: GameState, player: PlayerId): number[] {
   for (let i = state.log.length - 1; i >= 0; i--) {
     const e = state.log[i]
     if (e.type === 'called' || (e.type === 'cycle' && e.players.includes(player))) return []
+    if (e.type === 'misread' && e.player === player && e.dead) return DEAD_HAND
     if (e.type === 'rolled' && e.player === player && !e.hidden) return e.kept
   }
   return []
@@ -465,6 +476,40 @@ export function bottomTurn(state: GameState): PlayerId | null {
 export function bottomHands(state: GameState): PlayerId[] {
   const { phase } = state
   return phase.kind === 'play' ? playWorst(state, Object.keys(phase.rolling)) : []
+}
+
+/**
+ * A dead hand (misread with no roll left) is committed to all five dice.
+ * No game is made with all five, so it counts as missing the game.
+ */
+const DEAD_HAND = [0, 1, 2, 3, 4]
+
+/** Kicker games: who hasn't made the game and can still roll */
+function missersRolling(state: GameState): PlayerId[] {
+  const { phase } = state
+  if (phase.kind !== 'play' || !isKickerGame(phase.call.game) || !phase.call.variant) return []
+  const { game, variant } = phase.call
+  return seatOrderFrom(
+    state,
+    state.hammer,
+    Object.keys(phase.rolling).filter(
+      (id) => !phase.rolling[id].done && !evaluateKickerHand(state.dice[id], game, variant, phase.rolling[id].kept).made
+    )
+  )
+}
+
+/**
+ * Who may roll now, nearest the Hammer first. In a kicker game, everyone
+ * who hasn't made the game rolls on their own, at the same time, until
+ * they make it or run out of rolls (ruled 2026-10-21); a miss is the worst
+ * hand, so nobody who made the game rolls meanwhile. Then, and in Razzle,
+ * the worst hand rolls (bottomTurn).
+ */
+export function rollers(state: GameState): PlayerId[] {
+  const missing = missersRolling(state)
+  if (missing.length) return missing
+  const turn = bottomTurn(state)
+  return turn ? [turn] : []
 }
 
 /** Whose hand `player` must beat to get off the bottom: the worst of the others */
@@ -696,9 +741,8 @@ export function applyAction(state: GameState, action: Action): GameState {
         const rolls = phase.rolling[action.player]
         if (!rolls) throw new EngineError(`${action.player} isn't playing this cycle`)
         if (rolls.done) throw new EngineError(`${action.player} is already done rolling`)
-        const turn = bottomTurn(state)
-        if (turn !== action.player) {
-          throw new EngineError(`The worst hand rolls first: it's ${turn}'s turn, not ${action.player}'s`)
+        if (!rollers(state).includes(action.player)) {
+          throw new EngineError(`The worst hand rolls first: it's ${bottomTurn(state)}'s turn, not ${action.player}'s`)
         }
 
         if (action.type === 'stand') {
@@ -744,6 +788,42 @@ export function applyAction(state: GameState, action: Action): GameState {
           },
         }
         return maybeResolve(log(next, { type: 'rolled', player: action.player, dice, kept: [...keep] }))
+      }
+      if (action.type === 'misread') {
+        const rolls = phase.rolling[action.player]
+        if (!rolls) throw new EngineError(`${action.player} isn't playing this cycle`)
+        if (!isKickerGame(phase.call.game)) throw new EngineError('Only a kicker game is shown dice by dice')
+        // Picked up: roll all five as if there were no game, or with no roll left the hand is dead
+        if (rolls.rollsUsed >= MAX_ROLLS) {
+          return maybeResolve(
+            log(
+              {
+                ...state,
+                phase: {
+                  ...phase,
+                  rolling: { ...phase.rolling, [action.player]: { ...rolls, done: true, kept: [...DEAD_HAND] } },
+                },
+              },
+              { type: 'misread', player: action.player, dead: true }
+            )
+          )
+        }
+        const rolled = rollPositions(state, action.player, [0, 1, 2, 3, 4])
+        const rollsUsed = rolls.rollsUsed + 1
+        const next: GameState = {
+          ...rolled,
+          phase: {
+            ...phase,
+            rolling: { ...phase.rolling, [action.player]: { rollsUsed, done: rollsUsed >= MAX_ROLLS, kept: [] } },
+          },
+        }
+        return maybeResolve(
+          log(
+            next,
+            { type: 'misread', player: action.player, dead: false },
+            { type: 'rolled', player: action.player, dice: rolled.dice[action.player], kept: [] }
+          )
+        )
       }
       break
     }

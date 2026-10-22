@@ -1,4 +1,5 @@
 import {
+  Action,
   Call,
   DEFAULT_HOUSE_RULES,
   Dice,
@@ -9,6 +10,7 @@ import {
   createGame,
   rollDice,
   seeded,
+  viewFor,
 } from '../engine'
 import { ALL_CALLS, botAction, chooseCall, wouldAccept } from './bots'
 
@@ -363,4 +365,52 @@ export function simulateRefusal(options: {
       })),
     conditioned: true,
   }
+}
+
+/** One choice open to a player: its label and the action(s) it takes */
+export interface DecisionChoice {
+  label: string
+  actions: Action[]
+}
+
+/**
+ * Any decision mid-round: the chance `me` takes the pencil for each choice,
+ * playing the round out with solid bots (`me` included) after it. Dice
+ * `me` can't see (another Tres Away hand, the Boss's secret roll) are
+ * drawn fresh for every sample, so the estimate only knows what `me`
+ * knows. Every choice is played from the same dice (common random numbers).
+ */
+export function simulateDecision(options: {
+  state: GameState
+  me: PlayerId
+  choices: DecisionChoice[]
+  samples?: number
+  seed?: number
+}): Estimate[] {
+  const { state, me, choices, samples = 300, seed = 1 } = options
+  const view = viewFor(state, me)
+  const losses = choices.map(() => 0)
+  for (let i = 0; i < samples; i++) {
+    const s = sampleSeed(seed, i)
+    let hiddenSource = seeded(s ^ 0x3c6ef372)
+    const dice = { ...state.dice }
+    Object.entries(view.dice).forEach(([id, seen]) => {
+      if (id === me || (seen && seen.every((d) => d !== null))) return
+      const fresh = [...state.dice[id]]
+      fresh.forEach((_, j) => {
+        if (seen && seen[j] !== null) return
+        const [[d], next] = rollDice(hiddenSource, 1)
+        hiddenSource = next
+        fresh[j] = d
+      })
+      dice[id] = fresh
+    })
+    // Nobody is eliminated mid-simulation; only this round's pencil matters
+    const base: GameState = { ...state, dice, source: seeded(s), rules: { ...state.rules, pencilsToLose: 1000 } }
+    choices.forEach((choice, c) => {
+      const g = choice.actions.reduce(applyAction, base)
+      if (playOutRound(g).loser === me) losses[c]++
+    })
+  }
+  return losses.map((n) => estimate(n, samples))
 }
