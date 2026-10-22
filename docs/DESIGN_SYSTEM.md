@@ -119,7 +119,7 @@ caps the content column, **left-aligned**. Pages never set their own
 - `TableOrder`: **the order of play**, fixed for the whole game: from the
   piddle winner, going left. The 🔨 token slides down it as the Hammer
   passes; rows show roles, the hand in words, a status chip and pencils.
-- `DiceCup`: dice picked up: a player in the cup (safe), or your dice
+- `DiceCup`: dice picked up: a player in the cup (safe; Play shows why in place of the dice, against the finished hand they beat: "Kicker of 9 beats Ben’s all-day 6"), or your dice
   before you roll for the call.
 - **Play's table:** a video-player style control bar on the felt (Pause/Play,
   Next), every speed in view as a row of buttons (Very slow, the default,

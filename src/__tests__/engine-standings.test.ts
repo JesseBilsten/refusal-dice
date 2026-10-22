@@ -52,6 +52,9 @@ describe('kicker games', () => {
       ['c', 2, 'live', 0, true],
       ['b', 3, 'bottom', 2, false],
     ])
+    // a is in the cup because of c's finished hand
+    expect(standings(g).find((st) => st.player === 'a')?.safeOver).toBe('c')
+    expect(standings(g).find((st) => st.player === 'c')?.safeOver).toBeUndefined()
   })
 
   test('not on the table before play starts', () => {
@@ -77,4 +80,5 @@ test('round over: the final ranking, with the loser at the bottom and everyone e
     ['b', 2, 'safe', null, true],
     ['c', 3, 'bottom', null, true],
   ])
+  expect(standings(g).map((st) => st.safeOver)).toEqual(['c', 'c', undefined])
 })

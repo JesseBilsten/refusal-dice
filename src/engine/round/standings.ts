@@ -30,6 +30,12 @@ export interface Standing {
   rollsLeft: number | null
   /** No rolls left: this hand is final */
   allDay: boolean
+  /**
+   * In the cup: the player whose final hand is worse than this one (the best
+   * of them when there are several), which is why this player is safe.
+   * Missing for players safe from an earlier cycle.
+   */
+  safeOver?: PlayerId
   /** Boss: the Boss's hand is partly hidden, so they're listed first, unranked against the rest */
   boss?: boolean
 }
@@ -70,13 +76,15 @@ export function standings(state: GameState): Standing[] {
     const order = (a: PlayerId, b: PlayerId) => cmp(hand(a), hand(b), keptAt(state, a), keptAt(state, b))
     const ranked: Standing[] = rankBest(ids, order).map(({ id, rank }) => {
       const left = MAX_ROLLS - phase.rolling[id].rollsUsed
-      const safe = final.some((y) => y !== id && order(y, id) < 0)
+      const below = final.filter((y) => y !== id && order(y, id) < 0).sort((a, b) => order(b, a))
+      const status = bottom.includes(id) ? (bottom.length > 1 ? 'tied' : 'bottom') : below.length ? 'safe' : 'live'
       return {
         player: id,
         rank,
-        status: bottom.includes(id) ? (bottom.length > 1 ? 'tied' : 'bottom') : safe ? 'safe' : 'live',
+        status,
         rollsLeft: left,
         allDay: left === 0,
+        ...(status === 'safe' && { safeOver: below[0] }),
       }
     })
     return [...alreadySafe(state, ids), ...ranked]
@@ -89,14 +97,16 @@ export function standings(state: GameState): Standing[] {
     const high = (id: PlayerId) => low(id) + 6 * (5 - phase.hands[id].out.length)
     const ranked: Standing[] = rankBest(ids, (a, b) => low(b) - low(a)).map(({ id, rank }) => {
       const others = ids.filter((y) => y !== id)
-      const safe = others.some((y) => low(y) > high(id))
+      const below = others.filter((y) => low(y) > high(id)).sort((a, b) => low(a) - low(b))
       const bottom = others.every((y) => low(id) > high(y))
+      const status = bottom ? 'bottom' : below.length ? 'safe' : 'live'
       return {
         player: id,
         rank,
-        status: bottom ? 'bottom' : safe ? 'safe' : 'live',
+        status,
         rollsLeft: null,
         allDay: phase.hands[id].out.length === 5,
+        ...(status === 'safe' && { safeOver: below[0] }),
       }
     })
     return [...alreadySafe(state, ids), ...ranked]
@@ -109,13 +119,18 @@ export function standings(state: GameState): Standing[] {
     const boss: Standing = { player: phase.boss, rank: 1, status: 'live', rollsLeft: 0, allDay: true, boss: true }
     const ranked: Standing[] = rankBest(others, (a, b) => compareBoss(hand(a), hand(b))).map(({ id, rank }) => {
       // A last roll can make a hand worse, so only a final hand can be in the cup
-      const safe = rolled(id) && others.some((y) => y !== id && rolled(y) && compareBoss(hand(y), hand(id)) < 0)
+      const below = rolled(id)
+        ? others
+            .filter((y) => y !== id && rolled(y) && compareBoss(hand(y), hand(id)) < 0)
+            .sort((a, b) => compareBoss(hand(b), hand(a)))
+        : []
       return {
         player: id,
         rank: rank + 1,
-        status: safe ? 'safe' : 'live',
+        status: below.length ? 'safe' : 'live',
         rollsLeft: rolled(id) ? 0 : 1,
         allDay: rolled(id),
+        ...(below.length && { safeOver: below[0] }),
       }
     })
     return [...alreadySafe(state, phase.players), boss, ...ranked]
@@ -140,6 +155,7 @@ export function standings(state: GameState): Standing[] {
       status: id === phase.loser ? 'bottom' : 'safe',
       rollsLeft: null,
       allDay: true,
+      ...(id !== phase.loser && { safeOver: phase.loser! }),
     }))
     const others = state.seats.filter((s) => !s.out && !ids.includes(s.id)).map((s) => s.id)
     return [

@@ -661,6 +661,28 @@ export default function Play({ intro }) {
     return `${handText(dice, call, keptAt(game, st.player))} · ${rolls}`
   }
   const capital = (t) => t.charAt(0).toUpperCase() + t.slice(1)
+  // In the cup, and why: "Kicker of 9 beats Ben’s all-day 6", "Can’t reach Ben’s 14, already out"
+  const cupText = (st) => {
+    const over = st.safeOver
+    if (!over || !call) return 'Safe from the first cycle'
+    const whose = over === YOU ? 'your' : `${names[over]}’s`
+    const final = phase.kind === 'roundOver' || standingOf[over]?.allDay ? 'all-day' : 'final'
+    const mine = game.dice[st.player]
+    const theirs = game.dice[over]
+    if (call.game === 'tres-away') {
+      const out = phase.kind === 'tresAway' ? phase.hands[over].out.map((i) => theirs[i]) : theirs
+      return phase.kind === 'tresAway' ? `Can’t reach ${whose} ${tresAwayScore(out)}, already out` : `${capital(handText(mine, call))} beats ${whose} ${tresAwayScore(theirs)}`
+    }
+    if (isKickerGame(call.game)) {
+      const me = evaluateKickerHand(mine, call.game, call.variant, keptAt(game, st.player))
+      const them = evaluateKickerHand(theirs, call.game, call.variant, keptAt(game, over))
+      if (!them.made) return `Made ${gameName(call)}; ${over === YOU ? 'you' : names[over]} missed it, ${final === 'all-day' ? 'all day' : 'and stood'}`
+      return `Kicker of ${me.kickerTotal} beats ${whose} ${final} ${them.kickerTotal}`
+    }
+    const hand = capital(handText(mine, call))
+    const verb = /^(Three|Four|Five)\b/.test(hand) ? 'beat' : 'beats'
+    return `${hand} ${verb} ${whose} ${final} ${handText(theirs, call).replace(/^an? /, '')}`
+  }
   // Hard mode: nothing gives your hand away before you've shown it
   const statusOf = (st) =>
     !st || (st.player === YOU && hidingDice) || (mustShow && ['bottom', 'tied'].includes(st.status)) ? undefined : st.boss ? 'boss' : phase.kind === 'roundOver' && st.status === 'bottom' ? 'pencil' : st.status === 'live' ? undefined : st.status
@@ -1144,7 +1166,15 @@ export default function Play({ intro }) {
     let dicePart = null
     if (!s.out) {
       if (isYou && hidingDice) dicePart = <DiceCup label="Your dice, in the cup" />
-      else if (inCup) dicePart = <DiceCup label="In the cup">{hand('xs')}</DiceCup>
+      else if (inCup)
+        dicePart = (
+          <DiceCup>
+            <span className="flex min-w-0 flex-col leading-tight">
+              <span className="text-xs font-semibold text-muted-foreground">In the cup</span>
+              <span className="text-sm font-semibold text-foreground">{cupText(st)}</span>
+            </span>
+          </DiceCup>
+        )
       else dicePart = hand(compact ? 'sm' : 'md')
     }
     return (
