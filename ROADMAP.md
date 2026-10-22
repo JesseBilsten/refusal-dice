@@ -191,11 +191,14 @@ Build it once and every later phase gets cheaper.
 2. **Player counts:** support 2–8 everywhere? (The 2-player tie rule already differs.)
 3. **Accounts:** confirm AI play works fully signed-out, with accounts required only for online play.
 4. **Money:** do we track the pot/ante in online games, or only pencils?
+5. **`master` → `main`:** rename the default branch (and Netlify's production branch with it), as docs/WORKFLOW.md assumes? Asked 2026-10-22.
 
 ## Decision log
 
 | Date | Decision | Notes |
 |---|---|---|
+| 2026-10-22 | Branch per change, semver (major.minor.patch) in package.json and CHANGELOG.md, pull requests merged by the owner into `main` | docs/WORKFLOW.md; CI checks the version bump. Replaces committing straight to master |
+| 2026-10-22 | New UI is registered as proposed on the design system site (/design) and approved by the owner before use | Enforced by src/__tests__/design-system.test.ts |
 | 2026-10-14 | Build a pure, shared game engine before any new feature surfaces | Powers the tutorial, trainer, AI and online server |
 | 2026-10-14 | Defer the framework choice (Gatsby vs Next/Vite) to the start of Phase 4 | Engine is framework-free either way |
 | 2026-10-14 | Supabase + Resend as the default plan for online play | Revisit at Phase 4 |

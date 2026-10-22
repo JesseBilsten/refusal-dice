@@ -1,0 +1,50 @@
+# Changelog
+
+Every release of refusaldice.com, newest first. Versions are
+major.minor.patch ([docs/WORKFLOW.md](docs/WORKFLOW.md)): each pull request
+bumps the version once and adds its entry here.
+
+## 1.2.0 (unreleased)
+
+- **Design system site** at `/design`: every foundation, component and
+  pattern, live, with a sidebar organized like Ant Design and Material
+  (Overview, Foundations, Components in nine groups, Patterns), a filter, a
+  status for each piece (approved, proposed, deprecated) and a page per piece.
+- **Theme playground** (`/design/theming/`): try colors, fonts, heading sizes
+  and corner radius live, with presets, a live contrast check, a switch to
+  preview the draft on the whole site, and Copy CSS.
+- **Approval before use:** new patterns are registered as proposed and the
+  tests block them outside the design system until they're approved.
+- **Type roles:** every heading uses one of five roles (display, title,
+  section, heading, subheading); eyebrows are one style; no arbitrary sizes.
+- **Navigation in three groups** (Learn the game, Get better, Play) in the
+  header, the mobile menu and a new footer site map; the path's Next links
+  now pass through the Strategy Assistant.
+- **Consistency fixes:** one primary button per view on the Games page;
+  short rolls-left choices in the Odds Lab; percentages always through
+  fmtPct (no more "29%" beside "49.1%"); "Ship, Captain, Crew" spelled one
+  way; legible 12px card details; dice colors and every badge or alert
+  color from tokens; the game page's variant filter sits by the sections it
+  filters; sample rolls no longer print a kicker as text.
+- Removed unused components (`RollAnalysis`, the empty `Term`).
+
+## 1.1.0 (2026-10-22)
+
+Play, rebuilt to feel like a real table (committed straight to master,
+before this workflow):
+
+- The piddle plays out on the felt, roll by roll; the order of play fills in
+  beside it and the Hammer token moves down it.
+- Video-player controls: pause, step and every speed in view, from Very slow
+  to Instant, with Realistic thinking time.
+- The call in its own placard; a turn outline that glides from seat to seat.
+- Players who missed the game roll on their own, together; safe players'
+  dice go in the cup, with the hand they beat.
+- The Boss can roll, say "Come up" or "Pick 'em up"; hard mode has you show
+  your own game; hints show your chance of the pencil for every option.
+- Fixed: a Boss who skipped the extra roll could stall the table.
+
+## 1.0.0
+
+The site before versioning: Learn, Rules, Games, the Odds Lab, the Strategy
+Assistant and Play.

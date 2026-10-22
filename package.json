@@ -1,7 +1,7 @@
 {
   "name": "refusal-dice",
   "description": "Learn Refusal Dice and master the odds behind every call, bark and refusal",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "author": "Jesse Bilsten <jesse@bilsten.net>",
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.15",
