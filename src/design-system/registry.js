@@ -178,7 +178,7 @@ const DOCS = [
     'components/Page/ChoiceGroup.jsx',
     ['ChoiceGroup'],
     'Pick one of a few options: a labelled row of Chips with radio semantics. `size="lg"` for a page’s main choices (44px targets).',
-    { status: P, replaces: 'Play setup’s own pill buttons' }
+    { status: A, approved: '2026-10-22', replaces: 'Play setup’s own pill buttons' }
   ),
   comp(
     'badge',
@@ -196,7 +196,7 @@ const DOCS = [
     ['TextLink', 'Term'],
     'A link inside running text; `Term` links a game term to its Glossary entry.',
     {
-      status: P,
+      status: A, approved: '2026-10-22',
       replaces:
         'The Rules page’s `L`, the tutorial’s `T`, 70 hand-styled Glossary links, and the empty `Term`',
     }
@@ -242,7 +242,7 @@ const DOCS = [
     'components/Page/StepPanel.jsx',
     ['StepPanel'],
     'One numbered step: a Panel titled with its StepNumber.',
-    { status: P, replaces: 'The Rules page’s local `Step`' }
+    { status: A, approved: '2026-10-22', replaces: 'The Rules page’s local `Step`' }
   ),
   comp(
     'field',
@@ -251,7 +251,7 @@ const DOCS = [
     'components/Page/Field.jsx',
     ['Field', 'EmptyState'],
     'A labelled control with an optional hint; and the dashed box where a result will appear.',
-    { status: P, replaces: 'The keep advisor’s local `Field` and `Empty`' }
+    { status: A, approved: '2026-10-22', replaces: 'The keep advisor’s local `Field` and `Empty`' }
   ),
   comp(
     'site-layout',
@@ -333,7 +333,7 @@ const DOCS = [
     ['NativeSelect'],
     'The one dropdown: a native select, so it opens the phone’s own picker.',
     {
-      status: P,
+      status: A, approved: '2026-10-22',
       replaces:
         'Two local selects in the Odds Lab (`NumberSelect`, `NativeSelect`)',
     }
@@ -727,7 +727,7 @@ const DOCS = [
     'components/Play/TableControls.jsx',
     ['Transport', 'SpeedPicker'],
     'Play’s video-player controls: pause, step, and every speed in view.',
-    { status: P, replaces: 'The same controls, local to Play' }
+    { status: A, approved: '2026-10-22', replaces: 'The same controls, local to Play' }
   ),
   pat(
     'call-placard',
@@ -736,7 +736,7 @@ const DOCS = [
     'components/Play/CallPlacard.jsx',
     ['CallPlacard'],
     'The call in its own box: emoji, name, 1st or 2nd call.',
-    { status: P, replaces: 'The same placard, local to Play' }
+    { status: A, approved: '2026-10-22', replaces: 'The same placard, local to Play' }
   ),
   pat(
     'play-setup',
@@ -746,7 +746,7 @@ const DOCS = [
     ['Setup'],
     'Before a game: opponents and difficulty.',
     {
-      status: P,
+      status: A, approved: '2026-10-22',
       replaces: 'The same screen, local to Play, with its own pill buttons',
     }
   ),
@@ -775,7 +775,7 @@ const DOCS = [
     ['GameCard'],
     'One game on the Games page: how it’s made, examples, links.',
     {
-      status: P,
+      status: A, approved: '2026-10-22',
       replaces: 'The Games page’s local `GameSection`',
       liveAt: '/games',
     }
@@ -788,7 +788,7 @@ const DOCS = [
     ['StrengthChart', 'SampleRolls', 'PairedGames'],
     'A game page’s analysis sections.',
     {
-      status: P,
+      status: A, approved: '2026-10-22',
       replaces: 'Local components in templates/game-detail.js',
       liveAt: '/games/10-2',
     }
@@ -864,7 +864,7 @@ const DOCS = [
     ['RollBuilder'],
     'Build any roll: describe it and count it.',
     {
-      status: P,
+      status: A, approved: '2026-10-22',
       replaces: 'The same tool, local to pages/odds-lab.js',
       liveAt: '/odds-lab/?tab=build',
     }

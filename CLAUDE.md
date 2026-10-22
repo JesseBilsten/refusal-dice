@@ -183,16 +183,16 @@ Simulated odds mean "against (and as) solid bots". Show the sample size and that
 **Follow [docs/WORKFLOW.md](docs/WORKFLOW.md) for every change.** In short:
 
 - Remote: `git@github-jessebilsten:JesseBilsten/refusal-dice.git`. Always use the `github-jessebilsten` SSH alias; commits must be authored as `jessebilsten <jesse@bilsten.net>`.
-- **Never commit to `main`** (the default branch, and the live site: Netlify deploys every push; it's `master` until the rename). Every change gets a branch: `feature/…`, `fix/…`, `chore/…`.
+- **Never commit to `master`** (the default branch, and the live site: Netlify deploys every push). Every change gets a branch: `feature/…`, `fix/…`, `chore/…`.
 - **Every pull request bumps the version** in `package.json` (major.minor.patch: breaking / new / fix) and adds its entry to `CHANGELOG.md`. CI fails a pull request that doesn't.
 - Commit messages: Conventional Commits, matching history (`feat:`, `fix:`, `refactor:`, `chore(deps):`, …).
-- Push the branch and open the pull request with `gh pr create`. **The owner merges**: never merge, and never push to `main`, without their OK in the conversation.
+- Push the branch and open the pull request with `gh pr create`. **The owner merges**: never merge, and never push to `master`, without their OK in the conversation.
 - **New UI needs approval before it's used:** register it as `proposed` in `src/design-system/registry.js` with a live example; only the owner approves it (then set `status: 'approved'`). The tests block proposed components outside the design system.
 - Don't commit `/public`, `.cache` or `node_modules`.
 - **Sessions:** start with `/session-start`, end with `/handoff` (personal skills in `~/.claude/skills`, synced by chezmoi; the ground-truth script is configured in `.claude/ground-truth.conf`). This project's settings for them:
   - **Trackers:** open work is `ROADMAP.md` (in place of `BACKLOG.md`). Questions for the user go in its "Open questions", game-rule questions in `docs/RULES.md` §6 (in place of `questions.md`); rulings go in its "Decision log", game-rule rulings into `docs/RULES.md` itself, with the date.
   - **Handoff rule:** commit the handoff on the working branch; push only with the user's OK.
-  - **Extra check:** `main` is the live site, so the latest CI run on it should be green (`gh run list -L 1 --branch main`).
+  - **Extra check:** `master` is the live site, so the latest CI run on it should be green (`gh run list -L 1 --branch master`).
   - **Handoff and lessons:** `notes/handoff.md` (live), `notes/handoff-archive.md`, and @notes/lessons.md.
 
 ## Infrastructure direction (Phase 4, not built yet)

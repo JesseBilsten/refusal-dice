@@ -26,6 +26,9 @@ bumps the version once and adds its entry here.
   way; legible 12px card details; dice colors and every badge or alert
   color from tokens; the game page's variant filter sits by the sections it
   filters; sample rolls no longer print a kicker as text.
+- **Approved** (2026-10-22): ChoiceGroup, TextLink and Term, StepPanel,
+  Field and EmptyState, NativeSelect, Transport and SpeedPicker,
+  CallPlacard, Setup, GameCard, the game page sections and RollBuilder.
 - Removed unused components (`RollAnalysis`, the empty `Term`).
 
 ## 1.1.0 (2026-10-22)

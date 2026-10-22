@@ -5,17 +5,14 @@ session; CLAUDE.md points here.
 
 ## The default branch
 
-`main` is the default branch and the live site: Netlify deploys every
-push to it. Nothing is committed to `main` directly; it only changes
-through merged pull requests.
-
-> Until the rename from `master` is done (it needs the owner's OK, since
-> Netlify's production branch changes with it), read `main` as `master`
-> everywhere in this file.
+`master` is the default branch and the live site: Netlify deploys every
+push to it. Nothing is committed to `master` directly; it only changes
+through merged pull requests. (It stays `master`: the owner decided
+against renaming it to `main` on 2026-10-22.)
 
 ## One branch per change
 
-1. Branch from an up-to-date `main`:
+1. Branch from an up-to-date `master`:
    `feature/<short-name>` for something new, `fix/<short-name>` for a bug,
    `chore/<short-name>` for tooling, docs and dependencies.
 2. Commit as `jessebilsten <jesse@bilsten.net>` with Conventional Commits
@@ -38,7 +35,7 @@ contains:
 
 - Bump `version` in `package.json` and add the release at the top of
   `CHANGELOG.md` (date, version, and what changed, in players' words).
-  CI fails a pull request whose version isn't higher than `main`'s.
+  CI fails a pull request whose version isn't higher than `master`'s.
 - After the merge, tag it: `git tag v1.3.0 && git push origin v1.3.0`.
 
 ## Pull requests
@@ -53,8 +50,8 @@ contains:
 3. CI runs typecheck, tests, the build, the generated-data check and the
    version check.
 4. **The owner merges.** Claude never merges a pull request, and never
-   pushes to `main`, without the owner's OK in that conversation: merging
-   deploys the site. Use "Squash and merge" so `main` has one commit per
+   pushes to `master`, without the owner's OK in that conversation: merging
+   deploys the site. Use "Squash and merge" so `master` has one commit per
    release, titled with the Conventional Commit and version, e.g.
    `feat: design system site (1.2.0)`.
 5. Delete the branch after the merge.

@@ -130,13 +130,13 @@ caps the content column, **left-aligned**. Pages never set their own
   `rounded-lg border bg-background` box (the roll builder's patterns).
 - `Stat`: a headline number with its label; `plain` drops the card for a
   row of figures inside a Panel.
-- `StepPanel` *(proposed)*: one numbered step, a Panel titled with its
+- `StepPanel`: one numbered step, a Panel titled with its
   StepNumber (the Rules page's round).
-- `Field` and `EmptyState` *(proposed)*: a labelled control with a hint;
+- `Field` and `EmptyState`: a labelled control with a hint;
   the dashed box where a result will appear.
-- `ChoiceGroup` *(proposed)*: pick one of a few options, as a labelled row
+- `ChoiceGroup`: pick one of a few options, as a labelled row
   of Chips with radio semantics; `size="lg"` for 44px targets.
-- `TextLink` and `Term` *(proposed)*: a link in running text; `Term` links
+- `TextLink` and `Term`: a link in running text; `Term` links
   a game term to the Glossary.
 - `Panel collapsible`: the title becomes a button that shows or hides the
   content; `badge` sits after the title.
@@ -212,8 +212,8 @@ lone 3 or 4 keep.
 
 These are shadcn/ui components (JS): Button (and `buttonVariants` for
 links), Badge, Card (kept for shadcn; use `Panel`), Table, Dialog, Sheet, Popover, Tooltip, Tabs, ToggleGroup,
-Switch, Slider, Select, Input, Label, Alert, and `NativeSelect`
-*(proposed)*: the one dropdown, a native select. Card, Tabs and Select are
+Switch, Slider, Select, Input, Label, Alert, and `NativeSelect`,
+the one dropdown, a native select. Card, Tabs and Select are
 deprecated (use Panel, PageTabs and NativeSelect). Add new primitives with
 the shadcn CLI, then register them.
 
