@@ -540,7 +540,8 @@ export default function Play({ intro }) {
         if (actors(g).includes(id)) act(botActionFor(g, id))
       }, paceAfter(lastEvent, pace))
     })
-  }, [botsGo, botKey, lastEvent, pace, act])
+    // `game`: every move re-arms, even one the log doesn't show (a Boss who skips the extra roll)
+  }, [botsGo, botKey, game, lastEvent, pace, act])
   useEffect(() => () => Object.values(timers.current).forEach(clearTimeout), [])
 
   // Next: one step while paused (or to skip a wait)
