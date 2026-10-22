@@ -122,8 +122,9 @@ caps the content column, **left-aligned**. Pages never set their own
 - `DiceCup`: dice picked up: a player in the cup (safe), or your dice
   before you roll for the call.
 - **Play's table:** a video-player style control bar on the felt (Pause/Play,
-  Next, a speed slider from Very slow, the default, to Instant, with
-  Realistic in between: a few seconds of thinking per move, varied), the
+  Next), every speed in view as a row of buttons (Very slow, the default,
+  to Instant, with Realistic in between: a few seconds of thinking per move,
+  varied) with a line saying what the chosen speed means, the
   call in its own placard (emoji, name, 1st or 2nd call), an announcer
   holding the newest move, the others in order of play, and your seat last,
   docked to the bottom of the screen when it's your move so your buttons

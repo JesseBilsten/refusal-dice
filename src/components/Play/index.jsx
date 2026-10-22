@@ -29,6 +29,7 @@ import { cn } from '../../lib/utils'
 import { Button } from '../ui/button'
 import { Switch } from '../ui/switch'
 import { Label } from '../ui/label'
+import { ToggleGroup, ToggleGroupItem } from '../ui/toggle-group'
 import { BOSS_NAMES, DiceSettings, Die, Hand, RollButton, playRollSound, razzleName, useDicePrefs } from '../Dice'
 import { Panel } from '../Page'
 import Seat from '../Table/Seat'
@@ -207,13 +208,12 @@ function RoundLog({ events, previous }) {
   )
 }
 
-/** Play, pause, step and speed: the table's controls, like a video player's */
-function Transport({ paused, onToggle, onStep, canStep, pace, onPace }) {
-  const at = Math.max(0, PACES.findIndex((p) => p.id === pace))
+/** Play, pause and step: the table's controls, like a video player's */
+function Transport({ paused, onToggle, onStep, canStep }) {
   const button =
     'inline-flex min-h-11 items-center gap-1.5 rounded-full border border-felt-foreground/40 px-3 text-sm font-medium text-felt-foreground transition-colors hover:bg-felt-foreground/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-40 disabled:hover:bg-transparent'
   return (
-    <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Table controls">
+    <div className="flex items-center gap-2" role="group" aria-label="Table controls">
       <button type="button" onClick={onToggle} className={button}>
         {paused ? <Resume aria-hidden className="h-4 w-4" /> : <Pause aria-hidden className="h-4 w-4" />}
         {paused ? 'Play' : 'Pause'}
@@ -221,20 +221,36 @@ function Transport({ paused, onToggle, onStep, canStep, pace, onPace }) {
       <button type="button" onClick={onStep} disabled={!canStep} className={button}>
         <SkipForward aria-hidden className="h-4 w-4" /> Next
       </button>
-      <label className="flex min-h-11 items-center gap-2 rounded-full border border-felt-foreground/40 px-3 text-sm text-felt-foreground">
-        <span className="sr-only">Speed</span>
-        <input
-          type="range"
-          min={0}
-          max={PACES.length - 1}
-          step={1}
-          value={at}
-          aria-valuetext={PACES[at].label}
-          onChange={(e) => onPace(PACES[Number(e.target.value)].id)}
-          className="w-24 accent-primary sm:w-28"
-        />
-        <span className="w-[4.5rem] font-medium">{PACES[at].label}</span>
-      </label>
+    </div>
+  )
+}
+
+/** Every speed in view, slowest to instant, and what the chosen one means */
+function SpeedPicker({ pace, onPace }) {
+  const current = PACES.find((p) => p.id === pace) ?? PACES[0]
+  return (
+    <div className="space-y-1.5 text-felt-foreground">
+      <ToggleGroup
+        type="single"
+        value={current.id}
+        onValueChange={(v) => v && onPace(v)}
+        aria-label="Speed"
+        aria-describedby="play-speed-about"
+        className="grid grid-cols-3 gap-1 rounded-xl border border-felt-foreground/40 p-1 sm:grid-cols-6"
+      >
+        {PACES.map((p) => (
+          <ToggleGroupItem
+            key={p.id}
+            value={p.id}
+            className="min-h-10 whitespace-nowrap rounded-lg px-1.5 py-1 text-sm text-felt-foreground hover:bg-felt-foreground/10 hover:text-felt-foreground data-[state=on]:bg-felt-foreground data-[state=on]:font-semibold data-[state=on]:text-felt data-[state=on]:shadow-sm"
+          >
+            {p.label}
+          </ToggleGroupItem>
+        ))}
+      </ToggleGroup>
+      <p id="play-speed-about" className="text-xs text-felt-foreground/85" aria-live="polite">
+        <span className="font-semibold">Speed: {current.label}.</span> {current.about}
+      </p>
     </div>
   )
 }
@@ -1224,9 +1240,10 @@ export default function Play({ intro }) {
           <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 text-felt-foreground">
             <div className="font-display text-lg font-bold">{dealt ? `Round ${game.round}` : 'The piddle'}</div>
             {phase.kind !== 'gameOver' && (
-              <Transport paused={paused} onToggle={() => setPaused((p) => !p)} onStep={step} canStep={canStep} pace={pace} onPace={(p) => updatePrefs({ pace: p })} />
+              <Transport paused={paused} onToggle={() => setPaused((p) => !p)} onStep={step} canStep={canStep} />
             )}
           </div>
+          {phase.kind !== 'gameOver' && <SpeedPicker pace={pace} onPace={(p) => updatePrefs({ pace: p })} />}
 
           {dealt && phase.kind !== 'gameOver' && (
             <CallPlacard

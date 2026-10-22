@@ -137,13 +137,21 @@ export function rolledPositions(events: GameEvent[]): Record<PlayerId, number[]>
  */
 export type Pace = 'verySlow' | 'slow' | 'realistic' | 'normal' | 'fast' | 'instant'
 
-export const PACES: { id: Pace; label: string }[] = [
-  { id: 'verySlow', label: 'Very slow' },
-  { id: 'slow', label: 'Slow' },
-  { id: 'realistic', label: 'Realistic' },
-  { id: 'normal', label: 'Normal' },
-  { id: 'fast', label: 'Fast' },
-  { id: 'instant', label: 'Instant' },
+/** Realistic thinking time, in ms: [least, most] */
+const THINK_MS: [number, number] = [2000, 5000]
+
+/** The speeds, slowest first; `about` says what each one means, for the speed picker */
+export const PACES: { id: Pace; label: string; about: string }[] = [
+  { id: 'verySlow', label: 'Very slow', about: 'For learning: each move stays up about twice as long as Normal.' },
+  { id: 'slow', label: 'Slow', about: 'Each move stays up a little longer than Normal.' },
+  {
+    id: 'realistic',
+    label: 'Realistic',
+    about: `Like a real table: each player thinks for ${THINK_MS[0] / 1000}–${THINK_MS[1] / 1000} seconds, never the same.`,
+  },
+  { id: 'normal', label: 'Normal', about: 'Just long enough to read each move.' },
+  { id: 'fast', label: 'Fast', about: 'About twice as quick as Normal.' },
+  { id: 'instant', label: 'Instant', about: 'No waiting: the bots play straight to your turn. Pause or Next to look closer.' },
 ]
 
 /** New players start slow: there's a lot to take in */
@@ -174,9 +182,6 @@ const READ_MS: Partial<Record<GameEvent['type'], number>> = {
   misread: 2200,
   cycle: 2000,
 }
-
-/** Realistic thinking time, in ms: [least, most] */
-const THINK_MS: [number, number] = [2000, 5000]
 
 /**
  * How long a bot waits before its move after `last`, the latest event:
