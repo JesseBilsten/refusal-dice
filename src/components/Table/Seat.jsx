@@ -12,6 +12,12 @@ import { cn } from '../../lib/utils'
  * - loser: took the pencil this round
  * - badges: ['🔨 Hammer', '1st refusal'], shown as secondary badges
  * - decision: 'Refused', 'Accepted', ... shown as an outline badge
+ * - said: { text, fresh, at } this player's latest move ("Calls 10-4 High"),
+ *   beside their dice the way an online table labels each seat's last
+ *   action; `fresh` (the table's newest move) stands out, and a new `at`
+ *   replays its entrance
+ * - detail: a line under the dice (the hand in words, rolls left)
+ * - compact: smaller padding, for the other players around your seat
  */
 export default function Seat({
   name,
@@ -24,13 +30,17 @@ export default function Seat({
   pencils = 0,
   maxPencils = 3,
   status,
+  said,
+  detail,
+  compact,
   children,
   className,
 }) {
   return (
     <div
       className={cn(
-        'rounded-xl border bg-card p-3 shadow-sm transition-shadow',
+        'rounded-xl border bg-card shadow-sm transition-shadow',
+        compact ? 'p-2.5' : 'p-3',
         you && 'border-primary/60',
         active && 'ring-2 ring-pop ring-offset-2 ring-offset-transparent',
         loser && 'border-destructive',
@@ -39,7 +49,7 @@ export default function Seat({
       )}
       aria-current={active ? 'true' : undefined}
     >
-      <div className="mb-2 flex flex-wrap items-center gap-2">
+      <div className={cn('flex flex-wrap items-center', compact ? 'mb-1.5 gap-1.5' : 'mb-2 gap-2')}>
         <span className="font-semibold">{name}</span>
         {badges.map((b) => (
           <Badge key={b} variant="secondary">
@@ -55,16 +65,35 @@ export default function Seat({
         >
           {out ? (
             <span className="text-xs font-medium">Out</span>
-          ) : pencils ? (
-            Array.from({ length: pencils }, (_, i) => (
-              <Pencil key={i} aria-hidden className="h-3.5 w-3.5 text-pop" />
-            ))
           ) : (
-            <span className="text-xs">No pencils</span>
+            // One slot per pencil it takes to lose: taken ones filled in
+            Array.from({ length: maxPencils }, (_, i) => (
+              <Pencil
+                key={i}
+                aria-hidden
+                className={cn('h-3.5 w-3.5', i < pencils ? 'text-pop' : 'text-muted-foreground/30')}
+              />
+            ))
           )}
         </span>
       </div>
-      {children}
+      {said ? (
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+          {children}
+          <span
+            key={said.at}
+            className={cn(
+              'seat-said inline-flex max-w-full items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold',
+              said.fresh ? 'seat-said-fresh border-pop bg-pop/15 text-foreground' : 'bg-muted text-muted-foreground'
+            )}
+          >
+            {said.text}
+          </span>
+        </div>
+      ) : (
+        children
+      )}
+      {detail && <div className="mt-1 text-xs text-muted-foreground">{detail}</div>}
       {status && <div className="mt-2 text-xs text-muted-foreground">{status}</div>}
     </div>
   )

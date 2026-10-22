@@ -107,8 +107,17 @@ caps the content column, **left-aligned**. Pages never set their own
   anything played at the table, sit on it: the home page's story and
   Play. Text placed directly on the felt uses `text-felt-foreground`.
 
-- `Seat`: one player at the table (name, role badges, decision, pencils,
-  their dice, a status line). The tutorial and Play both use it.
+- `Seat`: one player at the table (name, role badges, decision, a pencil
+  meter with one slot per pencil it takes to lose, their dice, a status
+  line). `said` labels the seat with its latest move, the way online tables
+  do ("Calls 10-4 High", "Keeps 2, rolls 3"; the table's newest pulses
+  once); `compact` and `detail` (the hand in words) suit the other players
+  around your seat. The tutorial and Play both use it.
+- **Play's table layout:** seats never move (the others in table order from
+  your left, your seat last, docked to the bottom of the screen with your
+  buttons so they stay in thumb reach); an announcer above the seats holds
+  the newest move until the next; bots move at a readable pace per kind of
+  move (`paceAfter`), and players can pause and step through them.
 
 - `SeatRing`: **the table seen from above** (SVG). Each seat shows a
   chance (of the pencil), tinted better or worse than an even share; your

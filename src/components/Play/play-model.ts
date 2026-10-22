@@ -4,6 +4,7 @@ import {
   GameState,
   HouseRules,
   PlayerId,
+  Seat,
   createGame,
   seeded,
 } from '../../engine'
@@ -121,4 +122,108 @@ export function rolledPositions(events: GameEvent[]): Record<PlayerId, number[]>
     if (e.type === 'cycle') e.players.forEach((id) => add(id, [0, 1, 2, 3, 4]))
   })
   return out
+}
+
+/**
+ * How fast the bots play. Online tables give each action its own beat
+ * instead of one fixed tick: a call or a pencil is worth a longer look
+ * than a refusal. `slow` suits learning, `fast` players who know the game.
+ */
+export type Pace = 'slow' | 'normal' | 'fast'
+
+export const PACES: { id: Pace; label: string }[] = [
+  { id: 'slow', label: 'Slow' },
+  { id: 'normal', label: 'Normal' },
+  { id: 'fast', label: 'Fast' },
+]
+
+const PACE_SCALE: Record<Pace, number> = { slow: 1.6, normal: 1, fast: 0.45 }
+
+/** Milliseconds to read each kind of event at normal pace (a roll includes its ~1s tumble) */
+const READ_MS: Partial<Record<GameEvent['type'], number>> = {
+  called: 2200,
+  barked: 2000,
+  accepted: 1500,
+  refused: 1500,
+  rolled: 1700,
+  putOut: 1500,
+  boss: 2000,
+  noBoss: 2000,
+  comeUp: 1700,
+  dontComeUp: 1700,
+  revealed: 2000,
+  stood: 1200,
+  cycle: 2000,
+}
+
+/**
+ * How long the next bot waits after `last`, the latest event: long enough
+ * to see what just happened. Your own moves need less (you know what you
+ * did), but still leave the dice time to land. `null`: a fresh deal.
+ */
+export function paceAfter(last: GameEvent | null, pace: Pace = 'normal'): number {
+  const base = last ? READ_MS[last.type] ?? 1400 : 1600
+  const yours = last && 'player' in last && last.player === YOU
+  const ms = yours ? (last.type === 'rolled' ? 1100 : 700) : base
+  return Math.round(ms * PACE_SCALE[pace])
+}
+
+/** One player's latest move, short enough for their seat: "Calls 10-4 High", "Keeps 2, rolls 3" */
+export function shortEvent(e: GameEvent, label: Label): string | null {
+  switch (e.type) {
+    case 'called':
+      return e.second ? `Second call: ${label(e.call)}` : `Calls ${label(e.call)}`
+    case 'barked':
+      return 'Barks'
+    case 'accepted':
+      return 'Accepts'
+    case 'refused':
+      return 'Refuses'
+    case 'rolled':
+      if (e.hidden) return 'Rolls in secret'
+      return e.kept.length ? `Keeps ${e.kept.length}, rolls ${5 - e.kept.length}` : 'Rolls all 5'
+    case 'putOut':
+      return `Puts out ${e.dice.join(' ')}`
+    case 'boss':
+      return 'The Boss'
+    case 'comeUp':
+      return '“Come up”'
+    case 'dontComeUp':
+      return '“Don’t come up”'
+    case 'revealed':
+      return 'Shows the Boss’s dice'
+    case 'stood':
+      return 'Stands'
+    case 'pencil':
+      return e.out ? 'Takes a pencil: out' : 'Takes a pencil'
+    default:
+      return null
+  }
+}
+
+/**
+ * Each player's latest move in `events` (this round), with the event's
+ * index so the newest can stand out. A replay (cycle) counts as a move.
+ */
+export function latestMoves(events: GameEvent[], label: Label): Record<PlayerId, { text: string; at: number }> {
+  const out: Record<PlayerId, { text: string; at: number }> = {}
+  events.forEach((e, at) => {
+    if (e.type === 'cycle') {
+      e.players.forEach((id) => (out[id] = { text: e.reason === 'tie' ? 'Tied: plays again' : 'Missed: plays again', at }))
+      return
+    }
+    const text = shortEvent(e, label)
+    if (text && 'player' in e) out[e.player] = { text, at }
+  })
+  return out
+}
+
+/**
+ * The others in a fixed order, as they sit to your left: your seat stays
+ * at the bottom of the table and nobody moves between rounds (online
+ * tables keep seats still so players can learn where everyone is).
+ */
+export function opponentOrder<S extends Pick<Seat, 'id'>>(seats: S[]): S[] {
+  const me = seats.findIndex((s) => s.id === YOU)
+  return [...seats.slice(me + 1), ...seats.slice(0, Math.max(me, 0))]
 }

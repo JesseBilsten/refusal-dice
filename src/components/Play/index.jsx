@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { withPrefix } from 'gatsby'
-import { ChevronDown, FlaskConical } from 'lucide-react'
+import { ChevronDown, FlaskConical, Pause, Play as Resume, SkipForward } from 'lucide-react'
 import {
   applyAction,
   bossHand,
@@ -45,22 +45,27 @@ import { useHouseRules } from '../Settings/house-rules'
 import Standings from '../Table/Standings'
 import {
   BOT_NAMES,
+  PACES,
   YOU,
   actor,
   callAllowed,
   describeEvent,
+  latestMoves,
   newTable,
+  opponentOrder,
+  paceAfter,
   rolledPositions,
 } from './play-model'
 
 /**
  * Play full games of Refusal against solid bots (src/strategy/bots.ts), on
- * the real engine. You pick the table size; the bots take their turns with
- * a short pause so you can follow along. Hints show what a solid player
- * would do, and the Odds Lab link opens your exact situation.
+ * the real engine. You pick the table size; the bots take their turns at a
+ * pace you choose, each move held long enough to read (paceAfter), and you
+ * can pause and step through them. Every seat shows its latest move, and
+ * the newest is announced above the table. Your seat stays at the bottom
+ * with your controls, docked within thumb reach on phones. Hints show what
+ * a solid player would do, and the Odds Lab link opens your exact situation.
  */
-
-const BOT_DELAY = 750
 const ZERO = [0, 0, 0, 0, 0]
 const label = (call) => formatCallLabel(call)
 
@@ -146,16 +151,35 @@ function comeOutLabel(game) {
   return 'Roll for …'
 }
 
-/** This round in words, the latest last */
-function RoundLog({ events }) {
+/** This round in words, the latest last; the round before a tap away */
+function RoundLog({ events, previous }) {
   return (
-    <ol className="space-y-1 text-sm">
-      {events.slice(-12).map((t, i) => (
-        <li key={i} className="text-muted-foreground last:font-medium last:text-foreground">
-          {t}
-        </li>
-      ))}
-    </ol>
+    <div className="space-y-3">
+      {events.length ? (
+        <ol className="max-h-72 space-y-1 overflow-y-auto text-sm">
+          {events.map((t, i) => (
+            <li key={i} className="text-muted-foreground last:font-medium last:text-foreground">
+              {t}
+            </li>
+          ))}
+        </ol>
+      ) : (
+        <p className="text-sm text-muted-foreground">Fresh dice. Nothing called yet.</p>
+      )}
+      {previous?.length > 0 && (
+        <details className="group text-sm">
+          <summary className="flex cursor-pointer list-none items-center gap-1 font-medium text-foreground [&::-webkit-details-marker]:hidden">
+            <ChevronDown aria-hidden className="h-4 w-4 -rotate-90 transition-transform group-open:rotate-0" />
+            Last round
+          </summary>
+          <ol className="mt-1.5 max-h-72 space-y-1 overflow-y-auto text-muted-foreground">
+            {previous.map((t, i) => (
+              <li key={i}>{t}</li>
+            ))}
+          </ol>
+        </details>
+      )}
+    </div>
   )
 }
 
@@ -251,16 +275,49 @@ function startingKeep(g) {
   return []
 }
 
-export default function Play() {
+/** How fast the bots play, remembered with the dice settings */
+function PacePicker({ pace, onChange }) {
+  return (
+    <div className="flex items-center gap-2 text-sm">
+      <span className="font-medium" id="bot-pace">
+        Bot speed
+      </span>
+      <div role="radiogroup" aria-labelledby="bot-pace" className="inline-flex rounded-full border bg-background p-0.5">
+        {PACES.map((p) => (
+          <button
+            key={p.id}
+            type="button"
+            role="radio"
+            aria-checked={pace === p.id}
+            onClick={() => onChange(p.id)}
+            className={cn(
+              'min-h-9 rounded-full px-3 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+              pace === p.id ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
+            )}
+          >
+            {p.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+export default function Play({ intro }) {
   const [game, setGame] = useState(null)
   const [rollIds, setRollIds] = useState({})
   const [keep, setKeep] = useState([])
   const [error, setError] = useState(null)
   const [hints, setHints] = useState(true)
   const [roundStart, setRoundStart] = useState(0)
+  // The round before this one, [from, to) in the log, to look back at
+  const [lastRound, setLastRound] = useState(null)
+  const [paused, setPaused] = useState(false)
+  const roundStartRef = useRef(0)
+  roundStartRef.current = roundStart
   // The piddle's ranking shows before the first deal
   const [dealt, setDealt] = useState(false)
-  const [prefs] = useDicePrefs()
+  const [prefs, updatePrefs] = useDicePrefs()
   const [tableRules] = useHouseRules()
   const prev = useRef(null)
 
@@ -270,6 +327,8 @@ export default function Play() {
     setGame(g)
     setDealt(!g.log.some((e) => e.type === 'piddle'))
     setRoundStart(0)
+    setLastRound(null)
+    setPaused(false)
     setKeep([])
     setError(null)
     if (prefs.sound) playRollSound(5)
@@ -295,6 +354,7 @@ export default function Play() {
       // A new deal (next round, or a bark) re-rolls everyone
       if (next.round !== g.round) {
         next.seats.filter((s) => !s.out).forEach((s) => (rolled[s.id] = [0, 1, 2, 3, 4]))
+        setLastRound([roundStartRef.current, next.log.length])
         setRoundStart(next.log.length)
       }
       const count = Object.values(rolled).flat().length
@@ -316,12 +376,13 @@ export default function Play() {
 
   const who = game ? actor(game) : null
 
-  // Bots move on their own, a beat apart
+  // Bots move on their own, each move held long enough to read (unless paused)
+  const lastEvent = game && game.log.length > roundStart ? game.log[game.log.length - 1] : null
   useEffect(() => {
-    if (!game || !dealt || !who || who === YOU) return undefined
-    const t = setTimeout(() => act(botAction(game)), BOT_DELAY)
+    if (!game || !dealt || !who || who === YOU || paused) return undefined
+    const t = setTimeout(() => act(botAction(game)), paceAfter(lastEvent, prefs.pace))
     return () => clearTimeout(t)
-  }, [game, dealt, who, act])
+  }, [game, dealt, who, act, paused, lastEvent, prefs.pace])
 
   // A fresh keep selection whenever it becomes your move
   useEffect(() => {
@@ -335,13 +396,21 @@ export default function Play() {
   const view = useMemo(() => (game ? viewFor(game, YOU) : null), [game])
   const suggestion = useMemo(() => (game && who === YOU ? botAction(game) : null), [game, who])
 
-  if (!game) return <Setup onStart={start} />
+  if (!game)
+    return (
+      <>
+        {intro}
+        <Setup onStart={start} />
+      </>
+    )
 
   const names = Object.fromEntries(game.seats.map((s) => [s.id, s.name]))
   if (!dealt) {
     const piddle = game.log.find((e) => e.type === 'piddle')
     return (
-      <Piddle
+      <>
+        {intro}
+        <Piddle
         rounds={piddle.rounds}
         names={names}
         hammer={game.hammer}
@@ -352,6 +421,7 @@ export default function Play() {
           if (prefs.sound) playRollSound(5)
         }}
       />
+      </>
     )
   }
   const phase = game.phase
@@ -478,7 +548,8 @@ export default function Play() {
     const second = phase.kind === 'secondCall'
     title = second ? 'Both refused: make a second call' : 'You hold the Hammer: call a game'
     body = (
-      <p>
+      // Phones: the title says enough for a first call, leaving room for the choices
+      <p className={second ? undefined : 'hidden sm:block'}>
         {second
           ? `It must be a different game from ${label(phase.refused)}, and nobody can refuse it.`
           : 'Pick the game your dice play best. Your dice are hidden from everyone else until play starts.'}
@@ -494,7 +565,7 @@ export default function Play() {
             type="button"
             onClick={() => act({ type: 'call', player: YOU, call: c })}
             className={cn(
-              'flex min-h-11 w-full items-center justify-between gap-2 rounded-lg border bg-background p-2 text-left text-sm transition-colors hover:border-primary hover:bg-primary/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+              'flex min-h-11 w-full flex-col items-start gap-1 rounded-lg border bg-background p-2 text-left text-sm transition-colors sm:flex-row sm:items-center sm:justify-between sm:gap-2 hover:border-primary hover:bg-primary/5 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring',
               suggested && 'border-primary ring-1 ring-primary'
             )}
           >
@@ -510,12 +581,12 @@ export default function Play() {
     controls = (
       <div className="space-y-3">
         <p className="text-sm font-semibold">Best fits for your dice</p>
-        <ul className="grid gap-2 sm:grid-cols-2">{ranked.slice(0, 4).map(callButton)}</ul>
+        <ul className="grid grid-cols-2 gap-2">{ranked.slice(0, 4).map(callButton)}</ul>
         <details className="group rounded-lg border bg-background/60">
           <summary className="cursor-pointer select-none rounded-lg p-2 text-sm font-medium hover:bg-accent">
             Other calls ({ranked.length - 4})
           </summary>
-          <ul className="grid gap-2 p-2 sm:grid-cols-2">{ranked.slice(4).map(callButton)}</ul>
+          <ul className="grid grid-cols-2 gap-2 p-2">{ranked.slice(4).map(callButton)}</ul>
         </details>
         {!second && game.rules.barking && (
           <Button variant="outline" onClick={() => act({ type: 'bark', player: YOU })}>
@@ -677,169 +748,232 @@ export default function Play() {
       })
     : null
 
-  // Seats top to bottom from this round's Hammer, going left: the Hammer, 1st refusal, 2nd refusal, ...
-  // (once the round is over, game.hammer already holds the next Hammer, so keep this round's order)
-  const lastCall = phase.kind === 'roundOver' ? game.log.slice(roundStart).findLast((e) => e.type === 'called') : null
-  const topSeat = lastCall ? lastCall.player : game.hammer
-  const from = Math.max(0, game.seats.findIndex((s) => s.id === topSeat))
-  const seatOrder = [...game.seats.slice(from), ...game.seats.slice(0, from)]
+  // Seats stay put: the others in table order from your left, your seat at the bottom with your controls
+  const others = opponentOrder(game.seats)
+  const you = game.seats.find((s) => s.id === YOU)
 
-  // Your move sits in your seat; anyone else's shows as the acting seat's status
+  // Each seat's latest move this round; the newest stands out
+  const roundLog = game.log.slice(roundStart)
+  const moves = latestMoves(roundLog, label)
+  const newest = Math.max(-1, ...Object.values(moves).map((m) => m.at))
+  // The newest event in words, announced above the table
+  const latestAt = roundLog.map((e, i) => (describeEvent(e, names, label) ? i : -1)).reduce((a, b) => Math.max(a, b), -1)
+  const latest = latestAt >= 0 ? describeEvent(roundLog[latestAt], names, label) : null
+  const previousEvents = lastRound
+    ? game.log
+        .slice(lastRound[0], lastRound[1])
+        .map((e) => describeEvent(e, names, label))
+        .filter(Boolean)
+    : null
+
+  // Your move sits in your seat; anyone else's is announced above the table
   const moveInSeat = Boolean(controls) && !meOut
   // A finished Tres Away round: every die is out
   const roundOverTres = phase.kind === 'roundOver' && call?.game === 'tres-away'
+  const botTurn = Boolean(who) && who !== YOU
+  const step = () => act(botAction(gameRef.current))
+
   const move = (
-    <div className="mt-3 border-t pt-3" aria-live="polite">
-      <h2 className="text-lg font-semibold">{title}</h2>
+    <div aria-live="polite">
+      <h2 className="text-lg font-semibold leading-snug">{title}</h2>
       <div className="mt-1 space-y-2 text-sm leading-relaxed text-muted-foreground">{body}</div>
       {error && (
         <p className="mt-3 rounded-md border border-destructive/40 bg-destructive/10 p-2 text-sm">{error}</p>
       )}
-      {controls && <div className="mt-3">{controls}</div>}
+      {/* Phones and tablets: the hint folds into one line above your buttons */}
+      {hint && (
+        <details className="group mt-3 rounded-lg border bg-background/60 lg:hidden">
+          <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 px-2 text-sm [&::-webkit-details-marker]:hidden">
+            <span className="min-w-0 flex-1">
+              <strong>Hint:</strong> {hint}
+            </span>
+            <span className="shrink-0 text-xs text-muted-foreground">Why</span>
+            <ChevronDown aria-hidden className="h-4 w-4 shrink-0 transition-transform group-open:rotate-180" />
+          </summary>
+          <HintCard hint={hint} stats={hintDetail} className="m-2 mt-0 border-0 p-0 shadow-none" />
+        </details>
+      )}
       {labLink && (
         <a
           href={withPrefix(labLink)}
           target="_blank"
           rel="noopener noreferrer"
-          className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+          className="mt-2 inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-primary hover:underline"
         >
           <FlaskConical aria-hidden className="h-4 w-4" /> Not sure? See the exact odds in the Odds Lab
           <span className="sr-only">(opens in a new tab)</span>
         </a>
       )}
-    </div>
-  )
-  const status = (
-    <div aria-live="polite">
-      <h2 className="text-sm font-semibold text-foreground">{title}</h2>
-      {body && <div className="mt-0.5 space-y-1">{body}</div>}
+      {controls && <div className="mt-3">{controls}</div>}
     </div>
   )
 
-  // Collapsed standings (phones): just the worst hand
-  const worstRows = standingRows.filter((r) => ['bottom', 'tied', 'pencil'].includes(r.status))
-  const worstLine = worstRows.length
-    ? `${worstRows[0].status === 'pencil' ? 'Pencil' : worstRows.length > 1 ? 'Tied worst' : 'Worst hand'}: ${worstRows
-        .map((r) => `${r.name}, ${r.detail.charAt(0).toLowerCase()}${r.detail.slice(1)}`)
-        .join('; ')}`
-    : 'Standings'
+  const standingFor = Object.fromEntries(standingRows.map((r) => [r.id, r]))
+  const renderSeat = (s, { compact } = {}) => {
+    const badges = []
+    if (phase.kind !== 'gameOver') {
+      if (s.id === game.hammer) badges.push(phase.kind === 'roundOver' ? '🔨 Next Hammer' : '🔨 Hammer')
+      // Refusal seats matter until play starts; then the decision badge says what they did
+      if (['call', 'refusal', 'secondCall'].includes(phase.kind)) {
+        if (s.id === seats.first) badges.push('1st refusal')
+        if (s.id === seats.second) badges.push('2nd refusal')
+      }
+    }
+    if (phase.kind === 'boss' && phase.boss === s.id) badges.push('👑 Boss')
+    if (bottom.includes(s.id)) badges.push(bottom.length > 1 ? 'Tied worst' : 'Worst hand')
+    if (safe.includes(s.id) && phase.kind !== 'roundOver') badges.push('In the cup')
+    const dice = view.dice[s.id] || [null, null, null, null, null]
+    const isYou = s.id === YOU
+    const tres = phase.kind === 'tresAway' && phase.hands[s.id]
+    const m = moves[s.id]
+    return (
+      <Seat
+        key={s.id}
+        name={s.name}
+        you={isYou}
+        out={s.out}
+        compact={compact}
+        active={who === s.id}
+        loser={phase.kind === 'roundOver' && phase.loser === s.id}
+        badges={badges}
+        // The seat's latest move already says "Refuses" or "Accepts"
+        decision={['Refuses', 'Accepts'].includes(m?.text) ? undefined : decisions[s.id]}
+        pencils={s.pencils}
+        maxPencils={game.rules.pencilsToLose}
+        said={m && !s.out ? { text: m.text, at: m.at, fresh: m.at === newest } : undefined}
+        detail={compact && !s.out ? standingFor[s.id]?.detail : undefined}
+        className={isYou ? 'max-h-[75vh] overflow-y-auto shadow-lg' : undefined}
+      >
+        {!s.out && (
+          <Hand
+            dice={dice}
+            game={call ? call.game : null}
+            variant={call?.variant}
+            size={compact ? 'sm' : 'md'}
+            rollIds={rollIds[s.id]}
+            committed={call && isKickerGame(call.game) ? keptAt(game, s.id) : undefined}
+            putOut={tres ? tres.out : roundOverTres ? [0, 1, 2, 3, 4] : undefined}
+            kept={isYou && canKeep ? keep : undefined}
+            locked={
+              isYou && tres
+                ? tres.out
+                : isYou && phase.kind === 'play' && isKickerGame(phase.call.game) && phase.rolling[YOU]?.kept.length
+                  ? phase.rolling[YOU].kept
+                  : undefined
+            }
+            onToggleKeep={isYou && canKeep ? toggleKeep : undefined}
+          />
+        )}
+        {isYou && moveInSeat && <div className="mt-3 border-t pt-3">{move}</div>}
+      </Seat>
+    )
+  }
+
   const standingsNote =
     phase.kind === 'roundOver'
       ? 'How the round finished.'
       : 'Best hand first. Anyone above a hand that’s all day is in the cup: they can’t lose this round.'
+  const roundLogPanel = (className) => (
+    <Panel title="This round" tone="note" as="section" className={className}>
+      <RoundLog events={roundEvents} previous={previousEvents} />
+    </Panel>
+  )
 
   return (
     <div className="space-y-6">
+      <h1 className="sr-only">Play</h1>
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_19rem] lg:gap-6">
-        {/* Standings and advice: beside the players on wide screens, above them (collapsed) on phones */}
-        <aside className="space-y-4 lg:col-start-2 lg:row-start-1">
+        {/* Wide screens: standings, the hint and the round's story beside the table */}
+        <aside className="hidden space-y-4 lg:col-start-2 lg:row-start-1 lg:block">
           {standingRows.length > 0 && (
-            <>
-              <details className="group rounded-xl border bg-card shadow-sm lg:hidden">
-                <summary className="flex cursor-pointer list-none items-center gap-2 p-3 text-sm [&::-webkit-details-marker]:hidden">
-                  <span className="min-w-0 flex-1 font-medium">{worstLine}</span>
-                  <span className="shrink-0 text-xs text-muted-foreground">All standings</span>
-                  <ChevronDown aria-hidden className="h-4 w-4 shrink-0 transition-transform group-open:rotate-180" />
-                </summary>
-                <div className="px-3 pb-3">
-                  <p className="mb-2 text-xs text-muted-foreground">{standingsNote}</p>
-                  <Standings rows={standingRows} label="Standings this round" />
-                </div>
-              </details>
-              <Panel title="Standings" description={standingsNote} className="hidden lg:block">
-                <Standings rows={standingRows} label="Standings this round" />
-              </Panel>
-            </>
+            <Panel title="Standings" description={standingsNote}>
+              <Standings rows={standingRows} label="Standings this round" />
+            </Panel>
           )}
           {hint && <HintCard hint={hint} stats={hintDetail} />}
-          {/* This round, in words */}
-          <Panel title="This round" tone="note" as="section" className="hidden lg:block">
-            <RoundLog events={roundEvents} />
-          </Panel>
+          {roundLogPanel()}
         </aside>
 
-        {/* The table: the round and the players, Hammer first, on the felt */}
-        <TableFelt className="space-y-3 lg:col-start-1 lg:row-start-1">
-          <div className="flex flex-wrap items-center justify-between gap-3 text-felt-foreground">
+        {/* The table: what just happened, the others in fixed seats, then you */}
+        <TableFelt className="space-y-3 self-start overflow-visible lg:col-start-1 lg:row-start-1">
+          <div className="flex items-center justify-between gap-3 text-felt-foreground">
             <div className="font-display text-lg font-bold">
               Round {game.round}
               {call && <span className="font-normal"> · {label(call)}</span>}
             </div>
-            <div className="flex items-center gap-2 text-sm">
-              <Switch id="hints" checked={hints} onCheckedChange={setHints} />
-              <Label htmlFor="hints" className="text-felt-foreground">Hints</Label>
-            </div>
+            {phase.kind !== 'gameOver' && (
+              <button
+                type="button"
+                onClick={() => setPaused((p) => !p)}
+                aria-pressed={paused}
+                className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-felt-foreground/40 px-3 text-sm font-medium text-felt-foreground transition-colors hover:bg-felt-foreground/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                {paused ? <Resume aria-hidden className="h-4 w-4" /> : <Pause aria-hidden className="h-4 w-4" />}
+                {paused ? 'Resume' : 'Pause'}
+              </button>
+            )}
           </div>
 
-          <div className="space-y-3">
-            {seatOrder.map((s) => {
-              const badges = []
-              if (phase.kind !== 'gameOver') {
-                if (s.id === game.hammer) badges.push(phase.kind === 'roundOver' ? '🔨 Next Hammer' : '🔨 Hammer')
-                // Refusal seats matter until play starts; then the decision badge says what they did
-                if (['call', 'refusal', 'secondCall'].includes(phase.kind)) {
-                  if (s.id === seats.first) badges.push('1st refusal')
-                  if (s.id === seats.second) badges.push('2nd refusal')
-                }
-              }
-              if (phase.kind === 'boss' && phase.boss === s.id) badges.push('👑 Boss')
-              if (bottom.includes(s.id)) badges.push(bottom.length > 1 ? 'Tied worst' : 'Worst hand')
-              if (safe.includes(s.id) && phase.kind !== 'roundOver') badges.push('In the cup')
-              const dice = view.dice[s.id] || [null, null, null, null, null]
-              const isYou = s.id === YOU
-              const tres = phase.kind === 'tresAway' && phase.hands[s.id]
-              const showsStatus = !moveInSeat && title && (who ? who === s.id : isYou)
-              return (
-                <Seat
-                  key={s.id}
-                  name={s.name}
-                  you={isYou}
-                  out={s.out}
-                  active={who === s.id}
-                  loser={phase.kind === 'roundOver' && phase.loser === s.id}
-                  badges={badges}
-                  decision={decisions[s.id]}
-                  pencils={s.pencils}
-                  maxPencils={game.rules.pencilsToLose}
-                  status={showsStatus ? status : undefined}
-                >
-                  {!s.out && (
-                    <Hand
-                      dice={dice}
-                      game={call ? call.game : null}
-                      variant={call?.variant}
-                      rollIds={rollIds[s.id]}
-                      committed={call && isKickerGame(call.game) ? keptAt(game, s.id) : undefined}
-                      putOut={tres ? tres.out : roundOverTres ? [0, 1, 2, 3, 4] : undefined}
-                      kept={isYou && canKeep ? keep : undefined}
-                      locked={
-                        isYou && tres
-                          ? tres.out
-                          : isYou && phase.kind === 'play' && isKickerGame(phase.call.game) && phase.rolling[YOU]?.kept.length
-                            ? phase.rolling[YOU].kept
-                            : undefined
-                      }
-                      onToggleKeep={isYou && canKeep ? toggleKeep : undefined}
-                    />
-                  )}
-                  {isYou && moveInSeat && move}
-                </Seat>
-              )
-            })}
+          {/* The announcer: the newest move, held until the next one, and whose turn it is */}
+          <div className="rounded-xl bg-card/95 p-3 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              {latest ? 'Just now' : 'New deal'}
+            </p>
+            <p key={`${roundStart}:${latestAt}`} className="story-pop mt-0.5 font-medium" aria-live="polite">
+              {latest || (game.hammer === YOU ? 'Everyone rolled. You hold the Hammer.' : `Everyone rolled. ${names[game.hammer]} holds the Hammer.`)}
+            </p>
+            {!moveInSeat && title && (
+              <div className="mt-2 border-t pt-2 text-sm">
+                <p className="font-semibold">{title}</p>
+                {body && <div className="mt-0.5 space-y-1 text-muted-foreground">{body}</div>}
+              </div>
+            )}
+            {paused && botTurn && (
+              <div className="mt-2 flex flex-wrap items-center gap-2 border-t pt-2">
+                <Button size="sm" onClick={step} className="min-h-11">
+                  <SkipForward aria-hidden className="h-4 w-4" /> Next move
+                </Button>
+                <span className="text-xs text-muted-foreground">Paused: the bots wait for you.</span>
+              </div>
+            )}
           </div>
-          {/* Out of the game: the table's actions sit under the players */}
-          {controls && meOut && <div className="rounded-xl border bg-card p-3 shadow-sm">{move}</div>}
+
+          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">{others.map((s) => renderSeat(s, { compact: true }))}</div>
+
+          {/* Your seat, docked to the bottom of the screen while the table scrolls: your dice and buttons in thumb reach */}
+          <div className="sticky bottom-2 z-10">
+            {renderSeat(you)}
+            {/* Out of the game: the table's actions sit in your place */}
+            {controls && meOut && <div className="mt-2 rounded-xl border bg-card p-3 shadow-lg">{move}</div>}
+          </div>
         </TableFelt>
       </div>
 
-      {/* This round, in words (phones: under the table) */}
-      <Panel title="This round" tone="note" as="section" className="lg:hidden">
-        <RoundLog events={roundEvents} />
-      </Panel>
+      {/* Phones and tablets: standings and the round's story under the table */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:hidden">
+        {standingRows.length > 0 && (
+          <details className="group rounded-xl border bg-card shadow-sm">
+            <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 p-3 text-sm font-semibold [&::-webkit-details-marker]:hidden">
+              <span className="flex-1">Standings</span>
+              <ChevronDown aria-hidden className="h-4 w-4 shrink-0 transition-transform group-open:rotate-180" />
+            </summary>
+            <div className="px-3 pb-3">
+              <p className="mb-2 text-xs text-muted-foreground">{standingsNote}</p>
+              <Standings rows={standingRows} label="Standings this round" />
+            </div>
+          </details>
+        )}
+        {roundLogPanel()}
+      </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-muted-foreground">
+        <PacePicker pace={prefs.pace} onChange={(pace) => updatePrefs({ pace })} />
+        <div className="flex items-center gap-2">
+          <Switch id="hints" checked={hints} onCheckedChange={setHints} />
+          <Label htmlFor="hints">Hints</Label>
+        </div>
         <DiceSettings />
-        <button type="button" onClick={() => setGame(null)} className="underline-offset-2 hover:underline">
+        <button type="button" onClick={() => setGame(null)} className="ml-auto min-h-11 underline-offset-2 hover:underline">
           Leave the table
         </button>
       </div>

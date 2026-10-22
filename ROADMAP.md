@@ -138,7 +138,7 @@ Build it once and every later phase gets cheaper.
 
 ## Phase 3 — Play vs AI
 
-1. ✅ _Shipped 2026-10-15 (`/play`, `src/components/Play`): 1–7 solid bots, every game, hints, Odds Lab links for your exact situation. Next: difficulty levels, saving games, post-game review._ **Full game table UI** on the engine, 2–7 bots. Show dice animations, whose turn it is, pencils and Hammer position clearly.
+1. ✅ _Shipped 2026-10-15 (`/play`, `src/components/Play`): 1–7 solid bots, every game, hints, Odds Lab links for your exact situation. 2026-10-21: readable pacing (each bot move held by kind; Slow/Normal/Fast; pause and step), every seat labeled with its latest move, an announcer for the newest one, the last round kept in the log, fixed seats with yours docked at the bottom in thumb reach, the whole table on one screen. Next: difficulty levels, saving games, post-game review._ **Full game table UI** on the engine, 2–7 bots. Show dice animations, whose turn it is, pencils and Hammer position clearly.
 2. **Bot difficulty levels:**
    - **Novice:** simple rules of thumb, some randomness.
    - **Solid:** today's heuristics.

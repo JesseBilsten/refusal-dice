@@ -191,9 +191,16 @@
   100% { transform: none; }
 }
 .story-pop { animation: story-pop 0.35s ease-out both; }
+/* A seat's latest move (Play): slides in; the table's newest also pulses once */
+@keyframes seat-said-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 hsl(var(--color-pop) / 0); }
+  40% { box-shadow: 0 0 0 6px hsl(var(--color-pop) / 0.35); }
+}
+.seat-said { animation: story-pop 0.3s ease-out both; }
+.seat-said-fresh { animation: story-pop 0.3s ease-out both, seat-said-pulse 1.2s ease-out 0.2s both; }
 .story-fade { animation: story-fade 0.6s ease-out 0.1s both; }
 .story-pencil { animation: story-pencil 0.7s cubic-bezier(0.3, 0.7, 0.4, 1) both; }
 
 @media (prefers-reduced-motion: reduce) {
-  .story-pop, .story-fade, .story-pencil { animation: none; }
+  .story-pop, .story-fade, .story-pencil, .seat-said, .seat-said-fresh { animation: none; }
 }

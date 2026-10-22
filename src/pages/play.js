@@ -7,20 +7,23 @@ import Play from '../components/Play'
 const PlayPage = () => (
   <Layout>
     <Page width="tool">
-      <PageHeader
-        title="Play"
-        description={
-          <>
-            Play full games against solid bots: call, refuse, roll and keep. Hints show what a solid player would do.
-            New to the game?{' '}
-            <Link to="/learn" className="text-primary hover:underline">
-              Learn by playing one guided round first
-            </Link>
-            .
-          </>
+      <Play
+        intro={
+          <PageHeader
+            title="Play"
+            description={
+              <>
+                Play full games against solid bots: call, refuse, roll and keep.
+                Hints show what a solid player would do. New to the game?{' '}
+                <Link to="/learn" className="text-primary hover:underline">
+                  Learn by playing one guided round first
+                </Link>
+                .
+              </>
+            }
+          />
         }
       />
-      <Play />
     </Page>
   </Layout>
 )

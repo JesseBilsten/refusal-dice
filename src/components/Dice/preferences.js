@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 
 /**
  * Per-browser dice preferences. Both start off: flat dice, no sound.
+ * `pace` is how fast the bots play in Play ('slow' | 'normal' | 'fast').
  * Stored in localStorage (wrapped, since it can be unavailable) and synced
  * between components on the page with a window event.
  */
@@ -9,7 +10,7 @@ import { useEffect, useState } from 'react'
 const KEY = 'refusal-dice:dice-prefs'
 const EVENT = 'refusal-dice:dice-prefs'
 
-export const DEFAULT_DICE_PREFS = { dice3d: false, sound: false }
+export const DEFAULT_DICE_PREFS = { dice3d: false, sound: false, pace: 'normal' }
 
 export function readDicePrefs() {
   if (typeof window === 'undefined') return DEFAULT_DICE_PREFS
