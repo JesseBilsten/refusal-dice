@@ -48,7 +48,7 @@ import {
   useDicePrefs,
 } from '../Dice'
 import Seat from '../Table/Seat'
-import { Panel } from '../Page'
+import { Panel, Term } from '../Page'
 
 /**
  * Interactive first round, played on the real engine with scripted dice so
@@ -73,15 +73,6 @@ const WRONG_CALL = {
 }
 
 const newGame = newTutorialGame
-
-const T = ({ to, children }) => (
-  <Link
-    to={`/glossary#${to}`}
-    className="font-medium text-primary underline-offset-2 hover:underline"
-  >
-    {children}
-  </Link>
-)
 
 /** The dice that make 10-3 and the kicker total, in words */
 function describeHand(dice) {
@@ -186,13 +177,13 @@ const Tutorial = () => {
         <>
           <p>
             You're at a table with Ava and Ben. Everyone has five dice. At the
-            start of the game everyone <T to="piddle">piddles</T> (rolls one
+            start of the game everyone <Term id="piddle">piddles</Term> (rolls one
             die), and you rolled highest, so you hold the{' '}
-            <T to="hammer">Hammer</T>: you'll call the game this round.
+            <Term id="hammer">Hammer</Term>: you'll call the game this round.
           </p>
           <p>
             Whoever has the worst hand at the end of the round takes a{' '}
-            <T to="pencil">pencil</T>. Let's play one.
+            <Term id="pencil">pencil</Term>. Let's play one.
           </p>
         </>
       ),
@@ -222,7 +213,7 @@ const Tutorial = () => {
           <p>
             As the Hammer, you name a game, and for most games whether{' '}
             <strong>High</strong> or <strong>Low</strong>{' '}
-            <T to="kicker">kicker</T> wins. The kicker is all the dice left over
+            <Term id="kicker">kicker</Term> wins. The kicker is all the dice left over
             after you make the game.
           </p>
           <p>Your dice already make two games:</p>
@@ -259,8 +250,8 @@ const Tutorial = () => {
         <p>
           A two-dice kicker totals at most 12, so your 5+5 = 10 is strong. Now
           the players to your left get a say: first the{' '}
-          <T to="first-refusal">1st refusal</T>, then the{' '}
-          <T to="second-refusal">2nd refusal</T>.
+          <Term id="first-refusal">1st refusal</Term>, then the{' '}
+          <Term id="second-refusal">2nd refusal</Term>.
         </p>
       ),
       action: (
@@ -622,7 +613,7 @@ const Tutorial = () => {
               however good everyone else's kicker is.
             </li>
             <li>
-              The Hammer can <T to="bark">bark</T> instead of calling: the
+              The Hammer can <Term id="bark">bark</Term> instead of calling: the
               Hammer passes left and everyone re-rolls.
             </li>
             <li>

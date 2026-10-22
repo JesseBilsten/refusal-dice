@@ -44,7 +44,7 @@ export default function EveryPossibility({
   return (
     <section className={className}>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-xl font-semibold">{title}</h2>
+        <h2 className="text-heading">{title}</h2>
         <div className="flex flex-wrap items-center gap-4">
           {actions}
           {view === 'unique' && (

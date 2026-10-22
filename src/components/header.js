@@ -2,7 +2,7 @@ import React from 'react'
 import { Link } from 'gatsby'
 import MobileNav from './MobileNav'
 import { DieFace } from './Dice'
-import { MORE_NAV, PRIMARY_NAV } from './nav-items'
+import { NAV_GROUPS } from './nav-items'
 import { SettingsMenu, useTheme } from './Settings'
 
 const Header = ({ siteTitle }) => {
@@ -27,16 +27,24 @@ const Header = ({ siteTitle }) => {
           {siteTitle}
         </Link>
         <div className="flex items-center gap-4">
-          <ul className="hidden md:flex flex-row gap-6">
-            {[...PRIMARY_NAV, MORE_NAV[0]].map((item) => (
-              <li key={item.to}>
-                <Link
-                  to={item.to}
-                  className="text-sm font-medium text-foreground/70 hover:text-primary transition-colors"
-                  activeClassName="text-primary"
-                >
-                  {item.label}
-                </Link>
+          {/* The groups sit apart, so the shape of the site shows in the bar */}
+          <ul className="hidden md:flex flex-row items-center gap-6">
+            {NAV_GROUPS.map((group, g) => (
+              <li key={group.title} className={g > 0 ? 'border-l border-border pl-6' : undefined}>
+                <ul aria-label={group.title} className="flex flex-row gap-6">
+                  {group.items.map((item) => (
+                    <li key={item.to}>
+                      <Link
+                        to={item.to}
+                        className="text-sm font-medium text-foreground/70 hover:text-primary transition-colors"
+                        activeClassName="text-primary underline decoration-2 underline-offset-8"
+                        partiallyActive={item.to !== '/'}
+                      >
+                        {item.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
               </li>
             ))}
           </ul>

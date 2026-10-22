@@ -34,6 +34,21 @@
     --color-dice: 45 97% 82%;             /* the dice (#fee9a5) */
     --color-pop: 8 86% 58%;               /* a playful highlight, used sparingly */
     --color-pop-foreground: 0 0% 100%;
+    /* Dice: the face's edge and Michigan Red-Eye pips (1 and 6 dark, 2 and 5 red, 3 and 4 blue) */
+    --color-dice-edge: 0 0% 4%;
+    --color-pip-dark: 0 0% 4%;
+    --color-pip-red: 10 77% 52%;
+    --color-pip-blue: 191 60% 52%;
+
+    /* Type: the two families, and the heading roles (text-display … text-subheading) */
+    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    --font-display: 'Bricolage Grotesque', 'Inter', ui-sans-serif, sans-serif;
+    --fs-display: 3rem;
+    --fs-title: 1.875rem;
+    --fs-section: 1.5rem;
+    --fs-heading: 1.25rem;
+    --fs-subheading: 1.125rem;
+
     --radius-lg: 0.5rem;
     --radius-md: calc(0.5rem - 2px);
     --radius-sm: calc(0.5rem - 4px);
@@ -120,6 +135,20 @@
 }
 
 @layer base {
+  /* Headings grow on wider screens; the theme playground (/design/theming) overrides these inline */
+  @media (min-width: 640px) {
+    :root {
+      --fs-display: 3.75rem;
+      --fs-title: 2.25rem;
+      --fs-section: 1.875rem;
+    }
+  }
+  @media (min-width: 1024px) {
+    :root {
+      --fs-display: 4.5rem;
+    }
+  }
+
   * {
     border-color: hsl(var(--color-border));
   }
@@ -156,6 +185,13 @@
   p {
     max-width: 70ch;
     text-wrap: pretty;
+  }
+}
+
+@layer components {
+  /* A small label above or before something: "Next", "1st call", a footer group (docs/DESIGN_SYSTEM.md, Typography) */
+  .eyebrow {
+    @apply font-sans text-xs font-semibold uppercase tracking-wide;
   }
 }
 

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Plus, X } from 'lucide-react'
 import { DiceGroup, Die } from '../Dice'
 import { Button } from '../ui/button'
+import { NativeSelect } from '../ui/native-select'
 import { cn } from '../../lib/utils'
 import { describePattern, diceClaimed } from '../../lib/roll-query'
 
@@ -64,24 +65,6 @@ const OP_OPTIONS = [
 const range = (from, to) =>
   Array.from({ length: Math.max(0, to - from + 1) }, (_, i) => from + i)
 
-const selectClass =
-  'h-8 rounded-md border border-input bg-background px-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring'
-
-const NativeSelect = ({ label, value, options, onChange, className }) => (
-  <select
-    aria-label={label}
-    value={String(value)}
-    onChange={(e) => onChange(e.target.value)}
-    className={cn(selectClass, className)}
-  >
-    {options.map((o) => (
-      <option key={String(o.value)} value={String(o.value)}>
-        {o.label}
-      </option>
-    ))}
-  </select>
-)
-
 const Word = ({ children }) => (
   <span className="text-sm text-muted-foreground">{children}</span>
 )
@@ -135,7 +118,7 @@ const NumberList = ({ values, onChange, label }) => {
             .filter(Number.isFinite)
         )
       }}
-      className={cn(selectClass, 'w-24')}
+      className="h-8 w-24"
     />
   )
 }
@@ -185,7 +168,7 @@ const Condition = ({ rule, onChange, faces, allowAny, label }) => {
             min={0}
             max={30}
             onChange={(e) => onChange({ value: Number(e.target.value) || 0 })}
-            className={cn(selectClass, 'w-16')}
+            className="h-8 w-16"
           />
         ))}
     </>
@@ -346,7 +329,7 @@ const PatternCard = ({ pattern, index, diceCount, canRemove, onChange, onRemove 
   return (
     <div className="space-y-3 rounded-lg border bg-background p-4">
         <div className="flex items-center justify-between gap-2">
-          <h3 className="text-sm font-semibold">
+          <h3 className="text-subheading">
             Pattern {letter}
             <span className="ml-2 font-normal text-muted-foreground">
               {claimed > 0 && `uses ${claimed} of ${diceCount} dice`}
@@ -418,7 +401,7 @@ const QueryBuilder = ({ query, onChange }) => {
           {i > 0 && (
             <div className="flex items-center gap-3" aria-hidden="true">
               <div className="h-px flex-1 bg-border" />
-              <span className="text-xs font-bold uppercase tracking-wider text-primary">or</span>
+              <span className="eyebrow text-primary">or</span>
               <div className="h-px flex-1 bg-border" />
             </div>
           )}

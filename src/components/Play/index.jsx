@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { withPrefix } from 'gatsby'
-import { ChevronDown, FlaskConical, Pause, Play as Resume, SkipForward } from 'lucide-react'
+import { ChevronDown, FlaskConical } from 'lucide-react'
 import {
   applyAction,
   bossHand,
@@ -29,7 +29,6 @@ import { cn } from '../../lib/utils'
 import { Button } from '../ui/button'
 import { Switch } from '../ui/switch'
 import { Label } from '../ui/label'
-import { ToggleGroup, ToggleGroupItem } from '../ui/toggle-group'
 import { BOSS_NAMES, DiceSettings, Die, Hand, RollButton, playRollSound, razzleName, useDicePrefs } from '../Dice'
 import { Panel } from '../Page'
 import Seat from '../Table/Seat'
@@ -38,11 +37,13 @@ import TableOrder from '../Table/TableOrder'
 import DiceCup from '../Table/DiceCup'
 import Standings from '../Table/Standings'
 import HintCard from './HintCard'
+import CallPlacard from './CallPlacard'
+import Setup from './Setup'
+import { SpeedPicker, Transport } from './TableControls'
 import { hintStats } from './hint-stats'
 import { useHouseRules } from '../Settings/house-rules'
 import { useSimulation } from '../Odds/use-simulation'
 import {
-  BOT_NAMES,
   DEFAULT_PACE,
   PACES,
   YOU,
@@ -205,146 +206,6 @@ function RoundLog({ events, previous }) {
         </details>
       )}
     </div>
-  )
-}
-
-/** Play, pause and step: the table's controls, like a video player's */
-function Transport({ paused, onToggle, onStep, canStep }) {
-  const button =
-    'inline-flex min-h-11 items-center gap-1.5 rounded-full border border-felt-foreground/40 px-3 text-sm font-medium text-felt-foreground transition-colors hover:bg-felt-foreground/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-40 disabled:hover:bg-transparent'
-  return (
-    <div className="flex items-center gap-2" role="group" aria-label="Table controls">
-      <button type="button" onClick={onToggle} className={button}>
-        {paused ? <Resume aria-hidden className="h-4 w-4" /> : <Pause aria-hidden className="h-4 w-4" />}
-        {paused ? 'Play' : 'Pause'}
-      </button>
-      <button type="button" onClick={onStep} disabled={!canStep} className={button}>
-        <SkipForward aria-hidden className="h-4 w-4" /> Next
-      </button>
-    </div>
-  )
-}
-
-/** Every speed in view, slowest to instant, and what the chosen one means */
-function SpeedPicker({ pace, onPace }) {
-  const current = PACES.find((p) => p.id === pace) ?? PACES[0]
-  return (
-    <div className="space-y-1.5 text-felt-foreground">
-      <ToggleGroup
-        type="single"
-        value={current.id}
-        onValueChange={(v) => v && onPace(v)}
-        aria-label="Speed"
-        aria-describedby="play-speed-about"
-        className="grid grid-cols-3 gap-1 rounded-xl border border-felt-foreground/40 p-1 sm:grid-cols-6"
-      >
-        {PACES.map((p) => (
-          <ToggleGroupItem
-            key={p.id}
-            value={p.id}
-            className="min-h-10 whitespace-nowrap rounded-lg px-1.5 py-1 text-sm text-felt-foreground hover:bg-felt-foreground/10 hover:text-felt-foreground data-[state=on]:bg-felt-foreground data-[state=on]:font-semibold data-[state=on]:text-felt data-[state=on]:shadow-sm"
-          >
-            {p.label}
-          </ToggleGroupItem>
-        ))}
-      </ToggleGroup>
-      <p id="play-speed-about" className="text-xs text-felt-foreground/85" aria-live="polite">
-        <span className="font-semibold">Speed: {current.label}.</span> {current.about}
-      </p>
-    </div>
-  )
-}
-
-/** The call, in its own placard: the game's emoji and name, and whose call it is */
-function CallPlacard({ call, caller, second, refused, hammerName, youHammer }) {
-  if (!call)
-    return (
-      <div className="flex items-center gap-3 rounded-2xl border-2 border-dashed border-felt-foreground/40 p-3 text-felt-foreground">
-        <span className="text-3xl" aria-hidden>
-          🔨
-        </span>
-        <p className="font-medium">
-          {refused
-            ? `${label(refused)} was refused: ${youHammer ? 'your' : `${hammerName}’s`} second call is next`
-            : youHammer
-              ? 'Your call'
-              : `Waiting for ${hammerName}’s call`}
-        </p>
-      </div>
-    )
-  return (
-    <div key={`${label(call)}:${second}`} className="story-pop flex items-center gap-3 rounded-2xl border-2 border-primary bg-card p-3 shadow-md">
-      <span className="text-4xl leading-none" aria-hidden>
-        {emoji(call)}
-      </span>
-      <div className="min-w-0">
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-          {second ? '2nd call' : '1st call'} · {caller}
-          {second && ' · can’t be refused'}
-        </p>
-        <p className="font-display text-2xl font-bold leading-tight">{label(call)}</p>
-        {refused && (
-          <p className="text-xs text-muted-foreground">
-            Refused: <s>{label(refused)}</s>
-          </p>
-        )}
-      </div>
-    </div>
-  )
-}
-
-function Setup({ onStart }) {
-  const [bots, setBots] = useState(3)
-  const [hard, setHard] = useState(false)
-  const pill = (on) =>
-    cn(
-      'rounded-full border text-base font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-      on ? 'border-primary bg-primary text-primary-foreground' : 'bg-background hover:border-primary/50'
-    )
-  return (
-    <Panel tone="tool" title="Set the table" description="You against solid bots. First to three pencils is out; the last player standing wins.">
-      <div className="space-y-5">
-        <div className="space-y-2">
-          <div className="text-sm font-semibold" id="opponents">
-            Opponents
-          </div>
-          <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-labelledby="opponents">
-            {[1, 2, 3, 4, 5, 6, 7].map((n) => (
-              <button key={n} type="button" role="radio" aria-checked={bots === n} onClick={() => setBots(n)} className={cn('h-11 w-11', pill(bots === n))}>
-                {n}
-              </button>
-            ))}
-          </div>
-          <p className="text-sm text-muted-foreground">
-            {BOT_NAMES.slice(0, bots).join(', ')} {bots === 1 ? 'joins' : 'join'} you.
-            {bots === 1 && ' With two players there’s only one refusal.'}
-          </p>
-        </div>
-        <div className="space-y-2">
-          <div className="text-sm font-semibold" id="difficulty">
-            Difficulty
-          </div>
-          <div className="flex flex-wrap gap-1.5" role="radiogroup" aria-labelledby="difficulty">
-            {[
-              [false, 'Standard'],
-              [true, 'Hard'],
-            ].map(([value, name]) => (
-              <button key={name} type="button" role="radio" aria-checked={hard === value} onClick={() => setHard(value)} className={cn('min-h-11 px-4', pill(hard === value))}>
-                {name}
-              </button>
-            ))}
-          </div>
-          <p className="text-sm text-muted-foreground">
-            {hard
-              ? 'You show your own game: after each roll, tap the dice that make it, or say you missed. Show the wrong dice and you pick them all up and roll five, like at a real table.'
-              : 'The table reads your dice for you and outlines the game.'}
-          </p>
-        </div>
-        <RollButton size="lg" onClick={() => onStart(bots, hard)}>
-          Piddle for the Hammer
-        </RollButton>
-      </div>
-    </Panel>
   )
 }
 
@@ -1077,7 +938,7 @@ export default function Play({ intro }) {
 
   const move = (
     <div aria-live="polite">
-      <h2 className="text-lg font-semibold leading-snug">{title}</h2>
+      <h2 className="text-subheading">{title}</h2>
       <div className="mt-1 space-y-2 text-sm leading-relaxed text-muted-foreground">{body}</div>
       {error && <p className="mt-3 rounded-md border border-destructive/40 bg-destructive/10 p-2 text-sm">{error}</p>}
       {/* Phones and tablets: the hint folds into one line above your buttons */}
@@ -1289,7 +1150,7 @@ export default function Play({ intro }) {
 
           {/* The announcer: the newest move, held until the next one, and whose turn it is */}
           <div className="rounded-xl bg-card/95 p-3 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            <p className="eyebrow text-muted-foreground">
               {paused ? 'Paused' : !dealt ? 'Piddle for the Hammer' : latest ? 'Just now' : 'New deal'}
             </p>
             <p key={dealt ? `${roundStart}:${latestAt}` : `p${piddleStep}`} className="story-pop mt-0.5 font-medium" aria-live="polite">

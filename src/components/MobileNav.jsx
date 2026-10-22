@@ -8,7 +8,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from './ui/sheet'
-import { PRIMARY_NAV, MORE_NAV } from './nav-items'
+import { NAV_GROUPS } from './nav-items'
 import { Settings } from './Settings'
 
 const MobileNav = () => {
@@ -30,12 +30,9 @@ const MobileNav = () => {
           <SheetTitle>Navigation</SheetTitle>
         </SheetHeader>
         <nav className="flex flex-col gap-4 mt-6">
-          {[
-            { title: 'Main', items: PRIMARY_NAV },
-            { title: 'More', items: MORE_NAV },
-          ].map((group, i) => (
+          {NAV_GROUPS.map((group, i) => (
             <div key={group.title} className={i > 0 ? 'pt-2 border-t border-border' : undefined}>
-              <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">{group.title}</div>
+              <div className="eyebrow mb-2 text-muted-foreground">{group.title}</div>
               {group.items.map((item) => (
                 <Link
                   key={item.to}
@@ -51,7 +48,7 @@ const MobileNav = () => {
           ))}
 
           <div className="pt-2 border-t border-border">
-            <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">Settings</div>
+            <div className="eyebrow mb-3 text-muted-foreground">Settings</div>
             <Settings />
           </div>
         </nav>

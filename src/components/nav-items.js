@@ -1,19 +1,31 @@
 /**
- * Site navigation, shared by the desktop header and the mobile menu, in the
- * order the story goes: learn the game, look up the rules and games, work
- * out the odds, then play.
+ * Site navigation, shared by the header, the mobile menu and the footer.
+ * Three groups, in the order the story goes (docs/DESIGN_SYSTEM.md, "The
+ * story the site tells"): learn the game, get better at it, then play.
  */
 
-export const PRIMARY_NAV = [
-  { to: '/learn', label: 'Learn' },
-  { to: '/rules', label: 'Rules' },
-  { to: '/games', label: 'Games' },
-  { to: '/odds-lab', label: 'Odds Lab' },
-  { to: '/strategy-assistant', label: 'Strategy' },
-  { to: '/play', label: 'Play' },
+export const NAV_GROUPS = [
+  {
+    title: 'Learn the game',
+    items: [
+      { to: '/learn', label: 'Learn' },
+      { to: '/rules', label: 'Rules' },
+      { to: '/games', label: 'Games' },
+      { to: '/glossary', label: 'Glossary' },
+    ],
+  },
+  {
+    title: 'Get better',
+    items: [
+      { to: '/odds-lab', label: 'Odds Lab' },
+      { to: '/strategy-assistant', label: 'Strategy' },
+    ],
+  },
+  {
+    title: 'Play',
+    items: [{ to: '/play', label: 'Play' }],
+  },
 ]
 
-/** Reference pages: in the header's end and the mobile menu */
-export const MORE_NAV = [
-  { to: '/glossary', label: 'Glossary' },
-]
+/** About the site: in the footer only */
+export const SITE_NAV = [{ to: '/design', label: 'Design system' }]
