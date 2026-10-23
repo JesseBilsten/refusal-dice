@@ -4,6 +4,13 @@ Every release of refusaldice.com, newest first. Versions are
 major.minor.patch ([docs/WORKFLOW.md](docs/WORKFLOW.md)): each pull request
 bumps the version once and adds its entry here.
 
+## 1.4.0 (unreleased)
+
+- **Hard mode checks your pick as you make it** (ruled 2026-10-22): pick dice
+  that aren't the game (or too many, like 5-3-2 for 10-2) and it says "Not a
+  valid game", with Roll all five; fix the pick and Show turns on, then roll
+  the kicker. Saying you missed means rolling all five, as before.
+
 ## 1.3.0 (unreleased)
 
 - **A 404 page that plays along:** a cocked die and a stacked pair, an

@@ -41,7 +41,7 @@ export default function Setup({ onStart }) {
           />
           <p className="text-sm text-muted-foreground">
             {hard
-              ? 'You show your own game: after each roll, tap the dice that make it, or say you missed. Show the wrong dice and you pick them all up and roll five, like at a real table.'
+              ? 'You show your own game: after each roll, tap the dice that make it, or say you missed. A pick that isn’t the game is flagged: fix it, or roll all five.'
               : 'The table reads your dice for you and outlines the game.'}
           </p>
         </div>

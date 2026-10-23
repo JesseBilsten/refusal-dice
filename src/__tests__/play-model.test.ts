@@ -1,4 +1,4 @@
-import { applyAction } from '../engine'
+import { Dice, applyAction } from '../engine'
 import { botAction } from '../strategy'
 import {
   YOU,
@@ -13,6 +13,7 @@ import {
   tableOrder,
   rolledPositions,
   shortEvent,
+  showCheck,
 } from '../components/Play/play-model'
 
 const label = (c: { game: string; variant?: string }) => `${c.game}${c.variant ? ` ${c.variant}` : ''}`
@@ -114,4 +115,19 @@ test('the piddle shows each roll, then who holds the Hammer', () => {
     { round: 1, done: false },
     { round: 1, done: true },
   ])
+})
+
+test('hard mode checks a shown game as it is picked: not a valid game until it is', () => {
+  // 10-2 with 5-5-3-2-1: the game is the two 5s
+  const dice: Dice = [5, 5, 3, 2, 1]
+  expect(showCheck(dice, [0], '10-2')).toBe('picking')
+  expect(showCheck(dice, [0, 1], '10-2')).toBe('valid')
+  // 5-3 isn't a 10, and 5-3-2 is a 10 but 10-2 is made with two dice
+  expect(showCheck(dice, [0, 2], '10-2')).toBe('invalid')
+  expect(showCheck(dice, [0, 2, 3], '10-2')).toBe('invalid')
+  // 10-3 with 5-3-2: valid; 5-5 and a 3 isn't 10
+  expect(showCheck(dice, [0, 2, 3], '10-3')).toBe('valid')
+  expect(showCheck(dice, [0, 1, 2], '10-3')).toBe('invalid')
+  // Kept dice are part of the game: keep a 5 and the shown set must hold it
+  expect(showCheck(dice, [1, 2, 3], '10-3', [0])).toBe('invalid')
 })

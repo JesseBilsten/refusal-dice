@@ -10,7 +10,6 @@ import {
   compareBoss,
   evaluateKickerHand,
   gameSize,
-  isGameSet,
   keptAt,
   isKickerGame,
   keepProblem,
@@ -55,6 +54,7 @@ import {
   paceAfter,
   piddleSteps,
   rolledPositions,
+  showCheck,
   tableOrder,
 } from './play-model'
 
@@ -74,8 +74,8 @@ import {
  *   too); players in the cup have their dice picked up.
  * - Unless you're the Hammer or a refusal, your dice stay in the cup until
  *   the call; then you roll for it.
- * - Hard mode: you show your own game, dice by dice. Wrong dice are picked
- *   up and rolled whole, like at a real table.
+ * - Hard mode: you show your own game, dice by dice. Each pick is checked
+ *   as you make it: fix a pick that isn't the game, or roll all five.
  * - Hints say what a solid player would do, with your chance of the pencil
  *   for each option (call odds, or rounds played out in a worker).
  */
@@ -568,12 +568,20 @@ export default function Play({ intro }) {
     if (myRolls?.kept.includes(i)) return
     setShowing((s) => (s.includes(i) ? s.filter((x) => x !== i) : [...s, i]))
   }
-  // Hard mode: right, play on; wrong, pick them all up (with no roll left, the hand is dead)
-  const showGame = (claim) => {
-    const hand = evaluateKickerHand(myDice, call.game, call.variant, myRolls.kept)
-    const right = claim === 'none' ? !hand.made : isGameSet(myDice, showing, call.game, myRolls.kept)
-    if (right || myRolls.rollsUsed >= 3) setDeclared(rollKey)
-    if (!right) act({ type: 'misread', player: YOU })
+  // Hard mode (ruled 2026-10-22): a valid pick is shown, then the kicker rolls or stands.
+  // Rolling all five (a pick that isn't the game, or "No game" while holding it) picks them
+  // all up and uses a roll; with no roll left, the hand is dead.
+  const showGame = () => {
+    setDeclared(rollKey)
+    setKeep(showing)
+  }
+  const rollAllFive = () => {
+    if (myRolls.rollsUsed >= 3) setDeclared(rollKey)
+    act({ type: 'misread', player: YOU })
+  }
+  const sayMissed = () => {
+    if (evaluateKickerHand(myDice, call.game, call.variant, myRolls.kept).made) rollAllFive()
+    else setDeclared(rollKey)
   }
   // The Boss can skip the extra roll and say it straight away
   const bossSays = (type, skipRoll) => {
@@ -624,25 +632,44 @@ export default function Play({ intro }) {
       )
     }
   } else if (mustShow) {
-    // Hard mode: show the dice that make the game, or say you missed it
+    // Hard mode: show the dice that make the game, or say you missed it. Each pick is checked as you make it.
     const size = gameSize(call.game)
     const name = gameName(call)
+    const check = showCheck(myDice, showing, call.game, myRolls.kept)
+    const outOfRolls = myRolls.rollsUsed >= 3
+    const picked = showing.map((i) => myDice[i]).sort((x, y) => y - x).join('-')
     title = `Show your game: ${label(call)}`
-    body = (
-      <p>
-        Tap the {size} dice that make {name}
-        {myRolls.kept.length ? ', with the dice you kept' : ''}, then show them. No {name}? Say so. Show the wrong dice and you pick them all up
-        {myRolls.rollsUsed >= 3 ? ': out of rolls, that’s no game.' : ' and roll all five.'}
-      </p>
-    )
+    body =
+      check === 'invalid' ? (
+        <p role="status" className="font-medium text-destructive">
+          Not a valid game: {picked} isn’t {name}
+          {showing.length > size ? ` (it’s made with ${size} dice)` : ''}. Fix your pick, or roll all five
+          {outOfRolls ? ': out of rolls, that’s no game.' : '.'}
+        </p>
+      ) : check === 'valid' ? (
+        <p role="status">That’s {name}: show it.</p>
+      ) : (
+        <p>
+          Tap the {size} dice that make {name}
+          {myRolls.kept.length ? ', with the dice you kept' : ''}. Missed it? Say so and roll all five.
+        </p>
+      )
     controls = (
       <div className="flex flex-wrap gap-2">
-        <Button disabled={showing.length !== size} onClick={() => showGame('dice')}>
-          Show {name} ({showing.length}/{size})
-        </Button>
-        <Button variant="outline" onClick={() => showGame('none')}>
-          No {name}
-        </Button>
+        {check === 'invalid' ? (
+          <Button onClick={rollAllFive}>{outOfRolls ? 'No game: out of rolls' : 'Roll all five'}</Button>
+        ) : (
+          <>
+            <Button disabled={check !== 'valid'} onClick={showGame}>
+              Show {name} ({showing.length}/{size})
+            </Button>
+            {check === 'picking' && (
+              <Button variant="outline" onClick={sayMissed}>
+                No {name}
+              </Button>
+            )}
+          </>
+        )}
       </div>
     )
   } else if (!mine) {
