@@ -208,6 +208,18 @@ lone 3 or 4 keep.
 | `SettingsMenu` | The header's gear button: `Settings` in a popover (desktop). The mobile menu shows `Settings` directly. |
 | `HouseRuleSettings` | The house-rule switches, inside `Settings`. Each gets a one-line hint saying what "off" means. |
 
+## Error pages: `src/components/Errors/`
+
+Every error is told as a mishap at the table, but the eyebrow keeps the real
+name (`404 · Page not found`) so nobody has to decode the joke. `TableFault`
+renders the dice (`DiceMishap`), the page's PageHeader and the way out;
+`FAULTS` is the catalog: `not-found` (a cocked die and a stacked pair),
+`unknown-game` (400: "Nobody plays that game"), `off-table` (500). A new
+error adds an entry to `FAULTS` (and a `DiceMishap` kind if it needs a new
+picture), proposed for approval like any component. The way out is always
+a primary action (the page they most likely meant, from
+`src/lib/page-match.js`) and a re-roll to a random page.
+
 ## Primitives: `src/components/ui/`
 
 These are shadcn/ui components (JS): Button (and `buttonVariants` for

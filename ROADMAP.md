@@ -197,7 +197,9 @@ Build it once and every later phase gets cheaper.
 | Date | Decision | Notes |
 |---|---|---|
 | 2026-10-22 | Branch per change, semver (major.minor.patch) in package.json and CHANGELOG.md, pull requests merged by the owner into `master` | docs/WORKFLOW.md; CI checks the version bump. Replaces committing straight to master |
+| 2026-10-22 | Owner approves every new component; Claude never flips a status | src/design-system/registry.js, docs/WORKFLOW.md |
 | 2026-10-22 | Darken coral (`pop`) to meet WCAG AA | Light 8 86% 46%; dark keeps the coral with ink text on it |
+| 2026-10-22 | Owner approved `TableFault` and `DiceMishap` (error pages) | registry `approved: '2026-10-22'` |
 | 2026-10-22 | Keep `master` as the default branch (no rename to `main`) | Netlify's production branch stays as it is |
 | 2026-10-22 | The owner approved the 11 components proposed in 1.2.0 | Registry entries carry `approved: '2026-10-22'` |
 | 2026-10-22 | New UI is registered as proposed on the design system site (/design) and approved by the owner before use | Enforced by src/__tests__/design-system.test.ts |
