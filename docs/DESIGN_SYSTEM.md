@@ -180,9 +180,10 @@ caps the content column, **left-aligned**. Pages never set their own
   to Instant, with Realistic in between: a few seconds of thinking per move,
   varied) with a line saying what the chosen speed means, the
   call in its own placard (emoji, name, 1st or 2nd call), an announcer
-  holding the newest move, the others in order of play, and your seat last,
-  docked to the bottom of the screen when it's your move so your buttons
-  stay in thumb reach. The piddle plays out on the same table.
+  holding the newest move, your seat right under it, then the others in
+  order of play. Your seat is never docked over the table: on a phone or a
+  short window a docked seat hid the others. The piddle plays out on the
+  same table.
 
 - `SeatRing`: **the table seen from above** (SVG). Each seat shows a
   chance (of the pencil), tinted better or worse than an even share; your
