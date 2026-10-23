@@ -53,8 +53,11 @@ contains:
    pushes to `master`, without the owner's OK in that conversation: merging
    deploys the site. Use "Squash and merge" so `master` has one commit per
    release, titled with the Conventional Commit and version, e.g.
-   `feat: design system site (1.2.0)`.
-5. Delete the branch after the merge.
+   `feat: design system site (1.2.0)`. Stacked pull requests are the
+   exception: merge them bottom first as merge commits (a squash leaves the
+   next one's commits duplicated), retargeting each next one to `master`
+   (`gh pr edit <n> --base master`) before merging it.
+5. Tag the release (see Versions) and delete the branch after the merge.
 
 ## New UI patterns need approval first
 
