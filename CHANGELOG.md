@@ -29,6 +29,8 @@ bumps the version once and adds its entry here.
 - **Approved** (2026-10-22): ChoiceGroup, TextLink and Term, StepPanel,
   Field and EmptyState, NativeSelect, Transport and SpeedPicker,
   CallPlacard, Setup, GameCard, the game page sections and RollBuilder.
+- **Coral meets AA:** `pop` is darker in light mode (white on it 4.8:1, it
+  on the page 4.7:1, up from 3.55:1); in dark mode text on it is ink (6.2:1).
 - Removed unused components (`RollAnalysis`, the empty `Term`).
 
 ## 1.1.0 (2026-10-22)
