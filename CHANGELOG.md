@@ -8,7 +8,8 @@ bumps the version once and adds its entry here.
 
 - **A 404 page that plays along:** a cocked die and a stacked pair, an
   apology that names the address you asked for, and a way out: the page
-  you most likely meant (a typo like `/rulez` or `/game/10-2`), a re-roll
+  you most likely meant (a typo like `/rulez` or `/game/10-2`, or a page
+  name without its section, like `/1o-2`), a re-roll
   to a random page, or Home.
 - **Unknown games get a 400:** `/games/yahtzee` says "Nobody plays that
   game" and points to the games list (or the game you nearly typed).

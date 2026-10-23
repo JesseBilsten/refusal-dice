@@ -49,8 +49,9 @@ function distance(a, b) {
 
 /**
  * The closest page to `requested`, or null when nothing is close. A small
- * typo wins ('/rules/' for '/rulez'); otherwise the deepest page the
- * address starts with ('/games/' for '/games/yahtzee').
+ * typo wins ('/rules/' for '/rulez'); then a page whose name is a typo away,
+ * whatever section it's in ('/games/10-2/' for '/1o-2'); otherwise the
+ * deepest page the address starts with ('/games/' for '/games/yahtzee').
  */
 export function closestPage(requested, paths) {
   const want = normalizePath(requested)
@@ -63,8 +64,15 @@ export function closestPage(requested, paths) {
   })
   // A typo is a letter or two, and fewer in a short word: 'yahtzee' isn't 'razzle'
   const last = want.split('/').filter(Boolean).pop() || ''
-  if (best && best.d <= Math.max(1, Math.floor(last.length / 4)))
-    return best.path
+  const near = (d) => d <= Math.max(1, Math.floor(last.length / 4))
+  if (best && near(best.d)) return best.path
+  // The page's name without its section: '/1o-2' (or '/10-2') means '/games/10-2/'
+  let named = null
+  pages.forEach((p) => {
+    const d = distance(last, p.split('/').filter(Boolean).pop() || '')
+    if (last && near(d) && (!named || d < named.d)) named = { path: p, d }
+  })
+  if (named) return named.path
   const prefix = pages
     .filter((p) => p !== '/' && want.startsWith(p))
     .sort((a, b) => b.length - a.length)[0]

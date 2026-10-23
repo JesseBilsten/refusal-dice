@@ -40,6 +40,10 @@ test('a small typo finds the page', () => {
   expect(closestPage('/rulez', PATHS)).toBe('/rules/')
   expect(closestPage('/glosary/', PATHS)).toBe('/glossary/')
   expect(closestPage('/game/10-2', PATHS)).toBe('/games/10-2/')
+  // The page's name alone, or typed wrong, without its section
+  expect(closestPage('/1o-2', PATHS)).toBe('/games/10-2/')
+  expect(closestPage('/10-2/', PATHS)).toBe('/games/10-2/')
+  expect(closestPage('/ship-captain-crew', PATHS)).toBe('/games/ship-captain-crew/')
   expect(closestPage('/games/ship-captian-crew', PATHS)).toBe(
     '/games/ship-captain-crew/'
   )
