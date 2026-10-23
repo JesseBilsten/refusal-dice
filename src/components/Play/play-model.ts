@@ -1,11 +1,15 @@
 import {
   Call,
+  Dice,
   GameEvent,
   GameState,
   HouseRules,
   PlayerId,
   Seat,
+  KickerGameId,
   createGame,
+  gameSize,
+  isGameSet,
   seeded,
 } from '../../engine'
 import { botAction } from '../../strategy'
@@ -97,8 +101,8 @@ export function describeEvent(e: GameEvent, names: Names, label: Label): string 
       return `${who} ${v('stand')}.`
     case 'misread':
       return e.dead
-        ? `${who} ${v('show')} the wrong dice with no roll left: no game.`
-        : `${who} ${v('show')} the wrong dice, so ${who === 'You' ? 'you pick' : 'they pick'} them all up and roll five.`
+        ? `${who} ${v('miss', 'misses')} the game with no roll left: no game.`
+        : `${who} ${v('pick')} up all five and ${v('roll')} again.`
     case 'cycle':
       return e.reason === 'tie'
         ? `${list(e.players, names)} tie for the worst hand and play again.`
@@ -233,7 +237,7 @@ export function shortEvent(e: GameEvent, label: Label): string | null {
     case 'stood':
       return 'Stands'
     case 'misread':
-      return e.dead ? 'Wrong dice: no game' : 'Wrong dice: picks up'
+      return e.dead ? 'No game' : 'Rolls all five'
     case 'pencil':
       return e.out ? 'Takes a pencil: out' : 'Takes a pencil'
     default:
@@ -271,4 +275,22 @@ export function tableOrder<S extends Pick<Seat, 'id'>>(seats: S[], first: Player
 /** The piddle, one reveal at a time: each roll (and roll-off), then who holds the Hammer */
 export function piddleSteps(rounds: { player: PlayerId; die: number }[][]): { round: number; done: boolean }[] {
   return [...rounds.map((_, round) => ({ round, done: false })), { round: rounds.length - 1, done: true }]
+}
+
+/**
+ * Hard mode: what the dice you've picked to show say, as you pick them
+ * (ruled 2026-10-22, docs/RULES.md §3.1 "Showing the game"). `picking`
+ * until there are as many as the game needs, then `valid` (show it, then
+ * roll the kicker or stand) or `invalid` ("not a valid game", including too
+ * many dice, like 5-3-2 for 10-2: fix the pick, or roll all five).
+ */
+export function showCheck(
+  dice: Dice,
+  showing: number[],
+  game: KickerGameId,
+  kept: number[] = []
+): 'picking' | 'valid' | 'invalid' {
+  if (showing.length < gameSize(game)) return 'picking'
+  if (showing.length > gameSize(game)) return 'invalid'
+  return isGameSet(dice, showing, game, kept) ? 'valid' : 'invalid'
 }
