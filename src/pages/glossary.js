@@ -461,7 +461,8 @@ const GLOSSARY_TERMS = [
         </p>
         <p className="text-sm text-muted-foreground">
           <strong>Usage:</strong> "That one's cocked, roll it again"<br/>
-          <strong>See also:</strong> <TextLink to="#stacked-dice">Stacked Dice</TextLink>
+          <strong>See also:</strong> <TextLink to="#stacked-dice">Stacked Dice</TextLink>,{' '}
+          <TextLink to="#off-the-table">Off the Table</TextLink>
         </p>
       </>
     ),
@@ -480,6 +481,26 @@ const GLOSSARY_TERMS = [
         <p className="text-sm text-muted-foreground">
           <strong>Usage:</strong> "Stacked! Roll them again"<br/>
           <strong>See also:</strong> <TextLink to="#cocked-die">Cocked Die</TextLink>
+        </p>
+      </>
+    ),
+  },
+  {
+    id: 'off-the-table',
+    term: 'Off the Table',
+    emoji: '🫳',
+    keywords: ['off the table', 'floor', 'dropped', 'fell', 'rolled off', 're-roll'],
+    body: (
+      <>
+        <p className="mb-2">
+          A die that rolls off the table (onto the floor, a lap or the next table over)
+          doesn't count. Pick it up and re-roll it, like a{' '}
+          <TextLink to="#cocked-die">cocked die</TextLink>.
+        </p>
+        <p className="text-sm text-muted-foreground">
+          <strong>Usage:</strong> "Off the table, that one's a re-roll"<br/>
+          <strong>See also:</strong> <TextLink to="#cocked-die">Cocked Die</TextLink>,{' '}
+          <TextLink to="#stacked-dice">Stacked Dice</TextLink>
         </p>
       </>
     ),

@@ -32,7 +32,7 @@
     --color-felt: 158 52% 24%;            /* the table */
     --color-felt-foreground: 45 90% 92%;
     --color-dice: 45 97% 82%;             /* the dice (#fee9a5) */
-    --color-pop: 8 86% 58%;               /* a playful highlight, used sparingly */
+    --color-pop: 8 86% 46%;               /* a playful highlight, used sparingly; white on it is 4.8:1 (AA) */
     --color-pop-foreground: 0 0% 100%;
     /* Dice: the face's edge and Michigan Red-Eye pips (1 and 6 dark, 2 and 5 red, 3 and 4 blue) */
     --color-dice-edge: 0 0% 4%;
@@ -105,7 +105,7 @@
     --color-felt-foreground: 45 90% 92%;
     --color-dice: 45 97% 82%;
     --color-pop: 8 90% 64%;
-    --color-pop-foreground: 0 0% 100%;
+    --color-pop-foreground: 222 28% 8%;  /* ink on the light coral: 6.2:1 (white would be 3.0) */
     
     /* Rarity colors - Dark mode with WCAG-compliant backgrounds */
     --color-legendary: 280 60% 15%;  /* Muted purple background */

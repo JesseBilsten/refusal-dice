@@ -359,5 +359,3 @@ you work on that page:
 - **Single-choice controls:** `PlayersPicker` (BarkOdds) and
   `VariantSelector` are their own segmented controls; fold them into
   `ChoiceGroup` or `ToggleGroup` once those are approved.
-- **Coral contrast:** white text on `pop` is 3.55:1, which passes for large
-  text only (`/design/color/`). Keep pop text large and bold, or darken pop.

@@ -191,8 +191,6 @@ Build it once and every later phase gets cheaper.
 2. **Player counts:** support 2–8 everywhere? (The 2-player tie rule already differs.)
 3. **Accounts:** confirm AI play works fully signed-out, with accounts required only for online play.
 4. **Money:** do we track the pot/ante in online games, or only pencils?
-5. **Approve `TableFault` and `DiceMishap`?** The 404/400 error pages (PR #9) use them; the approval test (and #9's CI) stays red until then. See `/design/table-fault/`, `/design/dice-mishap/`. Asked 2026-10-22. Recommend: approve.
-6. **Pop color contrast:** white on `pop` is 3.55:1 (AA for large text only). Darken `pop` or keep it for large text and icons only? Asked 2026-10-22 (docs/DESIGN_SYSTEM.md known one-offs).
 
 ## Decision log
 
@@ -200,6 +198,8 @@ Build it once and every later phase gets cheaper.
 |---|---|---|
 | 2026-10-22 | Branch per change, semver (major.minor.patch) in package.json and CHANGELOG.md, pull requests merged by the owner into `master` | docs/WORKFLOW.md; CI checks the version bump. Replaces committing straight to master |
 | 2026-10-22 | Owner approves every new component; Claude never flips a status | src/design-system/registry.js, docs/WORKFLOW.md |
+| 2026-10-22 | Darken coral (`pop`) to meet WCAG AA | Light 8 86% 46%; dark keeps the coral with ink text on it |
+| 2026-10-22 | Owner approved `TableFault` and `DiceMishap` (error pages) | registry `approved: '2026-10-22'` |
 | 2026-10-22 | Keep `master` as the default branch (no rename to `main`) | Netlify's production branch stays as it is |
 | 2026-10-22 | The owner approved the 11 components proposed in 1.2.0 | Registry entries carry `approved: '2026-10-22'` |
 | 2026-10-22 | New UI is registered as proposed on the design system site (/design) and approved by the owner before use | Enforced by src/__tests__/design-system.test.ts |

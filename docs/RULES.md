@@ -14,7 +14,7 @@ Each rule is tagged by where it came from:
 
 - 2–8 players, 5 dice each, ante into a pot (amount and whether it's played for money are house rules). [site]
 - **Piddle:** everyone rolls one die; highest roll takes the **Hammer**; ties re-roll. [site]
-- **Cocked or stacked dice don't count.** A die that doesn't land flat (leaning on the cup, a die or the table edge) or lands on top of another is re-rolled; for stacked dice, both are. Only matters at a real table: the engine's dice always land flat. [inferred]
+- **Cocked, stacked or off the table: re-roll** (ruled 2026-10-22). A die that doesn't land flat (leaning on the cup, a die or the table edge), lands on top of another, or leaves the table doesn't count and is re-rolled; for stacked dice, both are. Only matters at a real table: the engine's dice always land flat. [confirmed]
 - Each player starts with 0 **pencils**. 3 pencils = out. Last player standing wins the pot. [site]
 
 ## 2. A round
@@ -151,7 +151,7 @@ Engine choices made without a ruling yet (the engine does the [inferred] thing u
 4. **Tied at the bottom: who rolls first?** [inferred: the tied player nearest the Hammer, going left; they can't take the tie while another tied player can still roll]
 5. **Boss "come up": strict order?** [inferred: the engine enforces order from the Boss's left, since in online play waiting can be an advantage]
 6. **Making the game: all at once, or in order?** Everyone who missed rolls at the same time for now (ruled 2026-10-21, §3.1); rolling one at a time from the Hammer's left would also be correct. Asking players which feels better.
-7. **Cocked and stacked dice:** re-rolled, as the Glossary says? And a die off the table? [inferred: cocked and stacked dice are re-rolled; off the table not ruled]
+7. ~~**Cocked and stacked dice**~~: re-rolled, and so is a die off the table (ruled 2026-10-22, §1).
 8. **Showing the wrong dice (hard mode):** a misread now means picking up all five and re-rolling, using a roll (§3.1 "Showing the game"). Keep that, let the player correct the show without penalty, or re-roll only the dice shown? Asked 2026-10-22, not answered yet. [current: pick up all five]
 
 ## Resolved questions (2026-10-14)

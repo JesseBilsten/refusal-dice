@@ -14,9 +14,9 @@ bumps the version once and adds its entry here.
   game" and points to the games list (or the game you nearly typed).
 - **Error pages as table mishaps:** `TableFault` and its catalog (404 cocked,
   400 unknown game, 500 dice off the table) and `DiceMishap` for the
-  pictures; both proposed on `/design` for approval.
-- **Glossary:** Cocked Die and Stacked Dice (and in docs/RULES.md, marked
-  inferred until confirmed).
+  pictures; approved by the owner 2026-10-22.
+- **Glossary:** Cocked Die, Stacked Dice and Off the Table: each is
+  re-rolled (ruled 2026-10-22, docs/RULES.md §1).
 
 ## 1.2.0 (unreleased)
 
@@ -43,6 +43,8 @@ bumps the version once and adds its entry here.
 - **Approved** (2026-10-22): ChoiceGroup, TextLink and Term, StepPanel,
   Field and EmptyState, NativeSelect, Transport and SpeedPicker,
   CallPlacard, Setup, GameCard, the game page sections and RollBuilder.
+- **Coral meets AA:** `pop` is darker in light mode (white on it 4.8:1, it
+  on the page 4.7:1, up from 3.55:1); in dark mode text on it is ink (6.2:1).
 - Removed unused components (`RollAnalysis`, the empty `Term`).
 
 ## 1.1.0 (2026-10-22)
