@@ -152,6 +152,7 @@ Engine choices made without a ruling yet (the engine does the [inferred] thing u
 5. **Boss "come up": strict order?** [inferred: the engine enforces order from the Boss's left, since in online play waiting can be an advantage]
 6. **Making the game: all at once, or in order?** Everyone who missed rolls at the same time for now (ruled 2026-10-21, §3.1); rolling one at a time from the Hammer's left would also be correct. Asking players which feels better.
 7. **Cocked and stacked dice:** re-rolled, as the Glossary says? And a die off the table? [inferred: cocked and stacked dice are re-rolled; off the table not ruled]
+8. **Showing the wrong dice (hard mode):** a misread now means picking up all five and re-rolling, using a roll (§3.1 "Showing the game"). Keep that, let the player correct the show without penalty, or re-roll only the dice shown? Asked 2026-10-22, not answered yet. [current: pick up all five]
 
 ## Resolved questions (2026-10-14)
 
