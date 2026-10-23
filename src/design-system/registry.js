@@ -735,7 +735,7 @@ const DOCS = [
     'Play',
     'components/Play/index.jsx',
     ['Play'],
-    'Full games against bots: the felt, the call, the seats, your move docked within thumb reach.',
+    'Full games against bots: the felt, the call, the seats, your seat right under the call.',
     { liveAt: '/play' }
   ),
   pat(

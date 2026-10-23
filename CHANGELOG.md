@@ -4,6 +4,13 @@ Every release of refusaldice.com, newest first. Versions are
 major.minor.patch ([docs/WORKFLOW.md](docs/WORKFLOW.md)): each pull request
 bumps the version once and adds its entry here.
 
+## 1.4.1 (unreleased)
+
+- **Your seat no longer covers the table:** in Play your seat sits right
+  under the call and the latest move, with the others below it. It used to
+  dock to the bottom of the screen on your turn, which on a phone, a tablet
+  or a short window hid the seats behind it.
+
 ## 1.4.0 (unreleased)
 
 - **Hard mode checks your pick as you make it** (ruled 2026-10-22): pick dice

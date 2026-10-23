@@ -1154,7 +1154,7 @@ export default function Play({ intro }) {
           )}
         </aside>
 
-        {/* The table: the controls, the call, what just happened, the others in order of play, then you */}
+        {/* The table: the controls, the call, what just happened, you, then the others in order of play */}
         <TableFelt className="space-y-3 self-start overflow-visible lg:col-start-1 lg:row-start-1">
           <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 text-felt-foreground">
             <div className="font-display text-lg font-bold">{dealt ? `Round ${game.round}` : 'The piddle'}</div>
@@ -1201,14 +1201,15 @@ export default function Play({ intro }) {
             )}
           </div>
 
-          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">{others.map((s) => renderSeat(s, { compact: true }))}</div>
-
-          {/* Your seat, docked to the bottom of the screen when it's your move: your dice and buttons in thumb reach */}
-          <div className={cn((moveInSeat || (controls && meOut)) && 'sticky bottom-2 z-10')}>
+          {/* Your seat, right under the call and the news: your dice and buttons always in the same place, never
+              covering anyone (a seat docked to the bottom of the screen hid the others on phones and short windows) */}
+          <div>
             {renderSeat(you)}
             {/* Out of the game: the table's actions sit in your place */}
             {controls && meOut && <div className="mt-2 rounded-xl border bg-card p-3 shadow-lg">{move}</div>}
           </div>
+
+          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">{others.map((s) => renderSeat(s, { compact: true }))}</div>
         </TableFelt>
       </div>
 

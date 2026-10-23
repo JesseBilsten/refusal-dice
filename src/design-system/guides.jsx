@@ -599,7 +599,7 @@ function LayoutDoc() {
             [
               '0',
               'phone',
-              'One column. Your move docks to the bottom in Play. 16px gutters.',
+              'One column. Your seat comes right after the call in Play. 16px gutters.',
             ],
             ['640px', 'sm', 'Two-column grids; headings grow.'],
             ['768px', 'md', 'The header shows the full navigation.'],
@@ -692,7 +692,7 @@ function Shape() {
           {[
             ['shadow-sm', 'Panels, cards and seats at rest'],
             ['shadow-md', 'Something lifted: a hovered card, the call placard'],
-            ['shadow-lg', 'Your seat docked over the table in Play'],
+            ['shadow-lg', 'The table’s actions in your place once you’re out, in Play'],
           ].map(([cls, use]) => (
             <div key={cls} className={`rounded-xl border bg-card p-4 ${cls}`}>
               <Code>{cls}</Code>
