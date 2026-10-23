@@ -2,13 +2,37 @@
 
 Every repeated piece of UI on Refusal Dice comes from one shared component,
 so changing that component changes it everywhere. Before building UI, look
-here for an existing piece. If you need something new that will appear
-twice or more, add it to the right kit and list it here.
+here for an existing piece.
 
-**See it live at `/design`** (not in the navigation): every piece below,
-in light and dark mode. `src/__tests__/design-system.test.ts` fails on
-raw palette colors, pages that set their own width, pages without a
-`PageHeader`, any use of `ui/card` (use `Panel`), local copies of the game list and `@/` imports.
+**See it live at `/design`** (linked from the footer): a site modelled on
+Ant Design and Material, with a sidebar of **Overview** (introduction,
+principles, proposing a pattern), **Foundations** (color, typography,
+layout and spacing, shape and elevation, motion, icons and emoji, writing
+style, accessibility, the theme playground), **Components** (General,
+Layout, Navigation, Data entry, Data display, Dice, Table, Odds, Feedback)
+and **Patterns** (whole features). Each piece has its own page at
+`/design/<id>/` with its status, source and live examples.
+
+- **The registry** (`src/design-system/registry.js`) lists every
+  component file and its status: *approved* (use it anywhere), *proposed*
+  (shown on the design system for review; only the design system may use
+  it) or *deprecated* (nothing may import it). It drives the site and the
+  tests.
+- **New patterns are approved before they're used.** Register a new piece
+  as proposed with a live example (`src/design-system/examples.jsx`); the
+  site owner approves it, and only then is it set to approved. The steps
+  are in [WORKFLOW.md](WORKFLOW.md) and on `/design/contributing/`.
+- **The theme playground** (`/design/theming/`) tries colors, fonts,
+  heading sizes and radius live, without a rebuild, and gives the CSS to
+  keep.
+- **The tests** (`src/__tests__/design-system.test.ts`) fail on: an
+  unregistered component file; a proposed or deprecated component used
+  outside the design system; a component with no live example or page; a
+  page or template that defines its own component or renders a raw button,
+  input, select or table; raw palette or hex colors; arbitrary text sizes
+  or sizes above 2xl; headings without a type role; pages that set their
+  own width or have no `PageHeader`; `ui/card`; local copies of the game
+  list; `@/` imports; and copy that says "click" or misspells a game.
 
 ## The story the site tells
 
@@ -25,7 +49,12 @@ Pages are ordered as a path, and link forward along it:
 5. **Play** (`/play`): full games against bots, with hints and Odds Lab
    links for your exact situation.
 
-The home page tells a round as an animated story and lays out this path.
+The navigation groups these as **Learn the game** (Learn, Rules, Games,
+Glossary), **Get better** (Odds Lab, Strategy) and **Play**, in the header,
+the mobile menu and the footer's site map (`nav-items.js`, `NAV_GROUPS`).
+Each page's `NextStep` leads to the next stop: Learn → Rules → Games →
+Odds Lab → Strategy → Play. The home page tells a round as an animated
+story and lays out the path.
 
 ## Foundations
 
@@ -45,9 +74,22 @@ The home page tells a round as an animated story and lays out this path.
     `bg-odds-lose/15`.
   - Rarity: `legendary`, `epic`, `rare`, `uncommon`, `common`.
 - **Type:** Bricolage Grotesque for headings (`font-display`, applied to
-  h1–h3 automatically), Inter for everything else. Running text is capped
-  at 70 characters (`p { max-width: 70ch }`) so lines stay readable at any
-  width.
+  h1–h3 automatically), Inter for everything else; both are CSS variables
+  (`--font-display`, `--font-sans`). Running text is capped at 70
+  characters (`p { max-width: 70ch }`).
+  - **Heading roles:** every heading uses one: `text-display` (the home
+    headline), `text-title` (each page's h1), `text-section` (h2 between
+    panels), `text-heading` (Panel titles), `text-subheading` (h3, note
+    titles). Sizes are CSS variables (`--fs-*`) that grow at `sm`.
+  - **Text sizes:** `text-2xs` (10px, dice-group labels only), `xs`, `sm`,
+    `base`, `lg`, `xl`, `2xl`. Nothing larger outside the roles, and no
+    arbitrary sizes.
+  - **Eyebrow:** `eyebrow` is the small uppercase label ("Next", "1st
+    call", footer groups); add a color class.
+- **Writing:** plain words, the table's terms, "tap" not "click", sentence
+  case, curly quotes, en dashes for ranges, game names from games-config
+  ("Ship, Captain, Crew"), and every number computed with its source
+  stated. The full guide is `/design/writing/`.
 - **Radius:** `rounded-lg`, `rounded-md`, `rounded-sm` (tokens); panels and
   cards `rounded-xl`, home cards `rounded-2xl`. Dice use `rounded-[22%]`.
 - **Motion:** short and purposeful (dice tumbles, a pop-in). Everything
@@ -86,12 +128,24 @@ caps the content column, **left-aligned**. Pages never set their own
   link, or a button that collapses the panel). Never nest panels: inside
   one, group with a heading, a divider, a `Stat` or a plain
   `rounded-lg border bg-background` box (the roll builder's patterns).
-- `Stat`: a headline number with its label.
+- `Stat`: a headline number with its label; `plain` drops the card for a
+  row of figures inside a Panel.
+- `StepPanel`: one numbered step, a Panel titled with its
+  StepNumber (the Rules page's round).
+- `Field` and `EmptyState`: a labelled control with a hint;
+  the dashed box where a result will appear.
+- `ChoiceGroup`: pick one of a few options, as a labelled row
+  of Chips with radio semantics; `size="lg"` for 44px targets.
+- `TextLink` and `Term`: a link in running text; `Term` links
+  a game term to the Glossary.
+- `Panel collapsible`: the title becomes a button that shows or hides the
+  content; `badge` sits after the title.
 - `PageTabs` (+ `tabFromUrl`): top-level tools on one page, kept in
   `?tab=`. Only the chosen tab renders.
 - `NextStep`: the next stop on the path, at the foot of a page.
 - `Chip`: a tappable choice (a game, a count, an example question);
-  `active` makes a row of chips a segmented control.
+  `active` makes a row of chips a segmented control; `to` makes it a link
+  that looks the same.
 
 ## Table: `src/components/Table/`
 
@@ -158,8 +212,10 @@ lone 3 or 4 keep.
 
 These are shadcn/ui components (JS): Button (and `buttonVariants` for
 links), Badge, Card (kept for shadcn; use `Panel`), Table, Dialog, Sheet, Popover, Tooltip, Tabs, ToggleGroup,
-Switch, Slider, Select, Input, Label, Alert. Add new primitives with the
-shadcn CLI.
+Switch, Slider, Select, Input, Label, Alert, and `NativeSelect`,
+the one dropdown, a native select. Card, Tabs and Select are
+deprecated (use Panel, PageTabs and NativeSelect). Add new primitives with
+the shadcn CLI, then register them.
 
 ## Dice kit: `src/components/Dice/`
 
@@ -285,12 +341,9 @@ accept-or-refuse decision (`RefusalDecision`).
 These predate the design system. Move each onto a kit piece the next time
 you work on that page:
 
-- **Percent formatting** is duplicated: `pct` in `OddsLab/RollGrid.jsx`, `formatPct` in `odds-lab.js`, `fmtPct` in
-  `games-config.js`. Use `fmtPct` from the Odds kit.
-- **Glossary links:**
-  - `Term` is an empty wrapper.
-  - The tutorial's local `T` link is the real pattern; make it the shared
-    `Term`.
-- **Duplicate strength meter:** `StrengthBar` and `CallList` in
-  `RollAnalysis.jsx` are a separate strength meter. Decide whether it
-  belongs in the Odds kit.
+- **Percent formatting:** `formatPct` in `OddsLab/RollBuilder.jsx` (adaptive
+  precision for tiny chances) and `pct` in `OddsLab/RollGrid.jsx` duplicate
+  `fmtPct`. Give `fmtPct` an adaptive mode in the Odds kit and use it.
+- **Single-choice controls:** `PlayersPicker` (BarkOdds) and
+  `VariantSelector` are their own segmented controls; fold them into
+  `ChoiceGroup` or `ToggleGroup` once those are approved.

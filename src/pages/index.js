@@ -35,7 +35,7 @@ const PATH = [
     step: 3,
     icon: FlaskConical,
     title: 'Settle the arguments',
-    text: 'Hold the 6 in Boss, or roll all five? Keep the 1-6 or the 5-6 in 7’s? The Odds Lab works it out exactly.',
+    text: 'Hold the 6 in Boss, or roll all five? The Odds Lab works it out exactly, and the Strategy Assistant says what to call with your roll.',
     to: '/odds-lab/',
     cta: 'Ask the Odds Lab',
   },
@@ -55,10 +55,10 @@ const IndexPage = () => (
     <Container as="section" width="wide" className="py-10 sm:py-16">
       <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:gap-16">
         <div>
-          <p className="mb-3 text-sm font-semibold uppercase tracking-wide text-primary">
+          <p className="eyebrow mb-3 text-sm text-primary">
             The bar dice game for 2–8 players
           </p>
-          <h1 className="mb-5 font-display text-5xl font-extrabold leading-[1.05] tracking-tight sm:text-6xl lg:text-7xl">
+          <h1 className="mb-5 text-display">
             Roll. Call.
             <br />
             <span className="relative inline-block text-pop">
@@ -99,8 +99,8 @@ const IndexPage = () => (
     {/* ─── The path ─── */}
     <section className="border-y bg-muted/40 py-12 sm:py-16">
       <Container width="wide">
-        <h2 className="mb-2 text-3xl font-bold tracking-tight">From first roll to sharp player</h2>
-        <p className="mb-8 text-muted-foreground">Four stops. Start wherever you are.</p>
+        <h2 className="mb-2 text-section">From first roll to sharp player</h2>
+        <p className="mb-8 text-muted-foreground">Four stops, the same as the menu. Start wherever you are.</p>
         <ol className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {PATH.map((p) => (
             <li key={p.step}>
@@ -126,7 +126,7 @@ const IndexPage = () => (
 
     {/* ─── The games ─── */}
     <Container as="section" width="wide" className="py-12 sm:py-16">
-      <h2 className="mb-2 text-3xl font-bold tracking-tight">Ten games, one roll</h2>
+      <h2 className="mb-2 text-section">Ten games, one roll</h2>
       <p className="mb-8 text-muted-foreground">
         The Hammer picks which game everyone plays, after seeing their own dice. Knowing them all is half the fun.
       </p>

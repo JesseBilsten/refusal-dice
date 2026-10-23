@@ -3,7 +3,9 @@ module.exports = {
   darkMode: 'class',
   content: [
     './src/pages/**/*.{js,jsx,ts,tsx}',
+    './src/templates/**/*.{js,jsx,ts,tsx}',
     './src/components/**/*.{js,jsx,ts,tsx}',
+    './src/design-system/**/*.{js,jsx,ts,tsx}',
   ],
   theme: {
     extend: {
@@ -72,7 +74,15 @@ module.exports = {
           DEFAULT: 'hsl(var(--color-felt) / <alpha-value>)',
           foreground: 'hsl(var(--color-felt-foreground))',
         },
-        dice: 'hsl(var(--color-dice) / <alpha-value>)',
+        dice: {
+          DEFAULT: 'hsl(var(--color-dice) / <alpha-value>)',
+          edge: 'hsl(var(--color-dice-edge) / <alpha-value>)',
+        },
+        pip: {
+          dark: 'hsl(var(--color-pip-dark) / <alpha-value>)',
+          red: 'hsl(var(--color-pip-red) / <alpha-value>)',
+          blue: 'hsl(var(--color-pip-blue) / <alpha-value>)',
+        },
         pop: {
           DEFAULT: 'hsl(var(--color-pop) / <alpha-value>)',
           foreground: 'hsl(var(--color-pop-foreground))',
@@ -83,9 +93,20 @@ module.exports = {
           border: 'hsl(var(--color-common-border))',
         },
       },
+      // Families are CSS variables so the theme playground can swap them live
       fontFamily: {
-        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        display: ['"Bricolage Grotesque"', 'Inter', 'ui-sans-serif', 'sans-serif'],
+        sans: ['var(--font-sans)'],
+        display: ['var(--font-display)'],
+      },
+      // The type scale (docs/DESIGN_SYSTEM.md, Typography): Tailwind's xs–2xl for text,
+      // 2xs for dice labels, and named roles for headings (sizes in global.css)
+      fontSize: {
+        '2xs': ['0.625rem', { lineHeight: '0.875rem' }],
+        display: ['var(--fs-display)', { lineHeight: '1.05', letterSpacing: '-0.02em', fontWeight: '800' }],
+        title: ['var(--fs-title)', { lineHeight: '1.15', letterSpacing: '-0.015em', fontWeight: '700' }],
+        section: ['var(--fs-section)', { lineHeight: '1.2', letterSpacing: '-0.01em', fontWeight: '700' }],
+        heading: ['var(--fs-heading)', { lineHeight: '1.3', fontWeight: '600' }],
+        subheading: ['var(--fs-subheading)', { lineHeight: '1.4', fontWeight: '600' }],
       },
       borderRadius: {
         lg: 'var(--radius-lg)',

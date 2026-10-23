@@ -43,7 +43,7 @@ export default function DiceGroup({
       {showLabel && (
         <span
           className={cn(
-            'rounded-b-md px-1.5 py-0.5 text-[10px] font-semibold uppercase leading-none tracking-wide',
+            'rounded-b-md px-1.5 py-0.5 text-2xs font-semibold uppercase leading-none tracking-wide',
             tone === 'game' && 'bg-primary text-primary-foreground',
             tone === 'kicker' && 'bg-muted text-muted-foreground',
             tone === 'plain' && 'text-muted-foreground'

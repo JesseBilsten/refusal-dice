@@ -5,8 +5,8 @@ const Alert = React.forwardRef(({ className, variant = "default", ...props }, re
   const variants = {
     default: "bg-background text-foreground border border-border",
     destructive: "border-destructive/50 text-destructive dark:border-destructive [&>svg]:text-destructive",
-    warning: "bg-yellow-50 dark:bg-yellow-950 text-yellow-900 dark:text-yellow-50 border-yellow-200 dark:border-yellow-800",
-    success: "bg-green-50 dark:bg-green-950 text-green-900 dark:text-green-50 border-green-200 dark:border-green-800",
+    warning: "border-odds-coin/50 bg-odds-coin/10 text-foreground",
+    success: "border-odds-safe/50 bg-odds-safe/10 text-foreground",
     muted: "bg-muted text-foreground",
     accent: "bg-accent/30 dark:bg-accent/20 text-foreground",
   }
@@ -27,10 +27,9 @@ const Alert = React.forwardRef(({ className, variant = "default", ...props }, re
 Alert.displayName = "Alert"
 
 const AlertTitle = React.forwardRef(({ className, ...props }, ref) => (
-  // eslint-disable-next-line jsx-a11y/heading-has-content
-  <h5
+  <p
     ref={ref}
-    className={cn("mb-1 font-medium leading-none tracking-tight", className)}
+    className={cn("mb-1 font-semibold leading-none tracking-tight", className)}
     {...props}
   />
 ))

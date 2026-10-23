@@ -43,7 +43,7 @@ export default function OutcomeGrid({ title, classify, kinds }) {
                 aria-hidden
                 title={`${c.a}+${c.b} = ${c.sum}`}
                 className={cn(
-                  'flex aspect-square flex-col items-center justify-center rounded-sm border text-[10px] leading-none tabular-nums',
+                  'flex aspect-square flex-col items-center justify-center rounded-sm border text-2xs leading-none tabular-nums',
                   TINT[k.kind]
                 )}
               >

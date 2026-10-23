@@ -1,36 +1,13 @@
 import React from 'react'
-import { Link } from 'gatsby'
 import Layout from '../components/layout'
-import Page, { PageHeader, NextStep, Panel, StepNumber } from '../components/Page'
+import Page, { PageHeader, NextStep, Panel, StepPanel, TextLink } from '../components/Page'
 import { Hand } from '../components/Dice'
 import GameLink from '../components/GameLink'
 import SeatRing from '../components/Table/SeatRing'
 import { Disclosure } from '../components/Odds'
 
-/** A step of the round: a Panel titled with its number */
-const Step = ({ n, title, id, children }) => (
-  <Panel
-    id={id}
-    className="scroll-mt-20"
-    title={
-      <span className="flex items-center gap-3">
-        <StepNumber n={n} />
-        {title}
-      </span>
-    }
-  >
-    <div className="space-y-3">{children}</div>
-  </Panel>
-)
-
 /** Where the refusals sit: the Hammer, then each seat to their left */
 const REFUSAL_SEATS = [{ text: '🔨' }, { text: '1st' }, { text: '2nd' }, { text: '' }]
-
-const L = ({ to, children }) => (
-  <Link to={to} className="text-primary hover:underline">
-    {children}
-  </Link>
-)
 
 const RulesPage = () => (
   <Layout>
@@ -40,7 +17,7 @@ const RulesPage = () => (
       <Panel tone="note" as="div" className="mb-8">
         <p>
           Roll → call a game → others accept or refuse → everyone gets up to 3 rolls to make it → the worst hand
-          takes a <L to="/glossary#pencil">pencil</L>. 3 pencils and you’re out. The last player standing wins.
+          takes a <TextLink to="/glossary#pencil">pencil</TextLink>. 3 pencils and you’re out. The last player standing wins.
         </p>
       </Panel>
 
@@ -73,41 +50,41 @@ const RulesPage = () => (
           </p>
           <p className="mb-3">
             <strong>Who goes first?</strong> Everyone rolls one die, and the highest roll gets the{' '}
-            <L to="/glossary#hammer">Hammer</L>. A tie for the highest rolls again. This is the{' '}
-            <L to="/glossary#piddle">piddle</L>.
+            <TextLink to="/glossary#hammer">Hammer</TextLink>. A tie for the highest rolls again. This is the{' '}
+            <TextLink to="/glossary#piddle">piddle</TextLink>.
           </p>
           <p className="text-sm text-muted-foreground">
-            <strong>Variation:</strong> some groups add $5 at <L to="/glossary#parity">parity</L> (when every
+            <strong>Variation:</strong> some groups add $5 at <TextLink to="/glossary#parity">parity</TextLink> (when every
             remaining player has 2 pencils).
           </p>
         </Disclosure>
       </div>
 
-      <h2 className="mb-4 text-xl font-bold">Each round</h2>
+      <h2 className="mb-4 text-section">Each round</h2>
 
       <div className="space-y-4">
-        <Step n={1} title="Roll" id="roll">
+        <StepPanel n={1} title="Roll" id="roll">
           <p>
-            The Hammer says <L to="/glossary#coming-out">“coming out”</L>, then everyone rolls all 5 dice and{' '}
+            The Hammer says <TextLink to="/glossary#coming-out">“coming out”</TextLink>, then everyone rolls all 5 dice and{' '}
             <strong>hides</strong> them from the other players.
           </p>
-        </Step>
+        </StepPanel>
 
-        <Step n={2} title="The Hammer calls a game" id="call">
+        <StepPanel n={2} title="The Hammer calls a game" id="call">
           <p>
-            The <L to="/glossary#hammer">Hammer</L> looks at their dice and names the <L to="/games">game</L>{' '}
+            The <TextLink to="/glossary#hammer">Hammer</TextLink> looks at their dice and names the <TextLink to="/games">game</TextLink>{' '}
             everyone will play, including High or Low for the kicker games.
           </p>
           <p>
             <strong>
-              Or <L to="/glossary#bark">bark</L>:
+              Or <TextLink to="/glossary#bark">bark</TextLink>:
             </strong>{' '}
             the Hammer passes left, everyone picks up their dice, and a new round starts.{' '}
-            <L to="/games/#barking">What a bark is worth</L>
+            <TextLink to="/games/#barking">What a bark is worth</TextLink>
           </p>
-        </Step>
+        </StepPanel>
 
-        <Step n={3} title="Refusal" id="refusal">
+        <StepPanel n={3} title="Refusal" id="refusal">
           <p>
             Two players can turn the call down. If either one accepts, everyone plays it. If both refuse, the
             Hammer must call a different game.
@@ -138,14 +115,14 @@ const RulesPage = () => (
             <strong>If you refuse but the other player accepts, you still play.</strong> Refusing doesn’t mean
             re-rolling: everyone keeps the dice they have.
           </p>
-          <h3 className="pt-1 font-semibold">Second call</h3>
+          <h3 className="pt-1 text-subheading">Second call</h3>
           <p>
             It must be a <strong>different game</strong>, not just the other High or Low. Nobody can refuse it, and
             your first roll still counts as roll 1.
           </p>
-        </Step>
+        </StepPanel>
 
-        <Step n={4} title="Play the game" id="play">
+        <StepPanel n={4} title="Play the game" id="play">
           <p>
             Everyone’s dice are now face up. Each player gets <strong>up to 3 rolls</strong>, and the roll they
             already have counts as the first.
@@ -169,7 +146,7 @@ const RulesPage = () => (
                   five each time.
                 </li>
                 <li>
-                  <strong>Ship Captain Crew:</strong> 1-2 or 5-6, not both.
+                  <strong>Ship, Captain, Crew:</strong> 1-2 or 5-6, not both.
                 </li>
                 <li>
                   <strong>Monterey:</strong> 2-3, 3-4 or 4-5 (some tables allow a lone 3 or 4).
@@ -189,7 +166,7 @@ const RulesPage = () => (
               in 10-2 you can’t pick up your 5-5 and roll it again.
             </li>
             <li>
-              Try to <strong>make the game</strong>, then improve your <L to="/glossary#kicker">kicker</L>: all the
+              Try to <strong>make the game</strong>, then improve your <TextLink to="/glossary#kicker">kicker</TextLink>: all the
               dice that aren’t part of the game.
             </li>
             <li>
@@ -199,12 +176,12 @@ const RulesPage = () => (
             </li>
             <li>You only ever roll to get off the bottom: beat the next-worst hand and your turn ends.</li>
             <li>
-              Out of rolls is <L to="/glossary#all-day">all day</L>: that hand is final. Anyone already better than a
-              hand that’s all day is <L to="/glossary#in-the-cup">in the cup</L>: safe, with nothing left to do this
+              Out of rolls is <TextLink to="/glossary#all-day">all day</TextLink>: that hand is final. Anyone already better than a
+              hand that’s all day is <TextLink to="/glossary#in-the-cup">in the cup</TextLink>: safe, with nothing left to do this
               round.
             </li>
           </ul>
-          <h3 className="pt-1 font-semibold">Example: 10-3 High</h3>
+          <h3 className="pt-1 text-subheading">Example: 10-3 High</h3>
           <Hand dice={[1, 3, 6, 2, 4]} game="10-3" variant="high" />
           <p className="text-sm text-muted-foreground">
             The 1, 3 and 6 make 10, so you have the game, with a kicker of 2+4 = 6. Keep the 1, 3 and 6 and re-roll
@@ -233,9 +210,9 @@ const RulesPage = () => (
               </li>
             </ul>
           </Disclosure>
-        </Step>
+        </StepPanel>
 
-        <Step n={5} title="Find the loser" id="score">
+        <StepPanel n={5} title="Find the loser" id="score">
           <ul className="divide-y border-y">
             <li className="py-3">
               <strong>Missed the game?</strong> Missing is the worst hand. If you’re the only one who missed, you
@@ -255,11 +232,11 @@ const RulesPage = () => (
               until you’re out of rolls.
             </li>
             <li className="py-3">
-              The loser takes a <L to="/glossary#pencil">pencil</L> and becomes the next Hammer.{' '}
+              The loser takes a <TextLink to="/glossary#pencil">pencil</TextLink> and becomes the next Hammer.{' '}
               <strong>3 pencils and you’re out</strong>, and the Hammer skips you.
             </li>
           </ul>
-        </Step>
+        </StepPanel>
       </div>
 
       <p className="mt-8 font-display text-lg font-bold">Repeat until one player remains: they win the pot.</p>

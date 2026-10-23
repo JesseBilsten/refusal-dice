@@ -5,7 +5,8 @@ import { CALLABLE_GAMES, getGameName } from '../../lib/games-config'
 import { cn } from '../../lib/utils'
 import { COUNT_WORDS, DiceGroup, Hand, RollInput, razzleName } from '../Dice'
 import { Disclosure, OddsDecision, Questions, fmtPct } from '../Odds'
-import { Chip, Panel } from '../Page'
+import { Chip, EmptyState, Field, Panel } from '../Page'
+import { NativeSelect } from '../ui/native-select'
 import { SITUATIONS } from './situations-catalog'
 import { bossName, goalFor, lockedPositions, optionLabel, rerollsFor, situationRules } from './keep-model'
 import SituationWhy from './SituationWhy'
@@ -24,7 +25,7 @@ const KEEP_RULE = {
   '10-2': '10-2 has to come in one roll: nothing can be kept until you have it.',
   '10-3': '10-3 has to come in one roll: nothing can be kept until you have it.',
   '10-4': '10-4 has to come in one roll: nothing can be kept until you have it.',
-  'ship-captain-crew': 'In Ship Captain Crew you may keep 1-2 or 5-6, one or the other, toward the straight.',
+  'ship-captain-crew': 'In Ship, Captain, Crew you may keep 1-2 or 5-6, one or the other, toward the straight.',
   monterey: 'In Monterey you may keep 2-3, 3-4 or 4-5 toward the straight (a lone 3 or 4 too, if your table allows it: see House rules in Settings).',
   vegas: 'In 7’s you may keep one pair that sums to 7 or 11 toward the second. The kept pair stays a pair: the second has to come from the dice you roll.',
   pairs: 'In Pairs you may keep one pair toward the second.',
@@ -65,29 +66,6 @@ function readUrl() {
     ask: p.get('ask') !== null ? p.get('ask').split(',') : [],
   }
 }
-
-const Field = ({ label, children, hint }) => (
-  <div className="space-y-2">
-    <div className="text-sm font-semibold">{label}</div>
-    {children}
-    {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
-  </div>
-)
-
-const NumberSelect = ({ value, onChange, options, label }) => (
-  <select
-    aria-label={label}
-    value={value}
-    onChange={(e) => onChange(Number(e.target.value))}
-    className="h-9 rounded-md border border-input bg-background px-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-  >
-    {options.map((o) => (
-      <option key={o.value} value={o.value}>
-        {o.label}
-      </option>
-    ))}
-  </select>
-)
 
 export default function KeepAdvisor() {
   const [s, setS] = useState(DEFAULT)
@@ -242,11 +220,14 @@ export default function KeepAdvisor() {
             </Field>
 
             {(kicker || s.game === 'razzle') && (
-              <Field label="Rolls left after this one">
+              <Field
+                label="Rolls left after this one"
+                hint={s.rolls === 2 ? 'This is your first roll.' : 'Your next roll is your last.'}
+              >
                 <div className="flex gap-1.5">
                   {[2, 1].map((n) => (
                     <Chip key={n} active={s.rolls === n} onClick={() => update({ rolls: n })}>
-                      {n === 2 ? '2 (this is your first roll)' : '1 (your last roll is next)'}
+                      {n}
                     </Chip>
                   ))}
                 </div>
@@ -277,7 +258,7 @@ export default function KeepAdvisor() {
                 </div>
                 {s.goal === 'kicker' && (
                   <div className="flex flex-wrap items-center gap-2 text-sm">
-                    <NumberSelect
+                    <NativeSelect numeric
                       label="Variant"
                       value={s.variant === 'high' ? 1 : 0}
                       onChange={(v) => update({ variant: v ? 'high' : 'low' })}
@@ -287,7 +268,7 @@ export default function KeepAdvisor() {
                       ]}
                     />
                     <span>kicker to beat:</span>
-                    <NumberSelect
+                    <NativeSelect numeric
                       label="Kicker total to beat"
                       value={s.total}
                       onChange={(v) => update({ total: v })}
@@ -304,13 +285,13 @@ export default function KeepAdvisor() {
             {s.game === 'razzle' && (
               <Field label="Hand to beat" hint="1s are wild. Equal counts go to the higher number.">
                 <div className="flex flex-wrap items-center gap-2 text-sm">
-                  <NumberSelect
+                  <NativeSelect numeric
                     label="How many"
                     value={s.count}
                     onChange={(v) => update({ count: v })}
                     options={[1, 2, 3, 4, 5].map((n) => ({ value: n, label: COUNT_WORDS[n] }))}
                   />
-                  <NumberSelect
+                  <NativeSelect numeric
                     label="Of which number"
                     value={s.face}
                     onChange={(v) => update({ face: v })}
@@ -335,9 +316,9 @@ export default function KeepAdvisor() {
           {s.game === 'tres-away' ? (
             <TresAwayAdvice roll={roll} />
           ) : !roll ? (
-            <Empty>Enter your five dice, or tap Roll.</Empty>
+            <EmptyState>Enter your five dice, or tap Roll.</EmptyState>
           ) : !goal ? (
-            <Empty>Enter the hand you need to beat.</Empty>
+            <EmptyState>Enter the hand you need to beat.</EmptyState>
           ) : (
             <div className="space-y-4">
               {needsRule && (
@@ -423,15 +404,9 @@ export default function KeepAdvisor() {
   )
 }
 
-const Empty = ({ children }) => (
-  <div className="flex min-h-[12rem] items-center justify-center rounded-xl border border-dashed p-6 text-center text-muted-foreground">
-    {children}
-  </div>
-)
-
 /** Tres Away: which dice to put out, by expected final score */
 function TresAwayAdvice({ roll }) {
-  if (!roll) return <Empty>Enter your five dice, or tap Roll.</Empty>
+  if (!roll) return <EmptyState>Enter your five dice, or tap Roll.</EmptyState>
   const v = tresAwayExpected()
   const order = [0, 1, 2, 3, 4].sort((a, b) => tresAwayScore([roll[a]]) - tresAwayScore([roll[b]]))
   const best = tresAwayPutOut(roll)

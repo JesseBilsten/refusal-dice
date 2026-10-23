@@ -17,7 +17,7 @@ npm run typecheck # tsc over the TypeScript engine
 npm run format    # Prettier
 ```
 
-Run `npm run typecheck`, `npm test` and `npm run build` before calling work done. A change isn't verified until the build passes.
+Run `npm run typecheck`, `npm test` and `npm run build` before calling work done. A change isn't verified until the build passes. Branching, versions and pull requests: [docs/WORKFLOW.md](docs/WORKFLOW.md).
 
 ## Stack
 
@@ -34,18 +34,22 @@ Run `npm run typecheck`, `npm test` and `npm run build` before calling work done
 ```
 src/
   pages/            Gatsby file-based routes (one file = one URL)
-  templates/        game-detail.js → /games/<id> (created in gatsby-node.js)
+  templates/        game-detail.js → /games/<id>; design-doc.js → /design/<id> (both created in gatsby-node.js)
   components/       App components; ui/ = shadcn primitives; nav-items.js = site navigation
-                    Page/ = the page kit: Page (reading | tool | wide), PageHeader, Panel, Stat, PageTabs, Chip
+                    Page/ = the page kit: Page (reading | tool | wide), PageHeader, Panel, Stat, PageTabs, Chip, ChoiceGroup,
+                            StepPanel, Field, EmptyState, TextLink, Term
                     Table/ = Seat, one player at the table (tutorial and Play); Standings, the ranking pattern; SeatRing, the table from above
                     Settings/ = site-wide settings (theme, 3D dice, sound, house rules): Settings block, SettingsMenu (header gear);
                                 useHouseRules() feeds the visitor's house rules to every odds figure that depends on them
-                    Play/ = full games against bots (play-model.ts is the pure side)
+                    Play/ = full games against bots (play-model.ts is the pure side): TableControls, CallPlacard, Setup, HintCard
+                    Games/ = the Games page's GameCard; GameDetail/ = a game page's analysis sections
                     Home/ = the home page's animated round (RoundStory)
                     OddsLab/ = the Odds Lab tools: KeepAdvisor, GameOdds, EveryPossibility, the roll builder; situations-catalog.js
                     Dice/ = the dice kit: Die, Hand (game + kicker groups), DiceGroup, RollInput; opt-in 3D and sound
                     Tutorial/ = the /learn guided round (script.ts holds its scripted dice)
                     Odds/ = the odds-decision pattern (verdict, comparison bars, outcome grid, math, questions)
+  design-system/     The live design system (/design): registry.js (every component and its status), examples.jsx,
+                    guides.jsx (Overview, Foundations), ThemePlayground.jsx + theme-draft.js, DesignLayout, DocPage
   lib/
     games-config.js     SINGLE SOURCE OF TRUTH for the game list and metadata (CommonJS; also used by gatsby-node.js and generators)
     game-validation.js  Rules + heuristic strategy (being split up, see below)
@@ -98,12 +102,16 @@ Simulated odds mean "against (and as) solid bots". Show the sample size and that
 
 ## Design system
 
-Build UI from the shared kits in **[docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md)** (the `design-system` skill), so updating a component updates it everywhere:
-- dice: `Hand`, `RollInput` and `Die`; never render a roll as text;
-- odds: the `explain-odds` skill;
-- `ui/` primitives and color tokens.
+**The live design system is `/design`** (`src/design-system/`), modelled on Ant Design and Material: Overview, Foundations (color, typography, layout, shape, motion, icons, writing style, accessibility, the theme playground), Components in groups, and Patterns. Rules in prose: **[docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md)** (the `design-system` skill).
 
-When a pattern repeats, extract it into a kit instead of copying it.
+- `src/design-system/registry.js` lists every component file with its status (approved, proposed, deprecated); it drives the site's sidebar and pages (gatsby-node.js) and the tests.
+- `src/__tests__/design-system.test.ts` fails when: a component file isn't registered; code outside the design system imports a proposed or deprecated component; a component has no live example (`examples.jsx`) or `liveAt` page; a page or template defines its own component or renders a raw button, input, select or table; a color isn't a token; a text size is arbitrary or above 2xl; a heading lacks a type role; copy says "click" or misspells a game.
+- Build UI from the shared kits so updating a component updates it everywhere:
+  - dice: `Hand`, `RollInput` and `Die`; never render a roll as text;
+  - odds: the `explain-odds` skill;
+  - `ui/` primitives and color tokens; headings use a type role (`text-title`, `text-section`, `text-heading`, `text-subheading`, `text-display`) or `eyebrow`.
+- When a pattern repeats, extract it into a kit instead of copying it, and register it as proposed for the owner to approve.
+- Try theme changes in the playground (`/design/theming/`), not by editing tokens blind.
 
 ## Code style
 
@@ -172,15 +180,19 @@ When a pattern repeats, extract it into a kit instead of copying it.
 
 ## Git & workflow
 
+**Follow [docs/WORKFLOW.md](docs/WORKFLOW.md) for every change.** In short:
+
 - Remote: `git@github-jessebilsten:JesseBilsten/refusal-dice.git`. Always use the `github-jessebilsten` SSH alias; commits must be authored as `jessebilsten <jesse@bilsten.net>`.
-- Default branch: `master`. While there's a single developer, **commit directly to `master`** and push. Once collaborators join, switch to branches (`feature/…`, `fix/…`, `chore/…`) merged through GitHub PRs.
+- **Never commit to `master`** (the default branch, and the live site: Netlify deploys every push). Every change gets a branch: `feature/…`, `fix/…`, `chore/…`.
+- **Every pull request bumps the version** in `package.json` (major.minor.patch: breaking / new / fix) and adds its entry to `CHANGELOG.md`. CI fails a pull request that doesn't.
 - Commit messages: Conventional Commits, matching history (`feat:`, `fix:`, `refactor:`, `chore(deps):`, …).
+- Push the branch and open the pull request with `gh pr create`. **The owner merges**: never merge, and never push to `master`, without their OK in the conversation.
+- **New UI needs approval before it's used:** register it as `proposed` in `src/design-system/registry.js` with a live example; only the owner approves it (then set `status: 'approved'`). The tests block proposed components outside the design system.
 - Don't commit `/public`, `.cache` or `node_modules`.
-- Keep commits small and mapped to a roadmap item where possible.
 - **Sessions:** start with `/session-start`, end with `/handoff` (personal skills in `~/.claude/skills`, synced by chezmoi; the ground-truth script is configured in `.claude/ground-truth.conf`). This project's settings for them:
   - **Trackers:** open work is `ROADMAP.md` (in place of `BACKLOG.md`). Questions for the user go in its "Open questions", game-rule questions in `docs/RULES.md` §6 (in place of `questions.md`); rulings go in its "Decision log", game-rule rulings into `docs/RULES.md` itself, with the date.
-  - **Handoff rule:** commit the handoff to master; push only with the user's OK, since pushing deploys refusaldice.com.
-  - **Extra check:** master is the live site, so the latest CI run on master should be green (`gh run list -L 1`).
+  - **Handoff rule:** commit the handoff on the working branch; push only with the user's OK.
+  - **Extra check:** `master` is the live site, so the latest CI run on it should be green (`gh run list -L 1 --branch master`).
   - **Handoff and lessons:** `notes/handoff.md` (live), `notes/handoff-archive.md`, and @notes/lessons.md.
 
 ## Infrastructure direction (Phase 4, not built yet)

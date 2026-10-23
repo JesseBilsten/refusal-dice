@@ -4,8 +4,15 @@ import Helmet from 'react-helmet'
 import { StaticQuery, graphql } from 'gatsby'
 import Header from './header'
 import Footer from './Footer/'
+import { useThemeDraft } from '../design-system/theme-draft'
 
 import '../styles/global.css'
+
+/** A theme draft from the design system's playground, when it's switched on for the whole site */
+function SiteWideDraft() {
+  useThemeDraft({ apply: false })
+  return null
+}
 
 const Layout = ({ children }) => (
   <StaticQuery
@@ -40,6 +47,7 @@ const Layout = ({ children }) => (
           <a id="skippy" className="sr-only focus:not-sr-only focus:absolute focus:top-0 focus:left-0 focus:z-50" href="#content">
             Skip to main content
           </a>
+          <SiteWideDraft />
           <Header siteTitle={data.site.siteMetadata.title} />
           <main id="content" role="main">{children}</main>
           <Footer />

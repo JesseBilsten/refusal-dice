@@ -13,7 +13,7 @@ const SettingsMenu = () => (
       <Gear aria-hidden className="h-4 w-4" />
     </PopoverTrigger>
     <PopoverContent align="end" className="w-72">
-      <h2 className="mb-3 font-display text-base font-bold">Settings</h2>
+      <h2 className="mb-3 text-subheading">Settings</h2>
       <Settings />
     </PopoverContent>
   </Popover>

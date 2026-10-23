@@ -94,12 +94,12 @@ export function PageHeader({
         </nav>
       )}
       {eyebrow && (
-        <p className="mb-2 text-sm font-semibold uppercase tracking-wide text-primary">
+        <p className="eyebrow mb-2 text-primary">
           {eyebrow}
         </p>
       )}
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+        <h1 className="text-title text-foreground">
           {title}
         </h1>
         {badge}
@@ -117,5 +117,9 @@ export function PageHeader({
 export { default as Panel, Stat } from './Panel'
 export { default as PageTabs, tabFromUrl } from './PageTabs'
 export { default as Chip } from './Chip'
+export { default as ChoiceGroup } from './ChoiceGroup'
 export { default as NextStep } from './NextStep'
 export { default as StepNumber } from './StepNumber'
+export { default as StepPanel } from './StepPanel'
+export { default as TextLink, Term } from './TextLink'
+export { default as Field, EmptyState } from './Field'

@@ -10,7 +10,7 @@
  * Monterey about its lone 3 or 4 house rule.
  *
  * Every keep must be legal (docs/RULES.md §3.1): nothing toward a 10 until
- * it's made, one connector in Ship Captain Crew or Monterey, one pair in
+ * it's made, one connector in Ship, Captain, Crew or Monterey, one pair in
  * 7's or Pairs, never a kicker die. A test checks each question's keeps.
  *
  * Keyed by question; `s.game` is its game, and a game page shows every
@@ -109,7 +109,7 @@ export const SITUATIONS = {
     }),
   },
   'ship-captain-crew': {
-    label: 'Ship Captain Crew Low, a kicker of 4 to beat: keep the 1-2 or the 5-6?',
+    label: 'Ship, Captain, Crew Low, a kicker of 4 to beat: keep the 1-2 or the 5-6?',
     s: { game: 'ship-captain-crew', roll: '12566', rolls: 2, goal: 'kicker', variant: 'low', total: 4, ask: ['12', '56'] },
     whyTitle: 'Why does the 5-6 come out ahead?',
     why: ({ odds, pct }) => [
@@ -127,7 +127,7 @@ export const SITUATIONS = {
     ],
   },
   'ship-captain-crew-high': {
-    label: 'Ship Captain Crew High, a kicker of 10 to beat: keep the 1-2 or the 5-6?',
+    label: 'Ship, Captain, Crew High, a kicker of 10 to beat: keep the 1-2 or the 5-6?',
     s: { game: 'ship-captain-crew', roll: '12566', rolls: 2, goal: 'kicker', variant: 'high', total: 10, ask: ['12', '56'] },
     whyTitle: 'Why does the 1-2 come out ahead?',
     why: ({ odds, pct }) => [

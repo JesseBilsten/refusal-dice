@@ -15,7 +15,7 @@ export default function NextStep({ to, title, text, className }) {
         className="group flex items-center justify-between gap-4 rounded-2xl border bg-card p-5 shadow-sm transition-colors hover:border-primary focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         <span>
-          <span className="block text-xs font-semibold uppercase tracking-wide text-primary">Next</span>
+          <span className="eyebrow block text-primary">Next</span>
           <span className="block font-display text-xl font-bold">{title}</span>
           {text && <span className="mt-1 block text-sm text-muted-foreground">{text}</span>}
         </span>

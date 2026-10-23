@@ -196,6 +196,11 @@ Build it once and every later phase gets cheaper.
 
 | Date | Decision | Notes |
 |---|---|---|
+| 2026-10-22 | Branch per change, semver (major.minor.patch) in package.json and CHANGELOG.md, pull requests merged by the owner into `master` | docs/WORKFLOW.md; CI checks the version bump. Replaces committing straight to master |
+| 2026-10-22 | Darken coral (`pop`) to meet WCAG AA | Light 8 86% 46%; dark keeps the coral with ink text on it |
+| 2026-10-22 | Keep `master` as the default branch (no rename to `main`) | Netlify's production branch stays as it is |
+| 2026-10-22 | The owner approved the 11 components proposed in 1.2.0 | Registry entries carry `approved: '2026-10-22'` |
+| 2026-10-22 | New UI is registered as proposed on the design system site (/design) and approved by the owner before use | Enforced by src/__tests__/design-system.test.ts |
 | 2026-10-14 | Build a pure, shared game engine before any new feature surfaces | Powers the tutorial, trainer, AI and online server |
 | 2026-10-14 | Defer the framework choice (Gatsby vs Next/Vite) to the start of Phase 4 | Engine is framework-free either way |
 | 2026-10-14 | Supabase + Resend as the default plan for online play | Revisit at Phase 4 |

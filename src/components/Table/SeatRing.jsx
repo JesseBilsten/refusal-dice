@@ -59,16 +59,16 @@ export default function SeatRing({ seats, even, passTo, label, className }) {
         return (
           <g key={i}>
             <circle cx={x} cy={y} r={seatR} strokeWidth={s.you ? 3 : 1.5} className={cn(FILL[t], s.you && 'stroke-primary')} />
-            <text x={x} y={y} textAnchor="middle" dominantBaseline="central" className={cn('fill-foreground font-bold tabular-nums', n > 6 ? 'text-[14px]' : 'text-[16px]')}>
+            <text x={x} y={y} textAnchor="middle" dominantBaseline="central" className={cn('fill-foreground font-bold tabular-nums', n > 6 ? 'text-sm' : 'text-base')}>
               {s.text ?? `${Math.round(s.value * 100)}%`}
             </text>
             {s.hammer && (
-              <text x={x + seatR * 0.75} y={y - seatR * 0.75} textAnchor="middle" dominantBaseline="central" className="text-[16px]">
+              <text x={x + seatR * 0.75} y={y - seatR * 0.75} textAnchor="middle" dominantBaseline="central" className="text-base">
                 🔨
               </text>
             )}
             {s.you && (
-              <text x={x} y={y + seatR + 11} textAnchor="middle" dominantBaseline="central" className="fill-primary text-[14px] font-bold">
+              <text x={x} y={y + seatR + 11} textAnchor="middle" dominantBaseline="central" className="fill-primary text-sm font-bold">
                 You
               </text>
             )}

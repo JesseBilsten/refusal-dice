@@ -128,6 +128,8 @@ exports.onPreBootstrap = async ({ reporter }) => {
 /**
  * Create individual game detail pages
  */
+const { DOCS, docPath } = require('./src/design-system/registry');
+
 exports.createPages = async ({ actions }) => {
   const { createPage } = actions;
   
@@ -145,6 +147,12 @@ exports.createPages = async ({ actions }) => {
         gameId: gameId,
       },
     });
+  });
+
+  // The design system: a page per registry entry (the introduction is src/pages/design.js)
+  const designDocTemplate = path.resolve('./src/templates/design-doc.js');
+  DOCS.filter(d => d.id !== 'introduction').forEach(d => {
+    createPage({ path: docPath(d.id), component: designDocTemplate, context: { id: d.id } });
   });
 };
 

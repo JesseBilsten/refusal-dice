@@ -165,20 +165,20 @@ const GameOddsCard = ({ game, isSelected, onClick }) => {
           ? 'border-primary bg-primary/5 shadow-md ring-1 ring-primary/20'
           : 'border-border hover:border-primary/40 hover:shadow-sm'}`}
     >
-      <div className="flex items-center justify-between mb-2">
+      <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 mb-2">
         <div className="flex items-center gap-2">
           <span className="text-xl">{game.emoji}</span>
           <span className="font-semibold text-sm">{game.name}</span>
         </div>
         {isAlways && (
           <div className="flex items-center gap-1 shrink-0">
-            <Badge variant="outline" className="text-[10px] px-1.5 py-0">Competitive</Badge>
+            <Badge variant="outline" className="px-1.5 py-0 text-xs font-medium">Every roll plays</Badge>
           </div>
         )}
       </div>
 
       <div className={`text-2xl font-bold tabular-nums ${pctColor(game.pct)}`}>
-        {game.pct}%
+        {fmtPct(game.count / TOTAL, 1)}
       </div>
 
       <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden mt-1.5 mb-1">
@@ -188,12 +188,12 @@ const GameOddsCard = ({ game, isSelected, onClick }) => {
         />
       </div>
 
-      <p className="text-[11px] text-muted-foreground tabular-nums">
+      <p className="text-xs text-muted-foreground tabular-nums">
         {game.count.toLocaleString()} / {TOTAL.toLocaleString()} rolls
       </p>
 
       {game.variants && (
-        <div className="flex gap-3 mt-2 text-[10px] text-muted-foreground">
+        <div className="flex gap-3 mt-2 text-xs text-muted-foreground">
           <span>High {game.variants.high.toLocaleString()}</span>
           <span className="text-border">|</span>
           <span>Low {game.variants.low.toLocaleString()}</span>
@@ -201,12 +201,12 @@ const GameOddsCard = ({ game, isSelected, onClick }) => {
       )}
 
       {game.specialty && (
-        <div className="flex flex-col gap-0.5 mt-2 text-[10px] text-muted-foreground">
+        <div className="flex flex-col gap-0.5 mt-2 text-xs text-muted-foreground">
           {callFilters()[game.id]?.map(f => (
             <div key={f.id} className="flex justify-between">
               <span>{f.label}</span>
               <span className="tabular-nums font-medium">
-                {game.specialty[f.id]?.toLocaleString()} ({((game.specialty[f.id] / TOTAL) * 100).toFixed(1)}%)
+                {game.specialty[f.id]?.toLocaleString()} ({fmtPct(game.specialty[f.id] / TOTAL, 1)})
               </span>
             </div>
           ))}
@@ -262,7 +262,7 @@ const CoPlayableGames = ({ matchingRolls, currentGameId, variant }) => {
                   />
                 </div>
                 <span className="w-12 text-right tabular-nums text-muted-foreground">
-                  {(c.pct * 100).toFixed(1)}%
+                  {fmtPct(c.pct, 1)}
                 </span>
               </div>
             )
@@ -419,7 +419,7 @@ const OddsDashboard = () => {
                   <GameLink id={selectedId} className="text-inherit" />
                 </>
               }
-              description={`${matchingRolls.length} unique rolls · ${totalInstances.toLocaleString()} of ${TOTAL.toLocaleString()} outcomes (${((totalInstances / TOTAL) * 100).toFixed(1)}%)`}
+              description={`${matchingRolls.length} unique rolls · ${totalInstances.toLocaleString()} of ${TOTAL.toLocaleString()} outcomes (${fmtPct(totalInstances / TOTAL, 1)})`}
               actions={
                 <div className="flex flex-wrap items-center gap-3">
                   {selectedGame.hasVariants && (
@@ -438,8 +438,8 @@ const OddsDashboard = () => {
                         <ToggleGroupItem key={f.id} value={f.id}>
                           {f.label}
                           {selectedGame.specialty?.[f.id] != null && (
-                            <Badge variant="secondary" className="ml-1.5 text-[10px] px-1 py-0">
-                              {((selectedGame.specialty[f.id] / TOTAL) * 100).toFixed(1)}%
+                            <Badge variant="secondary" className="ml-1.5 text-2xs px-1 py-0">
+                              {fmtPct(selectedGame.specialty[f.id] / TOTAL, 1)}
                             </Badge>
                           )}
                         </ToggleGroupItem>
@@ -478,7 +478,7 @@ const OddsDashboard = () => {
 
                     <div>
                       <div className="flex items-baseline gap-2 mb-3">
-                        <h3 className="text-sm font-semibold">Example Bark-worthy Hands</h3>
+                        <h3 className="text-subheading">Example bark-worthy hands</h3>
                         <span className="text-xs text-muted-foreground">
                           Showing top {Math.min(50, barkingWeakHands.length)}
                         </span>

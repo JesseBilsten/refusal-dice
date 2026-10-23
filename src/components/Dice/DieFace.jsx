@@ -38,12 +38,12 @@ const PIPS = {
 
 /** Michigan Red-Eye colors, matching the site's other dice: 1 and 6 black, 2 and 5 red, 3 and 4 blue */
 const PIP_COLOR = {
-  1: '#0a0a0a',
-  2: '#e34627',
-  3: '#3ab1cd',
-  4: '#3ab1cd',
-  5: '#e34627',
-  6: '#0a0a0a',
+  1: 'fill-pip-dark',
+  2: 'fill-pip-red',
+  3: 'fill-pip-blue',
+  4: 'fill-pip-blue',
+  5: 'fill-pip-red',
+  6: 'fill-pip-dark',
 }
 
 /**
@@ -66,13 +66,13 @@ const DieFace = ({ value, size = 48, className }) => (
       height="94"
       rx="16"
       className={
-        value ? 'fill-[#fee9a5] stroke-[#0a0a0a]' : 'fill-muted stroke-border'
+        value ? 'fill-dice stroke-dice-edge' : 'fill-muted stroke-border'
       }
       strokeWidth="3"
     />
     {value ? (
       PIPS[value].map(([x, y], i) => (
-        <circle key={i} cx={x} cy={y} r="9" fill={PIP_COLOR[value]} />
+        <circle key={i} cx={x} cy={y} r="9" className={PIP_COLOR[value]} />
       ))
     ) : (
       <text

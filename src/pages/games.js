@@ -3,10 +3,10 @@ import { Link } from 'gatsby'
 import { ArrowRight } from 'lucide-react'
 import Layout from '../components/layout'
 import Page, { PageHeader, Panel, NextStep } from '../components/Page'
-import { Hand, RollInput } from '../components/Dice'
+import GameCard from '../components/Games/GameCard'
+import { RollInput } from '../components/Dice'
 import { motion, useReducedMotion } from 'framer-motion'
-import { BarkOdds, STRENGTH_GRADES, StrengthTag, fmtPct } from '../components/Odds'
-import { Badge } from '../components/ui/badge'
+import { BarkOdds, STRENGTH_GRADES, fmtPct } from '../components/Odds'
 import { buttonVariants } from '../components/ui/button'
 import { analyzeRoll } from '../lib/game-validation'
 import { formatCallLabel, GAMES_MAP } from '../lib/games-config'
@@ -144,65 +144,6 @@ const madeOnOneRoll = () => {
   return out
 }
 
-function GameSection({ section, oneRoll, playable, loss, dimmed }) {
-  const meta = GAMES_MAP[section.id]
-  const callLine = useMemo(() => section.callLine?.(), [section])
-  return (
-    <Panel
-      id={section.id}
-      className={cn(
-        'scroll-mt-24 transition-opacity',
-        playable && 'border-primary ring-1 ring-primary',
-        dimmed && 'opacity-50'
-      )}
-    >
-      <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_auto]">
-        <div>
-          <div className="mb-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <h2 className="text-2xl font-bold tracking-tight">
-              <span aria-hidden>{meta.emoji}</span> {meta.fullName || meta.name}
-            </h2>
-            {meta.hasVariants && <span className="text-sm text-muted-foreground">high or low</span>}
-            {playable && (
-              <Badge>
-                Your roll plays it{playable.variant ? `: ${formatCallLabel(playable)}` : ''}
-              </Badge>
-            )}
-            {playable && <StrengthTag loss={loss} />}
-          </div>
-          <p className="mb-2">{section.made}</p>
-          {section.note && <p className="mb-2 text-sm text-muted-foreground">{section.note}</p>}
-          <p className="mb-4 text-sm text-muted-foreground">
-            {callLine || `Made on one roll ${fmtPct(oneRoll, 1)} of the time.`}
-          </p>
-          <div className="flex flex-wrap gap-2">
-            <Link to={`/games/${section.id}`} className={buttonVariants({ size: 'sm' })}>
-              How to play it
-            </Link>
-            <Link to={`/odds-lab/?tab=games&game=${section.id}`} className={buttonVariants({ variant: 'outline', size: 'sm' })}>
-              Every roll that makes it
-            </Link>
-          </div>
-        </div>
-        <div className="flex flex-col gap-3 md:items-end">
-          {section.examples.map((e, i) => (
-            <Hand
-              key={i}
-              dice={e.dice}
-              game={section.id}
-              variant={e.variant}
-              // Tres Away examples are finished hands, labeled with their score
-              putOut={section.id === 'tres-away' ? [0, 1, 2, 3, 4] : undefined}
-              size="sm"
-              labels
-            />
-          ))}
-        </div>
-      </div>
-    </Panel>
-  )
-}
-
 const GamesPage = () => {
   const [diceValues, setDiceValues] = useState(['', '', '', '', ''])
   const [houseRules] = useHouseRules()
@@ -294,7 +235,7 @@ const GamesPage = () => {
         <div className="space-y-4">
           {ordered.map((s) => (
             <motion.div key={s.id} layout={!reduced} transition={{ type: 'spring', stiffness: 260, damping: 30 }}>
-              <GameSection
+              <GameCard
                 section={s}
                 oneRoll={oneRoll[s.id]}
                 playable={playableCall(s.id)}

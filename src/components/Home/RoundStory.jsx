@@ -158,7 +158,7 @@ export default function RoundStory({ className }) {
 
       {/* The story */}
       <figcaption className="mt-4 min-h-[6.5rem]" aria-live={autoplay ? 'off' : 'polite'}>
-        <p className="text-xs font-semibold uppercase tracking-wide text-primary">
+        <p className="eyebrow text-primary">
           Step {scene + 1} of {SCENES.length}
         </p>
         <p key={`c${scene}`} className="story-pop font-display text-xl font-bold sm:text-2xl">
