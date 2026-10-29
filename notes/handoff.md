@@ -1,26 +1,25 @@
-# Handoff (2026-10-23 17:05 PDT)
+# Handoff (2026-10-28 17:40 PDT)
 
 Read by /session-start. Open work: `ROADMAP.md`. Decisions and rulings: `ROADMAP.md` "Decision log", `docs/RULES.md`. Rewritten at each /handoff.
 
 ## Next (task of the day, in order)
-1. [refusal-dice] **This handoff is on `chore/handoff-2026-10-23` (1.4.2, LOCAL ONLY until the owner OKs a push).** It carries the handoff, lessons, ROADMAP rows, the stacked-PR merge rule in `docs/WORKFLOW.md` and the CHANGELOG release dates. Once OK'd: push, `gh pr create`, the owner merges, then `git tag v1.4.2` and delete the branch.
+1. [refusal-dice] **PR #12 (`chore/handoff-2026-10-23`, 1.4.2, docs only, CI green) waits for the owner to merge.** After the merge: `git checkout master && git pull`, `git tag v1.4.2 && git push origin v1.4.2`, delete the branch (`git push origin --delete chore/handoff-2026-10-23`, `git branch -d chore/handoff-2026-10-23`). The next handoff goes on the next working branch.
 2. [refusal-dice] `ROADMAP.md` Phase 2 item 8 (the rest of the odds audit), unless the owner picks a new feature. Fresh branch from `master`, version bump, CHANGELOG entry.
 
 ## Waiting for the user
 - RULES §6 question 6 (missed players make the game all at once, or one at a time from the Hammer's left): the owner is asking players. Nothing is blocked; the engine rolls them at once.
-- Whether to delete the `tailwind-migration` branch on GitHub (its PRs #5/#6 are closed).
+- Old branches on GitHub (`codex/find-and-fix-an-important-bug`, `codex/update-npm-packages-to-latest-versions`, `feature/bootstrap-to-tailwind-shadcn` (merged in #7), `feature/unified-components`, `upgrade/gatsby-5-and-deps`, `gatsby` (Netlify's branch before 2026-10-17)): offered to check each against `master` and delete the merged or replaced ones; no answer yet.
 
 ## Running in the background
 | What | Unit / process | Ends | Check | Stop |
 |---|---|---|---|---|
 | Owner's `gatsby develop` | port 8000, started by the owner | when they stop it | `lsof -i :8000` | not ours, leave it |
 
-## Last session (2026-10-22 → 2026-10-23)
+## Last session (2026-10-23 → 2026-10-28)
 - Done:
-  - Merged with the owner's OK, as merge commits in stack order, and tagged: #8 design system, UX audit and workflow (v1.2.0); #9 404/400 error pages (v1.3.0); #10 hard mode checks a pick as it's made (v1.4.0); #11 your seat no longer docks over the table in Play (v1.4.1). Live on refusaldice.com; `master` CI green at d72383b.
-  - #9 fix: the 404 page suggests a page by its name alone (`/1o-2` → `/games/10-2/`) in `src/lib/page-match.js`.
-  - Closed PRs #5/#6; deleted the four merged branches; stopped the :9100 preview server.
+  - Deleted the `tailwind-migration` branch on GitHub (last commit `42e626c`, restorable with `git push origin 42e626c:refs/heads/tailwind-migration`); opened PR #12 for the 2026-10-23 handoff.
+  - Moved the refusal-dice conversations (`31bcb671`, `216403c4`) and memories (Netlify deploy, better bots; git accounts copied) from `~/.claude/projects/-Users-jessebilsten-Projects-Code/` to `~/.claude/projects/-Users-jessebilsten-Projects-Code-refusal-dice/`, so `claude` started in this repo lists them.
 - Unfinished:
-  - refusal-dice: `chore/handoff-2026-10-23`, LOCAL ONLY (see Next 1).
+  - Outside this repo: `~/.claude/projects/-Users-jessebilsten-Projects-Code/216403c4-….jsonl` (and its folder) is a stale copy of this conversation, kept because its last 29 lines (the end of the 2026-10-28 17:15 exchange) aren't in the refusal-dice copy, which has since grown on its own. Delete it once the owner is happy with the move.
   - Outside this repo (carried from 2026-10-21): hh-companion skill-move edits uncommitted; `~/.claude/settings.json` drifted from chezmoi.
-- Learned: now in `notes/lessons.md` (merging a stack of PRs, previewing the 404 on the dev server, zsh word splitting).
+- Learned: in `notes/lessons.md` (`ls` is `eza`: use `/bin/ls --` for names starting with `-`).

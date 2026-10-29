@@ -12,4 +12,5 @@ Short rules every session needs. Merge, don't append; drop what no longer holds.
 - **New pages from gatsby-node** (e.g. `/design/<id>/`) need a dev-server restart; tell the owner when a branch adds some.
 - **Shell:** never `cat > file` without a heredoc or input: it waits on stdin and hangs the call. Commit messages go in a scratchpad file, passed with `git commit -F`. Archive a file before overwriting it.
 - **Workflow:** branch per change, version bump + CHANGELOG per PR, the owner merges (CLAUDE.md "Git & workflow"). A feature that needs an unmerged one is a stacked PR (`--base feature/<previous>`). Merging a stack (with the owner's OK): bottom first, as merge commits (a squash leaves the next PR's commits duplicated), `gh pr edit <next> --base master` before each next merge, then tag each merge commit (`git tag v1.3.0 <sha>`) and delete the branches.
+- **`ls` is aliased to `eza`,** which reads a name starting with `-` (like `~/.claude/projects/-Users-…`) as an option: use `/bin/ls --`.
 - **zsh doesn't split unquoted variables:** `for p in "a b"; do set -- $p` gets one word. Use a function with explicit arguments.
