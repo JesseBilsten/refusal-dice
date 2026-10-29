@@ -103,7 +103,7 @@ Each rule is tagged by where it came from:
      - **"Pick 'em up"** (also "don't come up"): the game ends with **no loser**, and the Hammer passes left.
   - Common strategy debate: holding a single 6, keep it and roll 4 dice, or re-roll all 5?
 - **Tie for worst hand:** the tied players play again, just them. Hands only tie if they match exactly; otherwise poker rules decide (a pair of 6s beats a pair of 5s; 5s over 2s beats 4s over 3s). [confirmed]
-- In principle the other players act in order, but they often roll early when waiting gains them nothing. A player deciding between strategies (e.g. two pair: go for a full house?) may wait to see what the players before them do. [confirmed]
+- **Coming up is in a fixed order** from the Boss's left, as in Tres Away (ruled 2026-10-29): each player takes their last roll in turn, so a player deciding between strategies (e.g. two pair: go for a full house?) sees what the players before them rolled. [confirmed] (`assertActor` in the `comeUp` stage, `src/engine/round/game.ts`)
 
 ### 3.4 Razzle
 
@@ -149,8 +149,8 @@ Engine choices made without a ruling yet (the engine does the [inferred] thing u
 2. **Boss replay: a tie for the best hand.** When tied worst hands replay Boss and two of them tie for the best hand, the main-game rule (no Boss, no loser) would let them all off. [inferred: the replaying players start over with fresh rolls]
 3. ~~**Boss: may the Boss skip the extra roll?**~~ Yes: roll, come up, or pick 'em up (ruled 2026-10-21, §3.3).
 4. **Tied at the bottom: who rolls first?** [inferred: the tied player nearest the Hammer, going left; they can't take the tie while another tied player can still roll]
-5. **Boss "come up": strict order?** [inferred: the engine enforces order from the Boss's left, since in online play waiting can be an advantage]
-6. ~~**Making the game: all at once, or in order?**~~ Neither is required: each player rolls when they like (ruled 2026-10-29, §3.1). The owner: "Typically players will roll immediately if there's no advantage to them waiting for another player to roll … Ultimately, I don't think it's a hard/fast rule, so we could leave it up to the player to decide." They added that in Tres Away and Boss a player whose hand might depend on another's result will wait for it, which is the reason behind the order in question 5.
+5. ~~**Boss "come up": strict order?**~~ Yes: a fixed order from the Boss's left, just like Tres Away (ruled 2026-10-29, §3.3). The engine already enforced it.
+6. ~~**Making the game: all at once, or in order?**~~ Neither is required: each player rolls when they like (ruled 2026-10-29, §3.1). The owner: "Typically players will roll immediately if there's no advantage to them waiting for another player to roll … Ultimately, I don't think it's a hard/fast rule, so we could leave it up to the player to decide." They added that in Tres Away and Boss a player whose hand might depend on another's result will wait for it, which is why those two games keep a fixed order (question 5).
 7. ~~**Cocked and stacked dice**~~: re-rolled, and so is a die off the table (ruled 2026-10-22, §1).
 8. ~~**Showing the wrong dice (hard mode)**~~: a pick is checked as it's made; fix it, or roll all five (ruled 2026-10-22, §3.1).
 

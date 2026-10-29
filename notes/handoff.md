@@ -17,7 +17,7 @@ Read by /session-start. Open work: `ROADMAP.md`. Decisions and rulings: `ROADMAP
 ## Last session (2026-10-23 → 2026-10-29)
 - Done:
   - Deleted the `tailwind-migration` branch on GitHub (last commit `42e626c`, restorable with `git push origin 42e626c:refs/heads/tailwind-migration`); opened PR #12 for the 2026-10-23 handoff.
-  - Ruled 2026-10-29 (RULES §3.1, §6 question 6): making the game has no fixed order; each player rolls when they like. No engine change (`rollers` already allowed it).
+  - Ruled 2026-10-29 (RULES §3.1, §6 question 6): making the game has no fixed order; each player rolls when they like. No engine change (`rollers` already allowed it). Also ruled: Boss players come up in a fixed order from the Boss's left, like Tres Away (§3.3, question 5); the engine already enforced it.
   - Moved the refusal-dice conversations (`31bcb671`, `216403c4`) and memories (Netlify deploy, better bots; git accounts copied) from `~/.claude/projects/-Users-jessebilsten-Projects-Code/` to `~/.claude/projects/-Users-jessebilsten-Projects-Code-refusal-dice/`, so `claude` started in this repo lists them. The stale copy left in the old folder was deleted 2026-10-29 with the owner's OK.
 - Unfinished:
   - Outside this repo (carried from 2026-10-21): hh-companion skill-move edits uncommitted; `~/.claude/settings.json` drifted from chezmoi.
