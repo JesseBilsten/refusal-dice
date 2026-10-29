@@ -1,4 +1,4 @@
-# Handoff (2026-10-28 17:40 PDT)
+# Handoff (2026-10-29 07:40 PDT)
 
 Read by /session-start. Open work: `ROADMAP.md`. Decisions and rulings: `ROADMAP.md` "Decision log", `docs/RULES.md`. Rewritten at each /handoff.
 
@@ -15,11 +15,10 @@ Read by /session-start. Open work: `ROADMAP.md`. Decisions and rulings: `ROADMAP
 |---|---|---|---|---|
 | Owner's `gatsby develop` | port 8000, started by the owner | when they stop it | `lsof -i :8000` | not ours, leave it |
 
-## Last session (2026-10-23 → 2026-10-28)
+## Last session (2026-10-23 → 2026-10-29)
 - Done:
   - Deleted the `tailwind-migration` branch on GitHub (last commit `42e626c`, restorable with `git push origin 42e626c:refs/heads/tailwind-migration`); opened PR #12 for the 2026-10-23 handoff.
-  - Moved the refusal-dice conversations (`31bcb671`, `216403c4`) and memories (Netlify deploy, better bots; git accounts copied) from `~/.claude/projects/-Users-jessebilsten-Projects-Code/` to `~/.claude/projects/-Users-jessebilsten-Projects-Code-refusal-dice/`, so `claude` started in this repo lists them.
+  - Moved the refusal-dice conversations (`31bcb671`, `216403c4`) and memories (Netlify deploy, better bots; git accounts copied) from `~/.claude/projects/-Users-jessebilsten-Projects-Code/` to `~/.claude/projects/-Users-jessebilsten-Projects-Code-refusal-dice/`, so `claude` started in this repo lists them. The stale copy left in the old folder was deleted 2026-10-29 with the owner's OK.
 - Unfinished:
-  - Outside this repo: `~/.claude/projects/-Users-jessebilsten-Projects-Code/216403c4-….jsonl` (and its folder) is a stale copy of this conversation, kept because its last 29 lines (the end of the 2026-10-28 17:15 exchange) aren't in the refusal-dice copy, which has since grown on its own. Delete it once the owner is happy with the move.
   - Outside this repo (carried from 2026-10-21): hh-companion skill-move edits uncommitted; `~/.claude/settings.json` drifted from chezmoi.
 - Learned: in `notes/lessons.md` (`ls` is `eza`: use `/bin/ls --` for names starting with `-`).
