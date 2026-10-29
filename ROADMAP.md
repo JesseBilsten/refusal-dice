@@ -196,6 +196,7 @@ Build it once and every later phase gets cheaper.
 
 | Date | Decision | Notes |
 |---|---|---|
+| 2026-10-29 | Making the game has no fixed order: each player who missed rolls when they like | docs/RULES.md §3.1, §6 question 6; the engine already allowed any order |
 | 2026-10-23 | Your seat in Play sits right under the call, never docked over the table | The dock hid the other seats on phones, tablets and short windows (1.4.1) |
 | 2026-10-23 | Stacked PRs merge bottom first as merge commits, then each release is tagged | #8–#11 merged and tagged v1.2.0–v1.4.1; squash would break the next PR's base. docs/WORKFLOW.md |
 | 2026-10-23 | Closed stale PRs #5 and #6 (`tailwind-migration`) | Superseded by #7; the branch itself is still on GitHub |
