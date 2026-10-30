@@ -319,6 +319,27 @@ describe('Boss', () => {
     ])
   })
 
+  test('a tie for the best hand in a replay: no Boss, no loser, the Hammer passes left (ruled 2026-10-29)', () => {
+    // a's full house is Boss; b and c both hold 5-4-3-2-1
+    const tied = [6, 6, 6, 2, 2, 5, 4, 3, 2, 1, 5, 4, 3, 2, 1]
+    // the replay's fresh rolls: b and c both a pair of 6s with 3-2-1
+    let g = called('boss', tied, [6, 6, 1, 2, 3, 6, 6, 2, 1, 3])
+    g = play(
+      g,
+      { type: 'stand', player: 'a' },
+      { type: 'comeUp', player: 'a' },
+      { type: 'stand', player: 'b' },
+      { type: 'stand', player: 'c' }
+    )
+    // b and c tie for the worst hand and replay; they tie again for the best
+    expect(g.phase).toMatchObject({ kind: 'roundOver', loser: null })
+    expect(g.hammer).toBe('b')
+    expect(g.log.slice(-2)).toEqual([
+      { type: 'noBoss', players: ['b', 'c'] },
+      { type: 'noPencil', reason: 'no-boss' },
+    ])
+  })
+
   test('Boss and Tres Away have no high/low variant', () => {
     const g = createGame({
       players: players('a', 'b'),

@@ -102,7 +102,7 @@ Each rule is tagged by where it came from:
      - **"Come up":** every other player gets **one last roll** to avoid losing. They may keep any dice or re-roll all five, and each result is shown as soon as it's rolled. Then **the worst hand at the table loses, and that can be the Boss.** For example, a Boss who calls everyone up on two pair loses if everyone else rolls three of a kind.
      - **"Pick 'em up"** (also "don't come up"): the game ends with **no loser**, and the Hammer passes left.
   - Common strategy debate: holding a single 6, keep it and roll 4 dice, or re-roll all 5?
-- **Tie for worst hand:** the tied players play again, just them. Hands only tie if they match exactly; otherwise poker rules decide (a pair of 6s beats a pair of 5s; 5s over 2s beats 4s over 3s). [confirmed]
+- **Tie for worst hand:** the tied players play again, just them. Hands only tie if they match exactly; otherwise poker rules decide (a pair of 6s beats a pair of 5s; 5s over 2s beats 4s over 3s). [confirmed] If the replaying players then tie for the best hand, it's the same as in the main game: **no Boss**, nobody loses and the Hammer passes left (ruled 2026-10-29). [confirmed] (`enterPlay` in `src/engine/round/game.ts`)
 - **Coming up is in a fixed order** from the Boss's left, as in Tres Away (ruled 2026-10-29): each player takes their last roll in turn, so a player deciding between strategies (e.g. two pair: go for a full house?) sees what the players before them rolled. [confirmed] (`assertActor` in the `comeUp` stage, `src/engine/round/game.ts`)
 
 ### 3.4 Razzle
@@ -125,7 +125,7 @@ Each rule is tagged by where it came from:
   - **Two or more** miss: everyone who made it is **safe**. The players who missed start a new **cycle**: the same called game (variant included) with 3 fresh rolls each. This repeats with whoever still misses until a single loser emerges. If everyone in a cycle makes it, the worst kicker among them loses.
   - **Everyone** made it: the **weakest hand** loses. The call (game + High/Low) defines what's weakest, so no separate kicker comparison is needed: in 10-3 High, a player with a kicker of 2+1 = 3 loses to everyone with a higher kicker. [confirmed]
 - **Ties for the loser:**
-  - The tied players **replay the same called game, variant included**, starting over with fresh rolls, until one loser remains. [confirmed]
+  - The tied players **replay the same called game, variant included**, starting over with fresh rolls, until one loser remains. [confirmed] (A Boss replay can also end with no loser: a tie for the best hand, §3.3.)
   - **No standing at the bottom:** the worst hand has no choice: it rolls while it has rolls, and loses when it's out. The engine rejects `stand` there (`wouldLoseIfStopped`). [confirmed]
   - **Taking a tie:** a player tied for the weakest hand who still has a roll left, when the player(s) they're tied with are out of rolls, may stand and **take the tie** (go to the replay) or roll in hope of beating it. [confirmed] Tables usually take the tie when the tied kicker is strong; when the chance of losing on a last roll is lower than the chance of losing the replay, rolling is right. `rollOrTakeTie` in `src/strategy/kicker-odds.ts` computes both exactly (e.g. tied at 5+5 in 10-3 High with 2 rolls left: rolling loses ~77% even using both rolls, and 87.5% on a last roll; the replay ~50%). It counts every roll left: falling short means rolling again, and landing level is the same choice again.
   - **Exception, 2-player table:** when only 2 players are left in the whole game and they tie, or **both miss the game**, no pencil is taken and the Hammer passes to the other player. [confirmed]
@@ -146,7 +146,7 @@ Known variations to support:
 Engine choices made without a ruling yet (the engine does the [inferred] thing until told otherwise):
 
 1. **Tres Away replay: who sets the pace?** When tied highest scores replay, the caller may not be among them. [inferred: the tied player nearest the caller, going left, starting with the caller]
-2. **Boss replay: a tie for the best hand.** When tied worst hands replay Boss and two of them tie for the best hand, the main-game rule (no Boss, no loser) would let them all off. [inferred: the replaying players start over with fresh rolls]
+2. ~~**Boss replay: a tie for the best hand.**~~ No Boss, no loser, and the Hammer passes left, as in the main game (ruled 2026-10-29, §3.3). The owner: "If two players tie for the best hand, then there's 'No boss' and the call passes to the left."
 3. ~~**Boss: may the Boss skip the extra roll?**~~ Yes: roll, come up, or pick 'em up (ruled 2026-10-21, §3.3).
 4. **Tied at the bottom: who rolls first?** [inferred: the tied player nearest the Hammer, going left; they can't take the tie while another tied player can still roll]
 5. ~~**Boss "come up": strict order?**~~ Yes: a fixed order from the Boss's left, just like Tres Away (ruled 2026-10-29, §3.3). The engine already enforced it.

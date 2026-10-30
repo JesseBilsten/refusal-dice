@@ -4,6 +4,13 @@ Every release of refusaldice.com, newest first. Versions are
 major.minor.patch ([docs/WORKFLOW.md](docs/WORKFLOW.md)): each pull request
 bumps the version once and adds its entry here.
 
+## 1.5.0 (unreleased)
+
+- **Boss replays end like Boss games** (ruled 2026-10-29): when tied worst
+  hands replay Boss and two of them tie for the best hand, there's no Boss:
+  nobody takes a pencil and the Hammer passes left. Before, the replay
+  started over.
+
 ## 1.4.2 (unreleased)
 
 - **Nothing changes on the site:** release dates in this changelog, the

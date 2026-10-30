@@ -322,10 +322,9 @@ function enterPlay(state: GameState, call: Call, cycle: number, players: PlayerI
   if (call.game === 'boss') {
     const best = bestHands(players, (id) => state.dice[id], compareBoss)
     if (best.length > 1) {
-      // A tie for the best hand: no Boss. In the main game nobody loses;
-      // in a replay the tied players start over [inferred]
-      const next = log(state, { type: 'noBoss', players: best })
-      return cycle === 0 ? noPencil(next, call, 'no-boss') : startCycle(next, call, cycle, players, 'tie')
+      // A tie for the best hand: no Boss, nobody loses and the Hammer passes left,
+      // in a replay too (ruled 2026-10-29)
+      return noPencil(log(state, { type: 'noBoss', players: best }), call, 'no-boss')
     }
     const boss = best[0]
     return log(
