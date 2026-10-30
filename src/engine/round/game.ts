@@ -458,9 +458,10 @@ const playWorst = (state: GameState, ids: PlayerId[]): PlayerId[] => {
  * Returns who must roll now, or null when the cycle is settled: the worst
  * hand is out of rolls. With a tie at the bottom, whoever has the most
  * rolls left goes first, until the tied players have used as many rolls as
- * each other; then the tied player nearest the Hammer goes [confirmed]. A
- * player may take the tie (stand) only once the others they're tied with
- * have no rolls left.
+ * each other; then the tied player nearest the Hammer goes [confirmed].
+ * Each tied player in turn takes the tie (stands) or rolls; a tie taken is
+ * only an offer until every tied player takes it (ruled 2026-10-29, see
+ * reopenTie).
  */
 export function bottomTurn(state: GameState): PlayerId | null {
   const { phase } = state
@@ -519,18 +520,43 @@ export function bottomTarget(state: GameState, player: PlayerId): PlayerId | nul
 }
 
 /**
- * Must `player` keep rolling? Yes when they hold the worst hand alone, or
- * tied with someone who can still roll (§4: no standing at the bottom).
+ * Must `player` keep rolling? Yes when they hold the worst hand alone (§4:
+ * no standing at the bottom). Tied at the bottom, they may take the tie even
+ * while another tied player can still roll (ruled 2026-10-29). Not on a
+ * missed game, though: a miss rolls on while another miss can still roll.
  */
 export function wouldLoseIfStopped(state: GameState, player: PlayerId): boolean {
   const { phase } = state
   if (phase.kind !== 'play' || !phase.rolling[player]) return false
   const worst = playWorst(state, Object.keys(phase.rolling))
-  return worst.includes(player) && (worst.length === 1 || worst.some((id) => id !== player && !phase.rolling[id].done))
+  if (!worst.includes(player)) return false
+  if (worst.length === 1) return true
+  const { game, variant } = phase.call
+  const missed =
+    isKickerGame(game) && !!variant && !evaluateKickerHand(state.dice[player], game, variant, phase.rolling[player].kept).made
+  return missed && worst.some((id) => id !== player && !phase.rolling[id].done)
+}
+
+/**
+ * Taking a tie is an offer (ruled 2026-10-29): it holds only while every
+ * tied player takes it. When another tied player rolls instead and climbs
+ * off the bottom, a player who took the tie and is now the worst hand alone
+ * rolls again with the rolls they have left. (With several left tied who
+ * all took it, they replay.)
+ */
+function reopenTie(state: GameState): GameState {
+  const { phase } = state
+  if (phase.kind !== 'play') return state
+  const worst = playWorst(state, Object.keys(phase.rolling))
+  if (worst.length !== 1) return state
+  const rolls = phase.rolling[worst[0]]
+  if (!rolls.done || rolls.rollsUsed >= MAX_ROLLS) return state
+  return { ...state, phase: { ...phase, rolling: { ...phase.rolling, [worst[0]]: { ...rolls, done: false } } } }
 }
 
 /** When everyone in the cycle is done rolling, decide what happens next. */
-function maybeResolve(state: GameState): GameState {
+function maybeResolve(before: GameState): GameState {
+  const state = reopenTie(before)
   const { phase } = state
   if (phase.kind !== 'play') return state
 
@@ -746,8 +772,8 @@ export function applyAction(state: GameState, action: Action): GameState {
 
         if (action.type === 'stand') {
           // No standing at the bottom (§4): the worst hand rolls while it has
-          // rolls. Standing level with the others at the bottom, once they're
-          // out of rolls, is "taking the tie", and that's allowed.
+          // rolls. Standing level with the others at the bottom is "taking
+          // the tie", and that's allowed (an offer: reopenTie).
           if (wouldLoseIfStopped(state, action.player)) {
             throw new EngineError('You have the worst hand: roll while you have rolls left')
           }

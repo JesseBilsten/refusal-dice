@@ -104,9 +104,9 @@ export const wouldAccept = (dice: Dice, call: Call, rules?: KeepRules): boolean 
  * Play from the bottom (§4): whoever may roll holds the worst hand (or, in
  * a kicker game, hasn't made it yet), so roll with the exact best keep for
  * beating the next-worst hand (or just making the game, when that hand
- * missed too). Tied at the bottom with nobody else left to roll, take the
- * tie when that's at least as good as rolling (always with two players
- * left, where a tie means no pencil).
+ * missed too). Tied at the bottom, take the tie when that's at least as
+ * good as rolling (always with two players left, where a tie means no
+ * pencil); it's only an offer while another tied player can still roll.
  */
 function bottomAction(state: GameState, player: string): Action {
   const phase = state.phase

@@ -10,6 +10,12 @@ bumps the version once and adds its entry here.
   hands replay Boss and two of them tie for the best hand, there's no Boss:
   nobody takes a pencil and the Hammer passes left. Before, the replay
   started over.
+- **Taking a tie is an offer** (ruled 2026-10-29): tied for the worst hand,
+  you can take the tie on your turn even while the others tied with you can
+  still roll. It's a replay only if they all take it too. If one rolls
+  instead and climbs off the bottom, you roll on with the rolls you have
+  left; if they end up the worst hand, they lose. Play, Rules and the
+  Glossary say so, and the bots play it.
 
 ## 1.4.2 (unreleased)
 

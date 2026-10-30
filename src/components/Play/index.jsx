@@ -491,6 +491,8 @@ export default function Play({ intro }) {
     if (e.type === 'refused') decisions[e.player] = 'Refused'
     if (e.type === 'accepted') decisions[e.player] = 'Accepted'
     if (e.type === 'stood') decisions[e.player] = phase.kind === 'play' ? 'Took the tie' : 'Done'
+    // A tie taken is an offer: rolling again after it (reopenTie) withdraws it
+    if (e.type === 'rolled' && decisions[e.player] === 'Took the tie') delete decisions[e.player]
     if (e.type === 'cycle') e.players.forEach((id) => (decisions[id] = 'Replaying'))
   })
   const bottom = bottomHands(game)
@@ -765,6 +767,10 @@ export default function Play({ intro }) {
     const target = bottomTarget(game, YOU)
     const targetDice = game.dice[target]
     const tied = bottom.filter((id) => id !== YOU)
+    // Taking a tie is an offer: those who took it can roll again if someone else climbs off
+    const live = tied.filter((id) => !phase.rolling[id].done)
+    const offered = tied.filter((id) => phase.rolling[id].done && phase.rolling[id].rollsUsed < 3)
+    const nameList = (ids) => ids.map((id) => names[id]).join(' and ')
     const making = kicker && !hand.made
     const rollsWord = `${left} ${left === 1 ? 'roll' : 'rolls'} left`
     title = making ? `Roll to make ${gameName(call)}: ${rollsWord}` : `You have the worst hand: ${rollsWord}`
@@ -778,9 +784,16 @@ export default function Play({ intro }) {
               {beatText(targetDice, `${names[target]}’s`, call, 'Roll to', keptAt(game, target))}. Climb off the bottom and your turn ends; still there when your rolls run out,
               and you take the pencil.
             </>
+          ) : live.length ? (
+            <>
+              You’re tied with {nameList(tied)}, and {nameList(live)} can still roll. Take the tie and it’s their call: if they take it too,
+              you replay; if they roll and climb off the bottom, you roll again. Or roll now to beat it.
+            </>
           ) : (
             <>
-              You’re tied with {tied.map((id) => names[id]).join(' and ')}, who {tied.length === 1 ? 'is' : 'are'} out of rolls. Take the tie and you replay, or roll to beat it.
+              You’re tied with {nameList(tied)}, who{' '}
+              {offered.length === tied.length ? 'took the tie' : `${tied.length === 1 ? 'is' : 'are'} out of rolls`}. Take the tie and you
+              replay, or roll to beat it.
             </>
           )}
         </p>

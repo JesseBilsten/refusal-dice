@@ -196,6 +196,7 @@ Build it once and every later phase gets cheaper.
 
 | Date | Decision | Notes |
 |---|---|---|
+| 2026-10-29 | Taking a tie is an offer: a tied player may take it while another can still roll; it holds only if every tied player takes it, and one who rolls instead and ends up worst loses | docs/RULES.md §4, §6 question 4; engine changed (it blocked taking a tie while another tied player could roll), 1.5.0 |
 | 2026-10-29 | Boss replay: a tie for the best hand means no Boss, no loser, the Hammer passes left (as in the main game) | docs/RULES.md §3.3, §6 question 2; engine changed (it used to start the replay over), 1.5.0 |
 | 2026-10-29 | Boss: players come up in a fixed order from the Boss's left, like Tres Away | docs/RULES.md §3.3, §6 question 5; the engine already enforced it |
 | 2026-10-29 | Making the game has no fixed order: each player who missed rolls when they like | docs/RULES.md §3.1, §6 question 6; the engine already allowed any order |

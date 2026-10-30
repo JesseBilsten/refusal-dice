@@ -225,9 +225,10 @@ const RulesPage = () => (
             </li>
             <li className="py-3">
               <strong>Tied for worst?</strong> Whoever has the most rolls left rolls first, until you’ve all used
-              the same number; then the tied player nearest the Hammer goes. Once the others you’re tied with are
-              out of rolls, you can <strong>take the tie</strong> (replay the same game, same
-              High or Low, with fresh rolls) or roll to beat them. With only 2 players left in the game, a tie (or
+              the same number; then the tied player nearest the Hammer goes. On your turn you can <strong>take the tie</strong> or roll
+              to beat them. A tie happens only if everyone tied takes it: then you replay the same game, same High
+              or Low, with fresh rolls. If someone rolls instead and climbs off the bottom, the rest roll on with the
+              rolls they have left; if they end up the worst hand, they lose. With only 2 players left in the game, a tie (or
               both missing) means no pencil and the Hammer passes. Alone at the bottom, there’s no choice: you roll
               until you’re out of rolls.
             </li>

@@ -274,7 +274,7 @@ const GLOSSARY_TERMS = [
         </p>
         <p className="text-sm mb-2">
           <strong>With 3+ players:</strong> Players tied for the worst hand replay the same game until there's a single loser.
-          Once the others you're tied with are out of rolls, you can <TextLink to="#take-the-tie">take the tie</TextLink> or roll to beat them.
+          On your turn you can <TextLink to="#take-the-tie">take the tie</TextLink> or roll to beat them.
         </p>
         <p className="text-sm mb-2">
           <strong>With 2 players:</strong> Ties, or both players missing the game, result in the <TextLink to="#hammer">Hammer</TextLink> passing
@@ -374,8 +374,10 @@ const GLOSSARY_TERMS = [
     body: (
       <>
         <p className="mb-2">
-          Tied for the worst hand, with the others you're tied with out of rolls, you can stop rolling and go to a replay
-          instead of rolling to beat them.
+          Tied for the worst hand, you can stop rolling and offer to replay instead of rolling to beat them. It's a
+          replay only if everyone tied takes it. If one of them rolls instead and climbs off the bottom, you roll on with
+          the rolls you have left; if they end up the worst hand, they lose. Tied players sometimes all roll to
+          climb past a higher hand and "bring the leader back in" rather than replay.
         </p>
         <p className="text-sm text-muted-foreground">
           <strong>Rule of thumb:</strong> take the tie when the tied hand is hard to beat. The{' '}
