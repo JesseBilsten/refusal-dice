@@ -311,7 +311,8 @@ function rollPositions(state: GameState, player: PlayerId, positions: number[]):
 /** Enter the called game's play phase for `players`, who already hold their roll 1. */
 function enterPlay(state: GameState, call: Call, cycle: number, players: PlayerId[]): GameState {
   if (call.game === 'tres-away') {
-    // The caller sets the pace; in a replay, the tied player nearest the caller does [inferred]
+    // The caller sets the pace. A replay goes one die at a time (tresAwayMaxPutOut, ruled
+    // 2026-10-30), starting with the tied player nearest the caller [inferred]
     const pacer = seatOrderFrom(state, state.hammer, players)[0]
     const hands: Record<PlayerId, TresHand> = {}
     players.forEach((id) => (hands[id] = { out: [], fresh: true, rolls: 1 }))
@@ -600,11 +601,13 @@ function tresTurn(order: PlayerId[], hands: Record<PlayerId, TresHand>): PlayerI
 
 /**
  * The most dice `player` may put out now: the caller (pacer) any number from
- * hand; everyone else only up to the caller's count, never past it.
+ * hand; everyone else only up to the caller's count, never past it. In a
+ * replay nobody sets the pace: one die at a time (ruled 2026-10-30).
  */
 export function tresAwayMaxPutOut(phase: Extract<Phase, { kind: 'tresAway' }>, player: PlayerId): number {
   const out = phase.hands[player].out.length
-  return player === phase.pacer ? 5 - out : Math.max(0, phase.hands[phase.pacer].out.length - out)
+  if (player !== phase.pacer) return Math.max(0, phase.hands[phase.pacer].out.length - out)
+  return phase.cycle > 0 ? Math.min(1, 5 - out) : 5 - out
 }
 
 function tresAwayAction(state: GameState, action: Action): GameState {
@@ -633,7 +636,11 @@ function tresAwayAction(state: GameState, action: Action): GameState {
   }
   const most = tresAwayMaxPutOut(phase, action.player)
   if (action.dice.length > most) {
-    throw new EngineError(`Put out no more than ${most}: only the caller sets how many dice are out`)
+    throw new EngineError(
+      phase.cycle > 0 && action.player === phase.pacer
+        ? 'In a replay, dice go out one die at a time'
+        : `Put out no more than ${most}: only the caller sets how many dice are out`
+    )
   }
   const hands = { ...phase.hands, [action.player]: { ...hand, out: [...hand.out, ...action.dice], fresh: false } }
   const next = log(state, {

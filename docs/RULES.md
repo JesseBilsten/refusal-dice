@@ -90,6 +90,7 @@ Each rule is tagged by where it came from:
   2. Everyone else puts out dice until they have **as many dice out as the caller, and never more**.
   3. Starting with the player on the caller's left and going around, each player catches up: put out at least 1 die (from their hand, or after a roll), then roll and put out at least 1 after each roll until they've matched the caller's count. Then the next player goes.
   4. Then it's the caller's turn again: they put out another die (or several), from their hand or after rolling, and the cycle repeats until all dice are out.
+- **A replay goes one die at a time** (tied highest scores replay, §4): nobody sets the pace; each player puts out exactly one die per turn, instead of matching the caller's count. Only in a replay; the main game keeps the caller's pace. (ruled 2026-10-30) [confirmed] The tied player nearest the caller, going left, goes first [inferred]. (`tresAwayMaxPutOut` in `src/engine/round/game.ts`)
 - The loser is the highest score once everyone has all 5 dice out. [site]
 
 ### 3.3 Boss
@@ -145,7 +146,7 @@ Known variations to support:
 
 Engine choices made without a ruling yet (the engine does the [inferred] thing until told otherwise):
 
-1. **Tres Away replay: who sets the pace?** When tied highest scores replay, the caller may not be among them. [inferred: the tied player nearest the caller, going left, starting with the caller]
+1. ~~**Tres Away replay: who sets the pace?**~~ Nobody: in a replay each player puts out one die at a time (ruled 2026-10-30, §3.2). The owner: "each player puts out 1 die at a time in tre's away, rather than defaulting to the number of dice that the Hammer started with … That's only in a tie where they replay Tre's away." Who goes first stays [inferred]: the tied player nearest the caller.
 2. ~~**Boss replay: a tie for the best hand.**~~ No Boss, no loser, and the Hammer passes left, as in the main game (ruled 2026-10-29, §3.3). The owner: "If two players tie for the best hand, then there's 'No boss' and the call passes to the left."
 3. ~~**Boss: may the Boss skip the extra roll?**~~ Yes: roll, come up, or pick 'em up (ruled 2026-10-21, §3.3).
 4. ~~**Tied at the bottom: who rolls first?**~~ Most rolls left decides first, then going left; a tie can be taken while another tied player can still roll, and holds only if every tied player takes it (ruled 2026-10-29, §4). The owner: "If Ben has 1 roll and Cass has 2 rolls, then it's Cass's decision to take a tie or roll. If she opts to take a tie then it goes back to Ben… If one player doesn't agree to it and rolls, if they become the worst hand then they lose and no tie is established." Still open: with equal rolls the owner said "clockwise (left of the dealer)"; the engine starts with the Hammer when the Hammer is tied [inferred].

@@ -192,7 +192,8 @@ const RulesPage = () => (
               <li>
                 <GameLink id="tres-away" />: lowest total wins (3s count 0). After every roll you must put out at
                 least one die, and put-out dice are final. The caller sets the pace: taking turns from the caller’s
-                left, everyone catches up to how many dice the caller has out, and never past it. Your dice stay
+                left, everyone catches up to how many dice the caller has out, and never past it. When tied highest
+                scores replay, nobody sets the pace: everyone puts out one die at a time. Your dice stay
                 hidden until you put them out, and keep their values between turns: on your next turn you can put
                 one out as it is, after seeing what the others put out, or roll them all.
               </li>

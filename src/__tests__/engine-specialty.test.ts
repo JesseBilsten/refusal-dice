@@ -251,6 +251,29 @@ describe('Tres Away', () => {
     expect(g.phase).toMatchObject({ kind: 'roundOver', loser: 'c' })
   })
 
+  test('a replay goes one die at a time: nobody sets the pace (ruled 2026-10-30)', () => {
+    // a scores 0; b and c tie at 30 and replay with fresh rolls
+    let g = called(
+      'tres-away',
+      [3, 3, 3, 3, 3, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6],
+      [6, 5, 4, 2, 1, 6, 5, 4, 2, 1]
+    )
+    g = play(
+      g,
+      { type: 'putOut', player: 'a', dice: [0, 1, 2, 3, 4] },
+      { type: 'putOut', player: 'b', dice: [0, 1, 2, 3, 4] },
+      { type: 'putOut', player: 'c', dice: [0, 1, 2, 3, 4] }
+    )
+    expect(g.phase).toMatchObject({ kind: 'tresAway', cycle: 1, pacer: 'b', turn: 'b' })
+    expect(() => applyAction(g, { type: 'putOut', player: 'b', dice: [3, 4] })).toThrow(/one die at a time/)
+    g = applyAction(g, { type: 'putOut', player: 'b', dice: [4] })
+    expect(g.phase).toMatchObject({ turn: 'c' })
+    expect(() => applyAction(g, { type: 'putOut', player: 'c', dice: [3, 4] })).toThrow(/no more than 1/)
+    g = applyAction(g, { type: 'putOut', player: 'c', dice: [4] })
+    expect(g.phase).toMatchObject({ turn: 'b' })
+    expect(() => applyAction(g, { type: 'putOut', player: 'b', dice: [2, 3] })).toThrow(/one die at a time/)
+  })
+
   test('the caller may put out from hand on a later turn without rolling', () => {
     let g = called('tres-away', deal, extra)
     g = play(

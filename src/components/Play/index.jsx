@@ -842,9 +842,11 @@ export default function Play({ intro }) {
     body = (
       <p>
         Lowest total wins; 3s count 0. Put-out dice are final and everyone sees them.{' '}
-        {caller
-          ? 'You called it, so you set the pace: put out as many as you like, and everyone else catches up to your count.'
-          : `${names[phase.pacer]} has ${callerOut} ${callerOut === 1 ? 'die' : 'dice'} out, so you can put out ${most === 1 ? '1 more' : `up to ${most} more`}.`}
+        {phase.cycle > 0
+          ? 'In a replay nobody sets the pace: everyone puts out one die at a time.'
+          : caller
+            ? 'You called it, so you set the pace: put out as many as you like, and everyone else catches up to your count.'
+            : `${names[phase.pacer]} has ${callerOut} ${callerOut === 1 ? 'die' : 'dice'} out, so you can put out ${most === 1 ? '1 more' : `up to ${most} more`}.`}
         {!h.fresh && ' The dice in your hand can go out as they are, or you can roll them all.'}
       </p>
     )

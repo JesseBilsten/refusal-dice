@@ -167,7 +167,9 @@ export function hintStats(state: GameState, me: string, action: Action, names: H
     const inHand = [0, 1, 2, 3, 4].filter((i) => !hand.out.includes(i))
     const most = tresAwayMaxPutOut(phase, me)
     const cap =
-      me === phase.pacer
+      phase.cycle > 0
+        ? 'In a replay everyone puts out one die at a time.'
+        : me === phase.pacer
         ? 'You called it, so you can put out as many as you like.'
         : `${names.player(phase.pacer)} has ${phase.hands[phase.pacer].out.length} out, so you can put out ${most} more at most.`
     const order = [...inHand].sort((a, b) => tresAwayScore([dice[a]]) - tresAwayScore([dice[b]]))

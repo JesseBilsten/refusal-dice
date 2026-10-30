@@ -16,6 +16,9 @@ bumps the version once and adds its entry here.
   instead and climbs off the bottom, you roll on with the rolls you have
   left; if they end up the worst hand, they lose. Play, Rules and the
   Glossary say so, and the bots play it.
+- **Tres Away replays go one die at a time** (ruled 2026-10-30): when tied
+  highest scores replay, nobody sets the pace; everyone puts out one die
+  per turn. The main game keeps the caller's pace.
 
 ## 1.4.2 (unreleased)
 
