@@ -311,7 +311,8 @@ function rollPositions(state: GameState, player: PlayerId, positions: number[]):
 /** Enter the called game's play phase for `players`, who already hold their roll 1. */
 function enterPlay(state: GameState, call: Call, cycle: number, players: PlayerId[]): GameState {
   if (call.game === 'tres-away') {
-    // The caller sets the pace; in a replay, the tied player nearest the caller does [inferred]
+    // The caller sets the pace. A replay goes one die at a time (tresAwayMaxPutOut, ruled
+    // 2026-10-30), starting with the tied player nearest the caller [inferred]
     const pacer = seatOrderFrom(state, state.hammer, players)[0]
     const hands: Record<PlayerId, TresHand> = {}
     players.forEach((id) => (hands[id] = { out: [], fresh: true, rolls: 1 }))
@@ -322,10 +323,9 @@ function enterPlay(state: GameState, call: Call, cycle: number, players: PlayerI
   if (call.game === 'boss') {
     const best = bestHands(players, (id) => state.dice[id], compareBoss)
     if (best.length > 1) {
-      // A tie for the best hand: no Boss. In the main game nobody loses;
-      // in a replay the tied players start over [inferred]
-      const next = log(state, { type: 'noBoss', players: best })
-      return cycle === 0 ? noPencil(next, call, 'no-boss') : startCycle(next, call, cycle, players, 'tie')
+      // A tie for the best hand: no Boss, nobody loses and the Hammer passes left,
+      // in a replay too (ruled 2026-10-29)
+      return noPencil(log(state, { type: 'noBoss', players: best }), call, 'no-boss')
     }
     const boss = best[0]
     return log(
@@ -459,9 +459,10 @@ const playWorst = (state: GameState, ids: PlayerId[]): PlayerId[] => {
  * Returns who must roll now, or null when the cycle is settled: the worst
  * hand is out of rolls. With a tie at the bottom, whoever has the most
  * rolls left goes first, until the tied players have used as many rolls as
- * each other; then the tied player nearest the Hammer goes [confirmed]. A
- * player may take the tie (stand) only once the others they're tied with
- * have no rolls left.
+ * each other; then the tied player nearest the Hammer goes [confirmed].
+ * Each tied player in turn takes the tie (stands) or rolls; a tie taken is
+ * only an offer until every tied player takes it (ruled 2026-10-29, see
+ * reopenTie).
  */
 export function bottomTurn(state: GameState): PlayerId | null {
   const { phase } = state
@@ -520,18 +521,43 @@ export function bottomTarget(state: GameState, player: PlayerId): PlayerId | nul
 }
 
 /**
- * Must `player` keep rolling? Yes when they hold the worst hand alone, or
- * tied with someone who can still roll (§4: no standing at the bottom).
+ * Must `player` keep rolling? Yes when they hold the worst hand alone (§4:
+ * no standing at the bottom). Tied at the bottom, they may take the tie even
+ * while another tied player can still roll (ruled 2026-10-29). Not on a
+ * missed game, though: a miss rolls on while another miss can still roll.
  */
 export function wouldLoseIfStopped(state: GameState, player: PlayerId): boolean {
   const { phase } = state
   if (phase.kind !== 'play' || !phase.rolling[player]) return false
   const worst = playWorst(state, Object.keys(phase.rolling))
-  return worst.includes(player) && (worst.length === 1 || worst.some((id) => id !== player && !phase.rolling[id].done))
+  if (!worst.includes(player)) return false
+  if (worst.length === 1) return true
+  const { game, variant } = phase.call
+  const missed =
+    isKickerGame(game) && !!variant && !evaluateKickerHand(state.dice[player], game, variant, phase.rolling[player].kept).made
+  return missed && worst.some((id) => id !== player && !phase.rolling[id].done)
+}
+
+/**
+ * Taking a tie is an offer (ruled 2026-10-29): it holds only while every
+ * tied player takes it. When another tied player rolls instead and climbs
+ * off the bottom, a player who took the tie and is now the worst hand alone
+ * rolls again with the rolls they have left. (With several left tied who
+ * all took it, they replay.)
+ */
+function reopenTie(state: GameState): GameState {
+  const { phase } = state
+  if (phase.kind !== 'play') return state
+  const worst = playWorst(state, Object.keys(phase.rolling))
+  if (worst.length !== 1) return state
+  const rolls = phase.rolling[worst[0]]
+  if (!rolls.done || rolls.rollsUsed >= MAX_ROLLS) return state
+  return { ...state, phase: { ...phase, rolling: { ...phase.rolling, [worst[0]]: { ...rolls, done: false } } } }
 }
 
 /** When everyone in the cycle is done rolling, decide what happens next. */
-function maybeResolve(state: GameState): GameState {
+function maybeResolve(before: GameState): GameState {
+  const state = reopenTie(before)
   const { phase } = state
   if (phase.kind !== 'play') return state
 
@@ -575,11 +601,13 @@ function tresTurn(order: PlayerId[], hands: Record<PlayerId, TresHand>): PlayerI
 
 /**
  * The most dice `player` may put out now: the caller (pacer) any number from
- * hand; everyone else only up to the caller's count, never past it.
+ * hand; everyone else only up to the caller's count, never past it. In a
+ * replay nobody sets the pace: one die at a time (ruled 2026-10-30).
  */
 export function tresAwayMaxPutOut(phase: Extract<Phase, { kind: 'tresAway' }>, player: PlayerId): number {
   const out = phase.hands[player].out.length
-  return player === phase.pacer ? 5 - out : Math.max(0, phase.hands[phase.pacer].out.length - out)
+  if (player !== phase.pacer) return Math.max(0, phase.hands[phase.pacer].out.length - out)
+  return phase.cycle > 0 ? Math.min(1, 5 - out) : 5 - out
 }
 
 function tresAwayAction(state: GameState, action: Action): GameState {
@@ -608,7 +636,11 @@ function tresAwayAction(state: GameState, action: Action): GameState {
   }
   const most = tresAwayMaxPutOut(phase, action.player)
   if (action.dice.length > most) {
-    throw new EngineError(`Put out no more than ${most}: only the caller sets how many dice are out`)
+    throw new EngineError(
+      phase.cycle > 0 && action.player === phase.pacer
+        ? 'In a replay, dice go out one die at a time'
+        : `Put out no more than ${most}: only the caller sets how many dice are out`
+    )
   }
   const hands = { ...phase.hands, [action.player]: { ...hand, out: [...hand.out, ...action.dice], fresh: false } }
   const next = log(state, {
@@ -747,8 +779,8 @@ export function applyAction(state: GameState, action: Action): GameState {
 
         if (action.type === 'stand') {
           // No standing at the bottom (§4): the worst hand rolls while it has
-          // rolls. Standing level with the others at the bottom, once they're
-          // out of rolls, is "taking the tie", and that's allowed.
+          // rolls. Standing level with the others at the bottom is "taking
+          // the tie", and that's allowed (an offer: reopenTie).
           if (wouldLoseIfStopped(state, action.player)) {
             throw new EngineError('You have the worst hand: roll while you have rolls left')
           }

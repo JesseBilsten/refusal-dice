@@ -15,14 +15,13 @@ describe('comebacks: the Hammer’s second call, exact over every roll', () => {
     table.forEach((f) => f.comebacks.forEach((c) => expect(c.call.game).not.toBe(f.call.game)))
   })
 
-  test('the table’s hunch holds: after 10-3 Low or Monterey Low, 10-4 Low is the likeliest comeback', () => {
-    for (const first of [
-      { game: '10-3', variant: 'low' },
-      { game: 'monterey', variant: 'low' },
-    ] as const) {
-      expect(comebacksAfter(first)!.comebacks[0].call).toEqual({ game: '10-4', variant: 'low' })
-    }
+  test('the table’s hunch: 10-4 Low comes back after 10-3 Low, and is a top-two comeback after Monterey Low', () => {
+    const tenFourLow = { game: '10-4', variant: 'low' }
+    expect(comebacksAfter({ game: '10-3', variant: 'low' })!.comebacks[0].call).toEqual(tenFourLow)
+    // Since ties became offers (2026-10-29), 7's Low edges it out after Monterey Low
+    const afterMonterey = comebacksAfter({ game: 'monterey', variant: 'low' })!.comebacks.slice(0, 2).map((c) => c.call)
+    expect(afterMonterey).toContainEqual(tenFourLow)
     const tops = comebackOf('10-4').filter((x) => x.top).map((x) => `${x.first.game} ${x.first.variant}`)
-    expect(tops).toEqual(expect.arrayContaining(['10-3 low', 'monterey low']))
+    expect(tops).toContain('10-3 low')
   })
 })

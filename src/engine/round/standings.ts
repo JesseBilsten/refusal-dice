@@ -71,8 +71,9 @@ export function standings(state: GameState): Standing[] {
     const cmp = playCompare(phase.call)
     const hand = (id: PlayerId) => state.dice[id]
     const bottom = bottomHands(state)
-    // A finished hand that's already worse than yours puts you in the cup
-    const final = ids.filter((id) => phase.rolling[id].done)
+    // A finished hand that's already worse than yours puts you in the cup.
+    // A tie taken with rolls left isn't finished: it's only an offer (reopenTie).
+    const final = ids.filter((id) => phase.rolling[id].done && phase.rolling[id].rollsUsed >= MAX_ROLLS)
     const order = (a: PlayerId, b: PlayerId) => cmp(hand(a), hand(b), keptAt(state, a), keptAt(state, b))
     const ranked: Standing[] = rankBest(ids, order).map(({ id, rank }) => {
       const left = MAX_ROLLS - phase.rolling[id].rollsUsed

@@ -118,6 +118,55 @@ describe('Razzle', () => {
     expect(end.phase).toMatchObject({ kind: 'roundOver', loser: 'b' })
   })
 
+  describe('taking a tie is an offer until every tied player takes it (ruled 2026-10-29)', () => {
+    // b and c both hold two 5s; b rolls first and stays level, so c (2 rolls
+    // left) decides before b (1 roll left)
+    const start = (extra: number[]) => {
+      const g = called(
+        'razzle',
+        [6, 6, 6, 1, 2, 5, 5, 2, 3, 4, 5, 5, 4, 3, 2],
+        [2, 3, 4, ...extra]
+      )
+      return applyAction(g, { type: 'reroll', player: 'b', keep: [0, 1] })
+    }
+
+    test('c takes the tie while b can still roll; b takes it too: they replay', () => {
+      const g = start(Array(10).fill(6))
+      expect(bottomTurn(g)).toBe('c')
+      const offered = applyAction(g, { type: 'stand', player: 'c' })
+      expect(offered.phase.kind).toBe('play')
+      expect(bottomTurn(offered)).toBe('b')
+      const replay = applyAction(offered, { type: 'stand', player: 'b' })
+      expect(replay.phase).toMatchObject({ kind: 'play', cycle: 1 })
+      expect(replay.log.at(-1)).toEqual({ type: 'cycle', players: ['b', 'c'], reason: 'tie' })
+    })
+
+    test('b rolls instead and climbs off the bottom: c rolls again with the rolls left', () => {
+      // b rolls three 5s (five 5s); c then misses twice and loses
+      const g = start([5, 5, 5, 2, 3, 4, 2, 3, 4])
+      const offered = applyAction(g, { type: 'stand', player: 'c' })
+      const climbed = applyAction(offered, { type: 'reroll', player: 'b', keep: [0, 1] })
+      expect(climbed.phase.kind).toBe('play')
+      if (climbed.phase.kind !== 'play') return
+      expect(climbed.phase.rolling.c).toMatchObject({ done: false, rollsUsed: 1 })
+      expect(bottomTurn(climbed)).toBe('c')
+      const end = play(
+        climbed,
+        { type: 'reroll', player: 'c', keep: [0, 1] },
+        { type: 'reroll', player: 'c', keep: [0, 1] }
+      )
+      expect(end.phase).toMatchObject({ kind: 'roundOver', loser: 'c' })
+    })
+
+    test('b rolls instead and ends up the worst hand: b loses, no tie', () => {
+      // b picks up everything and rolls two 2s, worse than c's two 5s
+      const g = start([2, 2, 3, 4, 6])
+      const offered = applyAction(g, { type: 'stand', player: 'c' })
+      const end = applyAction(offered, { type: 'reroll', player: 'b', keep: [] })
+      expect(end.phase).toMatchObject({ kind: 'roundOver', loser: 'b' })
+    })
+  })
+
   test('tied at the bottom: roll in turn, then take the tie and replay', () => {
     // b and c both hold two 5s; b (nearest the Hammer) rolls first
     const g = called(
@@ -126,8 +175,6 @@ describe('Razzle', () => {
       [2, 3, 4, 4, 3, 2, 2, 3, 4, ...Array(10).fill(6)]
     )
     expect(bottomTurn(g)).toBe('b')
-    // c can still roll, so b can't take the tie yet
-    expect(() => applyAction(g, { type: 'stand', player: 'b' })).toThrow(/worst hand/)
     const once = applyAction(g, { type: 'reroll', player: 'b', keep: [0, 1] })
     // Still tied, and c has more rolls left: c rolls before b goes again
     expect(bottomTurn(once)).toBe('c')
@@ -202,6 +249,29 @@ describe('Tres Away', () => {
     )
     // a 0 · b 4 · c 19
     expect(g.phase).toMatchObject({ kind: 'roundOver', loser: 'c' })
+  })
+
+  test('a replay goes one die at a time: nobody sets the pace (ruled 2026-10-30)', () => {
+    // a scores 0; b and c tie at 30 and replay with fresh rolls
+    let g = called(
+      'tres-away',
+      [3, 3, 3, 3, 3, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6],
+      [6, 5, 4, 2, 1, 6, 5, 4, 2, 1]
+    )
+    g = play(
+      g,
+      { type: 'putOut', player: 'a', dice: [0, 1, 2, 3, 4] },
+      { type: 'putOut', player: 'b', dice: [0, 1, 2, 3, 4] },
+      { type: 'putOut', player: 'c', dice: [0, 1, 2, 3, 4] }
+    )
+    expect(g.phase).toMatchObject({ kind: 'tresAway', cycle: 1, pacer: 'b', turn: 'b' })
+    expect(() => applyAction(g, { type: 'putOut', player: 'b', dice: [3, 4] })).toThrow(/one die at a time/)
+    g = applyAction(g, { type: 'putOut', player: 'b', dice: [4] })
+    expect(g.phase).toMatchObject({ turn: 'c' })
+    expect(() => applyAction(g, { type: 'putOut', player: 'c', dice: [3, 4] })).toThrow(/no more than 1/)
+    g = applyAction(g, { type: 'putOut', player: 'c', dice: [4] })
+    expect(g.phase).toMatchObject({ turn: 'b' })
+    expect(() => applyAction(g, { type: 'putOut', player: 'b', dice: [2, 3] })).toThrow(/one die at a time/)
   })
 
   test('the caller may put out from hand on a later turn without rolling', () => {
@@ -315,6 +385,27 @@ describe('Boss', () => {
     expect(g.hammer).toBe('b')
     expect(g.log.slice(-2)).toEqual([
       { type: 'noBoss', players: ['a', 'b'] },
+      { type: 'noPencil', reason: 'no-boss' },
+    ])
+  })
+
+  test('a tie for the best hand in a replay: no Boss, no loser, the Hammer passes left (ruled 2026-10-29)', () => {
+    // a's full house is Boss; b and c both hold 5-4-3-2-1
+    const tied = [6, 6, 6, 2, 2, 5, 4, 3, 2, 1, 5, 4, 3, 2, 1]
+    // the replay's fresh rolls: b and c both a pair of 6s with 3-2-1
+    let g = called('boss', tied, [6, 6, 1, 2, 3, 6, 6, 2, 1, 3])
+    g = play(
+      g,
+      { type: 'stand', player: 'a' },
+      { type: 'comeUp', player: 'a' },
+      { type: 'stand', player: 'b' },
+      { type: 'stand', player: 'c' }
+    )
+    // b and c tie for the worst hand and replay; they tie again for the best
+    expect(g.phase).toMatchObject({ kind: 'roundOver', loser: null })
+    expect(g.hammer).toBe('b')
+    expect(g.log.slice(-2)).toEqual([
+      { type: 'noBoss', players: ['b', 'c'] },
       { type: 'noPencil', reason: 'no-boss' },
     ])
   })

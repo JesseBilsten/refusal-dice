@@ -192,7 +192,8 @@ const RulesPage = () => (
               <li>
                 <GameLink id="tres-away" />: lowest total wins (3s count 0). After every roll you must put out at
                 least one die, and put-out dice are final. The caller sets the pace: taking turns from the caller’s
-                left, everyone catches up to how many dice the caller has out, and never past it. Your dice stay
+                left, everyone catches up to how many dice the caller has out, and never past it. When tied highest
+                scores replay, nobody sets the pace: everyone puts out one die at a time. Your dice stay
                 hidden until you put them out, and keep their values between turns: on your next turn you can put
                 one out as it is, after seeing what the others put out, or roll them all.
               </li>
@@ -225,9 +226,10 @@ const RulesPage = () => (
             </li>
             <li className="py-3">
               <strong>Tied for worst?</strong> Whoever has the most rolls left rolls first, until you’ve all used
-              the same number; then the tied player nearest the Hammer goes. Once the others you’re tied with are
-              out of rolls, you can <strong>take the tie</strong> (replay the same game, same
-              High or Low, with fresh rolls) or roll to beat them. With only 2 players left in the game, a tie (or
+              the same number; then the tied player nearest the Hammer goes. On your turn you can <strong>take the tie</strong> or roll
+              to beat them. A tie happens only if everyone tied takes it: then you replay the same game, same High
+              or Low, with fresh rolls. If someone rolls instead and climbs off the bottom, the rest roll on with the
+              rolls they have left; if they end up the worst hand, they lose. With only 2 players left in the game, a tie (or
               both missing) means no pencil and the Hammer passes. Alone at the bottom, there’s no choice: you roll
               until you’re out of rolls.
             </li>

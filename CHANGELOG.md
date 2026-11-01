@@ -4,6 +4,22 @@ Every release of refusaldice.com, newest first. Versions are
 major.minor.patch ([docs/WORKFLOW.md](docs/WORKFLOW.md)): each pull request
 bumps the version once and adds its entry here.
 
+## 1.5.0 (unreleased)
+
+- **Boss replays end like Boss games** (ruled 2026-10-29): when tied worst
+  hands replay Boss and two of them tie for the best hand, there's no Boss:
+  nobody takes a pencil and the Hammer passes left. Before, the replay
+  started over.
+- **Taking a tie is an offer** (ruled 2026-10-29): tied for the worst hand,
+  you can take the tie on your turn even while the others tied with you can
+  still roll. It's a replay only if they all take it too. If one rolls
+  instead and climbs off the bottom, you roll on with the rolls you have
+  left; if they end up the worst hand, they lose. Play, Rules and the
+  Glossary say so, and the bots play it.
+- **Tres Away replays go one die at a time** (ruled 2026-10-30): when tied
+  highest scores replay, nobody sets the pace; everyone puts out one die
+  per turn. The main game keeps the caller's pace.
+
 ## 1.4.2 (unreleased)
 
 - **Nothing changes on the site:** release dates in this changelog, the
