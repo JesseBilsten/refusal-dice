@@ -1,30 +1,24 @@
-# Handoff (2026-10-22 21:00 PDT)
+# Handoff (2026-10-29 07:40 PDT)
 
 Read by /session-start. Open work: `ROADMAP.md`. Decisions and rulings: `ROADMAP.md` "Decision log", `docs/RULES.md`. Rewritten at each /handoff.
 
 ## Next (task of the day, in order)
-1. [refusal-dice] **PRs #8, #9 and #10 wait for the owner to merge, in that order**: #8 (design system, audit, workflow, darker coral; 1.2.0), #9 (404/400 error pages; 1.3.0, stacked on #8), #10 (hard mode checks a pick as it's made; 1.4.0, stacked on #9). Every component is approved and both should be green. If a base is squash-merged, rebase the next one onto `origin/master` (`git rebase --onto origin/master <old base> <branch>`), then force-push with lease.
-2. [refusal-dice] Then `ROADMAP.md` Phase 2 item 8 (rest of the odds audit), unless the owner picks a new feature (fresh branch from `master`, version bump).
+1. [refusal-dice] **PR #12 (`chore/handoff-2026-10-23`, 1.4.2, docs only, CI green) waits for the owner to merge.** After the merge: `git checkout master && git pull`, `git tag v1.4.2 && git push origin v1.4.2`, delete the branch (`git push origin --delete chore/handoff-2026-10-23`, `git branch -d chore/handoff-2026-10-23`). The next handoff goes on the next working branch.
+2. [refusal-dice] `ROADMAP.md` Phase 2 item 8 (the rest of the odds audit), unless the owner picks a new feature. Fresh branch from `master`, version bump, CHANGELOG entry.
 
 ## Waiting for the user
-- §6 question 6 (making the game in order): the owner is asking players.
+- Old branches on GitHub (`codex/find-and-fix-an-important-bug`, `codex/update-npm-packages-to-latest-versions`, `feature/bootstrap-to-tailwind-shadcn` (merged in #7), `feature/unified-components`, `upgrade/gatsby-5-and-deps`, `gatsby` (Netlify's branch before 2026-10-17)): offered to check each against `master` and delete the merged or replaced ones; no answer yet.
 
 ## Running in the background
 | What | Unit / process | Ends | Check | Stop |
 |---|---|---|---|---|
-| Owner's `gatsby develop` | port 8000, started by the owner | when they stop it | `lsof -i :8000` | not ours, leave it (needs a restart to show the new `/design` pages) |
-| `gatsby serve` of #9's production build | port 9100, from the scratchpad `build/` copy | when the session ends | `curl -sI http://127.0.0.1:9100/rulez` | `lsof -ti :9100 \| xargs kill` |
+| Owner's `gatsby develop` | port 8000, started by the owner | when they stop it | `lsof -i :8000` | not ours, leave it |
 
-## Last session (2026-10-22)
+## Last session (2026-10-23 → 2026-10-29)
 - Done:
-  - Play speed picker, cup text ("Kicker is higher than…"), Boss stall fix; pushed to `master` (ee28856, live, CI green).
-  - UX audit and design system site with theme playground and approval gate: PR #8.
-  - Workflow docs: `docs/WORKFLOW.md`, `CHANGELOG.md`, CI version check.
-  - The owner approved the 11 proposed components and kept `master` (no rename).
-  - 404/400 error pages with cocked/stacked dice, page matching (`src/lib/page-match.js`), and glossary entries (Cocked Die, Stacked Dice, Off the Table): PR #9. The owner approved `TableFault`/`DiceMishap`, ruled cocked/stacked/off-table dice are re-rolled, and approved darkening the coral (`pop`) for AA.
-  - Hard-mode showing revised (2026-10-22): a pick is checked live; "Not a valid game" offers Roll all five; PR #10 (`showCheck` in play-model).
-  - Seen, not fixed: at 390px in Play, your seat overlaps the seat above it (covers Ava's tags). Pre-existing; worth a look.
+  - Deleted the `tailwind-migration` branch on GitHub (last commit `42e626c`, restorable with `git push origin 42e626c:refs/heads/tailwind-migration`); opened PR #12 for the 2026-10-23 handoff.
+  - Ruled 2026-10-29 (RULES §3.1, §6 question 6): making the game has no fixed order; each player rolls when they like. No engine change (`rollers` already allowed it). Also ruled: Boss players come up in a fixed order from the Boss's left, like Tres Away (§3.3, question 5); the engine already enforced it.
+  - Moved the refusal-dice conversations (`31bcb671`, `216403c4`) and memories (Netlify deploy, better bots; git accounts copied) from `~/.claude/projects/-Users-jessebilsten-Projects-Code/` to `~/.claude/projects/-Users-jessebilsten-Projects-Code-refusal-dice/`, so `claude` started in this repo lists them. The stale copy left in the old folder was deleted 2026-10-29 with the owner's OK.
 - Unfinished:
-  - Stale PRs #5/#6 (`tailwind-migration`, CI green) are still open; ask the owner whether to close them.
   - Outside this repo (carried from 2026-10-21): hh-companion skill-move edits uncommitted; `~/.claude/settings.json` drifted from chezmoi.
-- Learned: now in `notes/lessons.md` (scratch builds, 404 testing, gatsby-node restarts, stacked PRs, `cat >` hang).
+- Learned: in `notes/lessons.md` (`ls` is `eza`: use `/bin/ls --` for names starting with `-`).
