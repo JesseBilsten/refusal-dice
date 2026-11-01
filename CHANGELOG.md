@@ -4,7 +4,12 @@ Every release of refusaldice.com, newest first. Versions are
 major.minor.patch ([docs/WORKFLOW.md](docs/WORKFLOW.md)): each pull request
 bumps the version once and adds its entry here.
 
-## 1.5.0 (unreleased)
+## 1.5.1 (unreleased)
+
+- **Nothing changes on the site:** release dates in this changelog and the
+  project's notes.
+
+## 1.5.0 (2026-11-01)
 
 - **Boss replays end like Boss games** (ruled 2026-10-29): when tied worst
   hands replay Boss and two of them tie for the best hand, there's no Boss:
@@ -20,7 +25,7 @@ bumps the version once and adds its entry here.
   highest scores replay, nobody sets the pace; everyone puts out one die
   per turn. The main game keeps the caller's pace.
 
-## 1.4.2 (unreleased)
+## 1.4.2 (2026-11-01)
 
 - **Nothing changes on the site:** release dates in this changelog, the
   rule for merging stacked pull requests, and the project's notes.
