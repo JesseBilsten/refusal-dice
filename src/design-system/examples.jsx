@@ -62,6 +62,7 @@ import { SpeedPicker, Transport } from '../components/Play/TableControls'
 import { Badge } from '../components/ui/badge'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
+import { Textarea } from '../components/ui/textarea'
 import { Label } from '../components/ui/label'
 import { Switch } from '../components/ui/switch'
 import { Slider } from '../components/ui/slider'
@@ -450,6 +451,13 @@ export const EXAMPLES = {
         className="max-w-xs"
         aria-label="Search terms"
       />
+    </Specimen>
+  ),
+  textarea: () => (
+    <Specimen title="In a Field, with its label and hint tied to it">
+      <Field label="What happened?" htmlFor="example-textarea" hint="What you tapped, and what the page did." className="max-w-md">
+        <Textarea id="example-textarea" rows={4} aria-describedby="example-textarea-hint" />
+      </Field>
     </Specimen>
   ),
   label: () => (

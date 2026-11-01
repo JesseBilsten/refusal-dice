@@ -28,4 +28,8 @@ export const NAV_GROUPS = [
 ]
 
 /** About the site: in the footer only */
-export const SITE_NAV = [{ to: '/design', label: 'Design system' }]
+export const SITE_NAV = [
+  { to: '/changelog', label: 'What’s new' },
+  { to: '/report', label: 'Report a problem' },
+  { to: '/design', label: 'Design system' },
+]

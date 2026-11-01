@@ -250,7 +250,7 @@ const DOCS = [
     'Layout',
     'components/Page/Field.jsx',
     ['Field', 'EmptyState'],
-    'A labelled control with an optional hint; and the dashed box where a result will appear.',
+    'A labelled control with an optional hint (`htmlFor`: a real label tied to the control, the hint its description); and the dashed box where a result will appear.',
     { status: A, approved: '2026-10-22', replaces: 'The keep advisor’s local `Field` and `Empty`' }
   ),
   comp(
@@ -345,6 +345,15 @@ const DOCS = [
     'components/ui/input.jsx',
     ['Input'],
     'A text box (the Glossary search).'
+  ),
+  comp(
+    'textarea',
+    'Textarea',
+    'Data entry',
+    'components/ui/textarea.jsx',
+    ['Textarea'],
+    'A text box for a few lines (the report form’s description). Label it with a Field (`htmlFor`).',
+    { status: P, proposed: '2026-11-01' }
   ),
   comp(
     'label',
@@ -719,6 +728,24 @@ const DOCS = [
     ['TableFault', 'FAULTS'],
     'An error page told as a mishap at the table: the dice, the real error name in the eyebrow, what happened, and the way out. `FAULTS` lists them: 404 not found (cocked), 400 unknown game, 500 dice off the table.',
     { status: A, approved: '2026-10-22', liveAt: '/404' }
+  ),
+  pat(
+    'release-notes',
+    'ReleaseNotes',
+    'Site',
+    'components/Changelog/ReleaseNotes.jsx',
+    ['ReleaseNotes', 'InlineMarkdown'],
+    'The changelog: each release’s version and date (the newest marked Latest), then what changed, read from CHANGELOG.md at build time (`lib/changelog.js`). Releases that change nothing on the site are left out.',
+    { status: P, proposed: '2026-11-01', liveAt: '/changelog' }
+  ),
+  pat(
+    'report-form',
+    'ReportForm',
+    'Site',
+    'components/Report/ReportForm.jsx',
+    ['ReportForm'],
+    'Report a problem or an idea: what kind, a title, what happened, then “Continue on GitHub” opens a prefilled new issue (`lib/issue-link.js`) with the page, version, browser and house rules. Nothing is sent from the site.',
+    { status: P, proposed: '2026-11-01', liveAt: '/report' }
   ),
   pat(
     'round-story',

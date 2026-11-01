@@ -4,6 +4,17 @@ Every release of refusaldice.com, newest first. Versions are
 major.minor.patch ([docs/WORKFLOW.md](docs/WORKFLOW.md)): each pull request
 bumps the version once and adds its entry here.
 
+## 1.6.0 (unreleased)
+
+- **What’s new:** a page listing every release of the site, newest first,
+  read from this changelog at build time (`/changelog`, in the footer).
+- **Report a problem:** a short form (`/report`, in the footer) for a bug, a
+  rule or number that looks wrong, or an idea. It opens a GitHub issue with
+  everything filled in, including the page, version, browser and house
+  rules; you check it and submit it there.
+- **Proposed for approval:** Textarea, ReleaseNotes and ReportForm. Field
+  can now tie its label to its control (`htmlFor`).
+
 ## 1.5.1 (unreleased)
 
 - **Nothing changes on the site:** release dates in this changelog and the
