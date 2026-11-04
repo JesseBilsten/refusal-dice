@@ -1,13 +1,25 @@
 import React from 'react'
 import { cn } from '../../lib/utils'
 
-/** A labelled control in a form or tool panel: the label, the control, then an optional hint */
-export default function Field({ label, hint, className, children }) {
+/**
+ * A labelled control in a form or tool panel: the label, the control, then
+ * an optional hint. `htmlFor` (the control's id) makes the label a real
+ * <label>, so tapping it focuses the control and screen readers announce
+ * it; the hint is then the control's description (`${htmlFor}-hint`).
+ */
+export default function Field({ label, hint, htmlFor, className, children }) {
+  const Label = htmlFor ? 'label' : 'div'
   return (
     <div className={cn('space-y-2', className)}>
-      <div className="text-sm font-semibold">{label}</div>
+      <Label htmlFor={htmlFor} className="block text-sm font-semibold">
+        {label}
+      </Label>
       {children}
-      {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
+      {hint && (
+        <p id={htmlFor && `${htmlFor}-hint`} className="text-xs text-muted-foreground">
+          {hint}
+        </p>
+      )}
     </div>
   )
 }

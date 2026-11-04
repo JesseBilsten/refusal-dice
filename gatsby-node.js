@@ -149,6 +149,14 @@ exports.createPages = async ({ actions }) => {
     });
   });
 
+  // The changelog, read from CHANGELOG.md at build time so it follows every release
+  const { parseChangelog } = require('./src/lib/changelog');
+  createPage({
+    path: '/changelog',
+    component: path.resolve('./src/templates/changelog.js'),
+    context: { releases: parseChangelog(fs.readFileSync(path.resolve('./CHANGELOG.md'), 'utf8')) },
+  });
+
   // The design system: a page per registry entry (the introduction is src/pages/design.js)
   const designDocTemplate = path.resolve('./src/templates/design-doc.js');
   DOCS.filter(d => d.id !== 'introduction').forEach(d => {
