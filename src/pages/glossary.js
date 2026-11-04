@@ -121,12 +121,12 @@ const GLOSSARY_TERMS = [
     body: (
       <>
         <p className="mb-2">
-          When all remaining players have exactly 2 <TextLink to="#pencil">pencils</TextLink>.
-          Some groups reset pencils to zero and add additional money to the pot at parity.
+          When every player still in has 2 <TextLink to="#pencil">pencils</TextLink>. Everyone puts their pencils
+          back, and from then on a loss is out: the next pencil puts a player out.
         </p>
         <p className="text-sm text-muted-foreground">
-          <strong>House rules vary:</strong> Check with your group about parity rules before playing.<br/>
-          <strong>See also:</strong> <TextLink to="/rules#setup">Rules: Ante Variations</TextLink>
+          <strong>House rules vary:</strong> some tables start over at parity and everyone buys in again.<br/>
+          <strong>See also:</strong> <TextLink to="/rules#setup">Rules: ante and setup</TextLink>
         </p>
       </>
     ),

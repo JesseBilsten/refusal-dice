@@ -82,7 +82,7 @@ Build it once and every later phase gets cheaper.
 
 ### House rules system (after the engine; before Phase 2's odds tables)
 
-✅ _Started 2026-10-19: the first rule, Monterey's lone 3 or 4 keep (`montereyLoneKeep`), is a switch under House rules in Settings (`useHouseRules`). The engine, bots, exact keep odds, simulations and every generated table follow it; the tables are generated for both settings. Next: ante, parity money and barking as settings._
+✅ _Started 2026-10-19: the first rule, Monterey's lone 3 or 4 keep (`montereyLoneKeep`), is a switch under House rules in Settings (`useHouseRules`). The engine, bots, exact keep odds, simulations and every generated table follow it; the tables are generated for both settings. Next: parity options at game start (sudden death is built as the default, 2026-11-04), the pot, and barking._
 
 - **Owner requirement:** house rules are selectable site-wide (header or user preferences), and changing them recalculates every probability on the site. See `docs/RULES.md` section 5.
 - **Engine and data:** the engine takes a `HouseRules` object; every rule and odds function is parameterized by it. Precomputed tables are generated for the default rules, and other rule sets are computed on demand (or a small set of common presets is precomputed).
@@ -184,13 +184,14 @@ Build it once and every later phase gets cheaper.
 
 ## Open questions
 
-1. **House rules beyond Monterey:** docs/RULES.md §5 lists three more things tables are said to play differently: (a) extra money into the pot at **parity** (everyone left has 2 pencils), (b) some tables **reset pencils** at parity, (c) whether **barking** is allowed at all. Do your tables actually differ on any of these? If not, we encode the owner's rules and drop the list; only rules that change who takes the pencil (like the Monterey keep) need a setting. (Asked again 2026-11-04 with this context; the owner wasn't sure these are separate rule sets.)
+1. **Barking allowed or not:** docs/RULES.md §5 still lists "barking allowed or not" as something tables play differently (the engine has a `barking` switch, always on). Do any of your tables ban barking? If not, we drop it from the list. (Parity was answered 2026-11-04.)
 
 ## Decision log
 
 | Date | Decision | Notes |
 |---|---|---|
-| 2026-11-04 | Tres Away replay: the tied player closest to the original caller's left goes first (the caller, when tied) | docs/RULES.md §3.2, §6 question 1; the engine already did this |
+| 2026-11-04 | Parity (everyone left has 2 pencils): pencils go back and a loss is out, by default; other parity rules (start over and buy in again) are options picked when starting a game | docs/RULES.md §1, §5; engine `parity` rule, 1.7.0. Owner: "Most tables play where parity just means everyone puts their pencils back and now a loss is out." Buy-in-again waits for the pot |
+| 2026-11-04 | Tres Away replay: the tied player closest to the original caller's left goes first (the caller, when tied); everyone, the first player included, puts out one die at a time | docs/RULES.md §3.2, §6 question 1; the engine already did this. Owner confirmed the caller goes first when tied |
 | 2026-11-04 | Support 2–8 players everywhere | Owner: "Yes." Play already seats 1–7 bots |
 | 2026-11-04 | AI play works signed-out; accounts only for online play (for now) | Owner: "AI play can be used without signing in for now." |
 | 2026-11-04 | Track the pot and pencils: $5 per game, later converted to fake internet points | Owner: "Track the pot and pencils. $5 per game. We'll convert this to fake internet points later." Not built yet (Phase 3/4) |

@@ -13,6 +13,7 @@ import {
   keptAt,
   isKickerGame,
   keepProblem,
+  pencilsToLose,
   rankBest,
   razzleScore,
   refusalSeats,
@@ -1020,7 +1021,7 @@ export default function Play({ intro }) {
           you={isYou}
           compact={compact}
           pencils={0}
-          maxPencils={game.rules.pencilsToLose}
+          maxPencils={pencilsToLose(game)}
           badges={pStep?.done && s.id === game.hammer ? ['🔨 Hammer'] : []}
           className={cn(!stillIn && 'opacity-60')}
         >
@@ -1094,7 +1095,7 @@ export default function Play({ intro }) {
         // The seat's latest move already says "Refuses" or "Accepts"
         decision={['Refuses', 'Accepts'].includes(m?.text) ? undefined : decisions[s.id]}
         pencils={s.pencils}
-        maxPencils={game.rules.pencilsToLose}
+        maxPencils={pencilsToLose(game)}
         said={m && !s.out ? { text: m.text, at: m.at, fresh: m.at === newest } : undefined}
         detail={compact && !s.out && st && !inCup ? capital(standingDetail(st)) : undefined}
         className={isYou ? 'max-h-[75vh] overflow-y-auto shadow-lg' : undefined}
@@ -1150,7 +1151,7 @@ export default function Play({ intro }) {
             : 'The Hammer calls first; play passes to the left, down the list.'
         }
       >
-        <TableOrder rows={orderRows} hammer={game.hammer} maxPencils={game.rules.pencilsToLose} />
+        <TableOrder rows={orderRows} hammer={game.hammer} maxPencils={pencilsToLose(game)} />
       </Panel>
     )
 

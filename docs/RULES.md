@@ -16,6 +16,7 @@ Each rule is tagged by where it came from:
 - **Piddle:** everyone rolls one die; highest roll takes the **Hammer**; ties re-roll. [site]
 - **Cocked, stacked or off the table: re-roll** (ruled 2026-10-22). A die that doesn't land flat (leaning on the cup, a die or the table edge), lands on top of another, or leaves the table doesn't count and is re-rolled; for stacked dice, both are. Only matters at a real table: the engine's dice always land flat. [confirmed]
 - Each player starts with 0 **pencils**. 3 pencils = out. Last player standing wins the pot. [site]
+- **Parity:** when every player still in has 2 pencils (one short of out), everyone puts their pencils back, and from then on **a loss is out**: the next pencil puts a player out (ruled 2026-11-04). The owner: "Most tables play where parity just means everyone puts their pencils back and now a loss is out." This is the default; other parity rules can be picked when starting a game (§5). Players already out stay out. It happens once a game. [confirmed] (`checkParity`, `pencilsToLose` in `src/engine/round/game.ts`)
 
 ## 2. A round
 
@@ -90,7 +91,7 @@ Each rule is tagged by where it came from:
   2. Everyone else puts out dice until they have **as many dice out as the caller, and never more**.
   3. Starting with the player on the caller's left and going around, each player catches up: put out at least 1 die (from their hand, or after a roll), then roll and put out at least 1 after each roll until they've matched the caller's count. Then the next player goes.
   4. Then it's the caller's turn again: they put out another die (or several), from their hand or after rolling, and the cycle repeats until all dice are out.
-- **A replay goes one die at a time** (tied highest scores replay, §4): nobody sets the pace; each player puts out exactly one die per turn, instead of matching the caller's count. Only in a replay; the main game keeps the caller's pace. (ruled 2026-10-30) [confirmed] The tied player closest to the original caller's left goes first, then on around the table to the left; the caller goes first when tied, as play always starts at the Hammer (ruled 2026-11-04). [confirmed] (`tresAwayMaxPutOut`, `enterPlay` in `src/engine/round/game.ts`)
+- **A replay goes one die at a time** (tied highest scores replay, §4): nobody sets the pace; each player puts out exactly one die per turn, instead of matching the caller's count. Only in a replay; the main game keeps the caller's pace. (ruled 2026-10-30) [confirmed] The tied player closest to the original caller's left goes first, then on around the table to the left; the caller goes first when tied (ruled 2026-11-04). Going first is no advantage here: the first player puts out one die too, unlike the main game, where the caller may put out as many as they like. The owner: "if the hammer is part of the tied players, he goes first but important to note, everyone puts out one die at a time during ties, there's no advantage at this stage like there is on the first call." [confirmed] (`tresAwayMaxPutOut`, `enterPlay` in `src/engine/round/game.ts`)
 - The loser is the highest score once everyone has all 5 dice out. [site]
 
 ### 3.3 Boss
@@ -137,7 +138,11 @@ House rules must be **selectable site-wide** (header or user preferences). Chang
 
 Known variations to support:
 
-- **Ante** amount; extra money added at **parity** (all remaining players have 2 pencils); some groups reset pencils at parity. [site]
+- **Ante** amount. The site tracks $5 a game (§1). [confirmed]
+- **Parity** (`parity`, built for the default): what happens when everyone left has 2 pencils. Picked when starting a game, not site-wide, since it doesn't change any round's odds. [confirmed, 2026-11-04]
+  - `'sudden-death'` (default): pencils go back, and a loss is out (§1).
+  - `'none'`: nothing happens; 3 pencils is out as usual.
+  - Planned: **start over and buy in again**: pencils go back to 0 and everyone left antes again (needs the pot, ROADMAP).
 - **Barking** allowed or not. [site]
 - **Monterey keep requirement** (`montereyLoneKeep`, built): some tables let a player keep a lone 3 or 4, not only 2-3 / 3-4 / 4-5. Off by default. Visitors set it under House rules in Settings; every odds figure follows it, using tables generated for both rule sets. [confirmed, example given by owner]
 - More will be collected as they come up; each needs a precise definition here before it's implemented.

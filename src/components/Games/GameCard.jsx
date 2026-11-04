@@ -21,9 +21,10 @@ export default function GameCard({ section, oneRoll, playable, loss, dimmed }) {
     <Panel
       id={section.id}
       className={cn(
-        'scroll-mt-24 transition-opacity',
+        'scroll-mt-24 transition-colors',
         playable && 'border-primary ring-1 ring-primary',
-        dimmed && 'opacity-50'
+        // Not your roll's game: a quieter card with grey dice. Text keeps full contrast (WCAG 1.4.3)
+        dimmed && 'border-dashed bg-muted/40 shadow-none'
       )}
     >
       <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_auto]">
@@ -65,7 +66,7 @@ export default function GameCard({ section, oneRoll, playable, loss, dimmed }) {
             </Link>
           </div>
         </div>
-        <div className="flex flex-col gap-3 md:items-end">
+        <div className={cn('flex flex-col gap-3 md:items-end', dimmed && 'grayscale')}>
           {section.examples.map((e, i) => (
             <Hand
               key={i}

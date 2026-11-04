@@ -172,7 +172,7 @@ Simulated odds mean "against (and as) solid bots". Show the sample size and that
 - **Kicker** (singular): all the dice left after making the game, as one total. It's re-rolled whole, never in part. Write "a kicker of 6+1", not "kickers".
 - **Keeping:** only dice toward the game, and kept dice stay kept (RULES.md §3.1). The 10s come in one roll (nothing to keep until made); Ship Captain Crew keeps 1-2 or 5-6; Monterey 2-3, 3-4 or 4-5 (a lone 3 or 4 under the house rule); 7's and Pairs one pair. Kept dice are part of the game (a kept pair stays a pair: pass the kept positions to `evaluateKickerHand`/`makesGame`, `keptAt` reads them back), and a made game's dice can't be re-rolled. Boss may pick up any dice that still leave a hand beating the table (`bossKeepProblem`, §3.3).
 - **Ties:** with 3+ players, the tied losers replay; with 2 players, no pencil is taken and the Hammer passes.
-- **End:** 3 pencils = out; last player standing wins the pot.
+- **End:** 3 pencils = out; last player standing wins the pot. **Parity** (everyone left has 2 pencils): pencils go back and a loss is out (`rules.parity`, default `'sudden-death'`).
 - **Games** (ids from `games-config.js`):
   - `10-2`, `10-3`, `10-4`, `ship-captain-crew`, `monterey`, `vegas` (7's) and `pairs` have high/low variants.
   - `razzle` (1s wild; most of one number, higher face breaks equal counts), `boss` (poker hands) and `tres-away` (lowest total, 3s = 0) are specialty games with no variant.

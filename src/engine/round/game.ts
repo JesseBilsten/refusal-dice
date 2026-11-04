@@ -139,10 +139,14 @@ export type GameEvent =
   | { type: 'cycle'; players: PlayerId[]; reason: 'missed' | 'tie' }
   | { type: 'pencil'; player: PlayerId; pencils: number; out: boolean }
   | { type: 'noPencil'; reason: 'two-player-tie' | 'two-player-miss' | 'no-boss' | 'boss-stayed-down' }
+  /** Everyone left had one pencil short of out: pencils went back, and the next pencil puts a player out (§1) */
+  | { type: 'parity' }
   | { type: 'gameOver'; winner: PlayerId }
 
 export interface GameState {
   rules: HouseRules
+  /** Parity was reached (rules.parity 'sudden-death'): one pencil now puts a player out */
+  parity?: boolean
   /** Seat order; "left" is the next seat */
   seats: Seat[]
   hammer: PlayerId
@@ -391,11 +395,26 @@ function settleWorst(state: GameState, call: Call, cycle: number, worst: PlayerI
   return startCycle(state, call, cycle, worst, 'tie')
 }
 
+/** Pencils that put a player out now: one after parity (§1) */
+export const pencilsToLose = (state: Pick<GameState, 'rules' | 'parity'>) =>
+  state.parity ? 1 : state.rules.pencilsToLose
+
+/**
+ * Parity (§1, ruled 2026-11-04): once everyone left has one pencil short of
+ * out, everyone's pencils go back, and from then on a loss puts a player out.
+ */
+function checkParity(state: GameState): GameState {
+  const short = state.rules.pencilsToLose - 1
+  if (state.rules.parity !== 'sudden-death' || state.parity || short < 1) return state
+  if (!activeSeats(state).every((s) => s.pencils === short)) return state
+  const seats = state.seats.map((s) => (s.out ? s : { ...s, pencils: 0 }))
+  return log({ ...state, seats, parity: true }, { type: 'parity' })
+}
+
 function scorePencil(state: GameState, call: Call, loser: PlayerId): GameState {
+  const limit = pencilsToLose(state)
   const seats = state.seats.map((s) =>
-    s.id === loser
-      ? { ...s, pencils: s.pencils + 1, out: s.pencils + 1 >= state.rules.pencilsToLose }
-      : s
+    s.id === loser ? { ...s, pencils: s.pencils + 1, out: s.pencils + 1 >= limit } : s
   )
   const seat = seats.find((s) => s.id === loser)!
   let next = log({ ...state, seats }, { type: 'pencil', player: loser, pencils: seat.pencils, out: seat.out })
@@ -405,6 +424,7 @@ function scorePencil(state: GameState, call: Call, loser: PlayerId): GameState {
     const winner = remaining[0].id
     return log({ ...next, hammer: winner, phase: { kind: 'gameOver', winner } }, { type: 'gameOver', winner })
   }
+  next = checkParity(next)
   // The loser takes the Hammer; if they're out, it passes to the next active player on their left
   const hammer = seat.out ? nextActive(next, loser) : loser
   return { ...next, hammer, phase: { kind: 'roundOver', call, loser } }
@@ -888,6 +908,8 @@ export type VisibleDice = (Die | null)[] | null
 export interface PlayerView {
   viewer: PlayerId
   seats: Seat[]
+  /** Parity was reached: one pencil now puts a player out */
+  parity: boolean
   hammer: PlayerId
   round: number
   phase: Phase
@@ -924,6 +946,7 @@ export function viewFor(state: GameState, viewer: PlayerId): PlayerView {
   return {
     viewer,
     seats: state.seats,
+    parity: !!state.parity,
     hammer: state.hammer,
     round: state.round,
     phase: state.phase,

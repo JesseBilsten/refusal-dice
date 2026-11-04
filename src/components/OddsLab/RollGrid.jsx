@@ -6,7 +6,7 @@ const pct = (count, total) => `${((count / total) * 100).toFixed(2)}%`
 
 /**
  * Every unique roll (order ignored), weighted by how many ordered outcomes
- * produce it. Matches glow green; everything else fades out. Inside a match,
+ * produce it. Matches glow green; everything else fades its dice. Inside a match,
  * dice no requirement needed (kickers) are dimmed.
  */
 const RollGrid = ({ rolls, total, diffKeys, matchesFirst }) => {
@@ -34,12 +34,16 @@ const RollGrid = ({ rolls, total, diffKeys, matchesFirst }) => {
               'flex items-center justify-between rounded-md border px-1 py-0.5 text-sm transition-all duration-300',
               r.match
                 ? 'border-uncommon-border bg-uncommon text-uncommon-foreground'
-                : 'border-transparent bg-muted/40 text-muted-foreground opacity-25 grayscale',
-              differs && 'opacity-100 grayscale-0 ring-2 ring-epic-border'
+                : 'border-transparent bg-muted/40 text-muted-foreground',
+              differs && 'ring-2 ring-epic-border'
             )}
           >
             <span className="sr-only">{`${r.roll.join(', ')}: ${status}`}</span>
-            <span aria-hidden="true" className="flex items-center">
+            {/* A non-match fades its dice; its count stays readable (WCAG 1.4.3) */}
+            <span
+              aria-hidden="true"
+              className={cn('flex items-center transition-opacity', !r.match && !differs && 'opacity-25 grayscale')}
+            >
               {r.roll.map((d, i) => (
                 <span
                   key={i}
@@ -49,7 +53,7 @@ const RollGrid = ({ rolls, total, diffKeys, matchesFirst }) => {
                 </span>
               ))}
             </span>
-            <span className="ml-1 text-right text-xs tabular-nums opacity-70">×{r.count}</span>
+            <span className="ml-1 text-right text-xs tabular-nums">×{r.count}</span>
           </li>
         )
       })}

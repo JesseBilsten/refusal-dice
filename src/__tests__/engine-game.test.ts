@@ -26,6 +26,7 @@ import {
   seeded,
   standings,
   tresAwayMaxPutOut,
+  pencilsToLose,
   viewFor,
 } from '../engine'
 
@@ -597,6 +598,55 @@ describe('playing and scoring (§3.1, §4)', () => {
   })
 })
 
+describe('parity (§1, ruled 2026-11-04)', () => {
+  // a and b hold 2 pencils, c holds 1; c misses 10-2 in round 1 (and, at parity, in round 2)
+  const cMisses = [...[4, 6, 1, 1, 1], ...[5, 5, 1, 1, 1], ...[1, 1, 1, 1, 2], ...Array(10).fill(1)]
+  const atTwoTwoOne = (rules = {}) => {
+    const g = createGame({
+      players: players('a', 'b', 'c'),
+      hammer: 'a',
+      rules,
+      source: scripted([...cMisses, ...cMisses]),
+    })
+    const pencils: Record<string, number> = { a: 2, b: 2, c: 1 }
+    return { ...g, seats: g.seats.map((s) => ({ ...s, pencils: pencils[s.id] })) }
+  }
+  const cLoses = (g: GameState, hammer: string, refuser: string) =>
+    play(
+      g,
+      { type: 'call', player: hammer, call: { game: '10-2', variant: 'high' } },
+      { type: 'accept', player: refuser },
+      { type: 'reroll', player: 'c', keep: [] },
+      { type: 'reroll', player: 'c', keep: [] }
+    )
+
+  test('everyone left one pencil short of out: pencils go back, and the next pencil puts a player out', () => {
+    let g = cLoses(atTwoTwoOne(), 'a', 'b')
+    expect(g.phase).toMatchObject({ kind: 'roundOver', loser: 'c' })
+    expect(g.log.slice(-2).map((e) => e.type)).toEqual(['pencil', 'parity'])
+    expect(g.seats.map((s) => [s.id, s.pencils, s.out])).toEqual([
+      ['a', 0, false],
+      ['b', 0, false],
+      ['c', 0, false],
+    ])
+    expect(g.parity).toBe(true)
+    expect(viewFor(g, 'a').parity).toBe(true)
+    expect(pencilsToLose(g)).toBe(1)
+
+    g = cLoses(applyAction(g, { type: 'nextRound' }), 'c', 'a')
+    expect(g.seats.find((s) => s.id === 'c')).toMatchObject({ pencils: 1, out: true })
+    expect(activeSeats(g).map((s) => s.id)).toEqual(['a', 'b'])
+    expect(g.log.filter((e) => e.type === 'parity')).toHaveLength(1) // only once a game
+  })
+
+  test("with parity 'none', nothing happens: 2 pencils each, 3 to go out", () => {
+    const g = cLoses(atTwoTwoOne({ parity: 'none' }), 'a', 'b')
+    expect(g.seats.map((s) => s.pencils)).toEqual([2, 2, 2])
+    expect(g.parity).toBeFalsy()
+    expect(pencilsToLose(g)).toBe(3)
+  })
+})
+
 describe('player views', () => {
   test('other players’ initial rolls are hidden until play starts', () => {
     let g = createGame({
@@ -706,6 +756,7 @@ describe('random games always finish and keep invariants', () => {
   }
 
   test('2,000 seeded games across 2–8 players', () => {
+    let parityGames = 0
     let seed = 1
     const r = () =>
       (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648
@@ -729,12 +780,14 @@ describe('random games always finish and keep invariants', () => {
         standings(g).forEach((s) => s.status === 'safe' && safe.add(s.player))
         expect(++steps).toBeLessThan(20000)
         g.seats.forEach((s) =>
-          expect(s.pencils).toBeLessThanOrEqual(g.rules.pencilsToLose)
+          expect(s.pencils).toBeLessThanOrEqual(s.out ? g.rules.pencilsToLose : pencilsToLose(g))
         )
         expect(g.seats.find((s) => s.id === g.hammer)!.out).toBe(false)
       }
       expect(activeSeats(g)).toHaveLength(1)
       expect(g.phase.winner).toBe(activeSeats(g)[0].id)
+      if (g.parity) parityGames++
     }
+    expect(parityGames).toBeGreaterThan(0)
   })
 })
