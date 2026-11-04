@@ -748,7 +748,6 @@ export function applyAction(state: GameState, action: Action): GameState {
       }
       if (action.type === 'bark') {
         assertActor(action.player, state.hammer, 'bark')
-        if (!state.rules.barking) throw new EngineError('Barking is off in these house rules')
         const hammer = nextActive(state, state.hammer)
         return deal(log({ ...state, hammer, round: state.round + 1 }, { type: 'barked', player: action.player }))
       }

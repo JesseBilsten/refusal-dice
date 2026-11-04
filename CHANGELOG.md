@@ -27,7 +27,8 @@ bumps the version once and adds its entry here.
   in paragraphs.
 - **Rules:** a Tres Away replay starts with the tied player nearest the
   caller's left (the caller, when tied), and everyone puts out one die at a
-  time.
+  time
+  time. Barking is always allowed, so it's no longer listed as a house rule.
 - **Behind the scenes:** old guesswork code and notes removed; the dice
   data files are a third of the size.
 

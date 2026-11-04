@@ -733,7 +733,7 @@ export default function Play({ intro }) {
           <summary className="cursor-pointer select-none rounded-lg p-2 text-sm font-medium hover:bg-accent">Other calls ({ranked.length - 4})</summary>
           <ul className="grid grid-cols-2 gap-2 p-2">{ranked.slice(4).map(callButton)}</ul>
         </details>
-        {!second && game.rules.barking && (
+        {!second && (
           <Button variant="outline" onClick={() => act({ type: 'bark', player: YOU })}>
             Bark: pass the Hammer
           </Button>

@@ -24,7 +24,7 @@ Each rule is tagged by where it came from:
    - Only the Hammer and the refusals need their dice before the call. Everyone else may leave theirs in the cup until the Hammer calls, then roll for the call; that roll is still their roll 1 (ruled 2026-10-21; Play works this way). [confirmed]
 2. **Call or bark.** The Hammer looks at their dice and either:
    - **calls** a game, including a high/low variant for kicker games (e.g. "10-3 High"), or
-   - **barks:** the Hammer passes to the player on the left, everyone picks up, and the round starts over with a fresh roll and the new Hammer calling. [confirmed]
+   - **barks:** the Hammer passes to the player on the left, everyone picks up, and the round starts over with a fresh roll and the new Hammer calling. [confirmed] Barking is always allowed: no known table bans it (ruled 2026-11-04). [confirmed]
 3. **Refusal.**
    - **1st refusal** (Hammer's left) accepts or refuses.
    - If they refuse, **2nd refusal** (two seats left) accepts or refuses. [site]
@@ -143,7 +143,6 @@ Known variations to support:
   - `'sudden-death'` (default): pencils go back, and a loss is out (§1).
   - `'none'`: nothing happens; 3 pencils is out as usual.
   - Planned: **start over and buy in again**: pencils go back to 0 and everyone left antes again (needs the pot, ROADMAP).
-- **Barking** allowed or not. [site]
 - **Monterey keep requirement** (`montereyLoneKeep`, built): some tables let a player keep a lone 3 or 4, not only 2-3 / 3-4 / 4-5. Off by default. Visitors set it under House rules in Settings; every odds figure follows it, using tables generated for both rule sets. [confirmed, example given by owner]
 - More will be collected as they come up; each needs a precise definition here before it's implemented.
 

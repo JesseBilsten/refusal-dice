@@ -206,17 +206,6 @@ describe('call and refusal (§2)', () => {
     expect(dice(g, 'a')).toEqual([2, 2, 2, 2, 2])
   })
 
-  test('barking can be turned off by house rules', () => {
-    const g = createGame({
-      players: players('a', 'b', 'c'),
-      hammer: 'a',
-      rules: { barking: false },
-      source: scripted(Array(15).fill(1)),
-    })
-    expect(() => applyAction(g, { type: 'bark', player: 'a' })).toThrow(
-      /Barking is off/
-    )
-  })
 })
 
 describe('playing and scoring (§3.1, §4)', () => {

@@ -82,7 +82,7 @@ Build it once and every later phase gets cheaper.
 
 ### House rules system (after the engine; before Phase 2's odds tables)
 
-✅ _Started 2026-10-19: the first rule, Monterey's lone 3 or 4 keep (`montereyLoneKeep`), is a switch under House rules in Settings (`useHouseRules`). The engine, bots, exact keep odds, simulations and every generated table follow it; the tables are generated for both settings. Next: parity options at game start (sudden death is built as the default, 2026-11-04), the pot, and barking._
+✅ _Started 2026-10-19: the first rule, Monterey's lone 3 or 4 keep (`montereyLoneKeep`), is a switch under House rules in Settings (`useHouseRules`). The engine, bots, exact keep odds, simulations and every generated table follow it; the tables are generated for both settings. Next: parity options at game start (sudden death is built as the default, 2026-11-04) and the pot._
 
 - **Owner requirement:** house rules are selectable site-wide (header or user preferences), and changing them recalculates every probability on the site. See `docs/RULES.md` section 5.
 - **Engine and data:** the engine takes a `HouseRules` object; every rule and odds function is parameterized by it. Precomputed tables are generated for the default rules, and other rule sets are computed on demand (or a small set of common presets is precomputed).
@@ -184,12 +184,13 @@ Build it once and every later phase gets cheaper.
 
 ## Open questions
 
-1. **Barking allowed or not:** docs/RULES.md §5 still lists "barking allowed or not" as something tables play differently (the engine has a `barking` switch, always on). Do any of your tables ban barking? If not, we drop it from the list. (Parity was answered 2026-11-04.)
+_None right now._
 
 ## Decision log
 
 | Date | Decision | Notes |
 |---|---|---|
+| 2026-11-04 | Barking is always allowed; no house rule for it | Owner: "I have no knowledge of any tables that ban barking." Dropped from docs/RULES.md §5, and the engine's unused `barking` switch removed |
 | 2026-11-04 | Parity (everyone left has 2 pencils): pencils go back and a loss is out, by default; other parity rules (start over and buy in again) are options picked when starting a game | docs/RULES.md §1, §5; engine `parity` rule, 1.7.0. Owner: "Most tables play where parity just means everyone puts their pencils back and now a loss is out." Buy-in-again waits for the pot |
 | 2026-11-04 | Tres Away replay: the tied player closest to the original caller's left goes first (the caller, when tied); everyone, the first player included, puts out one die at a time | docs/RULES.md §3.2, §6 question 1; the engine already did this. Owner confirmed the caller goes first when tied |
 | 2026-11-04 | Support 2–8 players everywhere | Owner: "Yes." Play already seats 1–7 bots |

@@ -91,7 +91,7 @@ export function hintStats(state: GameState, me: string, action: Action, names: H
       best: same(o.call, pick),
     }))
     const players = Math.min(8, Math.max(2, activeSeats(state).length))
-    const canBark = phase.kind === 'call' && state.rules.barking
+    const canBark = phase.kind === 'call'
     const bark = barkOdds(players, state.rules)
     if (canBark) rows.push({ label: 'Bark', value: bark, best: action.type === 'bark' })
     const best = ranked[0]
