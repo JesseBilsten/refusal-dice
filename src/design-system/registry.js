@@ -353,7 +353,7 @@ const DOCS = [
     'components/ui/textarea.jsx',
     ['Textarea'],
     'A text box for a few lines (the report form’s description). Label it with a Field (`htmlFor`).',
-    { status: P, proposed: '2026-11-01' }
+    { status: A, approved: '2026-11-04' }
   ),
   comp(
     'label',
@@ -736,7 +736,7 @@ const DOCS = [
     'components/Changelog/ReleaseNotes.jsx',
     ['ReleaseNotes', 'InlineMarkdown'],
     'The changelog: each release’s version and date (the newest marked Latest), then what changed, read from CHANGELOG.md at build time (`lib/changelog.js`). Releases that change nothing on the site are left out.',
-    { status: P, proposed: '2026-11-01', liveAt: '/changelog' }
+    { status: A, approved: '2026-11-04', liveAt: '/changelog' }
   ),
   pat(
     'report-form',
@@ -745,7 +745,7 @@ const DOCS = [
     'components/Report/ReportForm.jsx',
     ['ReportForm'],
     'Report a problem or an idea: what kind, a title, what happened, then “Continue on GitHub” opens a prefilled new issue (`lib/issue-link.js`) with the page, version, browser and house rules. Nothing is sent from the site.',
-    { status: P, proposed: '2026-11-01', liveAt: '/report' }
+    { status: A, approved: '2026-11-04', liveAt: '/report' }
   ),
   pat(
     'round-story',

@@ -12,8 +12,8 @@ bumps the version once and adds its entry here.
   rule or number that looks wrong, or an idea. It opens a GitHub issue with
   everything filled in, including the page, version, browser and house
   rules; you check it and submit it there.
-- **Proposed for approval:** Textarea, ReleaseNotes and ReportForm. Field
-  can now tie its label to its control (`htmlFor`).
+- **Design system:** Textarea, ReleaseNotes and ReportForm, approved
+  2026-11-04. Field can now tie its label to its control (`htmlFor`).
 
 ## 1.5.1 (unreleased)
 
