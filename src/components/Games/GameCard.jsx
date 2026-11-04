@@ -66,7 +66,12 @@ export default function GameCard({ section, oneRoll, playable, loss, dimmed }) {
             </Link>
           </div>
         </div>
-        <div className={cn('flex flex-col gap-3 md:items-end', dimmed && 'grayscale')}>
+        <div
+          className={cn(
+            'flex flex-col gap-3 md:items-end',
+            dimmed && 'grayscale'
+          )}
+        >
           {section.examples.map((e, i) => (
             <Hand
               key={i}

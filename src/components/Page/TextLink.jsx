@@ -8,10 +8,13 @@ import { cn } from '../../lib/utils'
  */
 export default function TextLink({ to, className, children }) {
   return (
-    <Link to={to} className={cn(
+    <Link
+      to={to}
+      className={cn(
         'text-primary underline decoration-primary/40 underline-offset-2 transition-colors hover:decoration-primary',
         className
-      )}>
+      )}
+    >
       {children}
     </Link>
   )
