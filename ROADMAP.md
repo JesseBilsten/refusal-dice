@@ -82,7 +82,7 @@ Build it once and every later phase gets cheaper.
 
 ### House rules system (after the engine; before Phase 2's odds tables)
 
-✅ _Started 2026-10-19: the first rule, Monterey's lone 3 or 4 keep (`montereyLoneKeep`), is a switch under House rules in Settings (`useHouseRules`). The engine, bots, exact keep odds, simulations and every generated table follow it; the tables are generated for both settings. Parity is built (a loss is out by default, or buy in again, picked at Set the table), and Play tracks a $5-a-game pot (1.8.0). Next: a running total across games, which becomes fake internet points with accounts._
+✅ _Started 2026-10-19: the first rule, Monterey's lone 3 or 4 keep (`montereyLoneKeep`), is a switch under House rules in Settings (`useHouseRules`). The engine, bots, exact keep odds, simulations and every generated table follow it; the tables are generated for both settings. Parity is built (a loss is out by default, or buy in again, picked at Set the table), and Play tracks a $5-a-game pot (1.8.0). A running total across games waits for accounts, where it becomes fake internet points (decided 2026-11-04)._
 
 - **Owner requirement:** house rules are selectable site-wide (header or user preferences), and changing them recalculates every probability on the site. See `docs/RULES.md` section 5.
 - **Engine and data:** the engine takes a `HouseRules` object; every rule and odds function is parameterized by it. Precomputed tables are generated for the default rules, and other rule sets are computed on demand (or a small set of common presets is precomputed).
@@ -190,6 +190,7 @@ _None right now._
 
 | Date | Decision | Notes |
 |---|---|---|
+| 2026-11-04 | A running total of winnings across games waits for accounts (no browser-only tally) | Owner: "wait for accounts". It becomes the fake internet points in Phase 4 |
 | 2026-11-04 | Pot: everyone antes $5 at the start (again at a buy-in parity) and the last player standing takes it; parity's rule is picked per game in Play's Set the table | docs/RULES.md §1, §5; engine `ante`/`pot`, 1.8.0. No running total across games yet |
 | 2026-11-04 | Barking is always allowed; no house rule for it | Owner: "I have no knowledge of any tables that ban barking." Dropped from docs/RULES.md §5, and the engine's unused `barking` switch removed |
 | 2026-11-04 | Parity (everyone left has 2 pencils): pencils go back and a loss is out, by default; other parity rules (start over and buy in again) are options picked when starting a game | docs/RULES.md §1, §5; engine `parity` rule, 1.7.0. Owner: "Most tables play where parity just means everyone puts their pencils back and now a loss is out." Buy-in-again waits for the pot |
