@@ -40,6 +40,8 @@ export interface Seat {
   name: string
   pencils: number
   out: boolean
+  /** What they've put in the pot this game: the ante, plus any buy-in at parity */
+  paid: number
 }
 
 export interface PlayerRolls {
@@ -139,14 +141,23 @@ export type GameEvent =
   | { type: 'cycle'; players: PlayerId[]; reason: 'missed' | 'tie' }
   | { type: 'pencil'; player: PlayerId; pencils: number; out: boolean }
   | { type: 'noPencil'; reason: 'two-player-tie' | 'two-player-miss' | 'no-boss' | 'boss-stayed-down' }
-  /** Everyone left had one pencil short of out: pencils went back, and the next pencil puts a player out (§1) */
-  | { type: 'parity' }
-  | { type: 'gameOver'; winner: PlayerId }
+  /** Everyone antes `amount` into the pot: at the start, and at a buy-in parity */
+  | { type: 'ante'; players: PlayerId[]; amount: number; pot: number }
+  /**
+   * Everyone left had one pencil short of out, so pencils went back (§1).
+   * 'sudden-death': the next pencil puts a player out; 'buy-in': everyone
+   * left antes again (an `ante` event follows) and plays on to the usual count.
+   */
+  | { type: 'parity'; rule: 'sudden-death' | 'buy-in' }
+  /** The winner takes the pot */
+  | { type: 'gameOver'; winner: PlayerId; pot: number }
 
 export interface GameState {
   rules: HouseRules
-  /** Parity was reached (rules.parity 'sudden-death'): one pencil now puts a player out */
+  /** Sudden-death parity was reached: one pencil now puts a player out */
   parity?: boolean
+  /** Everything anted this game; the winner takes it */
+  pot: number
   /** Seat order; "left" is the next seat */
   seats: Seat[]
   hammer: PlayerId
@@ -268,7 +279,8 @@ export function createGame(options: CreateGameOptions): GameState {
 
   const state: GameState = {
     rules: { ...DEFAULT_HOUSE_RULES, ...options.rules },
-    seats: players.map((p) => ({ id: p.id, name: p.name, pencils: 0, out: false })),
+    seats: players.map((p) => ({ id: p.id, name: p.name, pencils: 0, out: false, paid: 0 })),
+    pot: 0,
     hammer,
     round: 1,
     dice: {},
@@ -276,7 +288,7 @@ export function createGame(options: CreateGameOptions): GameState {
     source,
     log: [...(rounds ? [{ type: 'piddle' as const, rounds }] : []), { type: 'hammer', player: hammer }],
   }
-  return deal(state)
+  return deal(ante(state))
 }
 
 /* ── Helpers ── */
@@ -404,11 +416,23 @@ export const pencilsToLose = (state: Pick<GameState, 'rules' | 'parity'>) =>
  * out, everyone's pencils go back, and from then on a loss puts a player out.
  */
 function checkParity(state: GameState): GameState {
+  const rule = state.rules.parity
   const short = state.rules.pencilsToLose - 1
-  if (state.rules.parity !== 'sudden-death' || state.parity || short < 1) return state
+  if (rule === 'none' || state.parity || short < 1) return state
   if (!activeSeats(state).every((s) => s.pencils === short)) return state
   const seats = state.seats.map((s) => (s.out ? s : { ...s, pencils: 0 }))
-  return log({ ...state, seats, parity: true }, { type: 'parity' })
+  if (rule === 'buy-in') return ante(log({ ...state, seats }, { type: 'parity', rule }))
+  return log({ ...state, seats, parity: true }, { type: 'parity', rule })
+}
+
+/** Everyone still in puts the ante in the pot: at the start, and at a buy-in parity (§1) */
+function ante(state: GameState): GameState {
+  const amount = state.rules.ante
+  if (!(amount > 0)) return state
+  const players = activeSeats(state).map((s) => s.id)
+  const seats = state.seats.map((s) => (s.out ? s : { ...s, paid: s.paid + amount }))
+  const pot = state.pot + amount * players.length
+  return log({ ...state, seats, pot }, { type: 'ante', players, amount, pot })
 }
 
 function scorePencil(state: GameState, call: Call, loser: PlayerId): GameState {
@@ -422,7 +446,7 @@ function scorePencil(state: GameState, call: Call, loser: PlayerId): GameState {
   const remaining = activeSeats(next)
   if (remaining.length === 1) {
     const winner = remaining[0].id
-    return log({ ...next, hammer: winner, phase: { kind: 'gameOver', winner } }, { type: 'gameOver', winner })
+    return log({ ...next, hammer: winner, phase: { kind: 'gameOver', winner } }, { type: 'gameOver', winner, pot: next.pot })
   }
   next = checkParity(next)
   // The loser takes the Hammer; if they're out, it passes to the next active player on their left
@@ -907,8 +931,9 @@ export type VisibleDice = (Die | null)[] | null
 export interface PlayerView {
   viewer: PlayerId
   seats: Seat[]
-  /** Parity was reached: one pencil now puts a player out */
+  /** Sudden-death parity was reached: one pencil now puts a player out */
   parity: boolean
+  pot: number
   hammer: PlayerId
   round: number
   phase: Phase
@@ -946,6 +971,7 @@ export function viewFor(state: GameState, viewer: PlayerId): PlayerView {
     viewer,
     seats: state.seats,
     parity: !!state.parity,
+    pot: state.pot,
     hammer: state.hammer,
     round: state.round,
     phase: state.phase,

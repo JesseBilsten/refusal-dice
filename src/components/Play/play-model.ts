@@ -47,6 +47,9 @@ export function actor(state: GameState): PlayerId | null {
 export const callAllowed = (state: GameState, call: Call): boolean =>
   state.phase.kind !== 'secondCall' || call.game !== state.phase.refused.game
 
+/** "$5": the pot is played for pretend dollars, to become points later (docs/RULES.md §1) */
+export const money = (n: number) => `$${n.toLocaleString('en-US')}`
+
 type Names = Record<PlayerId, string>
 type Label = (call: Call) => string
 
@@ -113,10 +116,16 @@ export function describeEvent(e: GameEvent, names: Names, label: Label): string 
         : `${who} ${who === 'You' ? 'take' : 'takes'} a pencil (${plural(e.pencils, 'pencil')}).`
     case 'noPencil':
       return 'No pencil this round. The Hammer passes left.'
+    case 'ante':
+      return `${plural(e.players.length, 'player')} ${e.players.length === 1 ? 'puts' : 'each put'} ${money(e.amount)} in the pot. The pot: ${money(e.pot)}.`
     case 'parity':
-      return 'Parity: everyone left is one pencil from out. Pencils go back, and from now on one pencil puts a player out.'
-    case 'gameOver':
-      return `${who} ${who === 'You' ? 'win' : 'wins'} the pot!`
+      return e.rule === 'buy-in'
+        ? 'Parity: everyone left is one pencil from out. Pencils go back, and everyone buys in again.'
+        : 'Parity: everyone left is one pencil from out. Pencils go back, and from now on one pencil puts a player out.'
+    case 'gameOver': {
+      const winner = names[e.winner]
+      return `${winner} ${winner === 'You' ? 'win' : 'wins'} the pot: ${money(e.pot)}!`
+    }
   }
 }
 

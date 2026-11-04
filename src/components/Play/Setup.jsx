@@ -1,17 +1,35 @@
 import React, { useState } from 'react'
 import { ChoiceGroup, Panel } from '../Page'
 import { RollButton } from '../Dice'
-import { BOT_NAMES } from './play-model'
+import { DEFAULT_HOUSE_RULES } from '../../engine'
+import { BOT_NAMES, money } from './play-model'
 
-/** Before a game: how many bots, and the difficulty (Hard: you show your own game) */
+/** What happens at parity (docs/RULES.md §1), picked per game */
+const PARITY = [
+  {
+    value: 'sudden-death',
+    label: 'A loss is out',
+    detail:
+      'Pencils go back, and from then on one pencil puts a player out. Most tables play this way.',
+  },
+  {
+    value: 'buy-in',
+    label: 'Buy in again',
+    detail: `Pencils go back, everyone left puts another ${money(DEFAULT_HOUSE_RULES.ante)} in the pot, and the game starts over.`,
+  },
+]
+
+/** Before a game: how many bots, the difficulty (Hard: you show your own game) and the parity rule */
 export default function Setup({ onStart }) {
   const [bots, setBots] = useState(3)
   const [hard, setHard] = useState(false)
+  const [parity, setParity] = useState(DEFAULT_HOUSE_RULES.parity)
+  const ante = DEFAULT_HOUSE_RULES.ante
   return (
     <Panel
       tone="tool"
       title="Set the table"
-      description="You against solid bots. First to three pencils is out; the last player standing wins."
+      description={`You against solid bots. Everyone puts ${money(ante)} in the pot; first to three pencils is out, and the last player standing wins the pot.`}
     >
       <div className="space-y-5">
         <div className="space-y-2">
@@ -24,7 +42,8 @@ export default function Setup({ onStart }) {
           />
           <p className="text-sm text-muted-foreground">
             {BOT_NAMES.slice(0, bots).join(', ')}{' '}
-            {bots === 1 ? 'joins' : 'join'} you.
+            {bots === 1 ? 'joins' : 'join'} you. The pot starts at{' '}
+            {money(ante * (bots + 1))}.
             {bots === 1 && ' With two players there’s only one refusal.'}
           </p>
         </div>
@@ -45,7 +64,19 @@ export default function Setup({ onStart }) {
               : 'The table reads your dice for you and outlines the game.'}
           </p>
         </div>
-        <RollButton size="lg" onClick={() => onStart(bots, hard)}>
+        <div className="space-y-2">
+          <ChoiceGroup
+            label="At parity (everyone left has 2 pencils)"
+            size="lg"
+            value={parity}
+            onChange={setParity}
+            options={PARITY.map(({ value, label }) => ({ value, label }))}
+          />
+          <p className="text-sm text-muted-foreground">
+            {PARITY.find((p) => p.value === parity).detail}
+          </p>
+        </div>
+        <RollButton size="lg" onClick={() => onStart(bots, hard, parity)}>
           Piddle for the Hammer
         </RollButton>
       </div>

@@ -12,11 +12,11 @@ Each rule is tagged by where it came from:
 
 ## 1. Setup
 
-- 2–8 players, 5 dice each, ante into a pot (amount and whether it's played for money are house rules). The site tracks the pot alongside the pencils at $5 a game, to become fake internet points later (ruled 2026-11-04). [confirmed]
+- 2–8 players, 5 dice each, ante into a pot (amount and whether it's played for money are house rules). The site tracks the pot alongside the pencils at $5 a game, to become fake internet points later (ruled 2026-11-04): everyone antes $5 when the game starts, and the last player standing takes the whole pot. [confirmed] (`ante`, `rules.ante`, the `pot` and each seat's `paid` in `src/engine/round/game.ts`)
 - **Piddle:** everyone rolls one die; highest roll takes the **Hammer**; ties re-roll. [site]
 - **Cocked, stacked or off the table: re-roll** (ruled 2026-10-22). A die that doesn't land flat (leaning on the cup, a die or the table edge), lands on top of another, or leaves the table doesn't count and is re-rolled; for stacked dice, both are. Only matters at a real table: the engine's dice always land flat. [confirmed]
 - Each player starts with 0 **pencils**. 3 pencils = out. Last player standing wins the pot. [site]
-- **Parity:** when every player still in has 2 pencils (one short of out), everyone puts their pencils back, and from then on **a loss is out**: the next pencil puts a player out (ruled 2026-11-04). The owner: "Most tables play where parity just means everyone puts their pencils back and now a loss is out." This is the default; other parity rules can be picked when starting a game (§5). Players already out stay out. It happens once a game. [confirmed] (`checkParity`, `pencilsToLose` in `src/engine/round/game.ts`)
+- **Parity:** when every player still in has 2 pencils (one short of out), everyone puts their pencils back, and from then on **a loss is out**: the next pencil puts a player out (ruled 2026-11-04). The owner: "Most tables play where parity just means everyone puts their pencils back and now a loss is out." This is the default. A table can instead pick **buy in again** when starting the game: pencils go back, everyone still in antes again, and play goes on to the usual 3 pencils; with buy-in, parity can come round again (§5). Players already out stay out. It happens once a game. [confirmed] (`checkParity`, `pencilsToLose` in `src/engine/round/game.ts`)
 
 ## 2. A round
 
@@ -138,11 +138,11 @@ House rules must be **selectable site-wide** (header or user preferences). Chang
 
 Known variations to support:
 
-- **Ante** amount. The site tracks $5 a game (§1). [confirmed]
-- **Parity** (`parity`, built for the default): what happens when everyone left has 2 pencils. Picked when starting a game, not site-wide, since it doesn't change any round's odds. [confirmed, 2026-11-04]
+- **Ante** amount (`ante`, default $5; 0 means no pot). The site plays $5 a game (§1). [confirmed]
+- **Parity** (`parity`, built for the default): what happens when everyone left has 2 pencils. Picked when starting a game (Play's Set the table), not site-wide, since it doesn't change any round's odds. [confirmed, 2026-11-04]
   - `'sudden-death'` (default): pencils go back, and a loss is out (§1).
   - `'none'`: nothing happens; 3 pencils is out as usual.
-  - Planned: **start over and buy in again**: pencils go back to 0 and everyone left antes again (needs the pot, ROADMAP).
+  - `'buy-in'`: pencils go back to 0 and everyone left antes again (built 1.8.0; Play offers it at Set the table).
 - **Monterey keep requirement** (`montereyLoneKeep`, built): some tables let a player keep a lone 3 or 4, not only 2-3 / 3-4 / 4-5. Off by default. Visitors set it under House rules in Settings; every odds figure follows it, using tables generated for both rule sets. [confirmed, example given by owner]
 - More will be collected as they come up; each needs a precise definition here before it's implemented.
 

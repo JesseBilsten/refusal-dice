@@ -82,7 +82,7 @@ Build it once and every later phase gets cheaper.
 
 ### House rules system (after the engine; before Phase 2's odds tables)
 
-✅ _Started 2026-10-19: the first rule, Monterey's lone 3 or 4 keep (`montereyLoneKeep`), is a switch under House rules in Settings (`useHouseRules`). The engine, bots, exact keep odds, simulations and every generated table follow it; the tables are generated for both settings. Next: parity options at game start (sudden death is built as the default, 2026-11-04) and the pot._
+✅ _Started 2026-10-19: the first rule, Monterey's lone 3 or 4 keep (`montereyLoneKeep`), is a switch under House rules in Settings (`useHouseRules`). The engine, bots, exact keep odds, simulations and every generated table follow it; the tables are generated for both settings. Parity is built (a loss is out by default, or buy in again, picked at Set the table), and Play tracks a $5-a-game pot (1.8.0). Next: a running total across games, which becomes fake internet points with accounts._
 
 - **Owner requirement:** house rules are selectable site-wide (header or user preferences), and changing them recalculates every probability on the site. See `docs/RULES.md` section 5.
 - **Engine and data:** the engine takes a `HouseRules` object; every rule and odds function is parameterized by it. Precomputed tables are generated for the default rules, and other rule sets are computed on demand (or a small set of common presets is precomputed).
@@ -190,12 +190,13 @@ _None right now._
 
 | Date | Decision | Notes |
 |---|---|---|
+| 2026-11-04 | Pot: everyone antes $5 at the start (again at a buy-in parity) and the last player standing takes it; parity's rule is picked per game in Play's Set the table | docs/RULES.md §1, §5; engine `ante`/`pot`, 1.8.0. No running total across games yet |
 | 2026-11-04 | Barking is always allowed; no house rule for it | Owner: "I have no knowledge of any tables that ban barking." Dropped from docs/RULES.md §5, and the engine's unused `barking` switch removed |
 | 2026-11-04 | Parity (everyone left has 2 pencils): pencils go back and a loss is out, by default; other parity rules (start over and buy in again) are options picked when starting a game | docs/RULES.md §1, §5; engine `parity` rule, 1.7.0. Owner: "Most tables play where parity just means everyone puts their pencils back and now a loss is out." Buy-in-again waits for the pot |
 | 2026-11-04 | Tres Away replay: the tied player closest to the original caller's left goes first (the caller, when tied); everyone, the first player included, puts out one die at a time | docs/RULES.md §3.2, §6 question 1; the engine already did this. Owner confirmed the caller goes first when tied |
 | 2026-11-04 | Support 2–8 players everywhere | Owner: "Yes." Play already seats 1–7 bots |
 | 2026-11-04 | AI play works signed-out; accounts only for online play (for now) | Owner: "AI play can be used without signing in for now." |
-| 2026-11-04 | Track the pot and pencils: $5 per game, later converted to fake internet points | Owner: "Track the pot and pencils. $5 per game. We'll convert this to fake internet points later." Not built yet (Phase 3/4) |
+| 2026-11-04 | Track the pot and pencils: $5 per game, later converted to fake internet points | Owner: "Track the pot and pencils. $5 per game. We'll convert this to fake internet points later." The pot in Play is built (1.8.0) |
 | 2026-10-31 | Tied at the bottom with equal rolls: start at the Hammer and go clockwise, so a tied Hammer decides first | docs/RULES.md §4, §6 question 4; the engine already did this |
 | 2026-10-30 | Tres Away replay: nobody sets the pace; each player puts out one die at a time (main game unchanged) | docs/RULES.md §3.2, §6 question 1; engine changed (the tied player nearest the caller used to set the pace), 1.5.0 |
 | 2026-10-29 | Taking a tie is an offer: a tied player may take it while another can still roll; it holds only if every tied player takes it, and one who rolls instead and ends up worst loses | docs/RULES.md §4, §6 question 4; engine changed (it blocked taking a tie while another tied player could roll), 1.5.0 |

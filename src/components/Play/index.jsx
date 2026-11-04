@@ -51,6 +51,7 @@ import {
   describeEvent,
   holdFor,
   latestMoves,
+  money,
   newTable,
   paceAfter,
   piddleSteps,
@@ -257,8 +258,9 @@ export default function Play({ intro }) {
   const roundStartRef = useRef(0)
   roundStartRef.current = roundStart
 
-  const start = (botCount, hardMode) => {
-    const g = newTable(botCount, Math.floor(Math.random() * 2 ** 31), tableRules)
+  // Parity is picked per game at the table (Setup); the rest come from your house rules
+  const start = (botCount, hardMode, parity) => {
+    const g = newTable(botCount, Math.floor(Math.random() * 2 ** 31), { ...tableRules, parity })
     setRollIds(Object.fromEntries(g.seats.map((s) => [s.id, ZERO.map(() => 1)])))
     setGame(g)
     setHard(hardMode)
@@ -601,8 +603,17 @@ export default function Play({ intro }) {
   if (!dealt) {
     title = ''
   } else if (phase.kind === 'gameOver') {
-    title = phase.winner === YOU ? 'You win the pot! 🎉' : `${names[phase.winner]} wins the pot`
-    body = <p>Last player standing. Rack ’em up again?</p>
+    const paid = game.seats.find((s) => s.id === YOU)?.paid || 0
+    title = phase.winner === YOU ? `You win the pot: ${money(game.pot)}! 🎉` : `${names[phase.winner]} wins the pot: ${money(game.pot)}`
+    body = (
+      <p>
+        Last player standing.{' '}
+        {phase.winner === YOU
+          ? `You put in ${money(paid)}, so you’re up ${money(game.pot - paid)}.`
+          : `You put in ${money(paid)}, so you’re down ${money(paid)}.`}{' '}
+        Rack ’em up again?
+      </p>
+    )
     controls = <RollButton onClick={() => setGame(null)}>New game</RollButton>
   } else if (phase.kind === 'roundOver') {
     const loser = phase.loser
@@ -1173,7 +1184,14 @@ export default function Play({ intro }) {
         {/* The table: the controls, the call, what just happened, you, then the others in order of play */}
         <TableFelt className="space-y-3 self-start overflow-visible lg:col-start-1 lg:row-start-1">
           <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 text-felt-foreground">
-            <div className="font-display text-lg font-bold">{dealt ? `Round ${game.round}` : 'The piddle'}</div>
+            <div className="flex items-baseline gap-3">
+              <span className="font-display text-lg font-bold">{dealt ? `Round ${game.round}` : 'The piddle'}</span>
+              {game.pot > 0 && (
+                <span className="text-sm">
+                  Pot <strong className="tabular-nums">{money(game.pot)}</strong>
+                </span>
+              )}
+            </div>
             {phase.kind !== 'gameOver' && (
               <Transport paused={paused} onToggle={() => setPaused((p) => !p)} onStep={step} canStep={canStep} />
             )}

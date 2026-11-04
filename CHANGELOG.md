@@ -4,7 +4,20 @@ Every release of refusaldice.com, newest first. Versions are
 major.minor.patch ([docs/WORKFLOW.md](docs/WORKFLOW.md)): each pull request
 bumps the version once and adds its entry here.
 
-## 1.7.0 (unreleased)
+## 1.8.0 (unreleased)
+
+- **The pot:** in [Play](/play), everyone puts $5 in the pot to start, the
+  pot shows beside the round number, and the last player standing takes it.
+  At the end you see how much you're up or down.
+- **Parity, your way:** when you set the table, pick what happens when
+  everyone left has 2 pencils: **a loss is out** (pencils go back, and the
+  next pencil puts a player out; most tables play this way) or **buy in
+  again** (pencils go back, everyone puts another $5 in, and the game
+  starts over).
+- **Fix:** the game log's last line now names the winner (it read
+  " wins the pot!").
+
+## 1.7.0 (2026-11-04)
 
 - **Parity:** when everyone still in has 2 pencils, everyone puts their
   pencils back, and from then on a loss is out. Play follows it, and the
