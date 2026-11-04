@@ -1,13 +1,11 @@
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react'
 import { Badge } from '../ui/badge'
-import { Panel, Stat } from '../Page'
+import { Panel } from '../Page'
 import { Button } from '../ui/button'
 import VariantSelector from '../VariantSelector'
-import { Slider } from '../ui/slider'
 import { X } from 'lucide-react'
 import GameLink from '../GameLink'
 import uniqueRollsData from '../../data/unique-rolls.json'
-import rollGameMatrix from '../../data/roll-game-matrix.json'
 import {
   GAMES, GAMES_MAP, getGameName,
   isSpecialtyGame, SPECIALTY_GAME_IDS,
@@ -16,19 +14,32 @@ import {
   checkGame,
   getKickerStrength,
   classifySpecialtyRoll,
-  isCompetitiveSpecialtyHand,
-  analyzeRoll,
 } from '../../lib/game-validation'
 import { ToggleGroup, ToggleGroupItem } from '../ui/toggle-group'
-import { Hand } from '../Dice'
 import EveryPossibility from './EveryPossibility'
-import { OddsLabLink, ProbabilityBar, fmtPct } from '../Odds'
+import { BarkGuide, OddsLabLink, ProbabilityBar, fmtPct } from '../Odds'
+import { barkOdds, barkTable } from '../../strategy'
+import { useHouseRules } from '../Settings/house-rules'
 import { callFilters, callThresholds, specialtyCalls } from './specialty-calls'
 import { PRESETS } from '../../lib/roll-query'
 
 /* ─────────────────────────── helpers ─────────────────────────── */
 
 const TOTAL = 7776
+
+/** The table size the barking figures assume, as on the Barking page */
+const BARK_PLAYERS = 3
+
+/**
+ * The rolls that do better barking than making their best call, at
+ * BARK_PLAYERS players under these house rules (hammer-odds.ts against
+ * seat-odds.ts, through strategy/bark.ts): sorted roll keys, e.g. "11234"
+ */
+const barkWorthy = (rules) => {
+  const bark = barkOdds(BARK_PLAYERS, rules)
+  return new Set(barkTable(BARK_PLAYERS, rules).filter((r) => r.best.loss > bark).map((r) => r.dice.join('')))
+}
+const sortedKey = (roll) => [...roll].sort((a, b) => a - b).join('')
 
 /* ── When to call a specialty game, computed (specialty-calls.js) ── */
 
@@ -49,24 +60,8 @@ const GAME_ODDS = (() => {
             allRolls.push([a, b, c, d, e])
 
   return GAMES.map(g => {
-    if (g.id === 'barking') {
-      // Barking: count rolls where flexibility ≤ 4 and strength ≤ 65 (default thresholds)
-      let barkCount = 0
-      allRolls.forEach(roll => {
-        const analysis = analyzeRoll(roll)
-        if (analysis.flexibility <= 4 &&
-            (!analysis.bestCall || analysis.bestCall.rawStrength <= 65)) {
-          barkCount++
-        }
-      })
-      return {
-        ...g,
-        count: barkCount,
-        pct: parseFloat(((barkCount / TOTAL) * 100).toFixed(1)),
-        variants: null,
-        specialty: null,
-      }
-    }
+    // Barking depends on the house rules: filled in by the page (withBarking)
+    if (g.id === 'barking') return { ...g, count: 0, pct: 0, variants: null, specialty: null }
     if (isSpecialtyGame(g.id)) {
       // Compute specialty distribution counts using shared thresholds
       const filters = callFilters()[g.id] || []
@@ -107,6 +102,15 @@ const GAME_ODDS = (() => {
     }
   })
 })()
+
+/** GAME_ODDS with the barking card's count for these house rules */
+const withBarking = (rules) => {
+  const worthy = barkWorthy(rules)
+  const count = uniqueRollsData.uniqueRolls.filter((r) => worthy.has(sortedKey(r.roll))).reduce((n, r) => n + r.count, 0)
+  return GAME_ODDS.map((g) =>
+    g.id === 'barking' ? { ...g, count, pct: parseFloat(((count / TOTAL) * 100).toFixed(1)) } : g
+  )
+}
 
 /* ─────────────────────── colour helpers ──────────────────────── */
 
@@ -190,6 +194,7 @@ const GameOddsCard = ({ game, isSelected, onClick }) => {
 
       <p className="text-xs text-muted-foreground tabular-nums">
         {game.count.toLocaleString()} / {TOTAL.toLocaleString()} rolls
+        {game.id === 'barking' && ` do better barking, ${BARK_PLAYERS} players`}
       </p>
 
       {game.variants && (
@@ -278,8 +283,9 @@ const OddsDashboard = () => {
   const [selectedId, setSelectedId] = useState(null)
   const [variant, setVariant] = useState(null) // 'high' | 'low' | null
   const [specialtyFilter, setSpecialtyFilter] = useState(null) // e.g. '3-sixes', 'trips-plus'
-  const [barkingFlexThreshold, setBarkingFlexThreshold] = useState([4])
-  const [barkingStrengthThreshold, setBarkingStrengthThreshold] = useState([65])
+  const [rules] = useHouseRules()
+  const gameOdds = useMemo(() => withBarking(rules), [rules])
+  const worthy = useMemo(() => barkWorthy(rules), [rules])
   const detailRef = useRef(null)
 
   // Read URL parameters on mount to initialize from Games page links
@@ -301,8 +307,7 @@ const OddsDashboard = () => {
     }
   }, [])
 
-  const numOpponents = 0 // single-player probability view
-  const selectedGame = GAME_ODDS.find(g => g.id === selectedId) || null
+  const selectedGame = gameOdds.find(g => g.id === selectedId) || null
 
   const handleGameClick = useCallback(id => {
     if (selectedId === id) {
@@ -323,26 +328,9 @@ const OddsDashboard = () => {
   const matchingRolls = useMemo(() => {
     if (!selectedId) return []
     
-    // Special handling for Barking — show hands matching the thresholds
-    if (selectedId === 'barking') {
-      const hands = []
-      Object.values(rollGameMatrix).forEach(rd => {
-        const analysis = analyzeRoll(rd.roll)
-        if (analysis.flexibility <= barkingFlexThreshold[0] &&
-            (!analysis.bestCall || analysis.bestCall.rawStrength <= barkingStrengthThreshold[0])) {
-          // Find matching roll in uniqueRolls to get count
-          const rollKey = JSON.stringify([...rd.roll].sort((a, b) => a - b))
-          const matchingUnique = uniqueRollsData.uniqueRolls.find(ur => 
-            JSON.stringify([...ur.roll].sort((a, b) => a - b)) === rollKey
-          )
-          if (matchingUnique) {
-            hands.push(matchingUnique)
-          }
-        }
-      })
-      return hands
-    }
-    
+    // Barking: the rolls that do better passing the Hammer than calling
+    if (selectedId === 'barking') return uniqueRollsData.uniqueRolls.filter((r) => worthy.has(sortedKey(r.roll)))
+
     return uniqueRollsData.uniqueRolls.filter(r => {
       if (!checkGame(r.roll, selectedId)) return false
       if (variant) return getKickerStrength(r.roll, selectedId) === variant
@@ -354,32 +342,13 @@ const OddsDashboard = () => {
       }
       return true
     })
-  }, [selectedId, variant, specialtyFilter, barkingFlexThreshold, barkingStrengthThreshold])
+  }, [selectedId, variant, specialtyFilter, worthy])
 
   const totalInstances = useMemo(
     () => matchingRolls.reduce((s, r) => s + r.count, 0),
     [matchingRolls]
   )
 
-  // Barking weak hands — hands that warrant barking
-  const barkingWeakHands = useMemo(() => {
-    if (selectedId !== 'barking') return []
-    const hands = []
-    Object.values(rollGameMatrix).forEach(rd => {
-      const analysis = analyzeRoll(rd.roll)
-      if (analysis.flexibility <= barkingFlexThreshold[0] &&
-          (!analysis.bestCall || analysis.bestCall.rawStrength <= barkingStrengthThreshold[0])) {
-        hands.push({ 
-          roll: rd.roll, 
-          flexibility: analysis.flexibility, 
-          bestCall: analysis.bestCall, 
-          count: rd.count 
-        })
-      }
-    })
-    return hands.sort((a, b) => b.count - a.count)
-  }, [selectedId, barkingFlexThreshold, barkingStrengthThreshold])
-  const barkCount = barkingWeakHands.reduce((s, h) => s + h.count, 0)
   const proofRolls = useMemo(() => {
     const matches = new Set(matchingRolls.map(r => [...r.roll].sort((a, b) => a - b).join('')))
     return uniqueRollsData.uniqueRolls.map(r => {
@@ -398,7 +367,7 @@ const OddsDashboard = () => {
 
         {/* ── Odds Grid ── */}
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 mb-8">
-          {GAME_ODDS.map(g => (
+          {gameOdds.map(g => (
             <GameOddsCard
               key={g.id}
               game={g}
@@ -450,51 +419,10 @@ const OddsDashboard = () => {
               }
             />
 
-            {/* Barking-specific: weak hands to bark on */}
+            {/* Barking: when a bark beats calling, computed (the Barking page's guide) */}
             {selectedId === 'barking' && (
-              <Panel
-                title="When should you bark?"
-                description="A hand that makes few games, none of them well, is worth barking: pass the Hammer rather than call a weak game. A rule of thumb."
-              >
-                  <div className="space-y-6">
-                    <Stat
-                      value={`${((barkCount / 7776) * 100).toFixed(1)}%`}
-                      label={`of rolls are bark-worthy at flexibility ≤ ${barkingFlexThreshold[0]}, strength ≤ ${barkingStrengthThreshold[0]}`}
-                      sub={`${barkCount.toLocaleString()} of 7,776 outcomes · ${barkingWeakHands.length} unique rolls`}
-                    />
-
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">
-                        Flexibility Threshold: {barkingFlexThreshold[0]} or fewer playable games
-                      </label>
-                      <Slider value={barkingFlexThreshold} onValueChange={setBarkingFlexThreshold} min={0} max={10} step={1} className="w-full" />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">
-                        Strength Threshold: {barkingStrengthThreshold[0]} or lower raw strength
-                      </label>
-                      <Slider value={barkingStrengthThreshold} onValueChange={setBarkingStrengthThreshold} min={0} max={100} step={5} className="w-full" />
-                    </div>
-
-                    <div>
-                      <div className="flex items-baseline gap-2 mb-3">
-                        <h3 className="text-subheading">Example bark-worthy hands</h3>
-                        <span className="text-xs text-muted-foreground">
-                          Showing top {Math.min(50, barkingWeakHands.length)}
-                        </span>
-                      </div>
-                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 max-h-80 overflow-y-auto">
-                        {barkingWeakHands.slice(0, 50).map((hand, idx) => (
-                          <div key={idx} className="p-2 border rounded bg-muted/30 text-xs">
-                            <Hand dice={hand.roll} size="xs" className="mb-1" />
-                            <div className="text-xs text-muted-foreground">
-                              {hand.count} rolls
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
+              <Panel title="When should you bark?">
+                <BarkGuide />
               </Panel>
             )}
 
@@ -503,20 +431,20 @@ const OddsDashboard = () => {
               <StrategyCallout gameId={selectedId} />
             )}
 
-            {/* Co-playable games */}
-            <CoPlayableGames
+            {/* Co-playable games (barking's guide lists its own rolls, at any table size) */}
+            {selectedId !== 'barking' && <CoPlayableGames
               matchingRolls={matchingRolls}
               currentGameId={selectedId}
               variant={variant}
-            />
+            />}
 
             {/* Verification: every roll, the same view as the Odds Lab */}
-            <EveryPossibility
+            {selectedId !== 'barking' && <EveryPossibility
               title="Every roll"
               rolls={proofRolls}
               total={7776}
-              matchLabel={selectedId === 'barking' ? 'Bark-worthy hand' : `Makes ${getGameName(selectedId)}`}
-              missLabel={selectedId === 'barking' ? 'Other hands' : "Doesn't make it"}
+              matchLabel={`Makes ${getGameName(selectedId)}`}
+              missLabel="Doesn't make it"
               actions={
                 labPreset && (
                   <OddsLabLink query={labPreset.query} compare={selectedId}>
@@ -524,7 +452,7 @@ const OddsDashboard = () => {
                   </OddsLabLink>
                 )
               }
-            />
+            />}
           </div>
         )}
     </>

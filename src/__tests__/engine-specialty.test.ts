@@ -274,6 +274,22 @@ describe('Tres Away', () => {
     expect(() => applyAction(g, { type: 'putOut', player: 'b', dice: [2, 3] })).toThrow(/one die at a time/)
   })
 
+  test('a replay starts with the tied player nearest the caller, going left (ruled 2026-11-04)', () => {
+    // a (the caller) and c tie at 30; b scores 0. a is tied, so a goes first, then c
+    let g = called(
+      'tres-away',
+      [6, 6, 6, 6, 6, 3, 3, 3, 3, 3, 6, 6, 6, 6, 6],
+      [6, 5, 4, 2, 1, 6, 5, 4, 2, 1]
+    )
+    g = play(
+      g,
+      { type: 'putOut', player: 'a', dice: [0, 1, 2, 3, 4] },
+      { type: 'putOut', player: 'b', dice: [0, 1, 2, 3, 4] },
+      { type: 'putOut', player: 'c', dice: [0, 1, 2, 3, 4] }
+    )
+    expect(g.phase).toMatchObject({ kind: 'tresAway', cycle: 1, pacer: 'a', turn: 'a', order: ['a', 'c'] })
+  })
+
   test('the caller may put out from hand on a later turn without rolling', () => {
     let g = called('tres-away', deal, extra)
     g = play(

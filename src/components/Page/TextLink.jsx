@@ -3,12 +3,18 @@ import { Link } from 'gatsby'
 import { cn } from '../../lib/utils'
 
 /**
- * A link inside running text, to another page of the site. Underlined in
- * paragraphs by global.css, so color isn't the only cue.
+ * A link inside running text, to another page of the site. Always
+ * underlined, wherever it sits, so color isn't the only cue (WCAG 1.4.1).
  */
 export default function TextLink({ to, className, children }) {
   return (
-    <Link to={to} className={cn('text-primary hover:underline', className)}>
+    <Link
+      to={to}
+      className={cn(
+        'text-primary underline decoration-primary/40 underline-offset-2 transition-colors hover:decoration-primary',
+        className
+      )}
+    >
       {children}
     </Link>
   )

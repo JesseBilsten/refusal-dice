@@ -113,6 +113,8 @@ export function describeEvent(e: GameEvent, names: Names, label: Label): string 
         : `${who} ${who === 'You' ? 'take' : 'takes'} a pencil (${plural(e.pencils, 'pencil')}).`
     case 'noPencil':
       return 'No pencil this round. The Hammer passes left.'
+    case 'parity':
+      return 'Parity: everyone left is one pencil from out. Pencils go back, and from now on one pencil puts a player out.'
     case 'gameOver':
       return `${who} ${who === 'You' ? 'win' : 'wins'} the pot!`
   }

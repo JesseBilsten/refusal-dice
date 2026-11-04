@@ -12,7 +12,6 @@ import { analyzeRoll } from '../lib/game-validation'
 import { formatCallLabel, GAMES_MAP } from '../lib/games-config'
 import { cn } from '../lib/utils'
 import rollGameMatrix from '../data/roll-game-matrix.json'
-import { tresAwayScore } from '../engine'
 import { CALL_ODDS_PLAYERS, callLoss } from '../strategy'
 import { SPECIALTY_CALLS, specialtyCalls, worthCalling } from '../components/OddsLab/specialty-calls'
 import { useHouseRules } from '../components/Settings/house-rules'
@@ -125,8 +124,7 @@ const SECTIONS = [
     id: 'tres-away',
     made: 'Lowest total wins, like golf: each die counts its face, except 3s count 0.',
     note: 'After every roll you put out at least one die, for good. Put out every 3 (a 1 joins them only beside three 3s); with no 3s, put out just your lowest die. That’s exact, not a rule of thumb.',
-    callLine: () =>
-      `Worth calling with a score of 10 or less: ${fmtPct(share((d) => tresAwayScore(d) <= 10), 1)} of rolls.`,
+    callLine: () => worthLine('tres-away'),
     examples: [{ dice: [3, 3, 3, 3, 3] }, { dice: [3, 1, 1, 3, 3] }, { dice: [3, 1, 2, 4, 3] }],
   },
 ]
@@ -156,7 +154,11 @@ const GamesPage = () => {
 
   const roll = diceValues.every(Boolean) ? diceValues.map(Number) : null
   const analysis = useMemo(() => (roll ? analyzeRoll(roll) : null), [roll && roll.join('')]) // eslint-disable-line react-hooks/exhaustive-deps
-  const playableCall = (id) => analysis?.variants?.find((v) => v.game === id) || null
+  // The roll's call in each game it plays: of High and Low, the one less likely to take the pencil (call-odds.ts)
+  const playableCall = (id) =>
+    (analysis?.variants || [])
+      .filter((v) => v.game === id)
+      .sort((a, b) => callLoss(roll, a, houseRules) - callLoss(roll, b, houseRules))[0] || null
 
   const onDiceChange = useCallback((values) => {
     setDiceValues(values)

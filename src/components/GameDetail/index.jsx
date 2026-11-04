@@ -34,25 +34,18 @@ import { callLoss } from '../../strategy'
  * (call-odds.ts, from rounds played by solid bots)
  */
 export const classifyRoll = (roll, gameId, variant, rules) => {
-  const analysis = analyzeRoll(roll)
-  const v = analysis.variants?.find((vv) => vv.game === gameId)
-  if (!v) return null
-  const variants = GAMES_MAP[gameId].hasVariants
-    ? variant && variant !== 'all'
-      ? [variant]
-      : ['high', 'low']
-    : [null]
-  const best = variants
-    .map((vr) => ({
-      variant: vr,
-      loss: callLoss(
-        roll,
-        { game: gameId, ...(vr ? { variant: vr } : {}) },
-        rules
-      ),
+  const plays = analyzeRoll(roll).variants.filter(
+    (v) => v.game === gameId && (!variant || variant === 'all' || v.variant === variant)
+  )
+  if (!plays.length) return null
+  const best = plays
+    .map((v) => ({
+      variant: v.variant,
+      kicker: v.kicker,
+      loss: callLoss(roll, { game: gameId, ...(v.variant ? { variant: v.variant } : {}) }, rules),
     }))
     .sort((a, b) => a.loss - b.loss)[0]
-  return { variant: best.variant, loss: best.loss, kicker: v.kicker }
+  return best
 }
 
 /* ────────────────────────────────────────────────────────────── */

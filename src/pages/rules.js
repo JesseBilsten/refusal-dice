@@ -54,8 +54,9 @@ const RulesPage = () => (
             <TextLink to="/glossary#piddle">piddle</TextLink>.
           </p>
           <p className="text-sm text-muted-foreground">
-            <strong>Variation:</strong> some groups add $5 at <TextLink to="/glossary#parity">parity</TextLink> (when every
-            remaining player has 2 pencils).
+            <strong><TextLink to="/glossary#parity">Parity</TextLink>:</strong> when every player still in has 2
+            pencils, everyone puts their pencils back, and from then on a loss is out. Some tables start over and
+            buy in again instead.
           </p>
         </Disclosure>
       </div>

@@ -86,7 +86,8 @@ const GAME_CONTENT = {
   },
   'tres-away': {
     description: 'Just like golf, lowest score wins. Each die is worth its face value except for 3\'s which are worth 0 points.',
-    strategy: 'Call with a score of 10 or less; 7 or less is strong. Every 3 is worth 0, so 3s are gold.',
+    // Worked out from the call odds (specialty-calls.js)
+    strategy: () => `${callAdvice('tres-away', fmtPct)} 3s are gold.`,
     partialKeep: 'After each roll put out at least one die. Put out every 3; a 1 joins them only beside three 3s. With no 3s, put out just your lowest die and roll the rest.',
   },
   barking: {

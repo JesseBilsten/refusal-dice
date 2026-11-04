@@ -52,7 +52,7 @@ src/
                     guides.jsx (Overview, Foundations), ThemePlayground.jsx + theme-draft.js, DesignLayout, DocPage
   lib/
     games-config.js     SINGLE SOURCE OF TRUTH for the game list and metadata (CommonJS; also used by gatsby-node.js and generators)
-    game-validation.js  Rules + heuristic strategy (being split up, see below)
+    game-validation.js  Rules facts for the Odds Lab and game pages: game matching, kickers, High/Low variants (analyzeRoll), specialty scoring; no strategy
     roll-query.js       Odds Lab query engine: exact odds for any dice requirement, plus share-link encoding/oddsLabPath (pure, CommonJS)
     utils.js            cn() class merger
   data/             Generated JSON + the generator scripts
@@ -144,12 +144,12 @@ Simulated odds mean "against (and as) solid bots". Show the sample size and that
 - **Odds shown to users must be computed, not guessed.** Prefer exact enumeration (252 sorted rolls / 7,776 ordered) or seeded Monte Carlo with stated sample size. Label anything heuristic as such in the UI.
 - `roll-query.js` is CommonJS (`module.exports`) so Jest can load it without a Babel config; Gatsby/webpack imports it fine with named imports. Its game presets must keep matching `checkGame`; the Jest suite enforces this on all 7,776 rolls.
 - **Game odds are computed, never typed in.** `SINGLE_ROLL_ODDS` in `game-validation.js` counts each kicker game with `checkGame` over all 7,776 rolls. A hardcoded copy once left 10-3 at 53.43% instead of 63.85%.
-- **Data generators must be deterministic.** Use a seeded PRNG (see `generate-unique-rolls.js`), never `Math.random()`, so regenerating only changes what the logic change caused.
+- **Data generators must be deterministic.** Use a seeded PRNG (see `src/engine/dice-source.ts`), never `Math.random()`, and no timestamps in the output, so regenerating only changes what the logic change caused.
 - `game-validation.js` is loaded both as ESM (Gatsby) and CJS (Node generators, Jest via `jest-strip-esm-export.js`). Keep both export styles working until it's split into `engine/` + `strategy/`.
 
 ## Generated data
 
-- `src/data/unique-rolls.json` (252 unique rolls) and `src/data/roll-game-matrix.json` are **generated. Don't hand-edit them.**
+- `src/data/unique-rolls.json` (252 unique rolls and the games each plays) and `src/data/roll-game-matrix.json` are **generated** (`npm run generate:unique-rolls` makes both). **Don't hand-edit them.**
 - `gatsby-node.js` `onPreBootstrap` regenerates the matrix when the MD5 hash of `generate-roll-game-matrix.js`, `game-validation.js` or `unique-rolls.json` changes (metadata in `src/data/.cache-metadata/`, which is gitignored).
 - Commit regenerated JSON together with the logic change that caused it.
 - Precomputed odds tables (Phase 2) follow the same pattern: generator script + hash check + committed output.
@@ -172,7 +172,7 @@ Simulated odds mean "against (and as) solid bots". Show the sample size and that
 - **Kicker** (singular): all the dice left after making the game, as one total. It's re-rolled whole, never in part. Write "a kicker of 6+1", not "kickers".
 - **Keeping:** only dice toward the game, and kept dice stay kept (RULES.md §3.1). The 10s come in one roll (nothing to keep until made); Ship Captain Crew keeps 1-2 or 5-6; Monterey 2-3, 3-4 or 4-5 (a lone 3 or 4 under the house rule); 7's and Pairs one pair. Kept dice are part of the game (a kept pair stays a pair: pass the kept positions to `evaluateKickerHand`/`makesGame`, `keptAt` reads them back), and a made game's dice can't be re-rolled. Boss may pick up any dice that still leave a hand beating the table (`bossKeepProblem`, §3.3).
 - **Ties:** with 3+ players, the tied losers replay; with 2 players, no pencil is taken and the Hammer passes.
-- **End:** 3 pencils = out; last player standing wins the pot.
+- **End:** 3 pencils = out; last player standing wins the pot. **Parity** (everyone left has 2 pencils): pencils go back and a loss is out (`rules.parity`, default `'sudden-death'`).
 - **Games** (ids from `games-config.js`):
   - `10-2`, `10-3`, `10-4`, `ship-captain-crew`, `monterey`, `vegas` (7's) and `pairs` have high/low variants.
   - `razzle` (1s wild; most of one number, higher face breaks equal counts), `boss` (poker hands) and `tres-away` (lowest total, 3s = 0) are specialty games with no variant.

@@ -36,16 +36,20 @@ export interface Call {
 export interface HouseRules {
   /** Pencils that put a player out */
   pencilsToLose: number
-  /** Whether the Hammer may bark */
-  barking: boolean
   /** Monterey: a lone 3 or 4 may be kept, not only 2-3, 3-4 or 4-5 (docs/RULES.md §5) */
   montereyLoneKeep: boolean
+  /**
+   * Parity: everyone left has one pencil short of out (docs/RULES.md §1).
+   * 'sudden-death' (the default): pencils go back, and from then on one
+   * pencil puts a player out. 'none': nothing happens at parity.
+   */
+  parity: 'sudden-death' | 'none'
 }
 
 export const DEFAULT_HOUSE_RULES: HouseRules = {
   pencilsToLose: 3,
-  barking: true,
   montereyLoneKeep: false,
+  parity: 'sudden-death',
 }
 
 /** Thrown when an action isn't legal in the current state */

@@ -82,7 +82,7 @@ Build it once and every later phase gets cheaper.
 
 ### House rules system (after the engine; before Phase 2's odds tables)
 
-✅ _Started 2026-10-19: the first rule, Monterey's lone 3 or 4 keep (`montereyLoneKeep`), is a switch under House rules in Settings (`useHouseRules`). The engine, bots, exact keep odds, simulations and every generated table follow it; the tables are generated for both settings. Next: ante, parity money and barking as settings._
+✅ _Started 2026-10-19: the first rule, Monterey's lone 3 or 4 keep (`montereyLoneKeep`), is a switch under House rules in Settings (`useHouseRules`). The engine, bots, exact keep odds, simulations and every generated table follow it; the tables are generated for both settings. Next: parity options at game start (sudden death is built as the default, 2026-11-04) and the pot._
 
 - **Owner requirement:** house rules are selectable site-wide (header or user preferences), and changing them recalculates every probability on the site. See `docs/RULES.md` section 5.
 - **Engine and data:** the engine takes a `HouseRules` object; every rule and odds function is parameterized by it. Precomputed tables are generated for the default rules, and other rule sets are computed on demand (or a small set of common presets is precomputed).
@@ -128,11 +128,8 @@ Build it once and every later phase gets cheaper.
 4. **Player-count aware everywhere** (2–8), especially the Strategy Assistant.
 5. **Personal stats** in `localStorage`: accuracy by decision type, and weak spots to drill.
 6. ✅ _Done 2026-10-14._ **Fix the refuser model's assumption.** The old model (`evaluateRefuserPosition`, `REFUSER_STRATEGY.md`) assumed a refuser re-rolls. It's deleted; refusal advice is now simulated on the engine, where refusers keep their dice (`simulateRefusal` in `src/strategy/simulate.ts`).
-7. Retire or re-base the heuristic thresholds in `strategy/` once the computed odds exist. Keep the heuristics only as the "novice/solid" bot policies.
-8. **Finish the odds audit** (every figure shown is computed since 2026-10-21; these are what's left):
-   - GameOdds' barking rule of thumb still uses the heuristic `analyzeRoll`.
-   - Dead code: `RollAnalysis.jsx`'s default export (`generateHammerStrategy`) and the typed `gameOddsMap` in `lib/game-validation.js` it feeds; the old `analyzeSecondCallDistribution`.
-   - `docs/RULES.md` has a worked example with typed figures (a doc, not on the site).
+7. ✅ _Done 2026-11-04._ **Retire the heuristic thresholds.** The only heuristics left are the solid bots' play policies (`strategy/bots.ts`), as planned; their calls and refusals read the computed call odds.
+8. ✅ _Done 2026-11-04._ **Finish the odds audit.** The Odds Lab's barking card reads the computed bark odds (it used a strength rule of thumb with sliders); the games page and game pages pick High or Low by the computed call odds (the old strength score picked them); Tres Away's "worth calling" hands are worked out from the call odds by its 3s (typed score cut-offs before); the strength, tie-estimate and Hammer-strategy heuristics in `lib/game-validation.js` and the docs about them are deleted, so it holds the rules only; RULES.md's worked example quotes exact figures a test checks.
 
 **Measure:** trainer sessions per returning user; accuracy improvement over time.
 
@@ -187,15 +184,18 @@ Build it once and every later phase gets cheaper.
 
 ## Open questions
 
-1. **House rules:** should the ante, extra money at parity, and barking be configurable settings, or are we encoding one canonical ruleset?
-2. **Player counts:** support 2–8 everywhere? (The 2-player tie rule already differs.)
-3. **Accounts:** confirm AI play works fully signed-out, with accounts required only for online play.
-4. **Money:** do we track the pot/ante in online games, or only pencils?
+_None right now._
 
 ## Decision log
 
 | Date | Decision | Notes |
 |---|---|---|
+| 2026-11-04 | Barking is always allowed; no house rule for it | Owner: "I have no knowledge of any tables that ban barking." Dropped from docs/RULES.md §5, and the engine's unused `barking` switch removed |
+| 2026-11-04 | Parity (everyone left has 2 pencils): pencils go back and a loss is out, by default; other parity rules (start over and buy in again) are options picked when starting a game | docs/RULES.md §1, §5; engine `parity` rule, 1.7.0. Owner: "Most tables play where parity just means everyone puts their pencils back and now a loss is out." Buy-in-again waits for the pot |
+| 2026-11-04 | Tres Away replay: the tied player closest to the original caller's left goes first (the caller, when tied); everyone, the first player included, puts out one die at a time | docs/RULES.md §3.2, §6 question 1; the engine already did this. Owner confirmed the caller goes first when tied |
+| 2026-11-04 | Support 2–8 players everywhere | Owner: "Yes." Play already seats 1–7 bots |
+| 2026-11-04 | AI play works signed-out; accounts only for online play (for now) | Owner: "AI play can be used without signing in for now." |
+| 2026-11-04 | Track the pot and pencils: $5 per game, later converted to fake internet points | Owner: "Track the pot and pencils. $5 per game. We'll convert this to fake internet points later." Not built yet (Phase 3/4) |
 | 2026-10-31 | Tied at the bottom with equal rolls: start at the Hammer and go clockwise, so a tied Hammer decides first | docs/RULES.md §4, §6 question 4; the engine already did this |
 | 2026-10-30 | Tres Away replay: nobody sets the pace; each player puts out one die at a time (main game unchanged) | docs/RULES.md §3.2, §6 question 1; engine changed (the tied player nearest the caller used to set the pace), 1.5.0 |
 | 2026-10-29 | Taking a tie is an offer: a tied player may take it while another can still roll; it holds only if every tied player takes it, and one who rolls instead and ends up worst loses | docs/RULES.md §4, §6 question 4; engine changed (it blocked taking a tie while another tied player could roll), 1.5.0 |

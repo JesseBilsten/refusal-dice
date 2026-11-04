@@ -33,41 +33,9 @@ const SPECIALTY_GAME_IDS = ['razzle', 'boss', 'tres-away']
 /** Quick check: is this game an always-playable specialty game? */
 const isSpecialtyGame = (id) => SPECIALTY_GAME_IDS.includes(id)
 
-/* ── Competitive thresholds ──
- * Each specialty game is technically playable on every roll; these define
- * a "competitive hand" worth calling, in two tiers: Competitive (the main
- * odds displays) and Strong (premium hands).
- *
- * Razzle and Boss aren't here: their thresholds are worked out from the
- * call odds (callThresholds() in OddsLab/specialty-calls.js), which fills
- * them in. Tres Away's are by score, which the call odds don't group by:
- *   Tres    competitive: Score ≤ 10    →  18.2%  (1413 / 7776)
- *           strong:      Score ≤ 7     →   6.1%  ( 477 / 7776)
- */
-const SPECIALTY_THRESHOLDS = {
-  'tres-away': {
-    /** Maximum Tres Away score (sum of non-3 dice) for competitive */
-    scoreGood: 10,
-    /** Strong threshold — very low score */
-    scoreStrong: 7,
-    /** Minimum threes for a different competitive measure */
-    threesGood: 3,
-  },
-}
-
-/**
- * Toggle filter configs for the specialty game drill-down panels.
- * Each entry maps a game ID to an array of filter options.
- * 'competitive' is the default tier.
- * 'strong' is the premium tier for the best hands.
- */
-const SPECIALTY_FILTERS = {
-  // Razzle and Boss: callFilters() in OddsLab/specialty-calls.js
-  'tres-away': [
-    { id: 'competitive', label: 'Score ≤ 10' },
-    { id: 'strong', label: 'Score ≤ 7' },
-  ],
-}
+/* Each specialty game plays on every roll. Which hands are worth calling
+ * (and which are strong calls) is worked out from the call odds:
+ * callThresholds() and callFilters() in OddsLab/specialty-calls.js. */
 
 /** Lookup map by game id */
 const GAMES_MAP = Object.fromEntries(
@@ -115,8 +83,6 @@ module.exports = {
   KICKER_GAME_IDS,
   SPECIALTY_GAME_IDS,
   isSpecialtyGame,
-  SPECIALTY_THRESHOLDS,
-  SPECIALTY_FILTERS,
   GAMES_MAP,
   getGameFullName,
   getGameName,

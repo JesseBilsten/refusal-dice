@@ -12,10 +12,11 @@ Each rule is tagged by where it came from:
 
 ## 1. Setup
 
-- 2–8 players, 5 dice each, ante into a pot (amount and whether it's played for money are house rules). [site]
+- 2–8 players, 5 dice each, ante into a pot (amount and whether it's played for money are house rules). The site tracks the pot alongside the pencils at $5 a game, to become fake internet points later (ruled 2026-11-04). [confirmed]
 - **Piddle:** everyone rolls one die; highest roll takes the **Hammer**; ties re-roll. [site]
 - **Cocked, stacked or off the table: re-roll** (ruled 2026-10-22). A die that doesn't land flat (leaning on the cup, a die or the table edge), lands on top of another, or leaves the table doesn't count and is re-rolled; for stacked dice, both are. Only matters at a real table: the engine's dice always land flat. [confirmed]
 - Each player starts with 0 **pencils**. 3 pencils = out. Last player standing wins the pot. [site]
+- **Parity:** when every player still in has 2 pencils (one short of out), everyone puts their pencils back, and from then on **a loss is out**: the next pencil puts a player out (ruled 2026-11-04). The owner: "Most tables play where parity just means everyone puts their pencils back and now a loss is out." This is the default; other parity rules can be picked when starting a game (§5). Players already out stay out. It happens once a game. [confirmed] (`checkParity`, `pencilsToLose` in `src/engine/round/game.ts`)
 
 ## 2. A round
 
@@ -23,7 +24,7 @@ Each rule is tagged by where it came from:
    - Only the Hammer and the refusals need their dice before the call. Everyone else may leave theirs in the cup until the Hammer calls, then roll for the call; that roll is still their roll 1 (ruled 2026-10-21; Play works this way). [confirmed]
 2. **Call or bark.** The Hammer looks at their dice and either:
    - **calls** a game, including a high/low variant for kicker games (e.g. "10-3 High"), or
-   - **barks:** the Hammer passes to the player on the left, everyone picks up, and the round starts over with a fresh roll and the new Hammer calling. [confirmed]
+   - **barks:** the Hammer passes to the player on the left, everyone picks up, and the round starts over with a fresh roll and the new Hammer calling. [confirmed] Barking is always allowed: no known table bans it (ruled 2026-11-04). [confirmed]
 3. **Refusal.**
    - **1st refusal** (Hammer's left) accepts or refuses.
    - If they refuse, **2nd refusal** (two seats left) accepts or refuses. [site]
@@ -90,7 +91,7 @@ Each rule is tagged by where it came from:
   2. Everyone else puts out dice until they have **as many dice out as the caller, and never more**.
   3. Starting with the player on the caller's left and going around, each player catches up: put out at least 1 die (from their hand, or after a roll), then roll and put out at least 1 after each roll until they've matched the caller's count. Then the next player goes.
   4. Then it's the caller's turn again: they put out another die (or several), from their hand or after rolling, and the cycle repeats until all dice are out.
-- **A replay goes one die at a time** (tied highest scores replay, §4): nobody sets the pace; each player puts out exactly one die per turn, instead of matching the caller's count. Only in a replay; the main game keeps the caller's pace. (ruled 2026-10-30) [confirmed] The tied player nearest the caller, going left, goes first [inferred]. (`tresAwayMaxPutOut` in `src/engine/round/game.ts`)
+- **A replay goes one die at a time** (tied highest scores replay, §4): nobody sets the pace; each player puts out exactly one die per turn, instead of matching the caller's count. Only in a replay; the main game keeps the caller's pace. (ruled 2026-10-30) [confirmed] The tied player closest to the original caller's left goes first, then on around the table to the left; the caller goes first when tied (ruled 2026-11-04). Going first is no advantage here: the first player puts out one die too, unlike the main game, where the caller may put out as many as they like. The owner: "if the hammer is part of the tied players, he goes first but important to note, everyone puts out one die at a time during ties, there's no advantage at this stage like there is on the first call." [confirmed] (`tresAwayMaxPutOut`, `enterPlay` in `src/engine/round/game.ts`)
 - The loser is the highest score once everyone has all 5 dice out. [site]
 
 ### 3.3 Boss
@@ -128,7 +129,7 @@ Each rule is tagged by where it came from:
 - **Ties for the loser:**
   - The tied players **replay the same called game, variant included**, starting over with fresh rolls, until one loser remains. [confirmed] (A Boss replay can also end with no loser: a tie for the best hand, §3.3.)
   - **No standing at the bottom:** the worst hand has no choice: it rolls while it has rolls, and loses when it's out. The engine rejects `stand` there (`wouldLoseIfStopped`). [confirmed]
-  - **Taking a tie:** on their turn, a player tied for the weakest hand who still has a roll left may stand and **take the tie**, or roll in hope of beating it, even while the others tied with them can still roll (ruled 2026-10-29). [confirmed] **A tie needs every tied player to take it:** taking it is an offer. If another tied player rolls instead and climbs off the bottom, the player who took the tie is the worst hand again and rolls with the rolls they have left (two or more left tied who all took it replay); if the roller ends up the worst hand, they lose and there's no tie. The owner: "'Taking a tie' requires multiple players to agree to it before it happens." Tables sometimes refuse a tie on purpose and roll to climb past a higher hand, to "bring him back in": it can be worse odds, but it's shorter and can still hand the leader the pencil. (`wouldLoseIfStopped`, `reopenTie` in `src/engine/round/game.ts`; a missed game still rolls on while another miss can roll.) [confirmed] Tables usually take the tie when the tied kicker is strong; when the chance of losing on a last roll is lower than the chance of losing the replay, rolling is right. `rollOrTakeTie` in `src/strategy/kicker-odds.ts` computes both exactly (e.g. tied at 5+5 in 10-3 High with 2 rolls left: rolling loses ~77% even using both rolls, and 87.5% on a last roll; the replay ~50%). It counts every roll left: falling short means rolling again, and landing level is the same choice again.
+  - **Taking a tie:** on their turn, a player tied for the weakest hand who still has a roll left may stand and **take the tie**, or roll in hope of beating it, even while the others tied with them can still roll (ruled 2026-10-29). [confirmed] **A tie needs every tied player to take it:** taking it is an offer. If another tied player rolls instead and climbs off the bottom, the player who took the tie is the worst hand again and rolls with the rolls they have left (two or more left tied who all took it replay); if the roller ends up the worst hand, they lose and there's no tie. The owner: "'Taking a tie' requires multiple players to agree to it before it happens." Tables sometimes refuse a tie on purpose and roll to climb past a higher hand, to "bring him back in": it can be worse odds, but it's shorter and can still hand the leader the pencil. (`wouldLoseIfStopped`, `reopenTie` in `src/engine/round/game.ts`; a missed game still rolls on while another miss can roll.) [confirmed] Tables usually take the tie when the tied kicker is strong; when the chance of losing on a last roll is lower than the chance of losing the replay, rolling is right. `rollOrTakeTie` in `src/strategy/kicker-odds.ts` computes both exactly (e.g. tied two ways at 5+5 in 10-3 High with 2 rolls left: rolling loses 77.1% even using both rolls, and 87.5% on a last roll; the replay 50%; exact, checked in `src/__tests__/tutorial-script.test.ts`). It counts every roll left: falling short means rolling again, and landing level is the same choice again.
   - **Exception, 2-player table:** when only 2 players are left in the whole game and they tie, or **both miss the game**, no pencil is taken and the Hammer passes to the other player. [confirmed]
 
 ## 5. House rules (configurable)
@@ -137,8 +138,11 @@ House rules must be **selectable site-wide** (header or user preferences). Chang
 
 Known variations to support:
 
-- **Ante** amount; extra money added at **parity** (all remaining players have 2 pencils); some groups reset pencils at parity. [site]
-- **Barking** allowed or not. [site]
+- **Ante** amount. The site tracks $5 a game (§1). [confirmed]
+- **Parity** (`parity`, built for the default): what happens when everyone left has 2 pencils. Picked when starting a game, not site-wide, since it doesn't change any round's odds. [confirmed, 2026-11-04]
+  - `'sudden-death'` (default): pencils go back, and a loss is out (§1).
+  - `'none'`: nothing happens; 3 pencils is out as usual.
+  - Planned: **start over and buy in again**: pencils go back to 0 and everyone left antes again (needs the pot, ROADMAP).
 - **Monterey keep requirement** (`montereyLoneKeep`, built): some tables let a player keep a lone 3 or 4, not only 2-3 / 3-4 / 4-5. Off by default. Visitors set it under House rules in Settings; every odds figure follows it, using tables generated for both rule sets. [confirmed, example given by owner]
 - More will be collected as they come up; each needs a precise definition here before it's implemented.
 
@@ -146,7 +150,7 @@ Known variations to support:
 
 Engine choices made without a ruling yet (the engine does the [inferred] thing until told otherwise):
 
-1. ~~**Tres Away replay: who sets the pace?**~~ Nobody: in a replay each player puts out one die at a time (ruled 2026-10-30, §3.2). The owner: "each player puts out 1 die at a time in tre's away, rather than defaulting to the number of dice that the Hammer started with … That's only in a tie where they replay Tre's away." Who goes first stays [inferred]: the tied player nearest the caller.
+1. ~~**Tres Away replay: who sets the pace?**~~ Nobody: in a replay each player puts out one die at a time (ruled 2026-10-30, §3.2). The owner: "each player puts out 1 die at a time in tre's away, rather than defaulting to the number of dice that the Hammer started with … That's only in a tie where they replay Tre's away." Who goes first: "the player who was closest to the left of the original caller going first" (ruled 2026-11-04, §3.2).
 2. ~~**Boss replay: a tie for the best hand.**~~ No Boss, no loser, and the Hammer passes left, as in the main game (ruled 2026-10-29, §3.3). The owner: "If two players tie for the best hand, then there's 'No boss' and the call passes to the left."
 3. ~~**Boss: may the Boss skip the extra roll?**~~ Yes: roll, come up, or pick 'em up (ruled 2026-10-21, §3.3).
 4. ~~**Tied at the bottom: who rolls first?**~~ Most rolls left decides first, then going left; a tie can be taken while another tied player can still roll, and holds only if every tied player takes it (ruled 2026-10-29, §4). The owner: "If Ben has 1 roll and Cass has 2 rolls, then it's Cass's decision to take a tie or roll. If she opts to take a tie then it goes back to Ben… If one player doesn't agree to it and rolls, if they become the worst hand then they lose and no tie is established." With equal rolls it starts at the Hammer and goes clockwise, so a tied Hammer decides first (ruled 2026-10-31): "It would always start at the hammer and go clockwise, so yes, the hammer would go first."

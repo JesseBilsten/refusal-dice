@@ -1,6 +1,5 @@
 import { bossHand, razzleScore } from '../../engine'
 import { CALL_ODDS_PLAYERS, callLoss } from '../../strategy'
-import { SPECIALTY_FILTERS, SPECIALTY_THRESHOLDS } from '../../lib/games-config'
 import { STRENGTH_GRADES } from '../Odds/grades'
 
 /**
@@ -32,7 +31,7 @@ const BOSS_SHORT = ['High card+', 'Pair+', 'Two pair+', 'Trips+', 'Full house+',
  * Per game: how a starting roll is grouped (`by`, an index into the
  * rows, best last), each group's label, "this or better" in words, and
  * (where the site grades hands by it) the game's call thresholds
- * (`thresholds`, as games-config's SPECIALTY_THRESHOLDS) and filter labels
+ * (`thresholds`, as classifySpecialtyRoll in game-validation reads them) and filter labels
  * (`filter`) from a group. `orBetter(key, again)` is shorter on a second
  * mention; `also` is another hand worth calling, outside the groups.
  */
@@ -59,6 +58,8 @@ export const SPECIALTY_CALLS = {
     by: (dice) => count(dice, (d) => d === 3),
     label: (n) => counted(n, '3', '3s'),
     orBetter: (n, again) => (n === 1 ? 'a 3 or more' : `${n} or more 3s`) + (again ? '' : ' (3s count 0)'),
+    thresholds: (good, strong) => ({ threesGood: good, threesStrong: strong }),
+    filter: (n) => (n === 1 ? 'A 3+' : `${n}+ 3s`),
   },
 }
 
@@ -139,10 +140,10 @@ export function worthCalling(game, dice) {
   return (good != null && spec.by(dice) >= good) || Boolean(spec.alsoMakes?.(dice))
 }
 
-/** games-config's SPECIALTY_THRESHOLDS, with every one the call odds can set worked out from them */
+/** Each specialty game's call thresholds, worked out from the call odds (classifySpecialtyRoll reads them) */
 export function callThresholds() {
   if (CACHE.has('callThresholds')) return CACHE.get('callThresholds')
-  const out = { ...SPECIALTY_THRESHOLDS }
+  const out = {}
   Object.entries(SPECIALTY_CALLS).forEach(([game, spec]) => {
     if (!spec.thresholds) return
     const { good, strong } = specialtyCalls(game)
@@ -153,12 +154,12 @@ export function callThresholds() {
 }
 
 /**
- * games-config's SPECIALTY_FILTERS, labeled to match callThresholds();
+ * Each specialty game's Odds Lab filters, labeled to match callThresholds();
  * just the one when a hand worth calling is already a strong call
  */
 export function callFilters() {
   if (CACHE.has('callFilters')) return CACHE.get('callFilters')
-  const out = { ...SPECIALTY_FILTERS }
+  const out = {}
   Object.entries(SPECIALTY_CALLS).forEach(([game, spec]) => {
     if (!spec.filter) return
     const { good, strong } = specialtyCalls(game)
