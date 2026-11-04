@@ -388,15 +388,6 @@ const DOCS = [
     'A value on a range. Prefer visible choices (ToggleGroup) when there are only a few.'
   ),
   comp(
-    'select',
-    'Select',
-    'Data entry',
-    'components/ui/select.jsx',
-    [],
-    'The shadcn custom select. Use NativeSelect.',
-    { status: D }
-  ),
-  comp(
     'variant-selector',
     'VariantSelector',
     'Data entry',
@@ -446,24 +437,6 @@ const DOCS = [
     'components/ui/table.jsx',
     ['Table', 'TableBody', 'TableCell', 'TableHead', 'TableHeader', 'TableRow'],
     'Rows of figures (sample rolls, comebacks).'
-  ),
-  comp(
-    'card',
-    'Card',
-    'Data display',
-    'components/ui/card.jsx',
-    ['Card'],
-    'The shadcn card. Use Panel.',
-    { status: D }
-  ),
-  comp(
-    'tabs',
-    'Tabs',
-    'Data display',
-    'components/ui/tabs.jsx',
-    ['Tabs'],
-    'The shadcn tabs. Use PageTabs.',
-    { status: D }
   ),
   comp(
     'strength-tag',

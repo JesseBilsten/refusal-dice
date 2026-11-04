@@ -128,11 +128,8 @@ Build it once and every later phase gets cheaper.
 4. **Player-count aware everywhere** (2–8), especially the Strategy Assistant.
 5. **Personal stats** in `localStorage`: accuracy by decision type, and weak spots to drill.
 6. ✅ _Done 2026-10-14._ **Fix the refuser model's assumption.** The old model (`evaluateRefuserPosition`, `REFUSER_STRATEGY.md`) assumed a refuser re-rolls. It's deleted; refusal advice is now simulated on the engine, where refusers keep their dice (`simulateRefusal` in `src/strategy/simulate.ts`).
-7. Retire or re-base the heuristic thresholds in `strategy/` once the computed odds exist. Keep the heuristics only as the "novice/solid" bot policies.
-8. **Finish the odds audit** (every figure shown is computed since 2026-10-21; these are what's left):
-   - GameOdds' barking rule of thumb still uses the heuristic `analyzeRoll`.
-   - Dead code: `RollAnalysis.jsx`'s default export (`generateHammerStrategy`) and the typed `gameOddsMap` in `lib/game-validation.js` it feeds; the old `analyzeSecondCallDistribution`.
-   - `docs/RULES.md` has a worked example with typed figures (a doc, not on the site).
+7. ✅ _Done 2026-11-04._ **Retire the heuristic thresholds.** The only heuristics left are the solid bots' play policies (`strategy/bots.ts`), as planned; their calls and refusals read the computed call odds.
+8. ✅ _Done 2026-11-04._ **Finish the odds audit.** The Odds Lab's barking card reads the computed bark odds (it used a strength rule of thumb with sliders); the games page and game pages pick High or Low by the computed call odds (the old strength score picked them); Tres Away's "worth calling" hands are worked out from the call odds by its 3s (typed score cut-offs before); the strength, tie-estimate and Hammer-strategy heuristics in `lib/game-validation.js` and the docs about them are deleted, so it holds the rules only; RULES.md's worked example quotes exact figures a test checks.
 
 **Measure:** trainer sessions per returning user; accuracy improvement over time.
 
@@ -187,15 +184,16 @@ Build it once and every later phase gets cheaper.
 
 ## Open questions
 
-1. **House rules:** should the ante, extra money at parity, and barking be configurable settings, or are we encoding one canonical ruleset?
-2. **Player counts:** support 2–8 everywhere? (The 2-player tie rule already differs.)
-3. **Accounts:** confirm AI play works fully signed-out, with accounts required only for online play.
-4. **Money:** do we track the pot/ante in online games, or only pencils?
+1. **House rules beyond Monterey:** docs/RULES.md §5 lists three more things tables are said to play differently: (a) extra money into the pot at **parity** (everyone left has 2 pencils), (b) some tables **reset pencils** at parity, (c) whether **barking** is allowed at all. Do your tables actually differ on any of these? If not, we encode the owner's rules and drop the list; only rules that change who takes the pencil (like the Monterey keep) need a setting. (Asked again 2026-11-04 with this context; the owner wasn't sure these are separate rule sets.)
 
 ## Decision log
 
 | Date | Decision | Notes |
 |---|---|---|
+| 2026-11-04 | Tres Away replay: the tied player closest to the original caller's left goes first (the caller, when tied) | docs/RULES.md §3.2, §6 question 1; the engine already did this |
+| 2026-11-04 | Support 2–8 players everywhere | Owner: "Yes." Play already seats 1–7 bots |
+| 2026-11-04 | AI play works signed-out; accounts only for online play (for now) | Owner: "AI play can be used without signing in for now." |
+| 2026-11-04 | Track the pot and pencils: $5 per game, later converted to fake internet points | Owner: "Track the pot and pencils. $5 per game. We'll convert this to fake internet points later." Not built yet (Phase 3/4) |
 | 2026-10-31 | Tied at the bottom with equal rolls: start at the Hammer and go clockwise, so a tied Hammer decides first | docs/RULES.md §4, §6 question 4; the engine already did this |
 | 2026-10-30 | Tres Away replay: nobody sets the pace; each player puts out one die at a time (main game unchanged) | docs/RULES.md §3.2, §6 question 1; engine changed (the tied player nearest the caller used to set the pace), 1.5.0 |
 | 2026-10-29 | Taking a tie is an offer: a tied player may take it while another can still roll; it holds only if every tied player takes it, and one who rolls instead and ends up worst loses | docs/RULES.md §4, §6 question 4; engine changed (it blocked taking a tie while another tied player could roll), 1.5.0 |

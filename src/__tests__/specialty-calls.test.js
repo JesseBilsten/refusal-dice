@@ -41,7 +41,7 @@ describe('the call thresholds are worked out from the same table', () => {
     expect(callAdvice(game, pct)).toMatch(/^Call with /)
   })
 
-  test.each(['razzle', 'boss'])('%s: the site’s “competitive” hands are the ones worth calling', (game) => {
+  test.each(['razzle', 'boss', 'tres-away'])('%s: the site’s “competitive” hands are the ones worth calling', (game) => {
     const t = callThresholds()
     every.forEach((d) => expect(Boolean(classifySpecialtyRoll(d, game, t).competitive)).toBe(worthCalling(game, d)))
     expect(callFilters()[game][0].id).toBe('competitive')
@@ -53,7 +53,9 @@ describe('the call thresholds are worked out from the same table', () => {
       .forEach((d) => expect(callLoss(d, { game: 'razzle' })).toBeLessThanOrEqual(0.15))
   })
 
-  test('Tres Away keeps its score thresholds', () => {
-    expect(callThresholds()['tres-away'].scoreGood).toBeGreaterThan(0)
+  test('Tres Away: worth calling by its 3s, as its advice says', () => {
+    const t = callThresholds()['tres-away']
+    expect(t.threesStrong).toBeGreaterThanOrEqual(t.threesGood)
+    expect(callFilters()['tres-away'].map((f) => f.id)).toEqual(['competitive', 'strong'])
   })
 })

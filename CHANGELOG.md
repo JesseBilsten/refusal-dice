@@ -4,7 +4,23 @@ Every release of refusaldice.com, newest first. Versions are
 major.minor.patch ([docs/WORKFLOW.md](docs/WORKFLOW.md)): each pull request
 bumps the version once and adds its entry here.
 
-## 1.6.0 (unreleased)
+## 1.6.1 (unreleased)
+
+- **Barking in the Odds Lab:** the barking card now counts the rolls that
+  really do better barking than calling, from rounds played out (as on the
+  [Barking](/games/barking) page). It used a rule of thumb with two sliders.
+- **High or Low:** the [Games](/games) page and each game's page now score
+  your roll's call in the variant less likely to take the pencil. A rough
+  strength score used to pick it.
+- **Tres Away:** the hands worth calling are now the ones the odds say:
+  a 3 or more, and four 3s for a strong call. The Odds Lab used fixed score
+  cut-offs (10 or less) that didn't match the advice.
+- **Rules:** a Tres Away replay starts with the tied player nearest the
+  caller's left (the caller, when tied).
+- **Behind the scenes:** old guesswork code and notes removed; the dice
+  data files are a third of the size.
+
+## 1.6.0 (2026-11-04)
 
 - **What’s new:** a page listing every release of the site, newest first,
   read from this changelog at build time (`/changelog`, in the footer).

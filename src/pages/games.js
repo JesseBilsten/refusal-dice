@@ -156,7 +156,11 @@ const GamesPage = () => {
 
   const roll = diceValues.every(Boolean) ? diceValues.map(Number) : null
   const analysis = useMemo(() => (roll ? analyzeRoll(roll) : null), [roll && roll.join('')]) // eslint-disable-line react-hooks/exhaustive-deps
-  const playableCall = (id) => analysis?.variants?.find((v) => v.game === id) || null
+  // The roll's call in each game it plays: of High and Low, the one less likely to take the pencil (call-odds.ts)
+  const playableCall = (id) =>
+    (analysis?.variants || [])
+      .filter((v) => v.game === id)
+      .sort((a, b) => callLoss(roll, a, houseRules) - callLoss(roll, b, houseRules))[0] || null
 
   const onDiceChange = useCallback((values) => {
     setDiceValues(values)

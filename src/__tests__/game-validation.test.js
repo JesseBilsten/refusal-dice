@@ -5,12 +5,11 @@
  *   1. Game-matching rules (checkGame)
  *   2. Razzle: 1s are wild, 6s are natural
  *   3. Specialty game scoring (Boss, Tres Away)
- *   4. Kicker & variant logic (high/low)
- *   5. Hammer strategy recommendations (generateHammerStrategy)
- *   6. Partial-match detection (calculatePartialMatch)
- *   7. Precision invariant (perfect kickers never show 0.0%)
+ *   4. Specialty thresholds
+ *   5. Kicker & variant logic (high/low): the kicker each variant keeps,
+ *      and every game a roll plays (analyzeRoll)
  *
- * Refusal advice is simulated on the engine now: see strategy.test.ts.
+ * How good a call is comes from the computed odds: see strategy.test.ts.
  *
  * Run:  npm test
  */
@@ -18,27 +17,21 @@
 const {
   checkGame,
   getKickerStrength,
-  calculateKickerStrength,
   getBossHandRank,
   calculateTresAwayScore,
   getRazzleScore,
   findOptimalVariants,
-  calculateRawStrength,
-  generateHammerStrategy,
-  calculatePartialMatch,
-  calculateOffensiveStrength,
-  calculateGlobalStrength,
+  analyzeRoll,
   classifySpecialtyRoll,
   isCompetitiveSpecialtyHand,
-  gameOddsMap,
 } = require('../lib/game-validation')
 
 
-// Specialty thresholds (mirror games-config.js — CJS-friendly)
+// Sample thresholds, in the shape callThresholds() (OddsLab/specialty-calls.js) works out
 const SPECIALTY_THRESHOLDS = {
   razzle: { wildSixesGood: 3, wildSixesStrong: 4 },
   boss: { rankGood: 3, rankStrong: 4 },
-  'tres-away': { scoreGood: 10, scoreStrong: 7, threesGood: 3 },
+  'tres-away': { threesGood: 2, threesStrong: 4 },
 }
 
 /* ════════════════════════════════════════════════════════════
@@ -348,14 +341,10 @@ describe('Specialty game thresholds', () => {
     expect(isCompetitiveSpecialtyHand([2, 2, 3, 4, 5], 'boss', SPECIALTY_THRESHOLDS)).toBe(false)
   })
 
-  test('Tres Away: score 8 is competitive AND strong', () => {
-    // [3, 3, 1, 2, 3] → score = 0+0+1+2+0 = 3
-    expect(isCompetitiveSpecialtyHand([3, 3, 1, 2, 3], 'tres-away', SPECIALTY_THRESHOLDS)).toBe(true)
-  })
-
-  test('Tres Away: score 15 is NOT competitive', () => {
-    // [1, 2, 4, 5, 6] → 1+2+4+5+6 = 18 — not competitive
-    expect(isCompetitiveSpecialtyHand([1, 2, 4, 5, 6], 'tres-away', SPECIALTY_THRESHOLDS)).toBe(false)
+  test('Tres Away: graded by its 3s (here 2+ competitive, 4+ strong)', () => {
+    expect(classifySpecialtyRoll([3, 3, 1, 2, 3], 'tres-away', SPECIALTY_THRESHOLDS)).toEqual({ competitive: true, strong: false })
+    expect(classifySpecialtyRoll([3, 3, 3, 3, 6], 'tres-away', SPECIALTY_THRESHOLDS)).toEqual({ competitive: true, strong: true })
+    expect(isCompetitiveSpecialtyHand([1, 2, 3, 5, 6], 'tres-away', SPECIALTY_THRESHOLDS)).toBe(false)
   })
 })
 
@@ -498,287 +487,53 @@ describe('Kicker strength and variants', () => {
 })
 
 /* ════════════════════════════════════════════════════════════
-   7. GAME ODDS MAP — sanity checks
+   7. VARIANTS — findOptimalVariants, analyzeRoll
    ════════════════════════════════════════════════════════════ */
-describe('gameOddsMap', () => {
-  test('all 10 games present', () => {
-    const expected = ['10-2', '10-3', '10-4', 'ship-captain-crew', 'monterey', 'vegas', 'pairs', 'razzle', 'boss', 'tres-away']
-    expected.forEach(id => {
-      expect(gameOddsMap).toHaveProperty(id)
-    })
+describe('Variants: the kicker each variant keeps', () => {
+  test('[5,6,1,2,3] Vegas (6+1, 5+2): kicker 3 either way', () => {
+    const v = findOptimalVariants([5, 6, 1, 2, 3], 'vegas')
+    expect(v.high.kicker).toEqual([3])
+    expect(v.low.kicker).toEqual([3])
   })
 
-  test('odds are percentages (0-100)', () => {
-    Object.values(gameOddsMap).forEach(v => {
-      expect(v).toBeGreaterThan(0)
-      expect(v).toBeLessThanOrEqual(100)
-    })
+  test('[1,2,3,4,5] Vegas (2+5, 3+4): kicker 1 either way', () => {
+    const v = findOptimalVariants([1, 2, 3, 4, 5], 'vegas')
+    expect(v.high.kicker).toEqual([1])
+    expect(v.low.kicker).toEqual([1])
   })
 
-  test('Razzle is the most common game (~95%)', () => {
-    expect(gameOddsMap.razzle).toBeGreaterThan(90)
+  test('[5,6,2,3,4] Vegas: High keeps 6 (5+2, 3+4), Low keeps 2 (5+6, 3+4)', () => {
+    const v = findOptimalVariants([5, 6, 2, 3, 4], 'vegas')
+    expect(v.high.kicker).toEqual([6])
+    expect(v.low.kicker).toEqual([2])
   })
 
-  test('10-4 is one of the hardest (~22%)', () => {
-    expect(gameOddsMap['10-4']).toBeLessThan(30)
+  test('[4,6,5,5,1] 10-2: the kicker totals 11 whichever 10 is kept (always the roll less 10)', () => {
+    const v = findOptimalVariants([4, 6, 5, 5, 1], '10-2')
+    expect(v.high.kickerSum).toBe(11)
+    expect(v.low.kickerSum).toBe(11)
+  })
+
+  test('analyzeRoll lists every game a roll plays, in game order, High before Low', () => {
+    const { variants } = analyzeRoll([5, 6, 2, 3, 4])
+    expect(variants.map((v) => (v.variant ? `${v.game} ${v.variant}` : v.game))).toEqual([
+      '10-2 high', '10-2 low', '10-3 high', '10-3 low',
+      'ship-captain-crew high', 'ship-captain-crew low', 'monterey high', 'monterey low',
+      'vegas high', 'vegas low', 'razzle', 'boss', 'tres-away',
+    ])
+    expect(variants.find((v) => v.game === 'vegas' && v.variant === 'low').kicker).toEqual([2])
+  })
+
+  test('analyzeRoll describes the specialty hands', () => {
+    const d = (roll, game) => analyzeRoll(roll).variants.find((v) => v.game === game).details
+    expect(d([1, 1, 1, 1, 1], 'razzle')).toBe('5 wilds (as 6s)')
+    expect(d([6, 6, 1, 1, 3], 'razzle')).toBe('4 6s (2 natural, 2 wilds)')
+    expect(d([3, 3, 1, 2, 3], 'tres-away')).toBe('Score: 3')
+  })
+
+  test('analyzeRoll leaves out the games a roll misses', () => {
+    const games = analyzeRoll([2, 2, 4, 4, 6]).variants.map((v) => v.game)
+    expect(games).not.toContain('ship-captain-crew')
+    expect(games).toContain('pairs')
   })
 })
-
-/* ════════════════════════════════════════════════════════════
-   10. HAMMER STRATEGY — generateHammerStrategy
-   ════════════════════════════════════════════════════════════ */
-describe('generateHammerStrategy', () => {
-  test('returns bestCall, allRecommendations', () => {
-    const result = generateHammerStrategy([4, 6, 5, 5, 3], 2, gameOddsMap)
-    expect(result).toHaveProperty('bestCall')
-    expect(result).toHaveProperty('allRecommendations')
-    expect(Array.isArray(result.allRecommendations)).toBe(true)
-    expect(result.allRecommendations.length).toBeGreaterThan(0)
-  })
-
-  test('[6,6,6,6,6] best call is Boss (5-of-a-kind, nearly impossible to tie)', () => {
-    const result = generateHammerStrategy([6, 6, 6, 6, 6], 2, gameOddsMap)
-    expect(result.bestCall).toBeDefined()
-    expect(result.bestCall.game).toBe('boss')
-    expect(result.bestCall.globalStrength).toBeGreaterThan(99)
-  })
-
-  test('[6,6,6,6,6] Boss > Razzle > Pairs by globalStrength', () => {
-    const result = generateHammerStrategy([6, 6, 6, 6, 6], 2, gameOddsMap)
-    const boss = result.allRecommendations.find(r => r.game === 'boss')
-    const razzle = result.allRecommendations.find(r => r.game === 'razzle')
-    const pairsHi = result.allRecommendations.find(r => r.game === 'pairs' && r.variant === 'high')
-    expect(boss.globalStrength).toBeGreaterThan(razzle.globalStrength)
-    expect(razzle.globalStrength).toBeGreaterThan(pairsHi.globalStrength)
-  })
-
-  test('[5,5,2,2,1] 10-2 low is best call (3-kicker dice minimise ties)', () => {
-    const result = generateHammerStrategy([5, 5, 2, 2, 1], 2, gameOddsMap)
-    expect(result.bestCall.game).toBe('10-2')
-    expect(result.bestCall.variant).toBe('low')
-    expect(result.bestCall.globalStrength).toBeGreaterThan(99)
-  })
-
-  test('[5,5,2,2,1] vegas low = pairs low by globalStrength (both 1-die kicker)', () => {
-    const result = generateHammerStrategy([5, 5, 2, 2, 1], 2, gameOddsMap)
-    const vegasLo = result.allRecommendations.find(r => r.game === 'vegas' && r.variant === 'low')
-    const pairsLo = result.allRecommendations.find(r => r.game === 'pairs' && r.variant === 'low')
-    // Both have perfect 1-die kicker → same globalStrength
-    expect(Math.abs(vegasLo.globalStrength - pairsLo.globalStrength)).toBeLessThan(1)
-  })
-
-  test('allRecommendations are sorted by globalStrength desc', () => {
-    const result = generateHammerStrategy([2, 3, 4, 5, 6], 2, gameOddsMap)
-    for (let i = 1; i < result.allRecommendations.length; i++) {
-      expect(result.allRecommendations[i].globalStrength)
-        .toBeLessThanOrEqual(result.allRecommendations[i - 1].globalStrength)
-    }
-  })
-
-  test('each recommendation has game, rawStrength, offensiveStrength, globalStrength', () => {
-    const result = generateHammerStrategy([1, 2, 3, 4, 5], 2, gameOddsMap)
-    result.allRecommendations.forEach(rec => {
-      expect(rec).toHaveProperty('game')
-      expect(rec).toHaveProperty('rawStrength')
-      expect(rec).toHaveProperty('offensiveStrength')
-      expect(rec).toHaveProperty('globalStrength')
-    })
-  })
-})
-
-/* ════════════════════════════════════════════════════════════
-   11. RAW STRENGTH — sanity checks
-   ════════════════════════════════════════════════════════════ */
-describe('calculateRawStrength', () => {
-  test('best possible Razzle hand [6,6,6,6,6] is ~100%', () => {
-    const str = calculateRawStrength([6, 6, 6, 6, 6], 'razzle', {})
-    expect(str).toBeGreaterThan(95)
-  })
-
-  test('worst possible Razzle roll [2,3,4,5,2] is weak', () => {
-    const str = calculateRawStrength([2, 3, 4, 5, 2], 'razzle', {})
-    expect(str).toBeLessThan(20)
-  })
-
-  test('best Tres Away hand [3,3,3,3,3] → 100%', () => {
-    const str = calculateRawStrength([3, 3, 3, 3, 3], 'tres-away', {})
-    expect(str).toBe(100)
-  })
-})
-
-/* ════════════════════════════════════════════════════════════
-   13. PARTIAL MATCH — calculatePartialMatch
-   ════════════════════════════════════════════════════════════ */
-describe('calculatePartialMatch', () => {
-  // ── Monterey partial matches ──
-  describe('Monterey', () => {
-    test('[1,3,4,6,6] low → 2-way flexibility (need 2 or 5)', () => {
-      const pm = calculatePartialMatch([1, 3, 4, 6, 6], 'monterey', 'low')
-      expect(pm.hasPartialMatch).toBe(true)
-      expect(pm.diceNeeded).toBe(2)
-      expect(pm.productiveNextValues).toBe(2) // can extend in both directions
-    })
-
-    test('[1,2,3,6,6] low → 1-way flexibility (already SCC, limited extension)', () => {
-      const pm = calculatePartialMatch([1, 2, 3, 6, 6], 'monterey', 'low')
-      expect(pm.hasPartialMatch).toBe(true)
-      expect(pm.productiveNextValues).toBe(1)
-    })
-
-    test('[2,3,4,6,6] low → has 3/5, 2-way flexibility', () => {
-      const pm = calculatePartialMatch([2, 3, 4, 6, 6], 'monterey', 'low')
-      expect(pm.hasPartialMatch).toBe(true)
-      expect(pm.diceNeeded).toBe(2)
-    })
-
-    test('[2,5,5,1,1] high → only 2 unique matches (2,5), not enough for partial', () => {
-      const pm = calculatePartialMatch([2, 5, 5, 1, 1], 'monterey', 'high')
-      // Monterey requires ≥3 unique matches for partial
-      expect(pm.hasPartialMatch).toBe(false)
-    })
-
-    test('[1,1,1,1,1] low → no partial match (only 1 unique match)', () => {
-      const pm = calculatePartialMatch([1, 1, 1, 1, 1], 'monterey', 'low')
-      expect(pm.hasPartialMatch).toBe(false)
-    })
-
-    test('2-way flexibility has higher proximity than 1-way', () => {
-      const twoWay = calculatePartialMatch([1, 3, 4, 6, 6], 'monterey', 'low')
-      const oneWay = calculatePartialMatch([1, 2, 3, 6, 6], 'monterey', 'low')
-      expect(twoWay.proximity).toBeGreaterThan(oneWay.proximity)
-    })
-  })
-
-  // ── SCC partial matches ──
-  describe('SCC', () => {
-    test('[6,5,3,2,1] → has full low straight 1+2+3, proximity=90', () => {
-      const pm = calculatePartialMatch([6, 5, 3, 2, 1], 'ship-captain-crew', null)
-      expect(pm.hasPartialMatch).toBe(true)
-      expect(pm.diceNeeded).toBe(0)
-      expect(pm.proximity).toBe(90)
-    })
-
-    test('[6,1,2,3,3] → only has 6 of high straight, but has 1+2+3 of low → full match not partial', () => {
-      // This roll has all of 1,2,3 (low straight) → 3/3 match, proximity=90
-      const pm = calculatePartialMatch([6, 1, 2, 3, 3], 'ship-captain-crew', null)
-      expect(pm.hasPartialMatch).toBe(true)
-      expect(pm.proximity).toBe(90)
-      expect(pm.diceNeeded).toBe(0)
-    })
-
-    test('[1,2,4,4,5] → has 1+2 of low straight, needs 3 → partial, diceNeeded=1', () => {
-      const pm = calculatePartialMatch([1, 2, 4, 4, 5], 'ship-captain-crew', null)
-      expect(pm.hasPartialMatch).toBe(true)
-      expect(pm.diceNeeded).toBe(1)
-      expect(pm.proximity).toBe(60)
-    })
-
-    test('[3,3,3,3,3] → only has 3 of low straight (1/3) → no partial', () => {
-      const pm = calculatePartialMatch([3, 3, 3, 3, 3], 'ship-captain-crew', null)
-      expect(pm.hasPartialMatch).toBe(false)
-    })
-  })
-
-  // ── Vegas partial matches ──
-  describe('Vegas', () => {
-    test('[1,6,3,3,3] low → 1 pair summing to 7, partial match', () => {
-      const pm = calculatePartialMatch([1, 6, 3, 3, 3], 'vegas', 'low')
-      expect(pm.hasPartialMatch).toBe(true)
-      expect(pm.diceNeeded).toBe(2)
-      expect(pm.proximity).toBe(35)
-    })
-
-    test('[5,6,1,2,3] IS a complete Vegas game (6+1=7, 5+2=7), not partial', () => {
-      // Two pairs sum to 7: [6,1] and [5,2], kicker [3]
-      expect(checkGame([5, 6, 1, 2, 3], 'vegas')).toBe(true)
-      const v = findOptimalVariants([5, 6, 1, 2, 3], 'vegas')
-      expect(v.high.kicker).toEqual([3])
-      expect(v.low.kicker).toEqual([3])
-    })
-
-    test('[1,2,3,4,5] IS a complete Vegas game (2+5=7, 3+4=7), not partial', () => {
-      // Two pairs sum to 7: [2,5] and [3,4], kicker [1]
-      expect(checkGame([1, 2, 3, 4, 5], 'vegas')).toBe(true)
-      const v = findOptimalVariants([1, 2, 3, 4, 5], 'vegas')
-      expect(v.high.kicker).toEqual([1])
-      expect(v.low.kicker).toEqual([1])
-    })
-
-    test('[5,6,2,3,4] has both Vegas High and Vegas Low via different pair combos', () => {
-      // Combo 1: 7-pairs [5,2]+[3,4] → kicker 6 (HIGH)
-      // Combo 2: 11-pair [5,6] + 7-pair [3,4] → kicker 2 (LOW)
-      expect(checkGame([5, 6, 2, 3, 4], 'vegas')).toBe(true)
-      const v = findOptimalVariants([5, 6, 2, 3, 4], 'vegas')
-      expect(v.high.kicker).toEqual([6])
-      expect(v.low.kicker).toEqual([2])
-    })
-
-    test('[1,1,1,1,1] low → no pairs summing to 7, no partial', () => {
-      const pm = calculatePartialMatch([1, 1, 1, 1, 1], 'vegas', 'low')
-      expect(pm.hasPartialMatch).toBe(false)
-    })
-
-    test('[2,2,2,2,2] low → no pairs summing to 7, no partial', () => {
-      const pm = calculatePartialMatch([2, 2, 2, 2, 2], 'vegas', 'low')
-      expect(pm.hasPartialMatch).toBe(false)
-    })
-  })
-
-  // ── Pairs partial matches ──
-  describe('Pairs', () => {
-    test('[3,3,1,2,4] → 1 pair (3s), needs second pair', () => {
-      const pm = calculatePartialMatch([3, 3, 1, 2, 4], 'pairs', null)
-      expect(pm.hasPartialMatch).toBe(true)
-      expect(pm.diceNeeded).toBe(1)
-      expect(pm.proximity).toBe(40)
-    })
-
-    test('[1,2,3,4,5] → no pairs, no partial', () => {
-      const pm = calculatePartialMatch([1, 2, 3, 4, 5], 'pairs', null)
-      expect(pm.hasPartialMatch).toBe(false)
-    })
-  })
-
-  // ── No-partial defaults ──
-  test('returns hasPartialMatch=false for non-matching roll', () => {
-    const pm = calculatePartialMatch([6, 6, 6, 6, 6], 'monterey', 'low')
-    expect(pm.hasPartialMatch).toBe(false)
-    expect(pm.proximity).toBe(0)
-    expect(pm.diceNeeded).toBe(5)
-  })
-})
-
-/* ════════════════════════════════════════════════════════════
-   14. PRECISION INVARIANT — perfect kickers never show 0.0%
-   ════════════════════════════════════════════════════════════ */
-describe('Precision: perfect kickers have non-zero lose chance', () => {
-  const scenarios = [
-    { roll: [6, 6, 6, 4, 5], game: '10-2', label: 'Perfect 10-2 kicker [666]' },
-    { roll: [6, 6, 4, 5, 6], game: 'ship-captain-crew', label: 'Perfect SCC kicker [66]' },
-    { roll: [6, 5, 3, 1, 1], game: '10-4', label: 'Perfect 10-4 kicker [6]' },
-  ]
-
-  scenarios.forEach(({ roll, game, label }) => {
-    test(`${label}: offensiveStrength < 100 (ties always possible)`, () => {
-      const result = generateHammerStrategy(roll, 2, gameOddsMap)
-      const rec = result.allRecommendations.find(r => r.game === game)
-      expect(rec).toBeDefined()
-      // Even a perfect kicker can be tied → offensiveStrength must be < 100
-      expect(rec.offensiveStrength).toBeLessThan(100)
-      expect(rec.offensiveStrength).toBeGreaterThan(80)
-    })
-  })
-
-  test('1-die kickers (vegas, pairs) have higher tie probability than 3-die kickers (10-2)', () => {
-    // [5,6,2,3,4] has both vegas and 10-2
-    const result = generateHammerStrategy([5, 6, 2, 3, 4], 2, gameOddsMap)
-    const vegasRec = result.allRecommendations.find(r => r.game === 'vegas')
-    // 10-2 isn't available for this roll, so let's check pairs vs SCC on another roll
-    // [4,5,6,6,6]: SCC has 2 kicker dice, pairs might be available
-    const r2 = generateHammerStrategy([4, 5, 6, 6, 6], 2, gameOddsMap)
-    const scc = r2.allRecommendations.find(r => r.game === 'ship-captain-crew')
-    // SCC (2 kicker dice) should have lower tie prob than single-kicker games
-    expect(scc.tieProbability).toBeLessThan(0.05) // (1/6)^2 × p3rolls
-  })
-})
-

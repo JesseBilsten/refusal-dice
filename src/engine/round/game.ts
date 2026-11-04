@@ -312,7 +312,7 @@ function rollPositions(state: GameState, player: PlayerId, positions: number[]):
 function enterPlay(state: GameState, call: Call, cycle: number, players: PlayerId[]): GameState {
   if (call.game === 'tres-away') {
     // The caller sets the pace. A replay goes one die at a time (tresAwayMaxPutOut, ruled
-    // 2026-10-30), starting with the tied player nearest the caller [inferred]
+    // 2026-10-30), starting with the tied player nearest the caller's left (ruled 2026-11-04)
     const pacer = seatOrderFrom(state, state.hammer, players)[0]
     const hands: Record<PlayerId, TresHand> = {}
     players.forEach((id) => (hands[id] = { out: [], fresh: true, rolls: 1 }))

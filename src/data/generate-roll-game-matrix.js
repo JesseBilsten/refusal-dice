@@ -45,8 +45,6 @@ function generateRollGameMatrix() {
       roll: roll,
       games: validGames,
       kickerStrengths: kickerStrengths,
-      // Keep indices for runtime mapping
-      indices: rollData.indices,
       count: rollData.count
     };
     
