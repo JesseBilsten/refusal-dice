@@ -41,15 +41,19 @@ export interface HouseRules {
   /**
    * Parity: everyone left has one pencil short of out (docs/RULES.md §1).
    * 'sudden-death' (the default): pencils go back, and from then on one
-   * pencil puts a player out. 'none': nothing happens at parity.
+   * pencil puts a player out. 'buy-in': the game starts over: pencils go
+   * back and everyone left antes again. 'none': nothing happens at parity.
    */
-  parity: 'sudden-death' | 'none'
+  parity: 'sudden-death' | 'buy-in' | 'none'
+  /** What each player puts in the pot to start (and to buy in again at parity) */
+  ante: number
 }
 
 export const DEFAULT_HOUSE_RULES: HouseRules = {
   pencilsToLose: 3,
   montereyLoneKeep: false,
   parity: 'sudden-death',
+  ante: 5,
 }
 
 /** Thrown when an action isn't legal in the current state */

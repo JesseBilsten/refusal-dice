@@ -634,6 +634,57 @@ describe('parity (§1, ruled 2026-11-04)', () => {
     expect(g.parity).toBeFalsy()
     expect(pencilsToLose(g)).toBe(3)
   })
+
+  test("with parity 'buy-in', pencils go back, everyone left antes again, and 3 pencils is still out", () => {
+    const g = cLoses(atTwoTwoOne({ parity: 'buy-in' }), 'a', 'b')
+    expect(g.log.slice(-2)).toEqual([
+      { type: 'parity', rule: 'buy-in' },
+      { type: 'ante', players: ['a', 'b', 'c'], amount: 5, pot: 30 },
+    ])
+    expect(g.seats.map((s) => [s.pencils, s.paid])).toEqual([
+      [0, 10],
+      [0, 10],
+      [0, 10],
+    ])
+    expect(g.pot).toBe(30)
+    expect(g.parity).toBeFalsy()
+    expect(pencilsToLose(g)).toBe(3)
+  })
+})
+
+describe('the pot (§1, ruled 2026-11-04)', () => {
+  test('everyone antes $5 at the start', () => {
+    const g = createGame({ players: players('a', 'b', 'c', 'd'), hammer: 'a', source: seeded(1) })
+    expect(g.pot).toBe(20)
+    expect(g.seats.every((s) => s.paid === 5)).toBe(true)
+    expect(g.log).toContainEqual({ type: 'ante', players: ['a', 'b', 'c', 'd'], amount: 5, pot: 20 })
+    expect(viewFor(g, 'b').pot).toBe(20)
+  })
+
+  test('the ante is a house rule; 0 means no pot', () => {
+    expect(createGame({ players: players('a', 'b'), hammer: 'a', rules: { ante: 10 }, source: seeded(1) }).pot).toBe(20)
+    const free = createGame({ players: players('a', 'b'), hammer: 'a', rules: { ante: 0 }, source: seeded(1) })
+    expect(free.pot).toBe(0)
+    expect(free.log.some((e) => e.type === 'ante')).toBe(false)
+  })
+
+  test('the last player standing takes the pot', () => {
+    let g = createGame({
+      players: players('a', 'b'),
+      hammer: 'a',
+      rules: { pencilsToLose: 1 },
+      source: scripted([...[4, 6, 1, 1, 1], ...[1, 1, 1, 1, 2], ...Array(10).fill(1)]),
+    })
+    g = play(
+      g,
+      { type: 'call', player: 'a', call: { game: '10-2', variant: 'high' } },
+      { type: 'accept', player: 'b' },
+      { type: 'reroll', player: 'b', keep: [] },
+      { type: 'reroll', player: 'b', keep: [] }
+    )
+    expect(g.phase).toEqual({ kind: 'gameOver', winner: 'a' })
+    expect(g.log[g.log.length - 1]).toEqual({ type: 'gameOver', winner: 'a', pot: 10 })
+  })
 })
 
 describe('player views', () => {
@@ -778,5 +829,26 @@ describe('random games always finish and keep invariants', () => {
       if (g.parity) parityGames++
     }
     expect(parityGames).toBeGreaterThan(0)
+  })
+
+  test('buy-in games finish too, and every dollar paid is in the pot', () => {
+    let seed = 7
+    const r = () => (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648
+    let buyIns = 0
+    for (let n = 0; n < 200; n++) {
+      let g = createGame({
+        players: players(...'abcde'.slice(0, 2 + (n % 4)).split('')),
+        rules: { parity: 'buy-in' },
+        source: seeded(n),
+      })
+      let steps = 0
+      while (g.phase.kind !== 'gameOver') {
+        g = applyAction(g, randomAction(g, r))
+        expect(++steps).toBeLessThan(60000)
+      }
+      expect(g.pot).toBe(g.seats.reduce((sum, s) => sum + s.paid, 0))
+      buyIns += g.log.filter((e) => e.type === 'parity').length
+    }
+    expect(buyIns).toBeGreaterThan(0)
   })
 })

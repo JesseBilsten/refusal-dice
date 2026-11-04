@@ -36,6 +36,16 @@ test('bots and a bot-played "you" finish whole games, with every event in words'
   }
 })
 
+test('the pot in words: the ante, a buy-in parity and the winner', () => {
+  const names = { you: 'You', ava: 'Ava' }
+  expect(describeEvent({ type: 'ante', players: ['you', 'ava', 'ben', 'cass'], amount: 5, pot: 20 }, names, label)).toBe(
+    '4 players each put $5 in the pot. The pot: $20.'
+  )
+  expect(describeEvent({ type: 'parity', rule: 'buy-in' }, names, label)).toMatch(/everyone buys in again/)
+  expect(describeEvent({ type: 'gameOver', winner: 'ava', pot: 1500 }, names, label)).toBe('Ava wins the pot: $1,500!')
+  expect(newTable(3, 1, { parity: 'buy-in' }).rules.parity).toBe('buy-in')
+})
+
 test('a second call must be a different game', () => {
   let g = newTable(2, 7)
   // Play until someone has to make a second call
