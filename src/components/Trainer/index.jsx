@@ -25,15 +25,13 @@ import {
  * The decision trainer: a real moment from a game against solid bots, the
  * question "what do you do?", then the odds of every option, measured as
  * your chance of the pencil this round (trainer-model.ts). The Hammer's
- * call reads the generated call odds; every other decision is played out
- * by solid bots in a worker, starting as soon as the situation appears.
+ * decision (the Hammer's call and a bark included) is played out by solid
+ * bots in a worker, starting as soon as the situation appears.
  */
 
 // Rounds played out per decision, as in Play's hints: about ±1.5 points each
 const DECISION_SAMPLES = 1000
 const REFUSAL_SAMPLES = 600
-// Generated call odds: totals this close to the best are a toss-up
-const CALL_MARGIN = 0.01
 
 /** "2 points" (percentage points, rounded; at least 1) */
 const points = (p) => {
@@ -118,7 +116,7 @@ export default function Trainer({ className }) {
 
   // Play the options out as soon as the situation appears, so the answer is ready when you pick
   const request = useMemo(() => {
-    if (!situation || situation.kind === 'call') return null
+    if (!situation) return null
     if (situation.kind === 'refusal')
       return {
         kind: 'refusal',
@@ -142,10 +140,6 @@ export default function Trainer({ className }) {
   // Each option's chance of the pencil (and its error, when played out)
   const odds = useMemo(() => {
     if (!situation) return null
-    if (situation.kind === 'call')
-      return Object.fromEntries(
-        situation.stats.rows.map((r) => [r.label, { p: r.value, error: 0 }])
-      )
     if (!sim.result || sim.running) return null
     // For one render after a new situation, the hook still holds the last one's result: skip it
     // (it's reset before you can pick, since picking clears with each new situation)
@@ -177,12 +171,8 @@ export default function Trainer({ className }) {
   // The Boss's own choices are scored in net pencils (higher is better)
   const net = situation?.measure === 'net'
   const margin = odds
-    ? situation.kind === 'call'
-      ? CALL_MARGIN
-      : 2 *
-        Math.max(
-          ...Object.values(odds).map((o) => (net ? o.netError : o.error))
-        )
+    ? 2 *
+      Math.max(...Object.values(odds).map((o) => (net ? o.netError : o.error)))
     : 0
   const graded = useMemo(
     () =>
@@ -387,11 +377,9 @@ export default function Trainer({ className }) {
                 <div className="space-y-2 p-3 pt-0 text-sm">
                   <p>{situation.stats.why}</p>
                   <p className="text-muted-foreground">
-                    {situation.kind === 'call'
-                      ? 'Calls: generated call odds (rounds played out by solid bots); a bark is your seat’s chance with any hand.'
-                      : net
-                        ? `${DECISION_SAMPLES.toLocaleString()} rounds played out by solid bots from this spot. As the Boss, picking ’em up never costs you a pencil, but coming up hands one to someone else, so each option is scored in net pencils: the pencils that go to someone else, minus yours, per 100 rounds (good to about ${netPencils(margin / 2)}). Picks within ${netPencils(margin)} of the best count as a toss-up.`
-                        : `${(situation.kind === 'refusal' ? REFUSAL_SAMPLES : DECISION_SAMPLES).toLocaleString()} rounds played out by solid bots from this spot, so each chance is good to about ${points(margin / 2)}. Picks within ${points(margin)} of the best count as a toss-up.`}
+                    {net
+                      ? `${DECISION_SAMPLES.toLocaleString()} rounds played out by solid bots from this spot. As the Boss, picking ’em up never costs you a pencil, but coming up hands one to someone else, so each option is scored in net pencils: the pencils that go to someone else, minus yours, per 100 rounds (good to about ${netPencils(margin / 2)}). Picks within ${netPencils(margin)} of the best count as a toss-up.`
+                      : `${(situation.kind === 'refusal' ? REFUSAL_SAMPLES : DECISION_SAMPLES).toLocaleString()} rounds played out by solid bots from this spot, so each chance is good to about ${points(margin / 2)}. Picks within ${points(margin)} of the best count as a toss-up.`}
                     {situation.solid !== graded.best.id &&
                       ` The solid bots would have picked: ${situation.options.find((o) => o.id === situation.solid)?.label}.`}
                   </p>

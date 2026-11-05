@@ -47,7 +47,8 @@ export const FOCUSES: { id: Focus; label: string; about: string }[] = [
   {
     id: 'roll',
     label: 'Rolling',
-    about: 'Off the bottom: what to keep, take the tie, put out dice, and Boss: your secret roll, coming up, your last roll.',
+    about:
+      'Off the bottom: what to keep, take the tie, put out dice, and Boss: your secret roll, coming up, your last roll.',
   },
 ]
 
@@ -77,7 +78,9 @@ export interface Situation {
  * (someone else's chance of the pencil minus yours) instead.
  */
 export const isBossChoice = (state: GameState): boolean =>
-  state.phase.kind === 'boss' && state.phase.boss === YOU && state.phase.stage !== 'comeUp'
+  state.phase.kind === 'boss' &&
+  state.phase.boss === YOU &&
+  state.phase.stage !== 'comeUp'
 
 /** How a situation is scored: your chance of the pencil (lower is better), or net pencils (higher is better) */
 export type Measure = 'pencil' | 'net'
@@ -104,17 +107,15 @@ export function optionsFor(
 ): TrainerOption[] | null {
   const kind = kindOf(state)
   if (kind === 'call') {
-    // hint-stats labels each call row "Call <name>"
+    // hint-stats labels each call "Call <name>"
     const order = (label: string) => {
+      if (label === 'Bark') return ALL_CALLS.length + 1
       const i = ALL_CALLS.findIndex((c) => label === `Call ${names.call(c)}`)
       return i < 0 ? ALL_CALLS.length : i
     }
-    const opts: TrainerOption[] = stats.rows
-      .filter((r) => r.label !== 'Bark')
-      .map((r) => ({ id: r.label, label: r.label }))
+    const opts: TrainerOption[] = (stats.choices || [])
+      .map((c) => ({ id: c.label, label: c.label, actions: c.actions }))
       .sort((a, b) => order(a.label) - order(b.label))
-    if (stats.rows.some((r) => r.label === 'Bark'))
-      opts.push({ id: 'Bark', label: 'Bark' })
     return opts.length >= 2 ? opts : null
   }
   if (kind === 'refusal')
@@ -140,10 +141,6 @@ export function optionsFor(
 /** Which option the solid player's action is */
 function solidId(stats: HintStats, kind: Kind, solid: Action): string | null {
   if (kind === 'refusal') return solid.type === 'accept' ? 'accept' : 'refuse'
-  if (kind === 'call') {
-    if (solid.type === 'bark') return 'Bark'
-    return stats.rows.find((r) => r.best)?.label ?? null
-  }
   return stats.choices?.find((c) => c.best)?.label ?? null
 }
 
@@ -192,7 +189,15 @@ export function drawSituation(
         const options = stats && optionsFor(stats, state, names)
         const id = stats && options && solidId(stats, kind, solid)
         if (stats && options && id && options.some((o) => o.id === id)) {
-          return { seed, kind, state, options, solid: id, stats, measure: isBossChoice(state) ? 'net' : 'pencil' }
+          return {
+            seed,
+            kind,
+            state,
+            options,
+            solid: id,
+            stats,
+            measure: isBossChoice(state) ? 'net' : 'pencil',
+          }
         }
       }
       state = applyAction(state, next)

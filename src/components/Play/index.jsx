@@ -948,7 +948,7 @@ export default function Play({ intro }) {
 
   const canKeep = mine && rolledIn && !mustShow && (phase.kind === 'play' || phase.kind === 'tresAway' || (phase.kind === 'boss' && phase.stage !== 'decide'))
   const hint = hints && suggestion ? hintText(suggestion, myDice, phase) : null
-  // The hint's numbers: the call odds straight away; any other decision once its rounds are played out
+  // The hint's numbers: every decision, the call included, once its rounds are played out
   // The Boss's own choices weigh pencils both ways, so they rank by net pencils (someone else's chance minus yours)
   const bossChoice = phase.kind === 'boss' && phase.stage !== 'comeUp'
   let simRows = null

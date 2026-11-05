@@ -4,7 +4,7 @@
  * the answer away, and grading against the computed odds.
  */
 import { Call, evaluateKickerHand, isKickerGame } from '../engine'
-import { ALL_CALLS, callLoss } from '../strategy'
+import { ALL_CALLS } from '../strategy'
 import { YOU } from '../components/Play/play-model'
 import {
   FOCUSES,
@@ -35,7 +35,7 @@ test.each(FOCUSES.map((f) => f.id))(
       expect(s.options.length).toBeGreaterThanOrEqual(2)
       expect(s.options.map((o) => o.id)).toContain(s.solid)
       expect(new Set(s.options.map((o) => o.id)).size).toBe(s.options.length)
-      if (s.kind === 'roll')
+      if (s.kind !== 'refusal')
         s.options.forEach((o) => expect(o.actions?.length).toBeGreaterThan(0))
     }
   }
@@ -59,13 +59,10 @@ test('calls are listed in game order, Bark last, whatever their odds', () => {
     expect([...order].sort((a, b) => a - b)).toEqual(order)
     const bark = s.options.findIndex((o) => o.id === 'Bark')
     if (bark >= 0) expect(bark).toBe(s.options.length - 1)
-    // Each call row is the generated call odds for your dice
-    s.stats.rows
-      .filter((r) => r.label !== 'Bark')
-      .forEach((r) => {
-        const call = ALL_CALLS.find((c) => r.label === `Call ${callName(c)}`)!
-        expect(r.value).toBeCloseTo(callLoss(s.state.dice[YOU], call), 10)
-      })
+    // Every option, the bark included, is played out at this table: never a fixed figure
+    expect(s.stats.rows).toEqual([])
+    s.options.forEach((o) => expect(o.actions?.length).toBe(1))
+    if (bark >= 0) expect(s.options[bark].actions![0].type).toBe('bark')
   }
 })
 
@@ -116,7 +113,12 @@ test('once your game is made, every roll is the kicker (§3.1), and a miss never
     if (phase.kind !== 'play') continue
     const { game, variant } = phase.call
     if (!isKickerGame(game) || !variant) continue
-    const hand = evaluateKickerHand(s.state.dice[YOU], game, variant, phase.rolling[YOU].kept)
+    const hand = evaluateKickerHand(
+      s.state.dice[YOU],
+      game,
+      variant,
+      phase.rolling[YOU].kept
+    )
     const labels = s.options.map((o) => o.label)
     if (hand.made) {
       made++

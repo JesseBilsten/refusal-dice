@@ -4,7 +4,16 @@ Every release of refusaldice.com, newest first. Versions are
 major.minor.patch ([docs/WORKFLOW.md](docs/WORKFLOW.md)): each pull request
 bumps the version once and adds its entry here.
 
-## 1.10.0 (unreleased)
+## 1.10.1
+
+- **Fix: calling vs barking at bigger tables.** The Hammer's options in the
+  trainer and in Play's hint compared each call's chance of the pencil at a
+  3-player table with a bark at the real table size, so at 5 players a bark
+  (27%) could look better than calling (30%) when the call was really about
+  16%. Every option, the bark included, is now played out by solid bots at
+  the real table, refusals and second calls included.
+
+## 1.10.0
 
 - **Decision trainer (proposed, on the design system for now):** a real
   moment from a game against solid bots, "What do you do?", then every

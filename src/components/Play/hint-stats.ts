@@ -29,8 +29,8 @@ import {
  * move (the bots in src/strategy/bots.ts), for the hint card in Play.
  *
  * Every decision is measured the same way: your chance of the pencil
- * this round. The Hammer's call reads the generated call odds (`rows`);
- * every other decision is played out by solid bots, so it comes back as
+ * this round. Every decision, the Hammer's call and a bark included, is
+ * played out by solid bots at the real table, so it comes back as
  * `choices` for simulateDecision (or `refusal` for simulateRefusal), run
  * off the main thread by the page. `why` says how the choice was made.
  */
@@ -79,36 +79,35 @@ export function hintStats(state: GameState, me: string, action: Action, names: H
   const phase = state.phase
   const dice = state.dice[me]
 
-  // The Hammer's call: the calls this hand loses least often, and a bark
+  // The Hammer's call: the likeliest calls, and a bark, each played out at this table
   if (phase.kind === 'call' || phase.kind === 'secondCall') {
     const except = phase.kind === 'secondCall' ? phase.refused.game : undefined
+    const players = Math.min(8, Math.max(2, activeSeats(state).length))
     const ranked = ALL_CALLS.filter((c) => c.game !== except)
       .map((call) => ({ call, loss: callLoss(dice, call, state.rules) }))
       .sort((a, b) => a.loss - b.loss)
-    const pick = action.type === 'call' ? action.call : ranked[0].call
-    const rows: HintRow[] = ranked.slice(0, 4).map((o) => ({
-      label: `Call ${names.call(o.call)}`,
-      value: o.loss,
-      best: same(o.call, pick),
-    }))
-    const players = Math.min(8, Math.max(2, activeSeats(state).length))
-    const canBark = phase.kind === 'call'
-    const bark = barkOdds(players, state.rules)
-    if (canBark) rows.push({ label: 'Bark', value: bark, best: action.type === 'bark' })
-    const best = ranked[0]
-    let why =
-      `With ${diceText(dice)}, ${names.call(best.call)} loses least often: ${pct(best.loss)} when everyone plays it. ` +
-      `Call odds come from rounds played out by solid bots at a ${CALL_ODDS_PLAYERS}-player table.`
-    if (except) why = `Your first call was refused, so ${names.call({ game: except } as Call)} is out. ${why}`
-    if (canBark) {
-      // At this table size, with refusals played out (hammer-odds.ts)
-      const here = hammerCall(dice, players, { rules: state.rules })
-      why +=
-        bark > here.loss
-          ? ` A bark passes the Hammer left and you sit last: ${pct(bark)} with any hand. At ${players} players your best call, ${names.call(here.call)}, takes the pencil ${pct(here.loss)} of the time, so calling is better.`
-          : ` A bark passes the Hammer left and you sit last: ${pct(bark)} with any hand, better than your best call at ${players} players (${pct(here.loss)}).`
+    // Candidates: the calls that lose least when everyone plays them, the solid
+    // pick, and (on the first call) the generated best call at this table size
+    const candidates: Call[] = ranked.slice(0, 4).map((o) => o.call)
+    const add = (c: Call) => {
+      if (c.game !== except && !candidates.some((x) => same(x, c))) candidates.push(c)
     }
-    return { kind: 'loss', measure: 'Chance you take the pencil', rows, why }
+    if (action.type === 'call') add(action.call)
+    if (phase.kind === 'call') add(hammerCall(dice, players, { rules: state.rules }).call)
+    const choices: HintChoice[] = candidates.map((call) => ({
+      label: `Call ${names.call(call)}`,
+      actions: [{ type: 'call', player: me, call }],
+      best: action.type === 'call' && same(call, action.call),
+    }))
+    if (phase.kind === 'call')
+      choices.push({ label: 'Bark', actions: [{ type: 'bark', player: me }], best: action.type === 'bark' })
+    let why =
+      `Each option is played out by solid bots at this ${players}-player table, refusals and second calls included` +
+      (phase.kind === 'call'
+        ? `. A bark passes the Hammer left and you play the next round from the last seat, with fresh dice (${pct(barkOdds(players, state.rules))} with any hand).`
+        : '.')
+    if (except) why = `Your first call was refused, so ${names.call({ game: except } as Call)} is out. ${why}`
+    return { kind: 'loss', measure: MEASURE, rows: [], choices, why }
   }
 
   // A refusal: accept or refuse, each played out by solid bots
@@ -122,7 +121,7 @@ export function hintStats(state: GameState, me: string, action: Action, names: H
       refusal: { dice: [...dice], call: phase.call, position: phase.seat, players: activeSeats(state).length },
       why:
         `Each chance plays the round out with solid bots from here: refuse, and the next refuser or the Hammer’s second call decides what you play. ` +
-        `Played by everyone, ${names.call(phase.call)} takes your pencil ${pct(loss)} of the time with ${diceText(dice)}; an even share is ${pct(even)}.`,
+        `Played by everyone, ${names.call(phase.call)} takes your pencil ${pct(loss)} of the time with ${diceText(dice)} at a ${CALL_ODDS_PLAYERS}-player table, where an even share is ${pct(even)}.`,
     }
   }
 
