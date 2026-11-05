@@ -3,7 +3,7 @@
  * situations from seeded games against solid bots, options that don't give
  * the answer away, and grading against the computed odds.
  */
-import { Call } from '../engine'
+import { Call, evaluateKickerHand, isKickerGame } from '../engine'
 import { ALL_CALLS, callLoss } from '../strategy'
 import { YOU } from '../components/Play/play-model'
 import {
@@ -105,4 +105,28 @@ test('every situation is described in words, with nothing left blank', () => {
       expect(detail.length).toBeGreaterThan(10)
       expect(`${heading} ${detail}`).not.toMatch(/undefined|null|NaN/)
     }
+})
+
+test('once your game is made, every roll is the kicker (§3.1), and a miss never stands', () => {
+  let made = 0
+  for (let seed = 1; seed <= 400; seed++) {
+    const s = drawSituation(seed, 'roll', () => names)
+    const phase = s.state.phase
+    if (phase.kind !== 'play') continue
+    const { game, variant } = phase.call
+    if (!isKickerGame(game) || !variant) continue
+    const hand = evaluateKickerHand(s.state.dice[YOU], game, variant, phase.rolling[YOU].kept)
+    const labels = s.options.map((o) => o.label)
+    if (hand.made) {
+      made++
+      labels
+        .filter((l) => l !== 'Stand' && l !== 'Take the tie')
+        .forEach((l) => expect(l).toMatch(/^Roll the kicker/))
+    } else {
+      expect(labels).not.toContain('Stand')
+      expect(labels).not.toContain('Take the tie')
+      labels.forEach((l) => expect(l).not.toMatch(/kicker/))
+    }
+  }
+  expect(made).toBeGreaterThan(5)
 })

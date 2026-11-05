@@ -8,6 +8,8 @@ import {
   bossKeepProblem,
   bottomTarget,
   compareBoss,
+  evaluateKickerHand,
+  isKickerGame,
   tresAwayMaxPutOut,
   tresAwayScore,
   wouldLoseIfStopped,
@@ -146,12 +148,26 @@ export function hintStats(state: GameState, me: string, action: Action, names: H
       goal.kind === 'make'
         ? 'you need to make the game'
         : `you need to beat ${names.player(targetId)}, who has ${names.hand(target)}`
+    // Once the kept dice make the game, the only roll left is the kicker (§3.1)
+    const { game, variant } = phase.call
+    const rollsKicker = (o: (typeof options)[number]) => {
+      if (o.stand || !isKickerGame(game) || !variant) return false
+      const hand = evaluateKickerHand(dice, game, variant, o.keep)
+      return hand.made && hand.gameDice.length === o.keep.length
+    }
+    const kickerRolls = top.filter(rollsKicker).length
+    const label = (o: (typeof options)[number]) => {
+      if (o.stand) return o.tie > 0 ? 'Take the tie' : 'Stand'
+      if (rollsKicker(o))
+        return kickerRolls > 1 ? `Roll the kicker, keeping ${diceText(o.dice)}` : 'Roll the kicker'
+      return o.dice.length ? `Keep ${diceText(o.dice)}` : 'Roll all five'
+    }
     return {
       kind: 'loss',
       measure: MEASURE,
       rows: [],
       choices: top.map((o) => ({
-        label: o.stand ? (o.tie > 0 ? 'Take the tie' : 'Stand') : o.dice.length ? `Keep ${diceText(o.dice)}` : 'Roll all five',
+        label: label(o),
         actions: [o.stand ? { type: 'stand', player: me } : { type: 'reroll', player: me, keep: o.keep }] as Action[],
         best: chosen(o),
       })),

@@ -16,6 +16,9 @@ bumps the version once and adds its entry here.
   rolls until they make it or run out of rolls. The engine let you stand on
   a miss once every other miss was out of rolls, so Play, its hints and the
   trainer offered "Stand" with rolls left (e.g. 10-4 with 2 rolls left).
+- **"Roll the kicker":** once your dice make the game, the only roll left is
+  the kicker, so hints and the trainer now say "Roll the kicker" instead of
+  "Keep 2-3-5".
 
 ## 1.9.0 (unreleased)
 
