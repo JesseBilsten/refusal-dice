@@ -47,7 +47,7 @@ export const FOCUSES: { id: Focus; label: string; about: string }[] = [
   {
     id: 'roll',
     label: 'Rolling',
-    about: 'Off the bottom: what to keep, take the tie, put out dice, your last roll against the Boss.',
+    about: 'Off the bottom: what to keep, take the tie, put out dice, and Boss: your secret roll, coming up, your last roll.',
   },
 ]
 
@@ -67,16 +67,20 @@ export interface Situation {
   /** The solid player's pick (the bots' move), by option id */
   solid: string
   stats: HintStats
+  measure: Measure
 }
 
 /**
- * The Boss's own choices (roll, come up, pick 'em up) aren't dealt yet:
- * picking 'em up never costs a pencil, so "your chance of the pencil this
- * round" would always call it best, though coming up hands pencils to the
- * others. They need a measure over the whole game first.
+ * The Boss's own choices (the secret roll, then come up or pick 'em up)
+ * weigh pencils both ways: picking 'em up never costs you a pencil, but
+ * coming up hands one to someone else. They're scored in net pencils
+ * (someone else's chance of the pencil minus yours) instead.
  */
 export const isBossChoice = (state: GameState): boolean =>
   state.phase.kind === 'boss' && state.phase.boss === YOU && state.phase.stage !== 'comeUp'
+
+/** How a situation is scored: your chance of the pencil (lower is better), or net pencils (higher is better) */
+export type Measure = 'pencil' | 'net'
 
 /** Which kind of decision a game state asks of `me`, if any */
 export function kindOf(state: GameState): Kind | null {
@@ -181,14 +185,14 @@ export function drawSituation(
       const next = botAction(state)
       const mine = 'player' in next && next.player === YOU
       const kind = mine ? kindOf(state) : null
-      if (kind && !isBossChoice(state) && (focus === 'all' || focus === kind) && r() < stopAt) {
+      if (kind && (focus === 'all' || focus === kind) && r() < stopAt) {
         const solid = botActionFor(state, YOU)
         const names = namesOf(state)
         const stats = hintStats(state, YOU, solid, names)
         const options = stats && optionsFor(stats, state, names)
         const id = stats && options && solidId(stats, kind, solid)
         if (stats && options && id && options.some((o) => o.id === id)) {
-          return { seed, kind, state, options, solid: id, stats }
+          return { seed, kind, state, options, solid: id, stats, measure: isBossChoice(state) ? 'net' : 'pencil' }
         }
       }
       state = applyAction(state, next)
@@ -218,7 +222,8 @@ export interface Graded {
 }
 
 /**
- * Grade a pick: `values` maps option id → chance of the pencil. Totals
+ * Grade a pick: `values` maps option id → chance of the pencil (for net
+ * pencils, pass minus the net, so lower is still better). Totals
  * within `margin` of the lowest are a toss-up (simulated odds carry about
  * ±1.5 points at 1,000 rounds, so pass about 2 × that).
  */
@@ -328,7 +333,7 @@ export function describe(
         detail:
           phase.stage === 'bossRoll'
             ? `You have ${names.hand(dice)}. Roll once more in secret, keeping dice that still beat the table; then you decide whether everyone comes up.`
-            : `You have ${names.hand(dice)}. Come up (everyone gets one last roll, the worst hand loses), or pick ’em up (no loser)?`,
+            : `After your secret roll you have ${names.hand(dice)}. Come up (everyone gets one last roll, the worst hand loses), or pick ’em up (no loser)?`,
       }
     return {
       heading: `${names.player(phase.boss)} came up`,

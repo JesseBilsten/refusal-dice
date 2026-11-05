@@ -56,6 +56,8 @@ export interface Option {
   segments: Segment[]
   /** Standard error of the total, when it's simulated rather than exact */
   error?: number
+  /** Ranks the option instead of its slices' sum (net pencils: someone else's chance minus yours) */
+  value?: number
 }
 
 export interface Ranked extends Option {
@@ -73,7 +75,7 @@ export function rankOptions(
   lowerIsBetter = true,
   tieMargin = 0.005
 ): Ranked[] {
-  const totals = options.map((o) => o.segments.reduce((s, x) => s + x.p, 0))
+  const totals = options.map((o) => o.value ?? o.segments.reduce((s, x) => s + x.p, 0))
   const best = lowerIsBetter ? Math.min(...totals) : Math.max(...totals)
   return options.map((o, i) => ({
     ...o,
@@ -91,4 +93,10 @@ export function twoDiceGrid<K extends string>(
     for (let b = 1; b <= 6; b++)
       cells.push({ a, b, sum: a + b, kind: classify(a, b) })
   return cells
+}
+
+/** Net pencils per 100 rounds, signed: "+72", "−5", "0" */
+export function fmtNet(v: number): string {
+  const n = Math.round(v * 100)
+  return n > 0 ? `+${n}` : n < 0 ? `−${-n}` : '0'
 }

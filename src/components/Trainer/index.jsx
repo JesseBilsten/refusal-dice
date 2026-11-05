@@ -41,6 +41,12 @@ const points = (p) => {
   return `${n} ${n === 1 ? 'point' : 'points'}`
 }
 
+/** "3 net pencils" per 100 rounds (rounded; at least 1) */
+const netPencils = (v) => {
+  const n = Math.max(1, Math.round(v * 100))
+  return `${n} net ${n === 1 ? 'pencil' : 'pencils'}`
+}
+
 const gameName = (call) => GAMES_MAP[call.game]?.name || call.game
 
 /** Names for hint-stats and the situation line, for this game state */
@@ -146,7 +152,8 @@ export default function Trainer({ className }) {
     const fits =
       situation.kind === 'refusal'
         ? Boolean(sim.result.accept)
-        : Array.isArray(sim.result) && sim.result.length === situation.options.length
+        : Array.isArray(sim.result) &&
+          sim.result.length === situation.options.length
     if (!fits) return null
     if (situation.kind === 'refusal')
       return {
@@ -156,22 +163,35 @@ export default function Trainer({ className }) {
     return Object.fromEntries(
       situation.options.map((o, i) => [
         o.id,
-        { p: sim.result[i].pencil, error: sim.result[i].error },
+        {
+          p: sim.result[i].pencil,
+          error: sim.result[i].error,
+          other: sim.result[i].other,
+          net: sim.result[i].net,
+          netError: sim.result[i].netError,
+        },
       ])
     )
   }, [situation, sim.result, sim.running])
 
+  // The Boss's own choices are scored in net pencils (higher is better)
+  const net = situation?.measure === 'net'
   const margin = odds
     ? situation.kind === 'call'
       ? CALL_MARGIN
-      : 2 * Math.max(...Object.values(odds).map((o) => o.error))
+      : 2 *
+        Math.max(
+          ...Object.values(odds).map((o) => (net ? o.netError : o.error))
+        )
     : 0
   const graded = useMemo(
     () =>
       picked && odds
         ? grade(
             situation.options,
-            Object.fromEntries(Object.entries(odds).map(([k, v]) => [k, v.p])),
+            Object.fromEntries(
+              Object.entries(odds).map(([k, v]) => [k, net ? -v.net : v.p])
+            ),
             picked,
             margin
           )
@@ -305,17 +325,24 @@ export default function Trainer({ className }) {
                   : `✗ ${graded.best.label} was better`
             }
             description={
-              graded.verdict === 'best'
-                ? 'Your pick takes the pencil least often.'
-                : graded.verdict === 'tossup'
-                  ? `Your pick is within ${points(margin)} of the best: too close to call.`
-                  : `Your pick takes the pencil ${points(graded.cost)} more often.`
+              net
+                ? graded.verdict === 'best'
+                  ? 'Your pick sends the most pencils to the others, net.'
+                  : graded.verdict === 'tossup'
+                    ? `Your pick is within ${netPencils(margin)} per 100 rounds of the best: too close to call.`
+                    : `Your pick costs ${netPencils(graded.cost)} per 100 rounds.`
+                : graded.verdict === 'best'
+                  ? 'Your pick takes the pencil least often.'
+                  : graded.verdict === 'tossup'
+                    ? `Your pick is within ${points(margin)} of the best: too close to call.`
+                    : `Your pick takes the pencil ${points(graded.cost)} more often.`
             }
           >
             <div className="space-y-4">
               <OddsDecision
                 outcome="take the pencil"
                 tieMargin={margin}
+                net={net}
                 options={graded.ranked.map((o) => ({
                   id: o.id,
                   label: o.label,
@@ -327,10 +354,33 @@ export default function Trainer({ className }) {
                       )}
                     </span>
                   ),
-                  error: odds[o.id].error || undefined,
-                  segments: [
-                    { p: o.p, label: 'You take the pencil', kind: 'lose' },
-                  ],
+                  error:
+                    (net ? odds[o.id].netError : odds[o.id].error) || undefined,
+                  ...(net
+                    ? {
+                        value: odds[o.id].net,
+                        segments: [
+                          {
+                            p: odds[o.id].other,
+                            label: 'Someone else takes the pencil',
+                            kind: 'safe',
+                          },
+                          {
+                            p: odds[o.id].p,
+                            label: 'You take the pencil',
+                            kind: 'lose',
+                          },
+                        ],
+                      }
+                    : {
+                        segments: [
+                          {
+                            p: o.p,
+                            label: 'You take the pencil',
+                            kind: 'lose',
+                          },
+                        ],
+                      }),
                 }))}
               />
               <Disclosure title="How these odds are worked out">
@@ -339,7 +389,9 @@ export default function Trainer({ className }) {
                   <p className="text-muted-foreground">
                     {situation.kind === 'call'
                       ? 'Calls: generated call odds (rounds played out by solid bots); a bark is your seat’s chance with any hand.'
-                      : `${(situation.kind === 'refusal' ? REFUSAL_SAMPLES : DECISION_SAMPLES).toLocaleString()} rounds played out by solid bots from this spot, so each chance is good to about ${points(margin / 2)}. Picks within ${points(margin)} of the best count as a toss-up.`}
+                      : net
+                        ? `${DECISION_SAMPLES.toLocaleString()} rounds played out by solid bots from this spot. As the Boss, picking ’em up never costs you a pencil, but coming up hands one to someone else, so each option is scored in net pencils: the pencils that go to someone else, minus yours, per 100 rounds (good to about ${netPencils(margin / 2)}). Picks within ${netPencils(margin)} of the best count as a toss-up.`
+                        : `${(situation.kind === 'refusal' ? REFUSAL_SAMPLES : DECISION_SAMPLES).toLocaleString()} rounds played out by solid bots from this spot, so each chance is good to about ${points(margin / 2)}. Picks within ${points(margin)} of the best count as a toss-up.`}
                     {situation.solid !== graded.best.id &&
                       ` The solid bots would have picked: ${situation.options.find((o) => o.id === situation.solid)?.label}.`}
                   </p>

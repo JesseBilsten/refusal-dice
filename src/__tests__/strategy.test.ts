@@ -15,6 +15,8 @@ import {
 import {
   ALL_CALLS,
   botAction,
+  bossComeUpRisk,
+  simulateDecision,
   bestKeepToMake,
   chooseCall,
   diceSumDistribution,
@@ -172,6 +174,40 @@ describe('bots', () => {
     g = applyAction(g, { type: 'accept', player: 'b' })
     expect(g.phase).toMatchObject({ kind: 'boss', boss: 'a', stage: 'bossRoll' })
     expect(botAction(g)).toEqual({ type: 'reroll', player: 'a', keep: [0, 1, 2] })
+  })
+
+  test('the Boss comes up by net pencils: when every other player beating the hand on one roll is under 50%', () => {
+    // One other player with a pair of 6s against three 4s: they need three 6s or better on one roll
+    const one = bossComeUpRisk([4, 4, 4, 6, 1], [[6, 6, 2, 3, 1]])
+    expect(one).toBeGreaterThan(0.05)
+    expect(one).toBeLessThan(0.5)
+    // Two players must both beat it, so the risk multiplies
+    expect(bossComeUpRisk([4, 4, 4, 6, 1], [[6, 6, 2, 3, 1], [6, 6, 2, 3, 1]])).toBeCloseTo(one * one, 10)
+    // Five of a kind can't be beaten
+    expect(bossComeUpRisk([6, 6, 6, 6, 6], [[5, 5, 5, 5, 1]])).toBe(0)
+  })
+
+  test('simulated decisions also give someone else’s chance of the pencil and the net', () => {
+    let g: GameState = createGame({
+      players: 'abc'.split('').map((id) => ({ id, name: id })),
+      hammer: 'a',
+      source: scripted([4, 4, 4, 6, 1, 5, 5, 2, 3, 1, 6, 4, 2, 1, 3, 2, 2]),
+    })
+    g = applyAction(g, { type: 'call', player: 'a', call: { game: 'boss' } })
+    g = applyAction(g, { type: 'accept', player: 'b' })
+    g = applyAction(g, { type: 'stand', player: 'a' })
+    const [up, down] = simulateDecision({
+      state: g,
+      me: 'a',
+      choices: [
+        { label: 'Come up', actions: [{ type: 'comeUp', player: 'a' }] },
+        { label: 'Pick ’em up', actions: [{ type: 'dontComeUp', player: 'a' }] },
+      ],
+      samples: 200,
+    })
+    expect(up.net).toBeCloseTo(up.other! - up.pencil, 10)
+    expect(up.net!).toBeGreaterThan(0.5)
+    expect(down).toMatchObject({ pencil: 0, other: 0, net: 0, netError: 0 })
   })
 
   test('bots play 300 full games to the end with legal moves', () => {

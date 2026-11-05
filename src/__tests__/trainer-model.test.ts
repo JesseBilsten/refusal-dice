@@ -132,7 +132,18 @@ test('once your game is made, every roll is the kicker (§3.1), and a miss never
   expect(made).toBeGreaterThan(5)
 })
 
-test('the Boss’s own choices aren’t dealt: pick ’em up never costs a pencil this round', () => {
-  for (let seed = 1; seed <= 150; seed++)
-    expect(isBossChoice(drawSituation(seed, 'roll', () => names).state)).toBe(false)
+test('the Boss’s own choices are scored in net pencils; everything else in your chance of the pencil', () => {
+  let boss = 0
+  for (let seed = 1; seed <= 300; seed++) {
+    const s = drawSituation(seed, 'roll', () => names)
+    expect(s.measure).toBe(isBossChoice(s.state) ? 'net' : 'pencil')
+    if (s.measure === 'net') {
+      boss++
+      // Before the secret roll only keeps are offered; come up or pick ’em up comes after it
+      const phase = s.state.phase
+      if (phase.kind === 'boss' && phase.stage === 'bossRoll')
+        s.options.forEach((o) => expect(o.label).toMatch(/^Keep/))
+    }
+  }
+  expect(boss).toBeGreaterThan(0)
 })

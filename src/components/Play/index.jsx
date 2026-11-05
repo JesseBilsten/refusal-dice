@@ -43,6 +43,7 @@ import { SpeedPicker, Transport } from './TableControls'
 import { hintStats } from './hint-stats'
 import { useHouseRules } from '../Settings/house-rules'
 import { useSimulation } from '../Odds/use-simulation'
+import { fmtNet } from '../Odds/model'
 import {
   DEFAULT_PACE,
   PACES,
@@ -948,31 +949,43 @@ export default function Play({ intro }) {
   const canKeep = mine && rolledIn && !mustShow && (phase.kind === 'play' || phase.kind === 'tresAway' || (phase.kind === 'boss' && phase.stage !== 'decide'))
   const hint = hints && suggestion ? hintText(suggestion, myDice, phase) : null
   // The hint's numbers: the call odds straight away; any other decision once its rounds are played out
+  // The Boss's own choices weigh pencils both ways, so they rank by net pencils (someone else's chance minus yours)
+  const bossChoice = phase.kind === 'boss' && phase.stage !== 'comeUp'
   let simRows = null
   if (hintDetail && sim.result && !sim.running) {
     if (hintDetail.choices && Array.isArray(sim.result))
-      simRows = hintDetail.choices.map((c, i) => ({ label: c.label, value: sim.result[i]?.pencil ?? 0, best: c.best }))
+      simRows = hintDetail.choices.map((c, i) => ({
+        label: c.label,
+        value: sim.result[i]?.pencil ?? 0,
+        best: c.best,
+        ...(bossChoice ? { other: sim.result[i]?.other ?? 0, net: sim.result[i]?.net ?? 0 } : {}),
+      }))
     else if (hintDetail.refusal && sim.result.accept)
       simRows = [
         { label: 'Accept', value: sim.result.accept.pencil, best: suggestion.type === 'accept' },
         { label: 'Refuse', value: sim.result.refuse.pencil, best: suggestion.type === 'refuse' },
       ]
-    simRows?.sort((a, b) => a.value - b.value)
+    simRows?.sort((a, b) => (bossChoice ? b.net - a.net : a.value - b.value))
   }
   const simulated = Boolean(hintDetail?.choices || hintDetail?.refusal)
   // When the rounds played out clearly favour another option than the solid player's pick, say so
   const picked = simRows?.find((r) => r.best)
-  const lowest = simRows?.[0]
-  // (not for the Boss's choice: picking 'em up never costs a pencil, but never hands one out either)
-  const bossChoice = phase.kind === 'boss' && phase.stage !== 'comeUp'
+  const top = simRows?.[0]
   const disagree =
-    !bossChoice && picked && lowest && lowest !== picked && picked.value - lowest.value >= 0.03
-      ? `Played out, ${lowest.label.toLowerCase()} takes the pencil less often here (${Math.round(lowest.value * 100)}% vs ${Math.round(picked.value * 100)}%): the solid player’s rule of thumb gets this one wrong.`
+    picked && top && top !== picked
+      ? bossChoice
+        ? top.net - picked.net >= 0.06
+          ? `Played out, ${top.label.toLowerCase()} does better here (net ${fmtNet(top.net)} vs ${fmtNet(picked.net)} per 100 rounds): the solid player’s rule gets this one wrong.`
+          : null
+        : picked.value - top.value >= 0.03
+          ? `Played out, ${top.label.toLowerCase()} takes the pencil less often here (${Math.round(top.value * 100)}% vs ${Math.round(picked.value * 100)}%): the solid player’s rule of thumb gets this one wrong.`
+          : null
       : null
   const hintStatsShown = hintDetail
     ? {
         ...hintDetail,
         rows: simulated ? simRows || [] : hintDetail.rows,
+        ...(bossChoice && simulated ? { measure: 'Net pencils per 100 rounds: the pencils that go to someone else, minus yours' } : {}),
         pending: simulated && !simRows,
         disagree,
         note: simulated

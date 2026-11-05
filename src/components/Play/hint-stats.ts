@@ -241,7 +241,7 @@ export function hintStats(state: GameState, me: string, action: Action, names: H
         measure: MEASURE,
         rows: [],
         choices,
-        why: 'You roll once more in secret, keeping dice that still beat the table, and then decide: come up or pick ’em up. Each chance plays the round out with solid bots after your roll, including that decision (they come up with two pair or better).',
+        why: 'You roll once more in secret, keeping dice that still beat the table, and then decide: come up or pick ’em up. Each chance plays the round out with solid bots after your roll, including that decision (they come up when someone else is likelier to take the pencil than they are). As the Boss, each option is scored in net pencils: the pencils that go to someone else, minus yours.',
       }
     }
     if (phase.stage === 'decide') {
@@ -255,7 +255,7 @@ export function hintStats(state: GameState, me: string, action: Action, names: H
         rows: [],
         choices,
         why:
-          'Pick ’em up ends the round with no loser, so it never costs a pencil, but it gives up the chance to hand one to someone else. Come up gives everyone one last roll and the worst hand loses, which can be you.',
+          'Pick ’em up ends the round with no loser, so it never costs a pencil, but it gives up the chance to hand one to someone else. Come up gives everyone one last roll and the worst hand loses, which can be you. So each option is scored in net pencils: the pencils that go to someone else, minus yours.',
       }
     }
     const hand = bossHand(dice).handDice

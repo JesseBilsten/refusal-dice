@@ -30,6 +30,11 @@ export interface Estimate {
   /** Standard error of `pencil` */
   error: number
   samples: number
+  /** simulateDecision only: chance someone else takes the pencil this round */
+  other?: number
+  /** simulateDecision only: net pencils, `other − pencil` (higher is better for you), and its standard error */
+  net?: number
+  netError?: number
 }
 
 const ME: PlayerId = 'me'
@@ -390,6 +395,7 @@ export function simulateDecision(options: {
   const { state, me, choices, samples = 300, seed = 1 } = options
   const view = viewFor(state, me)
   const losses = choices.map(() => 0)
+  const others = choices.map(() => 0)
   for (let i = 0; i < samples; i++) {
     const s = sampleSeed(seed, i)
     let hiddenSource = seeded(s ^ 0x3c6ef372)
@@ -409,8 +415,20 @@ export function simulateDecision(options: {
     const base: GameState = { ...state, dice, source: seeded(s), rules: { ...state.rules, pencilsToLose: 1000 } }
     choices.forEach((choice, c) => {
       const g = choice.actions.reduce(applyAction, base)
-      if (playOutRound(g).loser === me) losses[c]++
+      const loser = playOutRound(g).loser
+      if (loser === me) losses[c]++
+      else if (loser != null) others[c]++
     })
   }
-  return losses.map((n) => estimate(n, samples))
+  return losses.map((n, c) => {
+    // Each round's net is +1 (someone else's pencil), −1 (yours) or 0 (no pencil)
+    const net = (others[c] - n) / samples
+    const square = (others[c] + n) / samples
+    return {
+      ...estimate(n, samples),
+      other: others[c] / samples,
+      net,
+      netError: Math.sqrt(Math.max(0, square - net * net) / samples),
+    }
+  })
 }

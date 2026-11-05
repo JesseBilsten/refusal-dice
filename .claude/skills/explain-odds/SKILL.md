@@ -96,6 +96,12 @@ import { OddsDecision, OutcomeGrid, Disclosure, MathSteps, Questions, fmtPct } f
   `tieMargin` of about 2 × the larger error. Close totals then read as a
   toss-up instead of a false recommendation. Say how many rounds were played
   and that it was against solid bots, not perfect ones.
+- **Net pencils** (`net`): when an option can hand the pencil to someone
+  else as well as to you (the Boss: coming up vs picking 'em up), "your
+  chance of the pencil" would always favour doing nothing. Pass `net`, give
+  each option `value` = someone else's chance minus yours, and two segments
+  (`safe`: someone else, `lose`: you). Totals read as signed net pencils per
+  100 rounds (`fmtNet`), higher is better.
 - `OddsLabLink` takes `query` (`roll-query.js` shape) and an optional
   `compare`. Its path comes from `oddsLabPath()` in `roll-query.js`, which
   the Lab's own share links also use.

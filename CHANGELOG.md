@@ -26,9 +26,12 @@ bumps the version once and adds its entry here.
   highest die, or all five. Solid bots keep only their hand and roll the rest
   (three 4s and a 6: roll two dice, since two dice improve trips 16 times in
   36 and one die only 12).
-- **Trainer:** the Boss's own choices aren't dealt for now. Picking 'em up
-  never costs a pencil, so "your chance of the pencil this round" can't judge
-  them fairly.
+- **Boss: net pencils.** Picking 'em up never costs a pencil, but coming up
+  hands one to someone else, so the Boss's choices (the secret roll, then
+  come up or pick 'em up) are scored in net pencils: the pencils that go to
+  someone else, minus yours, per 100 rounds. The trainer deals them that
+  way, Play's hint shows it, and solid bots come up when their exact chance
+  of taking the pencil is under 50% (it was "two pair or better").
 
 ## 1.9.0 (unreleased)
 
