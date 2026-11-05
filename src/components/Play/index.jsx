@@ -39,6 +39,7 @@ import Standings from '../Table/Standings'
 import HintCard from './HintCard'
 import CallPlacard from './CallPlacard'
 import Setup from './Setup'
+import { clearGame, loadGame, saveGame, savedSummary } from './saved-game'
 import { SpeedPicker, Transport } from './TableControls'
 import { hintStats } from './hint-stats'
 import { useHouseRules } from '../Settings/house-rules'
@@ -258,22 +259,53 @@ export default function Play({ intro }) {
   const roundStartRef = useRef(0)
   roundStartRef.current = roundStart
 
-  // Parity is picked per game at the table (Setup); the rest come from your house rules
-  const start = (botCount, hardMode, parity) => {
-    const g = newTable(botCount, Math.floor(Math.random() * 2 ** 31), { ...tableRules, parity })
+  // A game left unfinished in this browser, offered at Set the table (read after mount: SSR-safe)
+  const [saved, setSaved] = useState(null)
+  useEffect(() => setSaved(loadGame()), [])
+
+  /** Seat a game: a new one, or a saved one picked up where it was */
+  const seat = (g, { hardMode, dealtAlready, at = 0, last = null, rolled = 0 }) => {
+    gameRef.current = g
     setRollIds(Object.fromEntries(g.seats.map((s) => [s.id, ZERO.map(() => 1)])))
     setGame(g)
     setHard(hardMode)
-    setDealt(!g.log.some((e) => e.type === 'piddle'))
+    setDealt(dealtAlready)
     setPiddleStep(0)
-    setRoundStart(0)
-    setLastRound(null)
-    setRolledRound(0)
+    setRoundStart(at)
+    setLastRound(last)
+    setRolledRound(rolled)
     setDeclared(null)
     setPaused(false)
-    setKeep([])
+    setKeep(dealtAlready ? startingKeep(g) : [])
     setError(null)
     if (prefs.sound) playRollSound(5)
+  }
+
+  // Parity is picked per game at the table (Setup); the rest come from your house rules
+  const start = (botCount, hardMode, parity) => {
+    // A new game replaces the saved one
+    clearGame()
+    setSaved(null)
+    const g = newTable(botCount, Math.floor(Math.random() * 2 ** 31), { ...tableRules, parity })
+    seat(g, { hardMode, dealtAlready: !g.log.some((e) => e.type === 'piddle') })
+  }
+
+  const resume = () => {
+    if (!saved) return
+    seat(saved.game, {
+      hardMode: saved.hard,
+      dealtAlready: true,
+      at: saved.roundStart,
+      last: saved.lastRound,
+      rolled: saved.rolledRound,
+    })
+    setSaved(null)
+  }
+
+  /** Back to Set the table; an unfinished game stays saved, to resume */
+  const leave = () => {
+    setGame(null)
+    setSaved(loadGame())
   }
 
   const gameRef = useRef(game)
@@ -352,6 +384,12 @@ export default function Play({ intro }) {
     return piddle ? piddleSteps(piddle.rounds) : []
   }, [game?.log])
   const piddleDone = piddleStep >= steps.length - 1
+
+  // Save after every move once the piddle has played out (even while the first deal waits
+  // on you); a finished game clears the save
+  useEffect(() => {
+    if (game && (dealt || piddleDone)) saveGame({ game, hard, roundStart, lastRound, rolledRound })
+  }, [game, dealt, piddleDone, hard, roundStart, lastRound, rolledRound])
 
   const deal = useCallback(() => {
     setDealt(true)
@@ -472,7 +510,7 @@ export default function Play({ intro }) {
     return (
       <>
         {intro}
-        <Setup onStart={start} />
+        <Setup onStart={start} saved={saved && savedSummary(saved, YOU)} onResume={resume} />
       </>
     )
 
@@ -1264,7 +1302,7 @@ export default function Play({ intro }) {
         </div>
         <DiceSettings />
         {hard && <span className="rounded-full border px-2 py-0.5 text-xs font-semibold">Hard mode</span>}
-        <button type="button" onClick={() => setGame(null)} className="ml-auto min-h-11 underline-offset-2 hover:underline">
+        <button type="button" onClick={leave} className="ml-auto min-h-11 underline-offset-2 hover:underline">
           Leave the table
         </button>
       </div>
