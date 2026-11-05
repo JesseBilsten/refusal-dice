@@ -26,11 +26,16 @@ export interface SavedGame {
   rolledRound: number
 }
 
-type Store = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>
+export interface Store {
+  getItem(key: string): string | null
+  setItem(key: string, value: string): void
+  removeItem(key: string): void
+}
 
+/** The browser's localStorage, or null (server render, or storage blocked) */
 const storage = (): Store | null => {
   try {
-    return typeof window === 'undefined' ? null : window.localStorage
+    return (globalThis as { localStorage?: Store }).localStorage ?? null
   } catch {
     return null
   }
