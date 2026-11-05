@@ -568,7 +568,8 @@ export function bottomTarget(state: GameState, player: PlayerId): PlayerId | nul
  * Must `player` keep rolling? Yes when they hold the worst hand alone (§4:
  * no standing at the bottom). Tied at the bottom, they may take the tie even
  * while another tied player can still roll (ruled 2026-10-29). Not on a
- * missed game, though: a miss rolls on while another miss can still roll.
+ * missed game, though: a miss rolls on until it makes the game or runs out
+ * of rolls (§3.2), whatever the other misses do.
  */
 export function wouldLoseIfStopped(state: GameState, player: PlayerId): boolean {
   const { phase } = state
@@ -579,7 +580,7 @@ export function wouldLoseIfStopped(state: GameState, player: PlayerId): boolean 
   const { game, variant } = phase.call
   const missed =
     isKickerGame(game) && !!variant && !evaluateKickerHand(state.dice[player], game, variant, phase.rolling[player].kept).made
-  return missed && worst.some((id) => id !== player && !phase.rolling[id].done)
+  return missed
 }
 
 /**

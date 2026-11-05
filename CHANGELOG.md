@@ -12,6 +12,10 @@ bumps the version once and adds its entry here.
   best move, a toss-up, or how many points it cost. Practise everything, or
   just calling, refusing or rolling; a running tally counts your best picks
   and the pencils given away. It gets its own page once approved.
+- **Fix: no standing on a missed game.** A player who hasn't made the game
+  rolls until they make it or run out of rolls. The engine let you stand on
+  a miss once every other miss was out of rolls, so Play, its hints and the
+  trainer offered "Stand" with rolls left (e.g. 10-4 with 2 rolls left).
 
 ## 1.9.0 (unreleased)
 
