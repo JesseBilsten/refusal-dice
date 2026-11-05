@@ -1,0 +1,108 @@
+/**
+ * The decision trainer (src/components/Trainer/trainer-model.ts): real
+ * situations from seeded games against solid bots, options that don't give
+ * the answer away, and grading against the computed odds.
+ */
+import { Call } from '../engine'
+import { ALL_CALLS, callLoss } from '../strategy'
+import { YOU } from '../components/Play/play-model'
+import {
+  FOCUSES,
+  Focus,
+  addToTally,
+  describe as describeSituation,
+  drawSituation,
+  emptyTally,
+  grade,
+  kindOf,
+} from '../components/Trainer/trainer-model'
+
+const callName = (c: Call) => `${c.game}${c.variant ? ` ${c.variant}` : ''}`
+const names = {
+  call: callName,
+  player: (id: string) => (id === YOU ? 'You' : id),
+  hand: (dice: number[]) => dice.join(''),
+}
+
+test.each(FOCUSES.map((f) => f.id))(
+  '"%s" deals your own decisions, with the solid pick among the options',
+  (focus) => {
+    for (let seed = 1; seed <= 6; seed++) {
+      const s = drawSituation(seed, focus as Focus, () => names)
+      expect(kindOf(s.state)).toBe(s.kind)
+      if (focus !== 'all') expect(s.kind).toBe(focus)
+      expect(s.options.length).toBeGreaterThanOrEqual(2)
+      expect(s.options.map((o) => o.id)).toContain(s.solid)
+      expect(new Set(s.options.map((o) => o.id)).size).toBe(s.options.length)
+      if (s.kind === 'roll')
+        s.options.forEach((o) => expect(o.actions?.length).toBeGreaterThan(0))
+    }
+  }
+)
+
+test('the same seed deals the same situation', () => {
+  const a = drawSituation(11, 'all', () => names)
+  const b = drawSituation(11, 'all', () => names)
+  expect(b.state).toEqual(a.state)
+  expect(b.options).toEqual(a.options)
+})
+
+test('calls are listed in game order, Bark last, whatever their odds', () => {
+  for (let seed = 1; seed <= 8; seed++) {
+    const s = drawSituation(seed, 'call', () => names)
+    const calls = s.options.filter((o) => o.id !== 'Bark')
+    const index = (label: string) =>
+      ALL_CALLS.findIndex((c) => label === `Call ${callName(c)}`)
+    const order = calls.map((o) => index(o.label))
+    expect(order.every((i) => i >= 0)).toBe(true)
+    expect([...order].sort((a, b) => a - b)).toEqual(order)
+    const bark = s.options.findIndex((o) => o.id === 'Bark')
+    if (bark >= 0) expect(bark).toBe(s.options.length - 1)
+    // Each call row is the generated call odds for your dice
+    s.stats.rows
+      .filter((r) => r.label !== 'Bark')
+      .forEach((r) => {
+        const call = ALL_CALLS.find((c) => r.label === `Call ${callName(c)}`)!
+        expect(r.value).toBeCloseTo(callLoss(s.state.dice[YOU], call), 10)
+      })
+  }
+})
+
+test('grading: the lowest chance is best, close calls are a toss-up, the rest cost the difference', () => {
+  const options = [
+    { id: 'a', label: 'Keep 5-6' },
+    { id: 'b', label: 'Keep 6' },
+    { id: 'c', label: 'Roll all five' },
+  ]
+  const values = { a: 0.3, b: 0.32, c: 0.41 }
+  expect(grade(options, values, 'a', 0.03)).toMatchObject({
+    verdict: 'best',
+    cost: 0,
+  })
+  expect(grade(options, values, 'b', 0.03)).toMatchObject({ verdict: 'tossup' })
+  const costly = grade(options, values, 'c', 0.03)
+  expect(costly.verdict).toBe('costly')
+  expect(costly.cost).toBeCloseTo(0.11, 10)
+  expect(costly.ranked.map((o) => o.id)).toEqual(['a', 'b', 'c'])
+
+  let t = emptyTally()
+  t = addToTally(t, grade(options, values, 'a', 0.03))
+  t = addToTally(t, grade(options, values, 'b', 0.03))
+  t = addToTally(t, costly)
+  expect(t.played).toBe(3)
+  expect(t.good).toBe(2)
+  expect(t.given).toBeCloseTo(0.11, 10)
+})
+
+test('every situation is described in words, with nothing left blank', () => {
+  for (const focus of ['call', 'refusal', 'roll'] as Focus[])
+    for (let seed = 1; seed <= 15; seed++) {
+      const { heading, detail } = describeSituation(
+        drawSituation(seed, focus, () => names),
+        names
+      )
+      expect(heading.length).toBeGreaterThan(5)
+      expect(detail.length).toBeGreaterThan(10)
+      expect(`${heading} ${detail}`).not.toMatch(/undefined|null|NaN/)
+    }
+})

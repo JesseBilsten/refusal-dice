@@ -4,6 +4,15 @@ Every release of refusaldice.com, newest first. Versions are
 major.minor.patch ([docs/WORKFLOW.md](docs/WORKFLOW.md)): each pull request
 bumps the version once and adds its entry here.
 
+## 1.10.0 (unreleased)
+
+- **Decision trainer (proposed, on the design system for now):** a real
+  moment from a game against solid bots, "What do you do?", then every
+  option's chance of the pencil, with your pick marked and a verdict: the
+  best move, a toss-up, or how many points it cost. Practise everything, or
+  just calling, refusing or rolling; a running tally counts your best picks
+  and the pencils given away. It gets its own page once approved.
+
 ## 1.9.0 (unreleased)
 
 - **Your game is saved:** a game at [Play](/play) is kept in this browser

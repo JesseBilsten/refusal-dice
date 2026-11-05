@@ -3,7 +3,6 @@ import { withPrefix } from 'gatsby'
 import { ChevronDown, FlaskConical } from 'lucide-react'
 import {
   applyAction,
-  bossHand,
   bottomHands,
   bottomTarget,
   bossKeepProblem,
@@ -29,7 +28,7 @@ import { cn } from '../../lib/utils'
 import { Button } from '../ui/button'
 import { Switch } from '../ui/switch'
 import { Label } from '../ui/label'
-import { BOSS_NAMES, DiceSettings, Die, Hand, RollButton, playRollSound, razzleName, useDicePrefs } from '../Dice'
+import { DiceSettings, Die, Hand, RollButton, playRollSound, useDicePrefs } from '../Dice'
 import { Panel } from '../Page'
 import Seat from '../Table/Seat'
 import TableFelt from '../Table/TableFelt'
@@ -52,6 +51,7 @@ import {
   describeEvent,
   holdFor,
   latestMoves,
+  handText as sharedHandText,
   money,
   newTable,
   paceAfter,
@@ -101,20 +101,8 @@ const KEEP_TIPS = {
   pairs: 'Keep a pair, or roll all five.',
 }
 
-/** A hand in words: "three 2s", "a kicker of 9", "no 10-3", "a score of 7", "a full house". `kept`: positions committed in a kicker game */
-function handText(dice, call, kept = []) {
-  if (call.game === 'tres-away') return `a score of ${tresAwayScore(dice)}`
-  if (call.game === 'boss') {
-    const name = BOSS_NAMES[bossHand(dice).category]
-    return /^(two|three|four|five)/.test(name) ? name : `a ${name}`
-  }
-  if (call.game === 'razzle') {
-    const { count, face } = razzleScore(dice)
-    return razzleName(count, face)
-  }
-  const hand = evaluateKickerHand(dice, call.game, call.variant, kept)
-  return hand.made ? `a kicker of ${hand.kickerTotal}` : `no ${gameName(call)}`
-}
+/** A hand in words (play-model's handText, with the site's game names) */
+const handText = (dice, call, kept = []) => sharedHandText(dice, call, kept, gameName)
 
 /** Two pair or better: strong enough for a Boss to say "come up" (as the bots play it) */
 const bossStrong = (dice) => compareBoss(dice, [2, 2, 1, 1, 3]) >= 0

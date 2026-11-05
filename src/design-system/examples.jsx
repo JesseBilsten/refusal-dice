@@ -58,6 +58,7 @@ import DiceCup from '../components/Table/DiceCup'
 import HintCard from '../components/Play/HintCard'
 import CallPlacard from '../components/Play/CallPlacard'
 import Setup from '../components/Play/Setup'
+import Trainer from '../components/Trainer'
 import { SpeedPicker, Transport } from '../components/Play/TableControls'
 import { Badge } from '../components/ui/badge'
 import { Button } from '../components/ui/button'
@@ -1008,6 +1009,8 @@ export const EXAMPLES = {
       <Setup onStart={() => {}} />
     </Specimen>
   ),
+  // The whole trainer, live: deals real situations and plays them out
+  trainer: () => <Trainer />,
   'hint-card': () => (
     <Specimen>
       <HintCard

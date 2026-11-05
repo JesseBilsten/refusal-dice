@@ -41,6 +41,7 @@ src/
                     Table/ = Seat, one player at the table (tutorial and Play); Standings, the ranking pattern; SeatRing, the table from above
                     Settings/ = site-wide settings (theme, 3D dice, sound, house rules): Settings block, SettingsMenu (header gear);
                                 useHouseRules() feeds the visitor's house rules to every odds figure that depends on them
+                    Trainer/ = the decision trainer (trainer-model.ts: situations from seeded bot games, grading)
                     Play/ = full games against bots (play-model.ts is the pure side; saved-game.ts keeps the game in progress in
                             localStorage): TableControls, CallPlacard, Setup, HintCard
                     Games/ = the Games page's GameCard; GameDetail/ = a game page's analysis sections
