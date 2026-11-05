@@ -14,6 +14,7 @@ import {
   drawSituation,
   emptyTally,
   grade,
+  isBossChoice,
   kindOf,
 } from '../components/Trainer/trainer-model'
 
@@ -129,4 +130,9 @@ test('once your game is made, every roll is the kicker (§3.1), and a miss never
     }
   }
   expect(made).toBeGreaterThan(5)
+})
+
+test('the Boss’s own choices aren’t dealt: pick ’em up never costs a pencil this round', () => {
+  for (let seed = 1; seed <= 150; seed++)
+    expect(isBossChoice(drawSituation(seed, 'roll', () => names).state)).toBe(false)
 })

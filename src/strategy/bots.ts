@@ -202,9 +202,10 @@ export function botAction(state: GameState): Action {
       if (phase.stage === 'bossRoll') {
         const dice = state.dice[phase.boss]
         const others = phase.players.filter((id) => id !== phase.boss).map((id) => state.dice[id])
-        // Re-roll the low dice outside the hand, highest first back into the keep until what's kept still beats the table
+        // Keep the hand and roll every other die (trips: 2 dice improve it 16 in 36 times, 1 die only 12 in 36);
+        // put the highest dice back into the keep until what's kept still beats the table
         let weak = [0, 1, 2, 3, 4]
-          .filter((i) => !phase.bossDice.includes(i) && dice[i] <= 3)
+          .filter((i) => !phase.bossDice.includes(i))
           .sort((a, b) => dice[a] - dice[b])
         const kept = () => [0, 1, 2, 3, 4].filter((i) => !weak.includes(i)).map((i) => dice[i])
         while (weak.length && bossKeepProblem(kept(), others)) weak = weak.slice(0, -1)

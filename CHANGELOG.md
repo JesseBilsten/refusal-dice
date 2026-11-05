@@ -19,6 +19,16 @@ bumps the version once and adds its entry here.
 - **"Roll the kicker":** once your dice make the game, the only roll left is
   the kicker, so hints and the trainer now say "Roll the kicker" instead of
   "Keep 2-3-5".
+- **Boss: roll, then decide.** The Boss always takes the secret roll first
+  (keeping all five rolls nothing) and decides whether everyone comes up
+  after seeing it. Play no longer offers "Come up" or "Pick 'em up" before
+  the roll, and its hint weighs the keeps: your hand alone, your hand and its
+  highest die, or all five. Solid bots keep only their hand and roll the rest
+  (three 4s and a 6: roll two dice, since two dice improve trips 16 times in
+  36 and one die only 12).
+- **Trainer:** the Boss's own choices aren't dealt for now. Picking 'em up
+  never costs a pencil, so "your chance of the pencil this round" can't judge
+  them fairly.
 
 ## 1.9.0 (unreleased)
 

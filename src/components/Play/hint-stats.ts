@@ -7,7 +7,6 @@ import {
   bossHand,
   bossKeepProblem,
   bottomTarget,
-  compareBoss,
   evaluateKickerHand,
   isKickerGame,
   tresAwayMaxPutOut,
@@ -212,26 +211,51 @@ export function hintStats(state: GameState, me: string, action: Action, names: H
   // Boss: roll, come up, or pick 'em up, played out
   if (phase.kind === 'boss') {
     const others = phase.players.filter((id) => id !== me).map((id) => state.dice[id])
-    if (phase.stage === 'bossRoll' || phase.stage === 'decide') {
+    // The secret roll first: which dice to keep (keeping all five rolls none); then come up or pick 'em up
+    if (phase.stage === 'bossRoll') {
+      // The keeps worth weighing: your hand alone, your hand and its highest other die, the solid pick, all five
+      const hand = bossHand(dice).handDice
+      const rest = [0, 1, 2, 3, 4].filter((i) => !hand.includes(i)).sort((a, b) => dice[b] - dice[a])
+      const solidKeep = action.type === 'reroll' ? action.keep : [0, 1, 2, 3, 4]
+      const keeps = [hand, rest.length ? [...hand, rest[0]] : hand, solidKeep, [0, 1, 2, 3, 4]]
+      const solidText = diceText(solidKeep.map((i) => dice[i]))
+      const seen = new Set<string>()
       const choices: HintChoice[] = []
-      if (phase.stage === 'bossRoll') {
-        const keep = action.type === 'reroll' ? action.keep : bossHand(dice).handDice
-        if (keep.length < 5 && !bossKeepProblem(keep.map((i) => dice[i]), others))
-          choices.push({ label: `Keep ${diceText(keep.map((i) => dice[i]))}, roll ${5 - keep.length}`, actions: [{ type: 'reroll', player: me, keep }], best: action.type === 'reroll' })
+      for (const keep of keeps) {
+        const values = diceText(keep.map((i) => dice[i]))
+        if (keep.length === 0 || seen.has(values)) continue
+        if (keep.length < 5 && bossKeepProblem(keep.map((i) => dice[i]), others)) continue
+        seen.add(values)
+        choices.push(
+          keep.length === 5
+            ? { label: 'Keep all five', actions: [{ type: 'stand', player: me }], best: values === solidText }
+            : {
+                label: `Keep ${values}, roll ${5 - keep.length}`,
+                actions: [{ type: 'reroll', player: me, keep: [...keep].sort((a, b) => a - b) }],
+                best: values === solidText,
+              }
+        )
       }
-      const stand: Action[] = phase.stage === 'bossRoll' ? [{ type: 'stand', player: me }] : []
-      const bossCall = phase.stage === 'decide' ? action.type : null
-      choices.push(
-        { label: 'Come up', actions: [...stand, { type: 'comeUp', player: me }], best: bossCall === 'comeUp' || (action.type === 'stand' && phase.stage === 'bossRoll' && compareBoss(dice, [2, 2, 1, 1, 3]) >= 0) },
-        { label: 'Pick ’em up', actions: [...stand, { type: 'dontComeUp', player: me }], best: bossCall === 'dontComeUp' || (action.type === 'stand' && phase.stage === 'bossRoll' && compareBoss(dice, [2, 2, 1, 1, 3]) < 0) }
-      )
+      return {
+        kind: 'loss',
+        measure: MEASURE,
+        rows: [],
+        choices,
+        why: 'You roll once more in secret, keeping dice that still beat the table, and then decide: come up or pick ’em up. Each chance plays the round out with solid bots after your roll, including that decision (they come up with two pair or better).',
+      }
+    }
+    if (phase.stage === 'decide') {
+      const choices: HintChoice[] = [
+        { label: 'Come up', actions: [{ type: 'comeUp', player: me }], best: action.type === 'comeUp' },
+        { label: 'Pick ’em up', actions: [{ type: 'dontComeUp', player: me }], best: action.type === 'dontComeUp' },
+      ]
       return {
         kind: 'loss',
         measure: MEASURE,
         rows: [],
         choices,
         why:
-          'Pick ’em up ends the round with no loser, so it never costs a pencil, but it gives up the chance to hand one to someone else. Come up gives everyone one last roll and the worst hand loses, which can be you. A roll keeps what still beats the table and tries for more, in secret; then you decide.',
+          'Pick ’em up ends the round with no loser, so it never costs a pencil, but it gives up the chance to hand one to someone else. Come up gives everyone one last roll and the worst hand loses, which can be you.',
       }
     }
     const hand = bossHand(dice).handDice

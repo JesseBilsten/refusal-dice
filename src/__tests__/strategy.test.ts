@@ -9,6 +9,7 @@ import {
   createGame,
   isLegalKeep,
   makesGame,
+  scripted,
   seeded,
 } from '../engine'
 import {
@@ -158,6 +159,19 @@ describe('bots', () => {
     expect(chooseCall([3, 3, 3, 5, 6], 'boss')).toEqual({ game: 'tres-away' })
     // a second call never repeats the refused game
     expect(chooseCall([3, 3, 3, 3, 3], 'tres-away').game).not.toBe('tres-away')
+  })
+
+  test('a Boss bot keeps its hand and rolls the rest: three 4s roll two dice, not the 6 too', () => {
+    // a: 4-4-4-6-1 (Boss) · b: pair of 5s · c: high card
+    let g: GameState = createGame({
+      players: 'abc'.split('').map((id) => ({ id, name: id })),
+      hammer: 'a',
+      source: scripted([4, 4, 4, 6, 1, 5, 5, 2, 3, 1, 6, 4, 2, 1, 3, 2, 2]),
+    })
+    g = applyAction(g, { type: 'call', player: 'a', call: { game: 'boss' } })
+    g = applyAction(g, { type: 'accept', player: 'b' })
+    expect(g.phase).toMatchObject({ kind: 'boss', boss: 'a', stage: 'bossRoll' })
+    expect(botAction(g)).toEqual({ type: 'reroll', player: 'a', keep: [0, 1, 2] })
   })
 
   test('bots play 300 full games to the end with legal moves', () => {

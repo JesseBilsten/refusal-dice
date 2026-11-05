@@ -47,7 +47,7 @@ export const FOCUSES: { id: Focus; label: string; about: string }[] = [
   {
     id: 'roll',
     label: 'Rolling',
-    about: 'Off the bottom: what to keep, take the tie, put out dice, come up.',
+    about: 'Off the bottom: what to keep, take the tie, put out dice, your last roll against the Boss.',
   },
 ]
 
@@ -68,6 +68,15 @@ export interface Situation {
   solid: string
   stats: HintStats
 }
+
+/**
+ * The Boss's own choices (roll, come up, pick 'em up) aren't dealt yet:
+ * picking 'em up never costs a pencil, so "your chance of the pencil this
+ * round" would always call it best, though coming up hands pencils to the
+ * others. They need a measure over the whole game first.
+ */
+export const isBossChoice = (state: GameState): boolean =>
+  state.phase.kind === 'boss' && state.phase.boss === YOU && state.phase.stage !== 'comeUp'
 
 /** Which kind of decision a game state asks of `me`, if any */
 export function kindOf(state: GameState): Kind | null {
@@ -172,7 +181,7 @@ export function drawSituation(
       const next = botAction(state)
       const mine = 'player' in next && next.player === YOU
       const kind = mine ? kindOf(state) : null
-      if (kind && (focus === 'all' || focus === kind) && r() < stopAt) {
+      if (kind && !isBossChoice(state) && (focus === 'all' || focus === kind) && r() < stopAt) {
         const solid = botActionFor(state, YOU)
         const names = namesOf(state)
         const stats = hintStats(state, YOU, solid, names)
@@ -318,7 +327,7 @@ export function describe(
         heading: 'You’re the Boss',
         detail:
           phase.stage === 'bossRoll'
-            ? `You have ${names.hand(dice)}. Roll once more in secret, or decide now: come up, or pick ’em up?`
+            ? `You have ${names.hand(dice)}. Roll once more in secret, keeping dice that still beat the table; then you decide whether everyone comes up.`
             : `You have ${names.hand(dice)}. Come up (everyone gets one last roll, the worst hand loses), or pick ’em up (no loser)?`,
       }
     return {

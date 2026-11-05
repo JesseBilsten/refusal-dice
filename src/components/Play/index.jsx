@@ -614,11 +614,8 @@ export default function Play({ intro }) {
     if (evaluateKickerHand(myDice, call.game, call.variant, myRolls.kept).made) rollAllFive()
     else setDeclared(rollKey)
   }
-  // The Boss can skip the extra roll and say it straight away
-  const bossSays = (type, skipRoll) => {
-    if (skipRoll) act({ type: 'stand', player: YOU })
-    act({ type, player: YOU })
-  }
+  // After the secret roll, the Boss says it
+  const bossSays = (type) => act({ type, player: YOU })
 
   let title = ''
   let body = null
@@ -899,19 +896,19 @@ export default function Play({ intro }) {
     if (h.fresh) labLink = `/odds-lab/?tab=keep&game=tres-away&roll=${myDice.join('')}`
   } else if (phase.kind === 'boss') {
     const others = phase.players.filter((id) => id !== YOU).map((id) => game.dice[id])
-    const sayButtons = (skipRoll) => (
+    const sayButtons = () => (
       <>
-        <Button onClick={() => bossSays('comeUp', skipRoll)}>Come up</Button>
-        <Button variant="outline" onClick={() => bossSays('dontComeUp', skipRoll)}>
+        <Button onClick={() => bossSays('comeUp')}>Come up</Button>
+        <Button variant="outline" onClick={() => bossSays('dontComeUp')}>
           Pick ’em up
         </Button>
       </>
     )
     if (phase.stage === 'bossRoll') {
-      title = 'You’re the Boss: roll, come up, or pick ’em up'
+      title = 'You’re the Boss: your secret roll'
       body = (
         <p>
-          Roll once more, in secret: pick up any dice, as long as what you keep still beats everyone else’s hand. Or skip the roll: “come up” gives everyone one last roll and
+          Roll once more, in secret: pick up any dice, as long as what you keep still beats everyone else’s hand. Then decide: “come up” gives everyone one last roll and
           the worst hand loses (it can be you); “pick ’em up” ends the round with no loser, and the Hammer passes left.
         </p>
       )
@@ -921,14 +918,16 @@ export default function Play({ intro }) {
           <RollButton disabled={keep.length === 5 || Boolean(badBossKeep)} onClick={() => act({ type: 'reroll', player: YOU, keep })}>
             Roll {5 - keep.length}
           </RollButton>
-          {sayButtons(true)}
+          <Button variant="outline" onClick={() => act({ type: 'stand', player: YOU })}>
+            Keep all five
+          </Button>
           {badBossKeep && keep.length < 5 && <span className="text-sm text-destructive">{badBossKeep}.</span>}
         </div>
       )
     } else if (phase.stage === 'decide') {
       title = 'Come up, or pick ’em up?'
       body = <p>“Come up” gives everyone one last roll, and the worst hand loses: it can be you. “Pick ’em up” ends the round with no loser, and the Hammer passes left.</p>
-      controls = <div className="flex flex-wrap gap-2">{sayButtons(false)}</div>
+      controls = <div className="flex flex-wrap gap-2">{sayButtons()}</div>
     } else {
       title = 'Your last roll'
       body = <p>Keep any dice and roll the rest, or stand. The worst hand at the table loses.</p>
