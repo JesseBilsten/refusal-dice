@@ -4,7 +4,16 @@ Every release of refusaldice.com, newest first. Versions are
 major.minor.patch ([docs/WORKFLOW.md](docs/WORKFLOW.md)): each pull request
 bumps the version once and adds its entry here.
 
-## 1.8.0 (unreleased)
+## 1.9.0 (unreleased)
+
+- **Your game is saved:** a game at [Play](/play) is kept in this browser
+  after every move, so a refresh, a closed tab or leaving the table doesn't
+  lose it. Set the table offers to pick it up where you left off (round,
+  players still in, the pot and your pencils); a new game replaces it, and a
+  finished one is cleared.
+- **Screen readers:** the Hammer in the order of play is announced again.
+
+## 1.8.0 (2026-11-04)
 
 - **The pot:** in [Play](/play), everyone puts $5 in the pot to start, the
   pot shows beside the round number, and the last player standing takes it.

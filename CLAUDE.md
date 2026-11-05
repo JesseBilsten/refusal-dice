@@ -41,7 +41,8 @@ src/
                     Table/ = Seat, one player at the table (tutorial and Play); Standings, the ranking pattern; SeatRing, the table from above
                     Settings/ = site-wide settings (theme, 3D dice, sound, house rules): Settings block, SettingsMenu (header gear);
                                 useHouseRules() feeds the visitor's house rules to every odds figure that depends on them
-                    Play/ = full games against bots (play-model.ts is the pure side): TableControls, CallPlacard, Setup, HintCard
+                    Play/ = full games against bots (play-model.ts is the pure side; saved-game.ts keeps the game in progress in
+                            localStorage): TableControls, CallPlacard, Setup, HintCard
                     Games/ = the Games page's GameCard; GameDetail/ = a game page's analysis sections
                     Home/ = the home page's animated round (RoundStory)
                     OddsLab/ = the Odds Lab tools: KeepAdvisor, GameOdds, EveryPossibility, the roll builder; situations-catalog.js

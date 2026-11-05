@@ -55,6 +55,7 @@ export default function TableOrder({
           >
             <span
               className="flex w-7 shrink-0 justify-center text-lg"
+              role={r.id === hammer ? 'img' : undefined}
               aria-label={r.id === hammer ? 'Holds the Hammer' : undefined}
             >
               {r.id === hammer && (

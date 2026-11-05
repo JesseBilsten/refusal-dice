@@ -135,7 +135,7 @@ Build it once and every later phase gets cheaper.
 
 ## Phase 3 — Play vs AI
 
-1. ✅ _Shipped 2026-10-15 (`/play`, `src/components/Play`): 1–7 solid bots, every game, hints, Odds Lab links for your exact situation. 2026-10-21: readable pacing (each bot move held by kind; Slow/Normal/Fast; pause and step), every seat labeled with its latest move, an announcer for the newest one, the last round kept in the log, fixed seats, the whole table on one screen. 2026-10-21 (later): a piddle that plays out on the table; the order of play, fixed, with the Hammer token passing left; video-player controls (Very slow by default, Realistic thinking times, Instant); the call in a placard; a turn outline that glides between seats; players who missed the game roll at once; dice picked up into the cup; Boss can come up or pick 'em up without rolling; your dice wait in the cup until the call; hard mode (show your own game; 2026-10-22: a pick is checked as it's made, fix it or roll all five); 2026-10-23: your seat sits under the call instead of docking (it covered the table on phones); error pages (404/400) with cocked and stacked dice; every hint gives your chance of the pencil per option (played out by solid bots). Next: difficulty levels, saving games, post-game review._ **Full game table UI** on the engine, 2–7 bots. Show dice animations, whose turn it is, pencils and Hammer position clearly.
+1. ✅ _Shipped 2026-10-15 (`/play`, `src/components/Play`): 1–7 solid bots, every game, hints, Odds Lab links for your exact situation. 2026-10-21: readable pacing (each bot move held by kind; Slow/Normal/Fast; pause and step), every seat labeled with its latest move, an announcer for the newest one, the last round kept in the log, fixed seats, the whole table on one screen. 2026-10-21 (later): a piddle that plays out on the table; the order of play, fixed, with the Hammer token passing left; video-player controls (Very slow by default, Realistic thinking times, Instant); the call in a placard; a turn outline that glides between seats; players who missed the game roll at once; dice picked up into the cup; Boss can come up or pick 'em up without rolling; your dice wait in the cup until the call; hard mode (show your own game; 2026-10-22: a pick is checked as it's made, fix it or roll all five); 2026-10-23: your seat sits under the call instead of docking (it covered the table on phones); error pages (404/400) with cocked and stacked dice; every hint gives your chance of the pencil per option (played out by solid bots). 2026-11-04: the pot, parity picked per game, and saved games. Next: difficulty levels, post-game review._ **Full game table UI** on the engine, 2–7 bots. Show dice animations, whose turn it is, pencils and Hammer position clearly.
 2. **Bot difficulty levels:**
    - **Novice:** simple rules of thumb, some randomness.
    - **Solid:** today's heuristics.
@@ -145,7 +145,7 @@ Build it once and every later phase gets cheaper.
 
    Bots see only their own dice (the engine enforces information hiding through per-player views).
 3. **Post-game review.** Annotate each human decision, highlight the costliest mistakes, and deep-link into the Phase 2 trainer for that situation.
-4. Works signed-out; games saved in `localStorage`.
+4. ✅ _Done 2026-11-04 (1.9.0, `Play/saved-game.ts`): an unfinished game is saved after every move and offered at Set the table._ Works signed-out; games saved in `localStorage`.
 
 ## Phase 4 — Online async multiplayer with email turn alerts
 
