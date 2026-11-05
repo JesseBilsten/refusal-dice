@@ -4,6 +4,35 @@ Every release of refusaldice.com, newest first. Versions are
 major.minor.patch ([docs/WORKFLOW.md](docs/WORKFLOW.md)): each pull request
 bumps the version once and adds its entry here.
 
+## 1.10.0 (unreleased)
+
+- **Decision trainer (proposed, on the design system for now):** a real
+  moment from a game against solid bots, "What do you do?", then every
+  option's chance of the pencil, with your pick marked and a verdict: the
+  best move, a toss-up, or how many points it cost. Practise everything, or
+  just calling, refusing or rolling; a running tally counts your best picks
+  and the pencils given away. It gets its own page once approved.
+- **Fix: no standing on a missed game.** A player who hasn't made the game
+  rolls until they make it or run out of rolls. The engine let you stand on
+  a miss once every other miss was out of rolls, so Play, its hints and the
+  trainer offered "Stand" with rolls left (e.g. 10-4 with 2 rolls left).
+- **"Roll the kicker":** once your dice make the game, the only roll left is
+  the kicker, so hints and the trainer now say "Roll the kicker" instead of
+  "Keep 2-3-5".
+- **Boss: roll, then decide.** The Boss always takes the secret roll first
+  (keeping all five rolls nothing) and decides whether everyone comes up
+  after seeing it. Play no longer offers "Come up" or "Pick 'em up" before
+  the roll, and its hint weighs the keeps: your hand alone, your hand and its
+  highest die, or all five. Solid bots keep only their hand and roll the rest
+  (three 4s and a 6: roll two dice, since two dice improve trips 16 times in
+  36 and one die only 12).
+- **Boss: net pencils.** Picking 'em up never costs a pencil, but coming up
+  hands one to someone else, so the Boss's choices (the secret roll, then
+  come up or pick 'em up) are scored in net pencils: the pencils that go to
+  someone else, minus yours, per 100 rounds. The trainer deals them that
+  way, Play's hint shows it, and solid bots come up when their exact chance
+  of taking the pencil is under 50% (it was "two pair or better").
+
 ## 1.9.0 (unreleased)
 
 - **Your game is saved:** a game at [Play](/play) is kept in this browser

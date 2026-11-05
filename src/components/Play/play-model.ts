@@ -7,12 +7,17 @@ import {
   PlayerId,
   Seat,
   KickerGameId,
+  bossHand,
   createGame,
+  evaluateKickerHand,
   gameSize,
   isGameSet,
+  razzleScore,
   seeded,
+  tresAwayScore,
 } from '../../engine'
 import { botAction } from '../../strategy'
+import { BOSS_NAMES, razzleName } from '../Dice/hand-groups'
 
 /**
  * The pure side of playing against bots: setting up a table, whose move it
@@ -33,6 +38,25 @@ export function newTable(bots: number, seed: number, rules: Partial<HouseRules> 
     })),
   ]
   return createGame({ players, source: seeded(seed), rules })
+}
+
+/**
+ * A hand in words: "three 2s", "a kicker of 9", "no 10-3", "a score of 7",
+ * "a full house". `kept`: positions committed in a kicker game; `gameName`
+ * names the call's game (from games-config.js, which TypeScript can't import).
+ */
+export function handText(dice: Dice, call: Call, kept: number[], gameName: (call: Call) => string): string {
+  if (call.game === 'tres-away') return `a score of ${tresAwayScore(dice)}`
+  if (call.game === 'boss') {
+    const name = BOSS_NAMES[bossHand(dice).category]
+    return /^(two|three|four|five)/.test(name) ? name : `a ${name}`
+  }
+  if (call.game === 'razzle') {
+    const { count, face } = razzleScore(dice)
+    return razzleName(count, face)
+  }
+  const hand = evaluateKickerHand(dice, call.game, call.variant ?? 'high', kept)
+  return hand.made ? `a kicker of ${hand.kickerTotal}` : `no ${gameName(call)}`
 }
 
 /** Who must act now, or null between rounds and at the end */

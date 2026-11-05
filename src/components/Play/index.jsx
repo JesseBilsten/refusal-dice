@@ -3,7 +3,6 @@ import { withPrefix } from 'gatsby'
 import { ChevronDown, FlaskConical } from 'lucide-react'
 import {
   applyAction,
-  bossHand,
   bottomHands,
   bottomTarget,
   bossKeepProblem,
@@ -29,7 +28,7 @@ import { cn } from '../../lib/utils'
 import { Button } from '../ui/button'
 import { Switch } from '../ui/switch'
 import { Label } from '../ui/label'
-import { BOSS_NAMES, DiceSettings, Die, Hand, RollButton, playRollSound, razzleName, useDicePrefs } from '../Dice'
+import { DiceSettings, Die, Hand, RollButton, playRollSound, useDicePrefs } from '../Dice'
 import { Panel } from '../Page'
 import Seat from '../Table/Seat'
 import TableFelt from '../Table/TableFelt'
@@ -44,6 +43,7 @@ import { SpeedPicker, Transport } from './TableControls'
 import { hintStats } from './hint-stats'
 import { useHouseRules } from '../Settings/house-rules'
 import { useSimulation } from '../Odds/use-simulation'
+import { fmtNet } from '../Odds/model'
 import {
   DEFAULT_PACE,
   PACES,
@@ -52,6 +52,7 @@ import {
   describeEvent,
   holdFor,
   latestMoves,
+  handText as sharedHandText,
   money,
   newTable,
   paceAfter,
@@ -101,20 +102,8 @@ const KEEP_TIPS = {
   pairs: 'Keep a pair, or roll all five.',
 }
 
-/** A hand in words: "three 2s", "a kicker of 9", "no 10-3", "a score of 7", "a full house". `kept`: positions committed in a kicker game */
-function handText(dice, call, kept = []) {
-  if (call.game === 'tres-away') return `a score of ${tresAwayScore(dice)}`
-  if (call.game === 'boss') {
-    const name = BOSS_NAMES[bossHand(dice).category]
-    return /^(two|three|four|five)/.test(name) ? name : `a ${name}`
-  }
-  if (call.game === 'razzle') {
-    const { count, face } = razzleScore(dice)
-    return razzleName(count, face)
-  }
-  const hand = evaluateKickerHand(dice, call.game, call.variant, kept)
-  return hand.made ? `a kicker of ${hand.kickerTotal}` : `no ${gameName(call)}`
-}
+/** A hand in words (play-model's handText, with the site's game names) */
+const handText = (dice, call, kept = []) => sharedHandText(dice, call, kept, gameName)
 
 /** Two pair or better: strong enough for a Boss to say "come up" (as the bots play it) */
 const bossStrong = (dice) => compareBoss(dice, [2, 2, 1, 1, 3]) >= 0
@@ -626,11 +615,8 @@ export default function Play({ intro }) {
     if (evaluateKickerHand(myDice, call.game, call.variant, myRolls.kept).made) rollAllFive()
     else setDeclared(rollKey)
   }
-  // The Boss can skip the extra roll and say it straight away
-  const bossSays = (type, skipRoll) => {
-    if (skipRoll) act({ type: 'stand', player: YOU })
-    act({ type, player: YOU })
-  }
+  // After the secret roll, the Boss says it
+  const bossSays = (type) => act({ type, player: YOU })
 
   let title = ''
   let body = null
@@ -911,19 +897,19 @@ export default function Play({ intro }) {
     if (h.fresh) labLink = `/odds-lab/?tab=keep&game=tres-away&roll=${myDice.join('')}`
   } else if (phase.kind === 'boss') {
     const others = phase.players.filter((id) => id !== YOU).map((id) => game.dice[id])
-    const sayButtons = (skipRoll) => (
+    const sayButtons = () => (
       <>
-        <Button onClick={() => bossSays('comeUp', skipRoll)}>Come up</Button>
-        <Button variant="outline" onClick={() => bossSays('dontComeUp', skipRoll)}>
+        <Button onClick={() => bossSays('comeUp')}>Come up</Button>
+        <Button variant="outline" onClick={() => bossSays('dontComeUp')}>
           Pick ’em up
         </Button>
       </>
     )
     if (phase.stage === 'bossRoll') {
-      title = 'You’re the Boss: roll, come up, or pick ’em up'
+      title = 'You’re the Boss: your secret roll'
       body = (
         <p>
-          Roll once more, in secret: pick up any dice, as long as what you keep still beats everyone else’s hand. Or skip the roll: “come up” gives everyone one last roll and
+          Roll once more, in secret: pick up any dice, as long as what you keep still beats everyone else’s hand. Then decide: “come up” gives everyone one last roll and
           the worst hand loses (it can be you); “pick ’em up” ends the round with no loser, and the Hammer passes left.
         </p>
       )
@@ -933,14 +919,16 @@ export default function Play({ intro }) {
           <RollButton disabled={keep.length === 5 || Boolean(badBossKeep)} onClick={() => act({ type: 'reroll', player: YOU, keep })}>
             Roll {5 - keep.length}
           </RollButton>
-          {sayButtons(true)}
+          <Button variant="outline" onClick={() => act({ type: 'stand', player: YOU })}>
+            Keep all five
+          </Button>
           {badBossKeep && keep.length < 5 && <span className="text-sm text-destructive">{badBossKeep}.</span>}
         </div>
       )
     } else if (phase.stage === 'decide') {
       title = 'Come up, or pick ’em up?'
       body = <p>“Come up” gives everyone one last roll, and the worst hand loses: it can be you. “Pick ’em up” ends the round with no loser, and the Hammer passes left.</p>
-      controls = <div className="flex flex-wrap gap-2">{sayButtons(false)}</div>
+      controls = <div className="flex flex-wrap gap-2">{sayButtons()}</div>
     } else {
       title = 'Your last roll'
       body = <p>Keep any dice and roll the rest, or stand. The worst hand at the table loses.</p>
@@ -961,31 +949,43 @@ export default function Play({ intro }) {
   const canKeep = mine && rolledIn && !mustShow && (phase.kind === 'play' || phase.kind === 'tresAway' || (phase.kind === 'boss' && phase.stage !== 'decide'))
   const hint = hints && suggestion ? hintText(suggestion, myDice, phase) : null
   // The hint's numbers: the call odds straight away; any other decision once its rounds are played out
+  // The Boss's own choices weigh pencils both ways, so they rank by net pencils (someone else's chance minus yours)
+  const bossChoice = phase.kind === 'boss' && phase.stage !== 'comeUp'
   let simRows = null
   if (hintDetail && sim.result && !sim.running) {
     if (hintDetail.choices && Array.isArray(sim.result))
-      simRows = hintDetail.choices.map((c, i) => ({ label: c.label, value: sim.result[i]?.pencil ?? 0, best: c.best }))
+      simRows = hintDetail.choices.map((c, i) => ({
+        label: c.label,
+        value: sim.result[i]?.pencil ?? 0,
+        best: c.best,
+        ...(bossChoice ? { other: sim.result[i]?.other ?? 0, net: sim.result[i]?.net ?? 0 } : {}),
+      }))
     else if (hintDetail.refusal && sim.result.accept)
       simRows = [
         { label: 'Accept', value: sim.result.accept.pencil, best: suggestion.type === 'accept' },
         { label: 'Refuse', value: sim.result.refuse.pencil, best: suggestion.type === 'refuse' },
       ]
-    simRows?.sort((a, b) => a.value - b.value)
+    simRows?.sort((a, b) => (bossChoice ? b.net - a.net : a.value - b.value))
   }
   const simulated = Boolean(hintDetail?.choices || hintDetail?.refusal)
   // When the rounds played out clearly favour another option than the solid player's pick, say so
   const picked = simRows?.find((r) => r.best)
-  const lowest = simRows?.[0]
-  // (not for the Boss's choice: picking 'em up never costs a pencil, but never hands one out either)
-  const bossChoice = phase.kind === 'boss' && phase.stage !== 'comeUp'
+  const top = simRows?.[0]
   const disagree =
-    !bossChoice && picked && lowest && lowest !== picked && picked.value - lowest.value >= 0.03
-      ? `Played out, ${lowest.label.toLowerCase()} takes the pencil less often here (${Math.round(lowest.value * 100)}% vs ${Math.round(picked.value * 100)}%): the solid player’s rule of thumb gets this one wrong.`
+    picked && top && top !== picked
+      ? bossChoice
+        ? top.net - picked.net >= 0.06
+          ? `Played out, ${top.label.toLowerCase()} does better here (net ${fmtNet(top.net)} vs ${fmtNet(picked.net)} per 100 rounds): the solid player’s rule gets this one wrong.`
+          : null
+        : picked.value - top.value >= 0.03
+          ? `Played out, ${top.label.toLowerCase()} takes the pencil less often here (${Math.round(top.value * 100)}% vs ${Math.round(picked.value * 100)}%): the solid player’s rule of thumb gets this one wrong.`
+          : null
       : null
   const hintStatsShown = hintDetail
     ? {
         ...hintDetail,
         rows: simulated ? simRows || [] : hintDetail.rows,
+        ...(bossChoice && simulated ? { measure: 'Net pencils per 100 rounds: the pencils that go to someone else, minus yours' } : {}),
         pending: simulated && !simRows,
         disagree,
         note: simulated

@@ -23,7 +23,7 @@ import {
   wouldLoseIfStopped,
 } from '../engine'
 import { CALL_ODDS, CALL_ODDS_CALLS, CALL_ODDS_LONE_KEEP, CALL_ODDS_PLAYERS } from './call-odds'
-import { Goal, keepOptions } from './situations'
+import { Goal, keepOptions, reachChance } from './situations'
 import { tresAwayPutOut } from './tres-away'
 
 /**
@@ -138,6 +138,18 @@ export function bottomGoal(call: Call, target: Dice, targetKept: number[] = []):
 }
 
 /**
+ * The Boss's chance of taking the pencil after "come up": every other
+ * player must finish better than the Boss's hand on their one last roll
+ * (exact for each, keeping their best dice; their rolls are independent).
+ * A tie counts against the Boss, so it errs on the safe side. Coming up
+ * leaves the pencil with someone else the rest of the time, so the net
+ * pencil is 1 − 2 × this: come up below 50%.
+ */
+export function bossComeUpRisk(boss: Dice, others: Dice[]): number {
+  return others.reduce((p, dice) => p * reachChance(dice, 1, { kind: 'boss', hand: boss }), 1)
+}
+
+/**
  * Everyone who may act right now: one player, except in a kicker game
  * while several players are still making the game (they roll at once).
  * Empty between rounds.
@@ -202,9 +214,10 @@ export function botAction(state: GameState): Action {
       if (phase.stage === 'bossRoll') {
         const dice = state.dice[phase.boss]
         const others = phase.players.filter((id) => id !== phase.boss).map((id) => state.dice[id])
-        // Re-roll the low dice outside the hand, highest first back into the keep until what's kept still beats the table
+        // Keep the hand and roll every other die (trips: 2 dice improve it 16 in 36 times, 1 die only 12 in 36);
+        // put the highest dice back into the keep until what's kept still beats the table
         let weak = [0, 1, 2, 3, 4]
-          .filter((i) => !phase.bossDice.includes(i) && dice[i] <= 3)
+          .filter((i) => !phase.bossDice.includes(i))
           .sort((a, b) => dice[a] - dice[b])
         const kept = () => [0, 1, 2, 3, 4].filter((i) => !weak.includes(i)).map((i) => dice[i])
         while (weak.length && bossKeepProblem(kept(), others)) weak = weak.slice(0, -1)
@@ -217,9 +230,9 @@ export function botAction(state: GameState): Action {
           : { type: 'stand', player: phase.boss }
       }
       if (phase.stage === 'decide') {
-        // Come up with two pair or better
-        const strong = compareBoss(state.dice[phase.boss], [2, 2, 1, 1, 3]) >= 0
-        return { type: strong ? 'comeUp' : 'dontComeUp', player: phase.boss }
+        // Net pencils: come up when someone else is likelier to take the pencil than you
+        const risk = bossComeUpRisk(state.dice[phase.boss], phase.players.filter((id) => id !== phase.boss).map((id) => state.dice[id]))
+        return { type: risk < 0.5 ? 'comeUp' : 'dontComeUp', player: phase.boss }
       }
       const player = phase.waiting[0]
       const dice = state.dice[player]

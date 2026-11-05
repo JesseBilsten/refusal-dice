@@ -1,7 +1,7 @@
 import React from 'react'
 import { Badge } from '../ui/badge'
 import { cn } from '../../lib/utils'
-import { fmtPct, inWords, rankOptions } from './model'
+import { fmtNet, fmtPct, inWords, rankOptions } from './model'
 import RollsPct, { rollsLeft } from './RollsPct'
 
 /**
@@ -20,6 +20,10 @@ import RollsPct, { rollsLeft } from './RollsPct'
  * when: when the chances hold, leading the verdict ('With 2 rolls left')
  * tieMargin: totals this close to the best are a toss-up (default 0.5 pts;
  *   pass about 2 × the error for simulated odds)
+ * net: the options weigh pencils both ways (the Boss's choices): each has
+ *   `value` = someone else's chance of the pencil minus yours, shown as net
+ *   pencils per 100 rounds, higher is better; its segments are the two
+ *   chances ('safe': someone else, 'lose': you)
  */
 
 export const FILL = {
@@ -57,7 +61,38 @@ const label = (o, digits) => (
 )
 
 /** Whole percents, unless two options would read the same: then one decimal */
-const digitsFor = (ranked) => (new Set(ranked.map((o) => Math.round(o.total * 100))).size < ranked.length ? 1 : 0)
+const digitsFor = (ranked) =>
+  new Set(ranked.map((o) => Math.round(o.total * 100))).size < ranked.length
+    ? 1
+    : 0
+
+function NetVerdict({ ranked }) {
+  const best = ranked.filter((o) => o.best)
+  const others = ranked.filter((o) => !o.best)
+  const list = (os) =>
+    os.map((o, i) => (
+      <React.Fragment key={o.id}>
+        {i > 0 && ', or '}
+        <strong>{fmtNet(o.total)}</strong> if you {lower(o.label)}
+      </React.Fragment>
+    ))
+  if (best.length !== 1)
+    return (
+      <p className="text-base">
+        <strong>It's a toss-up.</strong> Net pencils per 100 rounds:{' '}
+        {list(best)}: too close to call.
+        {others.length > 0 && ' Everything else is worse.'}
+      </p>
+    )
+  const [pick] = best
+  return (
+    <p className="text-base">
+      <strong>{pick.label}.</strong> Per 100 rounds,{' '}
+      <strong>{fmtNet(pick.total)}</strong> net pencils: the pencils that go to
+      someone else, minus yours. Compared with {list(others)}.
+    </p>
+  )
+}
 
 function Verdict({ ranked, outcome, lowerIsBetter, when }) {
   const you = when ? `${when}, you` : 'You'
@@ -101,18 +136,25 @@ export default function OddsDecision({
   lowerIsBetter = true,
   tieMargin,
   when,
+  net = false,
 }) {
-  const ranked = rankOptions(options, lowerIsBetter, tieMargin)
+  const ranked = rankOptions(options, net ? false : lowerIsBetter, tieMargin)
   return (
     <div className="space-y-3">
-      <Verdict
-        ranked={ranked}
-        outcome={outcome}
-        lowerIsBetter={lowerIsBetter}
-        when={when}
-      />
+      {net ? (
+        <NetVerdict ranked={ranked} />
+      ) : (
+        <Verdict
+          ranked={ranked}
+          outcome={outcome}
+          lowerIsBetter={lowerIsBetter}
+          when={when}
+        />
+      )}
       <figure>
-        <figcaption className="sr-only">Chance you {outcome}</figcaption>
+        <figcaption className="sr-only">
+          {net ? 'Net pencils per 100 rounds' : `Chance you ${outcome}`}
+        </figcaption>
         <ul className="space-y-2">
           {ranked.map((o) => (
             <li
@@ -130,26 +172,40 @@ export default function OddsDecision({
                   </div>
                   {o.visual}
                 </div>
-                <span className="text-right">
-                  <RollsPct
-                    p={o.total}
-                    rolls={o.rolls}
-                    over={o.over}
-                    what={o.label}
-                    className="text-xl font-semibold"
-                  />
-                  <span className="block text-xs text-muted-foreground">
-                    {o.rolls != null && <>{rollsLeft(o.rolls)} · </>}
-                    {inWords(o.total)}
-                    {o.error != null && o.total > 0 && o.total < 1 && (
-                      <> · ±{(o.error * 100).toFixed(1)} pts</>
-                    )}
+                {net ? (
+                  <span className="text-right">
+                    <span className="block text-xl font-semibold tabular-nums">
+                      {fmtNet(o.total)}
+                    </span>
+                    <span className="block text-xs text-muted-foreground">
+                      net per 100 rounds
+                      {o.error != null && o.error > 0 && (
+                        <> · ±{(o.error * 100).toFixed(1)}</>
+                      )}
+                    </span>
                   </span>
-                </span>
+                ) : (
+                  <span className="text-right">
+                    <RollsPct
+                      p={o.total}
+                      rolls={o.rolls}
+                      over={o.over}
+                      what={o.label}
+                      className="text-xl font-semibold"
+                    />
+                    <span className="block text-xs text-muted-foreground">
+                      {o.rolls != null && <>{rollsLeft(o.rolls)} · </>}
+                      {inWords(o.total)}
+                      {o.error != null && o.total > 0 && o.total < 1 && (
+                        <> · ±{(o.error * 100).toFixed(1)} pts</>
+                      )}
+                    </span>
+                  </span>
+                )}
               </div>
               <div
                 role="img"
-                aria-label={`${fmtPct(o.total)} chance you ${outcome}: ${o.segments
+                aria-label={`${net ? `${fmtNet(o.total)} net pencils per 100 rounds` : `${fmtPct(o.total)} chance you ${outcome}`}: ${o.segments
                   .map((s) => `${s.label} ${fmtPct(s.p, 1)}`)
                   .join(', ')}`}
                 className="mt-2 flex h-3 gap-px overflow-hidden rounded-full bg-muted"

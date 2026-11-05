@@ -312,7 +312,7 @@ describe('playing and scoring (§3.1, §4)', () => {
           ...[4, 6, 6, 6, 5],
           ...[1, 1, 1, 1, 2],
           ...[1, 2, 3, 4, 1],
-          /* b, c and b re-roll and still miss: */ ...Array(15).fill(1),
+          /* b, c, b and c re-roll and still miss: */ ...Array(20).fill(1),
           /* cycle: */ ...[4, 6, 1, 1, 1, 2, 2, 2, 2, 2],
           /* c's re-rolls: */ ...Array(10).fill(2),
         ]),
@@ -328,14 +328,18 @@ describe('playing and scoring (§3.1, §4)', () => {
     const g1 = applyAction(g0, { type: 'reroll', player: 'b', keep: [] })
     // Still tied: c has more rolls left, so c rolls before b rolls again
     expect(bottomTurn(g1)).toBe('c')
-    const g = play(
+    const g2 = play(
       g1,
       { type: 'reroll', player: 'c', keep: [] },
       // Level on rolls again: b, nearest the Hammer, goes
-      { type: 'reroll', player: 'b', keep: [] },
-      // b is out of rolls and still level: c takes the tie
-      { type: 'stand', player: 'c' }
+      { type: 'reroll', player: 'b', keep: [] }
     )
+    // b is out of rolls; c missed too, so c can't stand on it: a miss rolls until it makes the game or runs out
+    expect(wouldLoseIfStopped(g2, 'c')).toBe(true)
+    expect(() => applyAction(g2, { type: 'stand', player: 'c' })).toThrow(
+      /worst hand/
+    )
+    const g = applyAction(g2, { type: 'reroll', player: 'c', keep: [] })
     expect(g.phase.kind).toBe('play')
     if (g.phase.kind !== 'play') return
     expect(Object.keys(g.phase.rolling)).toEqual(['b', 'c'])
@@ -528,14 +532,15 @@ describe('playing and scoring (§3.1, §4)', () => {
       createGame({
         players: players('a', 'b'),
         hammer: 'a',
-        source: scripted([1, 1, 1, 1, 1, 2, 2, 2, 2, 2, ...Array(15).fill(1)]),
+        source: scripted([1, 1, 1, 1, 1, 2, 2, 2, 2, 2, ...Array(20).fill(1)]),
       }),
       { type: 'call', player: 'a', call: { game: '10-2', variant: 'high' } },
       { type: 'accept', player: 'b' },
       { type: 'reroll', player: 'a', keep: [] },
       { type: 'reroll', player: 'b', keep: [] },
       { type: 'reroll', player: 'a', keep: [] },
-      { type: 'stand', player: 'b' }
+      // b missed too, so b rolls the last roll rather than standing on the miss
+      { type: 'reroll', player: 'b', keep: [] }
     )
     expect(g.phase).toMatchObject({ kind: 'roundOver', loser: null })
     expect(g.log.at(-1)).toEqual({

@@ -2,6 +2,7 @@
  * The odds-decision pattern's helpers (src/components/Odds/model.ts).
  */
 import {
+  fmtNet,
   fmtPct,
   inWords,
   rankOptions,
@@ -88,4 +89,22 @@ test('twoDiceGrid covers all 36 ordered rolls', () => {
   expect(cells).toHaveLength(36)
   const count = (k: string) => cells.filter((c) => c.kind === k).length
   expect([count('better'), count('equal'), count('worse')]).toEqual([3, 3, 30])
+})
+
+test('net pencils read signed, per 100 rounds, and rank higher first', () => {
+  expect(fmtNet(0.724)).toBe('+72')
+  expect(fmtNet(-0.05)).toBe('\u22125')
+  expect(fmtNet(0.001)).toBe('0')
+  const ranked = rankOptions(
+    [
+      { id: 'up', label: 'Come up', value: 0.72, segments: [{ p: 0.86, label: 'x', kind: 'safe' }, { p: 0.14, label: 'y', kind: 'lose' }] },
+      { id: 'down', label: 'Pick ’em up', value: 0, segments: [] },
+    ],
+    false,
+    0.02
+  )
+  expect(ranked.map((o) => [o.id, o.total, o.best])).toEqual([
+    ['up', 0.72, true],
+    ['down', 0, false],
+  ])
 })
