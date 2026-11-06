@@ -476,7 +476,7 @@ export default function Play({ intro }) {
   const hintDetail = useMemo(
     () =>
       hints && suggestion
-        ? hintStats(game, YOU, suggestion, { call: label, player: (id) => names[id], hand: (dice) => handText(dice, call) })
+        ? hintStats(game, YOU, suggestion, { call: label, player: (id) => names[id], hand: (dice, kept) => handText(dice, call, kept) })
         : null,
     [hints, suggestion] // eslint-disable-line react-hooks/exhaustive-deps
   )

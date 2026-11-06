@@ -5,7 +5,10 @@ import {
   HouseRules,
   activeSeats,
   applyAction,
+  bottomHands,
   bottomTarget,
+  evaluateKickerHand,
+  isKickerGame,
   refusalSeats,
 } from '../../engine'
 import { ALL_CALLS, botAction, botActionFor } from '../../strategy'
@@ -16,8 +19,8 @@ import { YOU, newTable } from '../Play/play-model'
  * The decision trainer's pure side. A situation is a real moment from a
  * game against solid bots: the table plays seeded games until it's your
  * move, then stops and asks what you'd do. The options and their odds come
- * from the same place as Play's hints (hint-stats.ts): the Hammer's call
- * from the generated call odds, every other decision played out by solid
+ * from the same place as Play's hints (hint-stats.ts): every decision,
+ * the Hammer's call included, played out by solid
  * bots (simulateDecision / simulateRefusal, run by the page in a worker).
  *
  * Every figure measures one thing: your chance of the pencil this round.
@@ -293,7 +296,11 @@ export function describe(
   if (phase.kind === 'secondCall')
     return {
       heading: 'Your call was refused',
-      detail: `Both refusals turned down ${names.call(phase.refused)}. Make a second call: a different game, and nobody can refuse it.`,
+      detail:
+        (players === 2
+          ? `${names.player(refusalSeats(state).first)} refused ${names.call(phase.refused)}.`
+          : `Both refusals turned down ${names.call(phase.refused)}.`) +
+        ' Make a second call: a different game, and nobody can refuse it.',
     }
   if (phase.kind === 'refusal') {
     const seat = refusalSeat(state)!
@@ -309,12 +316,22 @@ export function describe(
   if (phase.kind === 'play') {
     const rolls = 3 - phase.rolling[YOU].rollsUsed
     const target = bottomTarget(state, YOU)
-    const need = target
-      ? ` To climb off the bottom, beat ${names.player(target)}: ${names.hand(state.dice[target])}.`
-      : ''
+    const kept = (id: string) => phase.rolling[id]?.kept ?? []
+    const { game, variant } = phase.call
+    const missed = (id: string) =>
+      isKickerGame(game) && !!variant && !evaluateKickerHand(state.dice[id], game, variant, kept(id)).made
+    const tied = bottomHands(state).filter((id) => id !== YOU)
+    const targetHand = target ? names.hand(state.dice[target], kept(target)) : ''
+    const need = !target
+      ? ''
+      : missed(YOU) && missed(target)
+        ? ` ${names.player(target)} missed it too (${targetHand}): make the game and you’re safe.`
+        : tied.length && bottomHands(state).includes(YOU)
+          ? ` You’re tied at the bottom with ${tied.map(names.player).join(' and ')} (${targetHand}): take the tie, or roll to climb off it.`
+          : ` To climb off the bottom, beat ${names.player(target)}: ${targetHand}.`
     return {
       heading: `${names.call(phase.call)}: you’re at the bottom`,
-      detail: `You have ${names.hand(dice)}, with ${plural(rolls, 'roll', 'rolls')} left.${need}`,
+      detail: `You have ${names.hand(dice, kept(YOU))}, with ${plural(rolls, 'roll', 'rolls')} left.${need}`,
     }
   }
   if (phase.kind === 'tresAway') {

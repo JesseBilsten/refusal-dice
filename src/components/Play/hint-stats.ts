@@ -6,6 +6,7 @@ import {
   activeSeats,
   bossHand,
   bossKeepProblem,
+  compareBoss,
   bottomTarget,
   evaluateKickerHand,
   isKickerGame,
@@ -68,7 +69,7 @@ export interface HintNames {
   /** A player's name ("You" for you) */
   player: (id: string) => string
   /** A hand in words for the current call, e.g. "a kicker of 9", "no 10-3" */
-  hand: (dice: Dice) => string
+  hand: (dice: Dice, kept?: number[]) => string
 }
 
 const pct = (p: number) => `${Math.round(p * 100)}%`
@@ -93,7 +94,11 @@ export function hintStats(state: GameState, me: string, action: Action, names: H
       if (c.game !== except && !candidates.some((x) => same(x, c))) candidates.push(c)
     }
     if (action.type === 'call') add(action.call)
-    if (phase.kind === 'call') add(hammerCall(dice, players, { rules: state.rules }).call)
+    if (phase.kind === 'call') {
+      add(hammerCall(dice, players, { rules: state.rules }).call)
+      // The call that does best against the bots (often one meant to be refused)
+      add(hammerCall(dice, players, { rules: state.rules, vsBots: true }).call)
+    }
     const choices: HintChoice[] = candidates.map((call) => ({
       label: `Call ${names.call(call)}`,
       actions: [{ type: 'call', player: me, call }],
@@ -138,14 +143,21 @@ export function hintStats(state: GameState, me: string, action: Action, names: H
     )
     const chosen = (o: (typeof options)[number]) =>
       action.type === 'stand' ? o.stand : action.type === 'reroll' && !o.stand && diceText(o.keep.map((i) => dice[i])) === diceText(action.keep.map((i) => dice[i]))
-    const top = options.slice(0, 4)
-    // Always weigh the hint's own pick
-    const pick = options.find(chosen)
-    if (pick && !top.includes(pick)) top[top.length - 1] = pick
+    // Keeps worth exactly the same and re-rolling as many dice are one choice (in Razzle, 1-1-6 and 1-6-6 are both three 6s)
+    const same = new Set<string>()
+    const distinct = options.filter((o) => {
+      const key = `${o.stand}|${o.dice.length}|${o.win.toFixed(9)}|${o.tie.toFixed(9)}`
+      if (same.has(key) && !chosen(o)) return false
+      same.add(key)
+      return true
+    })
+    // Always weigh the hint's own pick, and standing (taking the tie) whenever it's allowed; then the best keeps
+    const required = [distinct.find(chosen), distinct.find((o) => o.stand)].filter((o) => o != null)
+    const top = distinct.filter((o) => required.includes(o) || distinct.indexOf(o) < 4 - required.filter((r) => distinct.indexOf(r) >= 4).length)
     const need =
       goal.kind === 'make'
         ? 'you need to make the game'
-        : `you need to beat ${names.player(targetId)}, who has ${names.hand(target)}`
+        : `you need to beat ${names.player(targetId)}, who has ${names.hand(target, phase.rolling[targetId].kept)}`
     // Once the kept dice make the game, the only roll left is the kicker (§3.1)
     const { game, variant } = phase.call
     const rollsKicker = (o: (typeof options)[number]) => {
@@ -212,11 +224,21 @@ export function hintStats(state: GameState, me: string, action: Action, names: H
     const others = phase.players.filter((id) => id !== me).map((id) => state.dice[id])
     // The secret roll first: which dice to keep (keeping all five rolls none); then come up or pick 'em up
     if (phase.stage === 'bossRoll') {
-      // The keeps worth weighing: your hand alone, your hand and its highest other die, the solid pick, all five
-      const hand = bossHand(dice).handDice
-      const rest = [0, 1, 2, 3, 4].filter((i) => !hand.includes(i)).sort((a, b) => dice[b] - dice[a])
+      // The keeps worth weighing: the solid pick, keeping all five, and the legal keeps likeliest to
+      // beat the best hand at the table on one roll (exact), which can mean picking up part of the hand
       const solidKeep = action.type === 'reroll' ? action.keep : [0, 1, 2, 3, 4]
-      const keeps = [hand, rest.length ? [...hand, rest[0]] : hand, solidKeep, [0, 1, 2, 3, 4]]
+      const strongest = others.reduce((a, b) => (compareBoss(a, b) >= 0 ? a : b))
+      const hand = bossHand(dice).handDice
+      const groups = [1, 2, 3, 4, 5, 6]
+        .map((face) => [0, 1, 2, 3, 4].filter((i) => dice[i] === face))
+        .filter((g) => g.length >= 2 && g.length < hand.length)
+      const exact = keepOptions(dice, 1, { kind: 'boss', hand: strongest }, { rules: state.rules }).filter(
+        (o) => !o.stand && o.keep.length > 0 && o.keep.length < 5 && !bossKeepProblem(o.dice as Dice, others)
+      )
+      const asHand = exact.find((o) => diceText(o.dice) === diceText(hand.map((i) => dice[i])))
+      const better = exact[0] && (!asHand || exact[0].win + exact[0].tie / 2 > asHand.win + asHand.tie / 2 + 1e-9) ? [exact[0].keep] : []
+      // Illegal keeps (ones that no longer beat the table) are dropped below
+      const keeps = [solidKeep, [0, 1, 2, 3, 4], hand, ...groups, ...better]
       const solidText = diceText(solidKeep.map((i) => dice[i]))
       const seen = new Set<string>()
       const choices: HintChoice[] = []
@@ -257,12 +279,37 @@ export function hintStats(state: GameState, me: string, action: Action, names: H
           'Pick ’em up ends the round with no loser, so it never costs a pencil, but it gives up the chance to hand one to someone else. Come up gives everyone one last roll and the worst hand loses, which can be you. So each option is scored in net pencils: the pencils that go to someone else, minus yours.',
       }
     }
+    // Coming up: stand, or keep any dice and roll the rest (§3.3). The keeps worth weighing: the solid
+    // pick, your poker hand, each pair or three of a kind in it, and the keep likeliest (exact) to beat
+    // the weakest hand you can see when it beats keeping your hand
+    const weakest = phase.players
+      .filter((id) => id !== me && id !== phase.boss)
+      .map((id) => state.dice[id])
+      .reduce<Dice | null>((a, b) => (a && compareBoss(a, b) <= 0 ? a : b), null)
+    const solidKeep = action.type === 'reroll' ? [...action.keep].sort((a, b) => a - b) : null
     const hand = bossHand(dice).handDice
-    const choices: HintChoice[] = [
-      { label: 'Stand', actions: [{ type: 'stand', player: me }], best: action.type === 'stand' },
-      { label: hand.length ? `Keep ${diceText(hand.map((i) => dice[i]))}, roll ${5 - hand.length}` : 'Roll all five', actions: [{ type: 'reroll', player: me, keep: hand }], best: action.type === 'reroll' },
-    ]
-    if (hand.length) choices.push({ label: 'Roll all five', actions: [{ type: 'reroll', player: me, keep: [] }], best: false })
+    const groups = [1, 2, 3, 4, 5, 6]
+      .map((face) => [0, 1, 2, 3, 4].filter((i) => dice[i] === face))
+      .filter((g) => g.length >= 2 && g.length < hand.length)
+    const keeps: number[][] = [...(solidKeep ? [solidKeep] : []), hand, ...groups]
+    if (weakest) {
+      const exact = keepOptions(dice, 1, { kind: 'boss', hand: weakest }, { rules: state.rules }).filter((o) => !o.stand && o.keep.length < 5)
+      const asHand = exact.find((o) => diceText(o.dice) === diceText(hand.map((i) => dice[i])))
+      if (exact[0] && (!asHand || exact[0].win + exact[0].tie / 2 > asHand.win + asHand.tie / 2 + 1e-9)) keeps.push(exact[0].keep)
+    }
+    keeps.push([])
+    const seen = new Set<string>()
+    const choices: HintChoice[] = [{ label: 'Stand', actions: [{ type: 'stand', player: me }], best: action.type === 'stand' }]
+    for (const keep of keeps) {
+      const values = diceText(keep.map((i) => dice[i]))
+      if (keep.length === 5 || seen.has(values)) continue
+      seen.add(values)
+      choices.push({
+        label: keep.length ? `Keep ${values}, roll ${5 - keep.length}` : 'Roll all five',
+        actions: [{ type: 'reroll', player: me, keep }],
+        best: solidKeep != null && values === diceText(solidKeep.map((i) => dice[i])),
+      })
+    }
     return {
       kind: 'loss',
       measure: MEASURE,

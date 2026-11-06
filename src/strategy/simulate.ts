@@ -3,6 +3,7 @@ import {
   Call,
   DEFAULT_HOUSE_RULES,
   Dice,
+  Die,
   GameState,
   HouseRules,
   PlayerId,
@@ -12,7 +13,7 @@ import {
   seeded,
   viewFor,
 } from '../engine'
-import { ALL_CALLS, botAction, chooseCall, wouldAccept } from './bots'
+import { ALL_CALLS, botAction, bossComeUpRisk, chooseCall, wouldAccept } from './bots'
 
 /**
  * Seeded Monte Carlo through the real engine: deal the other players random
@@ -61,10 +62,10 @@ export function playOutRound(state: GameState): {
     if (steps > 5000) throw new Error('Round did not finish')
     g = applyAction(g, botAction(g))
   }
-  return {
-    loser: g.phase.kind === 'roundOver' ? g.phase.loser : null,
-    state: g,
-  }
+  if (g.phase.kind === 'roundOver') return { loser: g.phase.loser, state: g }
+  // The pencil that ended the game (after parity one pencil puts a player out, §1)
+  const last = [...g.log].reverse().find((e) => e.type === 'pencil')
+  return { loser: last?.type === 'pencil' ? last.player : null, state: g }
 }
 
 /** Seat ids in order: the Hammer first, then to their left */
@@ -400,8 +401,7 @@ export function simulateDecision(options: {
     const s = sampleSeed(seed, i)
     let hiddenSource = seeded(s ^ 0x3c6ef372)
     const dice = { ...state.dice }
-    Object.entries(view.dice).forEach(([id, seen]) => {
-      if (id === me || (seen && seen.every((d) => d !== null))) return
+    const redraw = (id: PlayerId, seen: (Die | null)[] | null | undefined) => {
       const fresh = [...state.dice[id]]
       fresh.forEach((_, j) => {
         if (seen && seen[j] !== null) return
@@ -409,7 +409,20 @@ export function simulateDecision(options: {
         hiddenSource = next
         fresh[j] = d
       })
-      dice[id] = fresh
+      return fresh as Dice
+    }
+    // The Boss came up, so their secret dice are ones a Boss comes up with (the bots' rule):
+    // draw again until they are, rather than from every possible roll
+    const phase = state.phase
+    const cameUp =
+      phase.kind === 'boss' && phase.stage === 'comeUp' && phase.boss !== me ? phase : null
+    Object.entries(view.dice).forEach(([id, seen]) => {
+      if (id === me || (seen && seen.every((d) => d !== null))) return
+      dice[id] = redraw(id, seen)
+      if (cameUp && id === cameUp.boss) {
+        const others = cameUp.players.filter((p) => p !== id).map((p) => state.dice[p])
+        for (let t = 0; t < 200 && bossComeUpRisk(dice[id], others) >= 0.5; t++) dice[id] = redraw(id, seen)
+      }
     })
     // Nobody is eliminated mid-simulation; only this round's pencil matters
     const base: GameState = { ...state, dice, source: seeded(s), rules: { ...state.rules, pencilsToLose: 1000 } }

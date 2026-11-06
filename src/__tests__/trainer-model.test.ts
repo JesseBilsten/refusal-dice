@@ -3,8 +3,14 @@
  * situations from seeded games against solid bots, options that don't give
  * the answer away, and grading against the computed odds.
  */
-import { Call, evaluateKickerHand, isKickerGame } from '../engine'
-import { ALL_CALLS } from '../strategy'
+import {
+  Call,
+  activeSeats,
+  evaluateKickerHand,
+  isKickerGame,
+  wouldLoseIfStopped,
+} from '../engine'
+import { ALL_CALLS, hammerCall, simulateDecision } from '../strategy'
 import { YOU } from '../components/Play/play-model'
 import {
   FOCUSES,
@@ -148,4 +154,74 @@ test('the Boss’s own choices are scored in net pencils; everything else in you
     }
   }
   expect(boss).toBeGreaterThan(0)
+})
+
+test('a sudden-death round (after parity) still has a loser when played out', () => {
+  // Seed 35: two players left at parity, so the round's pencil ends the game
+  const s = drawSituation(35, 'call', () => names)
+  const odds = simulateDecision({
+    state: s.state,
+    me: YOU,
+    choices: s.options.map((o) => ({ label: o.label, actions: o.actions! })),
+    samples: 60,
+  })
+  // (a 2-player tie takes no pencil, so not every round has one; before the fix none did)
+  odds.forEach((o) => expect(o.pencil + o.other!).toBeGreaterThan(0.5))
+})
+
+test('the options always include taking the tie when it’s allowed, and the best call against the bots', () => {
+  for (let seed = 1; seed <= 150; seed++) {
+    const roll = drawSituation(seed, 'roll', () => names)
+    if (
+      roll.state.phase.kind === 'play' &&
+      !wouldLoseIfStopped(roll.state, YOU)
+    )
+      expect(roll.options.some((o) => o.actions?.[0].type === 'stand')).toBe(
+        true
+      )
+    const call = drawSituation(seed, 'call', () => names)
+    if (call.state.phase.kind === 'call') {
+      const players = activeSeats(call.state).length
+      const vsBots = hammerCall(call.state.dice[YOU], players, {
+        vsBots: true,
+      }).call
+      expect(call.options.map((o) => o.label)).toContain(
+        `Call ${callName(vsBots)}`
+      )
+    }
+  }
+})
+
+test('coming up after the Boss: stand, or keep any dice (never all five) and roll the rest', () => {
+  let seen = 0
+  for (let seed = 1; seed <= 300; seed++) {
+    const s = drawSituation(seed, 'roll', () => names)
+    const phase = s.state.phase
+    if (phase.kind !== 'boss' || phase.stage !== 'comeUp') continue
+    seen++
+    const labels = s.options.map((o) => o.label)
+    expect(labels[0]).toBe('Stand')
+    expect(labels).toContain('Roll all five')
+    expect(new Set(labels).size).toBe(labels.length)
+    s.options.forEach((o) => {
+      const a = o.actions![0]
+      if (a.type === 'reroll') expect(a.keep.length).toBeLessThan(5)
+    })
+  }
+  expect(seen).toBeGreaterThan(5)
+})
+
+test('a 2-player second call names the one refusal', () => {
+  let seen = 0
+  for (let seed = 1; seed <= 60; seed++) {
+    const s = drawSituation(seed, 'call', () => names)
+    if (
+      s.state.phase.kind !== 'secondCall' ||
+      activeSeats(s.state).length !== 2
+    )
+      continue
+    seen++
+    expect(describeSituation(s, names).detail).not.toMatch(/Both refusals/)
+  }
+  expect(seen).toBeGreaterThan(0)
 })

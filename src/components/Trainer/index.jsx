@@ -54,8 +54,8 @@ function namesFor(state) {
   return {
     call: formatCallLabel,
     player: (id) => seatName[id] || id,
-    hand: (dice) =>
-      call ? handText(dice, call, [], gameName) : dice.join('-'),
+    hand: (dice, kept = []) =>
+      call ? handText(dice, call, kept, gameName) : dice.join('-'),
   }
 }
 
