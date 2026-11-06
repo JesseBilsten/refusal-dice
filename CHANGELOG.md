@@ -27,6 +27,9 @@ bumps the version once and adds its entry here.
   - **Wording:** hands count the dice already kept (7's, Pairs); a 2-player
     second call names the one refusal; "missed it too: make the game and
     you're safe" instead of "beat: no game"; tied at the bottom says so.
+  - **Rolls left:** playing from the bottom, every seat shows its hand and
+    how many rolls it has left (or "all day", or in the cup), and the hand
+    you have to beat says how many rolls it has to answer with.
   - **The Boss's secret dice** in the playouts are now ones a Boss would
     come up with, not any roll.
 

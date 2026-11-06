@@ -10,7 +10,7 @@ import { useSimulation } from '../Odds/use-simulation'
 import { useHouseRules } from '../Settings/house-rules'
 import { formatCallLabel, GAMES_MAP } from '../../lib/games-config'
 import { cn } from '../../lib/utils'
-import { viewFor } from '../../engine'
+import { standings, viewFor } from '../../engine'
 import { YOU, handText } from '../Play/play-model'
 import {
   FOCUSES,
@@ -57,6 +57,23 @@ function namesFor(state) {
     hand: (dice, kept = []) =>
       call ? handText(dice, call, kept, gameName) : dice.join('-'),
   }
+}
+
+/**
+ * The line under a seat while playing from the bottom: the hand, and how
+ * many rolls that player has left (or that they're safe)
+ */
+function seatDetail(state, id, names) {
+  const phase = state.phase
+  if (phase.kind !== 'play') return undefined
+  const st = standings(state).find((s) => s.player === id)
+  if (!st) return undefined
+  if (st.status === 'safe') return 'In the cup: safe this round'
+  const hand = names.hand(state.dice[id], phase.rolling[id]?.kept ?? [])
+  const rolls = st.allDay
+    ? 'all day'
+    : `${st.rollsLeft} ${st.rollsLeft === 1 ? 'roll' : 'rolls'} left`
+  return `${hand.charAt(0).toUpperCase()}${hand.slice(1)} · ${rolls}`
 }
 
 /** The dice to show for a seat: your own whole, others as the table sees them */
@@ -249,6 +266,7 @@ export default function Trainer({ className }) {
               pencils={me.pencils}
               maxPencils={state.rules.pencilsToLose}
               badges={state.hammer === YOU ? ['🔨 Hammer'] : []}
+              detail={seatDetail(state, YOU, names)}
             >
               <SeatDice state={state} id={YOU} view={view} />
             </Seat>
@@ -262,6 +280,7 @@ export default function Trainer({ className }) {
                     pencils={s.pencils}
                     maxPencils={state.rules.pencilsToLose}
                     badges={state.hammer === s.id ? ['🔨 Hammer'] : []}
+                    detail={seatDetail(state, s.id, names)}
                   >
                     <SeatDice state={state} id={s.id} view={view} />
                   </Seat>

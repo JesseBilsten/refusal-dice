@@ -6,6 +6,7 @@
 import {
   Call,
   activeSeats,
+  bottomTarget,
   evaluateKickerHand,
   isKickerGame,
   wouldLoseIfStopped,
@@ -224,4 +225,22 @@ test('a 2-player second call names the one refusal', () => {
     expect(describeSituation(s, names).detail).not.toMatch(/Both refusals/)
   }
   expect(seen).toBeGreaterThan(0)
+})
+
+test('playing from the bottom, the hand to beat says how many rolls it has left', () => {
+  let seen = 0
+  for (let seed = 1; seed <= 30; seed++) {
+    const s = drawSituation(seed, 'roll', () => names)
+    const phase = s.state.phase
+    if (phase.kind !== 'play') continue
+    const { detail } = describeSituation(s, names)
+    const target = bottomTarget(s.state, YOU)
+    if (!target) continue
+    seen++
+    const left = 3 - phase.rolling[target].rollsUsed
+    expect(detail).toContain(
+      left > 0 ? `${left} ${left === 1 ? 'roll' : 'rolls'} left)` : 'all day)'
+    )
+  }
+  expect(seen).toBeGreaterThan(3)
 })

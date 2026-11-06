@@ -321,14 +321,19 @@ export function describe(
     const missed = (id: string) =>
       isKickerGame(game) && !!variant && !evaluateKickerHand(state.dice[id], game, variant, kept(id)).made
     const tied = bottomHands(state).filter((id) => id !== YOU)
-    const targetHand = target ? names.hand(state.dice[target], kept(target)) : ''
+    // Their hand, and how many rolls they have to answer with once you climb off
+    const left = (id: string) => {
+      const n = 3 - phase.rolling[id].rollsUsed
+      return n > 0 ? `${plural(n, 'roll', 'rolls')} left` : 'all day'
+    }
+    const targetHand = target ? `${names.hand(state.dice[target], kept(target))}, ${left(target)}` : ''
     const need = !target
       ? ''
       : missed(YOU) && missed(target)
         ? ` ${names.player(target)} missed it too (${targetHand}): make the game and you’re safe.`
         : tied.length && bottomHands(state).includes(YOU)
           ? ` You’re tied at the bottom with ${tied.map(names.player).join(' and ')} (${targetHand}): take the tie, or roll to climb off it.`
-          : ` To climb off the bottom, beat ${names.player(target)}: ${targetHand}.`
+          : ` To climb off the bottom, beat ${names.player(target)} (${targetHand}).`
     return {
       heading: `${names.call(phase.call)}: you’re at the bottom`,
       detail: `You have ${names.hand(dice, kept(YOU))}, with ${plural(rolls, 'roll', 'rolls')} left.${need}`,
