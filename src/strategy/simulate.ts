@@ -36,6 +36,13 @@ export interface Estimate {
   /** simulateDecision only: net pencils, `other − pencil` (higher is better for you), and its standard error */
   net?: number
   netError?: number
+  /**
+   * simulateDecision, for a call with a planned second call (`then`): how the
+   * round went after it. `accepted`: a refuser accepted and everyone played
+   * the call; `refused`: both refused and you made the second call. Shares
+   * are out of every sample, so share × pencil over the two adds up to `pencil`.
+   */
+  orderPaths?: { accepted: { share: number; pencil: number }; refused: { share: number; pencil: number } }
 }
 
 const ME: PlayerId = 'me'
@@ -48,8 +55,15 @@ const estimate = (losses: number, samples: number): Estimate => {
 const sameCall = (a: Call, b: Call) =>
   a.game === b.game && a.variant === b.variant
 
-/** Play the current round to its end with bots; returns the loser (null: no pencil) */
-export function playOutRound(state: GameState): {
+/**
+ * Play the current round to its end with bots; returns the loser (null: no
+ * pencil). `secondCall`: the call the Hammer makes if both refusals turn
+ * the first one down, in place of the bot's choice.
+ */
+export function playOutRound(
+  state: GameState,
+  secondCall?: Call
+): {
   loser: PlayerId | null
   state: GameState
 } {
@@ -60,7 +74,12 @@ export function playOutRound(state: GameState): {
     steps++
   ) {
     if (steps > 5000) throw new Error('Round did not finish')
-    g = applyAction(g, botAction(g))
+    g = applyAction(
+      g,
+      secondCall && g.phase.kind === 'secondCall'
+        ? { type: 'call', player: g.hammer, call: secondCall }
+        : botAction(g)
+    )
   }
   if (g.phase.kind === 'roundOver') return { loser: g.phase.loser, state: g }
   // The pencil that ended the game (after parity one pencil puts a player out, §1)
@@ -377,6 +396,8 @@ export function simulateRefusal(options: {
 export interface DecisionChoice {
   label: string
   actions: Action[]
+  /** For a call: the call you make second if both refusals turn it down (otherwise the bot's choice) */
+  then?: Call
 }
 
 /**
@@ -397,6 +418,8 @@ export function simulateDecision(options: {
   const view = viewFor(state, me)
   const losses = choices.map(() => 0)
   const others = choices.map(() => 0)
+  // Rounds where both refused (the second call was made), and your pencils in them
+  const refused = choices.map(() => ({ n: 0, lost: 0 }))
   for (let i = 0; i < samples; i++) {
     const s = sampleSeed(seed, i)
     let hiddenSource = seeded(s ^ 0x3c6ef372)
@@ -428,9 +451,14 @@ export function simulateDecision(options: {
     const base: GameState = { ...state, dice, source: seeded(s), rules: { ...state.rules, pencilsToLose: 1000 } }
     choices.forEach((choice, c) => {
       const g = choice.actions.reduce(applyAction, base)
-      const loser = playOutRound(g).loser
+      const { loser, state: end } = playOutRound(g, choice.then)
       if (loser === me) losses[c]++
       else if (loser != null) others[c]++
+      // Only this round's log: earlier rounds may have had second calls too
+      if (choice.then && end.log.slice(base.log.length).some((e) => e.type === 'called' && e.second)) {
+        refused[c].n++
+        if (loser === me) refused[c].lost++
+      }
     })
   }
   return losses.map((n, c) => {
@@ -442,6 +470,18 @@ export function simulateDecision(options: {
       other: others[c] / samples,
       net,
       netError: Math.sqrt(Math.max(0, square - net * net) / samples),
+      ...(choices[c].then && {
+        orderPaths: {
+          accepted: {
+            share: (samples - refused[c].n) / samples,
+            pencil: samples > refused[c].n ? (n - refused[c].lost) / (samples - refused[c].n) : 0,
+          },
+          refused: {
+            share: refused[c].n / samples,
+            pencil: refused[c].n ? refused[c].lost / refused[c].n : 0,
+          },
+        },
+      }),
     }
   })
 }

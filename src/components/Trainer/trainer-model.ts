@@ -1,5 +1,6 @@
 import {
   Action,
+  Call,
   Dice,
   GameState,
   HouseRules,
@@ -11,7 +12,13 @@ import {
   isKickerGame,
   refusalSeats,
 } from '../../engine'
-import { ALL_CALLS, botAction, botActionFor } from '../../strategy'
+import {
+  ALL_CALLS,
+  botAction,
+  botActionFor,
+  callLoss,
+  chooseCall,
+} from '../../strategy'
 import { HintNames, HintStats, hintStats } from '../Play/hint-stats'
 import { YOU, newTable } from '../Play/play-model'
 
@@ -27,9 +34,9 @@ import { YOU, newTable } from '../Play/play-model'
  */
 
 /** What to practise */
-export type Focus = 'all' | 'call' | 'refusal' | 'roll'
-/** The kind of decision a situation asks */
-export type Kind = 'call' | 'refusal' | 'roll'
+export type Focus = 'all' | 'call' | 'order' | 'refusal' | 'roll'
+/** The kind of decision a situation asks ('order': which of two games to call first) */
+export type Kind = 'call' | 'order' | 'refusal' | 'roll'
 
 export const FOCUSES: { id: Focus; label: string; about: string }[] = [
   {
@@ -41,6 +48,12 @@ export const FOCUSES: { id: Focus; label: string; about: string }[] = [
     id: 'call',
     label: 'Calling',
     about: 'You hold the Hammer: which game to call, or bark.',
+  },
+  {
+    id: 'order',
+    label: 'Call order',
+    about:
+      'Your roll plays two games: call one first, and the other if it’s refused. Which goes first?',
   },
   {
     id: 'refusal',
@@ -58,8 +71,10 @@ export const FOCUSES: { id: Focus; label: string; about: string }[] = [
 export interface TrainerOption {
   id: string
   label: string
-  /** The actions this option takes, to play it out (not for calls and refusals) */
+  /** The actions this option takes, to play it out (not for refusals) */
   actions?: Action[]
+  /** Call order: the call you make second if both refusals turn the first down */
+  then?: Call
 }
 
 export interface Situation {
@@ -141,6 +156,53 @@ export function optionsFor(
     )
 }
 
+/**
+ * Call order: your roll's two best games (by the 3-player call odds), when
+ * both are worth calling: the best call, and the best call of another game
+ * (a second call must be a different game). Both must be strong: you take
+ * the pencil at most `ORDER_MAX` of the time at 3 players (an even share
+ * is 33%). Null otherwise, or when the bots' own first call is neither.
+ */
+export const ORDER_MAX = 0.1
+
+export function orderPair(
+  dice: Dice,
+  rules?: Partial<HouseRules>
+): [Call, Call] | null {
+  const keep = { montereyLoneKeep: Boolean(rules?.montereyLoneKeep) }
+  const ranked = ALL_CALLS.map((call) => ({
+    call,
+    loss: callLoss(dice, call, keep),
+  })).sort((a, b) => a.loss - b.loss)
+  const a = ranked[0]
+  const b = ranked.find((o) => o.call.game !== a.call.game)!
+  if (b.loss > ORDER_MAX) return null
+  const first = chooseCall(dice, undefined, keep)
+  if (first.game !== a.call.game && first.game !== b.call.game) return null
+  return [a.call, b.call]
+}
+
+const sameCall = (x: Call, y: Call) =>
+  x.game === y.game && x.variant === y.variant
+
+/** The two orders, in the site's game order (so the order says nothing about which is best) */
+function orderOptions(pair: [Call, Call], names: HintNames): TrainerOption[] {
+  const at = (c: Call) => ALL_CALLS.findIndex((x) => sameCall(x, c))
+  const [x, y] = [...pair].sort((p, q) => at(p) - at(q))
+  return [
+    [x, y],
+    [y, x],
+  ].map(([first, second]) => {
+    const label = `Call ${names.call(first)} first, then ${names.call(second)}`
+    return {
+      id: label,
+      label,
+      actions: [{ type: 'call', player: YOU, call: first }],
+      then: second,
+    }
+  })
+}
+
 /** Which option the solid player's action is */
 function solidId(stats: HintStats, kind: Kind, solid: Action): string | null {
   if (kind === 'refusal') return solid.type === 'accept' ? 'accept' : 'refuse'
@@ -173,7 +235,9 @@ export function drawSituation(
 ): Situation {
   const r = rng(seed)
   for (let attempt = 0; attempt < 50; attempt++) {
-    const bots = 2 + Math.floor(r() * 4)
+    // Call order: 2–4 players, where the order changes your chance by more than a fraction of a point
+    const bots =
+      focus === 'order' ? 1 + Math.floor(r() * 3) : 2 + Math.floor(r() * 4)
     let state = newTable(bots, Math.floor(r() * 2 ** 31), rules)
     // Stop at a decision with this chance, so situations come from every stage of a game
     const stopAt = 0.35
@@ -185,7 +249,41 @@ export function drawSituation(
       const next = botAction(state)
       const mine = 'player' in next && next.player === YOU
       const kind = mine ? kindOf(state) : null
-      if (kind && (focus === 'all' || focus === kind) && r() < stopAt) {
+      // Call order: you hold the Hammer with two games worth calling
+      const pair =
+        focus === 'order' && kind === 'call' && state.phase.kind === 'call'
+          ? orderPair(state.dice[YOU], rules)
+          : null
+      if (pair && r() < 0.6) {
+        const names = namesOf(state)
+        const options = orderOptions(pair, names)
+        const first = chooseCall(state.dice[YOU], undefined, {
+          montereyLoneKeep: Boolean(rules.montereyLoneKeep),
+        })
+        const solid = options.find(
+          (o) => (o.actions![0] as { call: Call }).call.game === first.game
+        )!
+        return {
+          seed,
+          kind: 'order',
+          state,
+          options,
+          solid: solid.id,
+          stats: {
+            kind: 'loss',
+            measure: 'Chance you take the pencil',
+            rows: [],
+            why: `Each order is played out at this ${tableSize(state)}-player table: you call the first game, the refusals decide from their own dice, and if it’s refused you call the second. Solid bots play the rest of the round.`,
+          },
+          measure: 'pencil',
+        }
+      }
+      if (
+        kind &&
+        focus !== 'order' &&
+        (focus === 'all' || focus === kind) &&
+        r() < stopAt
+      ) {
         const solid = botActionFor(state, YOU)
         const names = namesOf(state)
         const stats = hintStats(state, YOU, solid, names)
@@ -288,6 +386,13 @@ export function describe(
   const phase = state.phase
   const players = tableSize(state)
   const dice = state.dice[YOU]
+  if (s.kind === 'order') {
+    const [a, b] = s.options.map((o) => o.then!)
+    return {
+      heading: 'You hold the Hammer: which game first?',
+      detail: `${players} players. Your roll plays ${names.call(b)} and ${names.call(a)}. Call one, and if ${players === 2 ? 'it’s refused' : 'both refusals turn it down'}, call the other.`,
+    }
+  }
   if (phase.kind === 'call')
     return {
       heading: 'You hold the Hammer',
@@ -319,14 +424,18 @@ export function describe(
     const kept = (id: string) => phase.rolling[id]?.kept ?? []
     const { game, variant } = phase.call
     const missed = (id: string) =>
-      isKickerGame(game) && !!variant && !evaluateKickerHand(state.dice[id], game, variant, kept(id)).made
+      isKickerGame(game) &&
+      !!variant &&
+      !evaluateKickerHand(state.dice[id], game, variant, kept(id)).made
     const tied = bottomHands(state).filter((id) => id !== YOU)
     // Their hand, and how many rolls they have to answer with once you climb off
     const left = (id: string) => {
       const n = 3 - phase.rolling[id].rollsUsed
       return n > 0 ? `${plural(n, 'roll', 'rolls')} left` : 'all day'
     }
-    const targetHand = target ? `${names.hand(state.dice[target], kept(target))}, ${left(target)}` : ''
+    const targetHand = target
+      ? `${names.hand(state.dice[target], kept(target))}, ${left(target)}`
+      : ''
     const need = !target
       ? ''
       : missed(YOU) && missed(target)
@@ -368,4 +477,53 @@ export function describe(
     }
   }
   return { heading: '', detail: '' }
+}
+
+/** How a call-order option's rounds went: accepted (everyone played the first call) or refused (you made the second) */
+export interface OrderPaths {
+  accepted: { share: number; pencil: number }
+  refused: { share: number; pencil: number }
+}
+
+const pctText = (p: number) => `${Math.round(p * 100)}%`
+
+/**
+ * Call order: the questions the result raises, answered from this
+ * situation's own playouts (`paths` by option id).
+ */
+export function orderQuestions(
+  s: Situation,
+  paths: Record<string, OrderPaths>,
+  names: HintNames
+): { q: string; a: string }[] {
+  const first = (o: TrainerOption) => (o.actions![0] as { call: Call }).call
+  const [x, y] = s.options
+  const px = paths[x.id]
+  const py = paths[y.id]
+  if (!px || !py) return []
+  const two = tableSize(s.state) === 2
+  return [
+    {
+      q: 'Why not save my best game for the second call, where nobody can refuse it?',
+      a:
+        `A refuser only accepts a game they’re good at, so your first call is played against a strong hand whenever it’s played. ` +
+        `Called first and accepted, ${names.call(first(x))} costs you ${pctText(px.accepted.pencil)} and ${names.call(first(y))} costs you ${pctText(py.accepted.pencil)}. ` +
+        `The game that holds up better against a strong hand belongs first.`,
+    },
+    {
+      q: two ? 'And when it’s refused?' : 'And when both refuse?',
+      a:
+        `${two ? 'The refuser' : 'Both refusers'} just turned the first game down, so their dice are weak for it, and often for similar games. ` +
+        `After ${names.call(first(x))} is refused, ${names.call(x.then!)} costs you ${pctText(px.refused.pencil)}; ` +
+        `after ${names.call(first(y))} is refused, ${names.call(y.then!)} costs you ${pctText(py.refused.pencil)}.`,
+    },
+    {
+      q: 'How often is the first call refused?',
+      a: `${names.call(first(x))}: ${pctText(px.refused.share)} of rounds. ${names.call(first(y))}: ${pctText(py.refused.share)}. The refusals decide from their own dice, so it depends on the game, not your roll.`,
+    },
+    {
+      q: 'What about calling a game I’m weak at, so it gets refused?',
+      a: 'That’s a decoy: it pays only when it’s refused, and costs you when it’s accepted. The Calling practice includes the call that does best against the bots, decoys included.',
+    },
+  ]
 }

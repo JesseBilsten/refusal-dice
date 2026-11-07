@@ -6,12 +6,19 @@
 import {
   Call,
   activeSeats,
+  applyAction,
   bottomTarget,
   evaluateKickerHand,
   isKickerGame,
   wouldLoseIfStopped,
 } from '../engine'
-import { ALL_CALLS, hammerCall, simulateDecision } from '../strategy'
+import {
+  ALL_CALLS,
+  callLoss,
+  hammerCall,
+  playOutRound,
+  simulateDecision,
+} from '../strategy'
 import { YOU } from '../components/Play/play-model'
 import {
   FOCUSES,
@@ -23,6 +30,9 @@ import {
   grade,
   isBossChoice,
   kindOf,
+  ORDER_MAX,
+  orderPair,
+  orderQuestions,
 } from '../components/Trainer/trainer-model'
 
 const callName = (c: Call) => `${c.game}${c.variant ? ` ${c.variant}` : ''}`
@@ -37,7 +47,8 @@ test.each(FOCUSES.map((f) => f.id))(
   (focus) => {
     for (let seed = 1; seed <= 6; seed++) {
       const s = drawSituation(seed, focus as Focus, () => names)
-      expect(kindOf(s.state)).toBe(s.kind)
+      // Call order is a Hammer's call, asked a different way
+      expect(kindOf(s.state)).toBe(s.kind === 'order' ? 'call' : s.kind)
       if (focus !== 'all') expect(s.kind).toBe(focus)
       expect(s.options.length).toBeGreaterThanOrEqual(2)
       expect(s.options.map((o) => o.id)).toContain(s.solid)
@@ -243,4 +254,81 @@ test('playing from the bottom, the hand to beat says how many rolls it has left'
     )
   }
   expect(seen).toBeGreaterThan(3)
+})
+
+describe('call order', () => {
+  const draw = (seed: number) => drawSituation(seed, 'order', () => names)
+
+  test('deals your two strongest games as the two orders, each with its second call', () => {
+    for (let seed = 1; seed <= 8; seed++) {
+      const s = draw(seed)
+      expect(s.kind).toBe('order')
+      expect(s.state.phase.kind).toBe('call')
+      expect(s.state.hammer).toBe(YOU)
+      const pair = orderPair(s.state.dice[YOU])!
+      expect(pair).not.toBeNull()
+      pair.forEach((c) =>
+        expect(callLoss(s.state.dice[YOU], c)).toBeLessThanOrEqual(ORDER_MAX)
+      )
+      expect(pair[0].game).not.toBe(pair[1].game)
+      expect(s.options).toHaveLength(2)
+      const [x, y] = s.options
+      const firstOf = (o: (typeof s.options)[0]) =>
+        (o.actions![0] as { call: Call }).call
+      expect(firstOf(x)).toEqual(y.then)
+      expect(firstOf(y)).toEqual(x.then)
+      expect(s.options.map((o) => o.id)).toContain(s.solid)
+      const { heading, detail } = describeSituation(s, names)
+      expect(`${heading} ${detail}`).not.toMatch(/undefined|null|NaN/)
+    }
+  })
+
+  test('playing it out makes the planned second call when both refuse, and the paths add up', () => {
+    const s = draw(3)
+    const [est] = simulateDecision({
+      state: s.state,
+      me: YOU,
+      choices: s.options
+        .slice(0, 1)
+        .map((o) => ({ label: o.label, actions: o.actions!, then: o.then })),
+      samples: 300,
+    })
+    const p = est.orderPaths!
+    expect(p.accepted.share + p.refused.share).toBeCloseTo(1, 9)
+    expect(p.refused.share).toBeGreaterThan(0)
+    expect(
+      p.accepted.share * p.accepted.pencil + p.refused.share * p.refused.pencil
+    ).toBeCloseTo(est.pencil, 9)
+    // The second call is the planned one, not the bot's choice
+    let seen = 0
+    for (let seed = 1; seed <= 12; seed++) {
+      const o = draw(seed).options[0]
+      const g = applyAction(draw(seed).state, o.actions![0])
+      const second = playOutRound(g, o.then)
+        .state.log.slice(g.log.length)
+        .find((e) => e.type === 'called' && e.second)
+      if (second?.type !== 'called') continue
+      seen++
+      expect(second.call).toEqual(o.then)
+    }
+    expect(seen).toBeGreaterThan(0)
+  })
+
+  test('the questions quote this situation’s own playouts', () => {
+    const s = draw(5)
+    const paths = Object.fromEntries(
+      s.options.map((o, i) => [
+        o.id,
+        {
+          accepted: { share: 0.6, pencil: 0.1 + i / 10 },
+          refused: { share: 0.4, pencil: 0.05 },
+        },
+      ])
+    )
+    const qs = orderQuestions(s, paths, names)
+    expect(qs.length).toBeGreaterThanOrEqual(3)
+    expect(qs[0].a).toContain('10%')
+    expect(qs[0].a).toContain('20%')
+    qs.forEach((q) => expect(`${q.q} ${q.a}`).not.toMatch(/undefined|null|NaN/))
+  })
 })
