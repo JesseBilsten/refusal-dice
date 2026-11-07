@@ -5,7 +5,10 @@ import {
   HouseRules,
   activeSeats,
   applyAction,
+  bottomHands,
   bottomTarget,
+  evaluateKickerHand,
+  isKickerGame,
   refusalSeats,
 } from '../../engine'
 import { ALL_CALLS, botAction, botActionFor } from '../../strategy'
@@ -16,8 +19,8 @@ import { YOU, newTable } from '../Play/play-model'
  * The decision trainer's pure side. A situation is a real moment from a
  * game against solid bots: the table plays seeded games until it's your
  * move, then stops and asks what you'd do. The options and their odds come
- * from the same place as Play's hints (hint-stats.ts): the Hammer's call
- * from the generated call odds, every other decision played out by solid
+ * from the same place as Play's hints (hint-stats.ts): every decision,
+ * the Hammer's call included, played out by solid
  * bots (simulateDecision / simulateRefusal, run by the page in a worker).
  *
  * Every figure measures one thing: your chance of the pencil this round.
@@ -47,7 +50,8 @@ export const FOCUSES: { id: Focus; label: string; about: string }[] = [
   {
     id: 'roll',
     label: 'Rolling',
-    about: 'Off the bottom: what to keep, take the tie, put out dice, and Boss: your secret roll, coming up, your last roll.',
+    about:
+      'Off the bottom: what to keep, take the tie, put out dice, and Boss: your secret roll, coming up, your last roll.',
   },
 ]
 
@@ -77,7 +81,9 @@ export interface Situation {
  * (someone else's chance of the pencil minus yours) instead.
  */
 export const isBossChoice = (state: GameState): boolean =>
-  state.phase.kind === 'boss' && state.phase.boss === YOU && state.phase.stage !== 'comeUp'
+  state.phase.kind === 'boss' &&
+  state.phase.boss === YOU &&
+  state.phase.stage !== 'comeUp'
 
 /** How a situation is scored: your chance of the pencil (lower is better), or net pencils (higher is better) */
 export type Measure = 'pencil' | 'net'
@@ -104,17 +110,15 @@ export function optionsFor(
 ): TrainerOption[] | null {
   const kind = kindOf(state)
   if (kind === 'call') {
-    // hint-stats labels each call row "Call <name>"
+    // hint-stats labels each call "Call <name>"
     const order = (label: string) => {
+      if (label === 'Bark') return ALL_CALLS.length + 1
       const i = ALL_CALLS.findIndex((c) => label === `Call ${names.call(c)}`)
       return i < 0 ? ALL_CALLS.length : i
     }
-    const opts: TrainerOption[] = stats.rows
-      .filter((r) => r.label !== 'Bark')
-      .map((r) => ({ id: r.label, label: r.label }))
+    const opts: TrainerOption[] = (stats.choices || [])
+      .map((c) => ({ id: c.label, label: c.label, actions: c.actions }))
       .sort((a, b) => order(a.label) - order(b.label))
-    if (stats.rows.some((r) => r.label === 'Bark'))
-      opts.push({ id: 'Bark', label: 'Bark' })
     return opts.length >= 2 ? opts : null
   }
   if (kind === 'refusal')
@@ -140,10 +144,6 @@ export function optionsFor(
 /** Which option the solid player's action is */
 function solidId(stats: HintStats, kind: Kind, solid: Action): string | null {
   if (kind === 'refusal') return solid.type === 'accept' ? 'accept' : 'refuse'
-  if (kind === 'call') {
-    if (solid.type === 'bark') return 'Bark'
-    return stats.rows.find((r) => r.best)?.label ?? null
-  }
   return stats.choices?.find((c) => c.best)?.label ?? null
 }
 
@@ -192,7 +192,15 @@ export function drawSituation(
         const options = stats && optionsFor(stats, state, names)
         const id = stats && options && solidId(stats, kind, solid)
         if (stats && options && id && options.some((o) => o.id === id)) {
-          return { seed, kind, state, options, solid: id, stats, measure: isBossChoice(state) ? 'net' : 'pencil' }
+          return {
+            seed,
+            kind,
+            state,
+            options,
+            solid: id,
+            stats,
+            measure: isBossChoice(state) ? 'net' : 'pencil',
+          }
         }
       }
       state = applyAction(state, next)
@@ -288,7 +296,11 @@ export function describe(
   if (phase.kind === 'secondCall')
     return {
       heading: 'Your call was refused',
-      detail: `Both refusals turned down ${names.call(phase.refused)}. Make a second call: a different game, and nobody can refuse it.`,
+      detail:
+        (players === 2
+          ? `${names.player(refusalSeats(state).first)} refused ${names.call(phase.refused)}.`
+          : `Both refusals turned down ${names.call(phase.refused)}.`) +
+        ' Make a second call: a different game, and nobody can refuse it.',
     }
   if (phase.kind === 'refusal') {
     const seat = refusalSeat(state)!
@@ -304,12 +316,27 @@ export function describe(
   if (phase.kind === 'play') {
     const rolls = 3 - phase.rolling[YOU].rollsUsed
     const target = bottomTarget(state, YOU)
-    const need = target
-      ? ` To climb off the bottom, beat ${names.player(target)}: ${names.hand(state.dice[target])}.`
-      : ''
+    const kept = (id: string) => phase.rolling[id]?.kept ?? []
+    const { game, variant } = phase.call
+    const missed = (id: string) =>
+      isKickerGame(game) && !!variant && !evaluateKickerHand(state.dice[id], game, variant, kept(id)).made
+    const tied = bottomHands(state).filter((id) => id !== YOU)
+    // Their hand, and how many rolls they have to answer with once you climb off
+    const left = (id: string) => {
+      const n = 3 - phase.rolling[id].rollsUsed
+      return n > 0 ? `${plural(n, 'roll', 'rolls')} left` : 'all day'
+    }
+    const targetHand = target ? `${names.hand(state.dice[target], kept(target))}, ${left(target)}` : ''
+    const need = !target
+      ? ''
+      : missed(YOU) && missed(target)
+        ? ` ${names.player(target)} missed it too (${targetHand}): make the game and you’re safe.`
+        : tied.length && bottomHands(state).includes(YOU)
+          ? ` You’re tied at the bottom with ${tied.map(names.player).join(' and ')} (${targetHand}): take the tie, or roll to climb off it.`
+          : ` To climb off the bottom, beat ${names.player(target)} (${targetHand}).`
     return {
       heading: `${names.call(phase.call)}: you’re at the bottom`,
-      detail: `You have ${names.hand(dice)}, with ${plural(rolls, 'roll', 'rolls')} left.${need}`,
+      detail: `You have ${names.hand(dice, kept(YOU))}, with ${plural(rolls, 'roll', 'rolls')} left.${need}`,
     }
   }
   if (phase.kind === 'tresAway') {

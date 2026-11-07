@@ -3,8 +3,15 @@
  * situations from seeded games against solid bots, options that don't give
  * the answer away, and grading against the computed odds.
  */
-import { Call, evaluateKickerHand, isKickerGame } from '../engine'
-import { ALL_CALLS, callLoss } from '../strategy'
+import {
+  Call,
+  activeSeats,
+  bottomTarget,
+  evaluateKickerHand,
+  isKickerGame,
+  wouldLoseIfStopped,
+} from '../engine'
+import { ALL_CALLS, hammerCall, simulateDecision } from '../strategy'
 import { YOU } from '../components/Play/play-model'
 import {
   FOCUSES,
@@ -35,7 +42,7 @@ test.each(FOCUSES.map((f) => f.id))(
       expect(s.options.length).toBeGreaterThanOrEqual(2)
       expect(s.options.map((o) => o.id)).toContain(s.solid)
       expect(new Set(s.options.map((o) => o.id)).size).toBe(s.options.length)
-      if (s.kind === 'roll')
+      if (s.kind !== 'refusal')
         s.options.forEach((o) => expect(o.actions?.length).toBeGreaterThan(0))
     }
   }
@@ -59,13 +66,10 @@ test('calls are listed in game order, Bark last, whatever their odds', () => {
     expect([...order].sort((a, b) => a - b)).toEqual(order)
     const bark = s.options.findIndex((o) => o.id === 'Bark')
     if (bark >= 0) expect(bark).toBe(s.options.length - 1)
-    // Each call row is the generated call odds for your dice
-    s.stats.rows
-      .filter((r) => r.label !== 'Bark')
-      .forEach((r) => {
-        const call = ALL_CALLS.find((c) => r.label === `Call ${callName(c)}`)!
-        expect(r.value).toBeCloseTo(callLoss(s.state.dice[YOU], call), 10)
-      })
+    // Every option, the bark included, is played out at this table: never a fixed figure
+    expect(s.stats.rows).toEqual([])
+    s.options.forEach((o) => expect(o.actions?.length).toBe(1))
+    if (bark >= 0) expect(s.options[bark].actions![0].type).toBe('bark')
   }
 })
 
@@ -116,7 +120,12 @@ test('once your game is made, every roll is the kicker (§3.1), and a miss never
     if (phase.kind !== 'play') continue
     const { game, variant } = phase.call
     if (!isKickerGame(game) || !variant) continue
-    const hand = evaluateKickerHand(s.state.dice[YOU], game, variant, phase.rolling[YOU].kept)
+    const hand = evaluateKickerHand(
+      s.state.dice[YOU],
+      game,
+      variant,
+      phase.rolling[YOU].kept
+    )
     const labels = s.options.map((o) => o.label)
     if (hand.made) {
       made++
@@ -146,4 +155,92 @@ test('the Boss’s own choices are scored in net pencils; everything else in you
     }
   }
   expect(boss).toBeGreaterThan(0)
+})
+
+test('a sudden-death round (after parity) still has a loser when played out', () => {
+  // Seed 35: two players left at parity, so the round's pencil ends the game
+  const s = drawSituation(35, 'call', () => names)
+  const odds = simulateDecision({
+    state: s.state,
+    me: YOU,
+    choices: s.options.map((o) => ({ label: o.label, actions: o.actions! })),
+    samples: 60,
+  })
+  // (a 2-player tie takes no pencil, so not every round has one; before the fix none did)
+  odds.forEach((o) => expect(o.pencil + o.other!).toBeGreaterThan(0.5))
+})
+
+test('the options always include taking the tie when it’s allowed, and the best call against the bots', () => {
+  for (let seed = 1; seed <= 150; seed++) {
+    const roll = drawSituation(seed, 'roll', () => names)
+    if (
+      roll.state.phase.kind === 'play' &&
+      !wouldLoseIfStopped(roll.state, YOU)
+    )
+      expect(roll.options.some((o) => o.actions?.[0].type === 'stand')).toBe(
+        true
+      )
+    const call = drawSituation(seed, 'call', () => names)
+    if (call.state.phase.kind === 'call') {
+      const players = activeSeats(call.state).length
+      const vsBots = hammerCall(call.state.dice[YOU], players, {
+        vsBots: true,
+      }).call
+      expect(call.options.map((o) => o.label)).toContain(
+        `Call ${callName(vsBots)}`
+      )
+    }
+  }
+})
+
+test('coming up after the Boss: stand, or keep any dice (never all five) and roll the rest', () => {
+  let seen = 0
+  for (let seed = 1; seed <= 300; seed++) {
+    const s = drawSituation(seed, 'roll', () => names)
+    const phase = s.state.phase
+    if (phase.kind !== 'boss' || phase.stage !== 'comeUp') continue
+    seen++
+    const labels = s.options.map((o) => o.label)
+    expect(labels[0]).toBe('Stand')
+    expect(labels).toContain('Roll all five')
+    expect(new Set(labels).size).toBe(labels.length)
+    s.options.forEach((o) => {
+      const a = o.actions![0]
+      if (a.type === 'reroll') expect(a.keep.length).toBeLessThan(5)
+    })
+  }
+  expect(seen).toBeGreaterThan(5)
+})
+
+test('a 2-player second call names the one refusal', () => {
+  let seen = 0
+  for (let seed = 1; seed <= 60; seed++) {
+    const s = drawSituation(seed, 'call', () => names)
+    if (
+      s.state.phase.kind !== 'secondCall' ||
+      activeSeats(s.state).length !== 2
+    )
+      continue
+    seen++
+    expect(describeSituation(s, names).detail).not.toMatch(/Both refusals/)
+  }
+  expect(seen).toBeGreaterThan(0)
+})
+
+test('playing from the bottom, the hand to beat says how many rolls it has left', () => {
+  let seen = 0
+  for (let seed = 1; seed <= 30; seed++) {
+    const s = drawSituation(seed, 'roll', () => names)
+    const phase = s.state.phase
+    if (phase.kind !== 'play') continue
+    const { detail } = describeSituation(s, names)
+    const target = bottomTarget(s.state, YOU)
+    if (!target) continue
+    seen++
+    const left = 3 - phase.rolling[target].rollsUsed
+    expect(detail).toContain(
+      left > 0 ? `${left} ${left === 1 ? 'roll' : 'rolls'} left)` : 'all day)'
+    )
+  }
+  expect(seen).toBeGreaterThan(3)
 })

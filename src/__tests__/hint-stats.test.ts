@@ -14,15 +14,20 @@ describe('hint stats', () => {
   const deal = [3, 3, 3, 3, 3, 6, 4, 1, 1, 2, 5, 5, 2, 3, 4, ...Array(30).fill(1)]
   const game = () => createGame({ players, hammer: 'a', source: scripted(deal) })
 
-  test('the Hammer: the calls this hand loses least, best first, the pick marked, and a bark', () => {
+  test('the Hammer: the likeliest calls and a bark, each played out at this table, the pick marked', () => {
     const g = game()
     const stats = hintStats(g, 'a', botAction(g), names)!
     expect(stats.kind).toBe('loss')
-    const calls = stats.rows.filter((r) => r.label !== 'Bark')
-    expect(calls.map((r) => r.value)).toEqual([...calls.map((r) => r.value)].sort((x, y) => x - y))
-    expect(stats.rows.filter((r) => r.best)).toHaveLength(1)
-    expect(stats.rows.at(-1)!.label).toBe('Bark')
-    expect(stats.why).toMatch(/3-3-3-3-3/)
+    expect(stats.rows).toEqual([])
+    const choices = stats.choices!
+    expect(choices.filter((c) => c.best)).toHaveLength(1)
+    expect(choices.at(-1)!.label).toBe('Bark')
+    expect(choices.at(-1)!.actions).toEqual([{ type: 'bark', player: 'a' }])
+    expect(stats.why).toMatch(/3-player table/)
+    // Every option, the bark included, plays out to a pencil
+    const odds = simulateDecision({ state: g, me: 'a', choices, samples: 40 })
+    expect(odds).toHaveLength(choices.length)
+    odds.forEach((o) => expect(o.pencil + o.other!).toBeGreaterThan(0.9))
   })
 
   test('a refusal is played out: accept vs. refuse', () => {

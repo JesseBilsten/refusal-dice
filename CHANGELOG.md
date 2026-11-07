@@ -4,7 +4,36 @@ Every release of refusaldice.com, newest first. Versions are
 major.minor.patch ([docs/WORKFLOW.md](docs/WORKFLOW.md)): each pull request
 bumps the version once and adds its entry here.
 
-## 1.10.0 (unreleased)
+## 1.10.1
+
+- **Fix: calling vs barking at bigger tables.** The Hammer's options in the
+  trainer and in Play's hint compared each call's chance of the pencil at a
+  3-player table with a bark at the real table size, so at 5 players a bark
+  (27%) could look better than calling (30%) when the call was really about
+  16%. Every option, the bark included, is now played out by solid bots at
+  the real table, refusals and second calls included.
+- **Trainer audit** (450 situations checked against the exact and generated
+  odds, plus a rules review):
+  - **Sudden death showed 0% for everything.** After parity a pencil ends
+    the game, and the playouts counted that as "no loser". They now count
+    the player who took it, in the trainer and in Play's hints.
+  - **Missing options:** "Take the tie" when you're tied at the bottom
+    (Razzle could leave it out); the call that does best against the bots;
+    Boss keeps other than the whole hand (one pair of two pair, three of a
+    kind from a full house, or the exact best keep).
+  - **Duplicate options:** keeps worth the same are shown once (in Razzle,
+    1-1-6 and 1-6-6 are both three 6s), and a full house coming up no
+    longer offers "roll 0" next to Stand.
+  - **Wording:** hands count the dice already kept (7's, Pairs); a 2-player
+    second call names the one refusal; "missed it too: make the game and
+    you're safe" instead of "beat: no game"; tied at the bottom says so.
+  - **Rolls left:** playing from the bottom, every seat shows its hand and
+    how many rolls it has left (or "all day", or in the cup), and the hand
+    you have to beat says how many rolls it has to answer with.
+  - **The Boss's secret dice** in the playouts are now ones a Boss would
+    come up with, not any roll.
+
+## 1.10.0
 
 - **Decision trainer (proposed, on the design system for now):** a real
   moment from a game against solid bots, "What do you do?", then every
