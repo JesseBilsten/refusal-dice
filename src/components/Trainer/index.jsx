@@ -2,7 +2,14 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { ArrowRight } from 'lucide-react'
 import { ChoiceGroup, Panel, Stat } from '../Page'
 import { Die, Hand } from '../Dice'
-import { Branches, Disclosure, OddsDecision, Questions } from '../Odds'
+import {
+  Branches,
+  Disclosure,
+  MathSteps,
+  OddsDecision,
+  Questions,
+} from '../Odds'
+import { refusalView } from '../RefusalDecision/odds'
 import Seat from '../Table/Seat'
 import { Badge } from '../ui/badge'
 import { Button } from '../ui/button'
@@ -11,6 +18,7 @@ import { useHouseRules } from '../Settings/house-rules'
 import { formatCallLabel, GAMES_MAP } from '../../lib/games-config'
 import { cn } from '../../lib/utils'
 import { standings, viewFor } from '../../engine'
+import { callLoss } from '../../strategy'
 import { YOU, handText } from '../Play/play-model'
 import {
   FOCUSES,
@@ -20,6 +28,9 @@ import {
   emptyTally,
   grade,
   orderQuestions,
+  parseSituationCode,
+  refusalQuestions,
+  situationCode,
   tableSize,
 } from './trainer-model'
 
@@ -33,7 +44,8 @@ import {
 
 // Rounds played out per decision, as in Play's hints: about ±1.5 points each
 const DECISION_SAMPLES = 1000
-const REFUSAL_SAMPLES = 600
+// Refusals show where refusing leads (the 2nd refusal, each second call), so they play more
+const REFUSAL_SAMPLES = 2000
 // Call order compares two orders that differ by a few points, so it plays more rounds
 const ORDER_SAMPLES = 3000
 const samplesFor = (kind) =>
@@ -124,8 +136,41 @@ export default function Trainer({ className }) {
   const [picked, setPicked] = useState(null)
   const [tally, setTally] = useState(emptyTally)
 
-  // A random first situation, after mount (the server render stays empty)
-  useEffect(() => setSeed(Math.floor(Math.random() * 2 ** 31)), [])
+  const [copied, setCopied] = useState(false)
+
+  // The first situation, after mount (the server render stays empty): the one
+  // a link names (?s=CODE), or a random one
+  useEffect(() => {
+    let linked = null
+    try {
+      const code = new URLSearchParams(window.location.search).get('s')
+      linked = code && parseSituationCode(code)
+    } catch (e) {
+      linked = null
+    }
+    if (linked) {
+      setFocus(linked.focus)
+      setSeed(linked.seed)
+    } else setSeed(Math.floor(Math.random() * 2 ** 31))
+  }, [])
+
+  const code =
+    seed == null
+      ? null
+      : situationCode(seed, focus, Boolean(rules.montereyLoneKeep))
+  const copyLink = () => {
+    try {
+      const url = new URL(window.location.href)
+      url.searchParams.set('s', code)
+      navigator.clipboard.writeText(url.toString()).then(
+        () => setCopied(true),
+        () => setCopied(false)
+      )
+    } catch (e) {
+      setCopied(false)
+    }
+  }
+  useEffect(() => setCopied(false), [code])
 
   const situation = useMemo(() => {
     if (seed == null) return null
@@ -196,6 +241,34 @@ export default function Trainer({ className }) {
       ])
     )
   }, [situation, sim.result, sim.running])
+
+  // A refusal's breakdown: where refusing leads, and the questions it raises
+  const refusal = useMemo(() => {
+    if (situation?.kind !== 'refusal' || !odds) return null
+    const { dice, call, position, players } = situation.stats.refusal
+    const estimate = sim.result
+    return {
+      view: refusalView({
+        estimate,
+        dice,
+        call,
+        position,
+        players,
+        name: formatCallLabel,
+        rules,
+      }),
+      questions: refusalQuestions(
+        estimate,
+        {
+          call,
+          position,
+          players,
+          callOdds: callLoss(dice, call, rules),
+        },
+        names
+      ),
+    }
+  }, [situation, odds]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // The Boss's own choices are scored in net pencils (higher is better)
   const net = situation?.measure === 'net'
@@ -318,6 +391,14 @@ export default function Trainer({ className }) {
                 ))}
               </div>
             </div>
+            <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+              <span>
+                Situation <span className="font-mono">{code}</span>
+              </span>
+              <Button variant="ghost" size="sm" onClick={copyLink}>
+                {copied ? 'Link copied' : 'Copy link'}
+              </Button>
+            </div>
           </div>
         </Panel>
       )}
@@ -401,6 +482,31 @@ export default function Trainer({ className }) {
                       }),
                 }))}
               />
+              {situation.kind === 'refusal' && refusal && (
+                <>
+                  {refusal.view.branches.length > 0 && (
+                    <Branches
+                      title="If you refuse: what happens next"
+                      outcome="take the pencil"
+                      rows={refusal.view.branches.slice(0, 6)}
+                      note={
+                        refusal.view.branches.length > 6
+                          ? `Plus ${refusal.view.branches.length - 6} rarer second calls.`
+                          : undefined
+                      }
+                    />
+                  )}
+                  <Disclosure title="Why accept or refuse">
+                    <div className="space-y-3 p-3 pt-0 text-sm">
+                      <Questions items={refusal.questions} />
+                      <MathSteps
+                        title="Refuse"
+                        steps={refusal.view.refuseSteps}
+                      />
+                    </div>
+                  </Disclosure>
+                </>
+              )}
               {situation.kind === 'order' && (
                 <>
                   {graded.ranked.map((o) => {
