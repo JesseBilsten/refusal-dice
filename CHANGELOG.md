@@ -4,6 +4,19 @@ Every release of refusaldice.com, newest first. Versions are
 major.minor.patch ([docs/WORKFLOW.md](docs/WORKFLOW.md)): each pull request
 bumps the version once and adds its entry here.
 
+## 1.12.0
+
+- **Trainer: why accept or refuse.** A refusal's result now shows where
+  refusing leads: how often the 2nd refusal accepts and your chance then,
+  and each second call the Hammer makes with your chance in it. A "Why
+  accept or refuse" section answers from that situation's playouts: the
+  Hammer called it, so they probably have it; the 2nd refusal only accepts
+  with a good hand; the Hammer picks the second call for their own roll;
+  and the sum. Refusals now play 2,000 rounds (was 600).
+- **Trainer: situation codes.** Every situation shows a short code (e.g.
+  `R-AMCY54`) and a "Copy link" button; the link opens that exact
+  situation, so a screenshot is enough to find it again.
+
 ## 1.11.0
 
 - **Trainer: call order.** A new practice for when your roll plays two

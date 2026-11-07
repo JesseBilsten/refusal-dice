@@ -14,6 +14,7 @@ import {
 } from '../engine'
 import {
   ALL_CALLS,
+  RefusalEstimate,
   callLoss,
   hammerCall,
   playOutRound,
@@ -33,6 +34,9 @@ import {
   ORDER_MAX,
   orderPair,
   orderQuestions,
+  parseSituationCode,
+  refusalQuestions,
+  situationCode,
 } from '../components/Trainer/trainer-model'
 
 const callName = (c: Call) => `${c.game}${c.variant ? ` ${c.variant}` : ''}`
@@ -330,5 +334,95 @@ describe('call order', () => {
     expect(qs[0].a).toContain('10%')
     expect(qs[0].a).toContain('20%')
     qs.forEach((q) => expect(`${q.q} ${q.a}`).not.toMatch(/undefined|null|NaN/))
+  })
+})
+
+describe('situation codes', () => {
+  test('a code reads back to the same practice, seed and house rule', () => {
+    for (const focus of FOCUSES.map((f) => f.id))
+      for (const seed of [0, 1, 31, 32, 123456789, 2 ** 31 - 1])
+        for (const loneKeep of [false, true])
+          expect(
+            parseSituationCode(situationCode(seed, focus, loneKeep))
+          ).toEqual({ seed, focus, loneKeep })
+  })
+
+  test('codes avoid look-alike letters, and read them back when typed', () => {
+    const code = situationCode(2 ** 31 - 1, 'refusal')
+    expect(code).toMatch(/^R-[0-9A-HJKMNP-TV-Z]+$/)
+    expect(parseSituationCode(code.toLowerCase())?.seed).toBe(2 ** 31 - 1)
+    expect(parseSituationCode('R-1O')).toEqual(parseSituationCode('R-10'))
+    expect(parseSituationCode('R-1L')).toEqual(parseSituationCode('R-11'))
+  })
+
+  test('anything else is not a code', () => {
+    for (const bad of ['', 'R', 'R-', 'X-12', 'R-12-Q', 'R-ZZZZZZZ', 'hello'])
+      expect(parseSituationCode(bad)).toBeNull()
+  })
+
+  test('the same code deals the same situation', () => {
+    const { seed, focus } = parseSituationCode(situationCode(77, 'refusal'))!
+    expect(drawSituation(seed, focus, () => names).state).toEqual(
+      drawSituation(77, 'refusal', () => names).state
+    )
+  })
+})
+
+describe('refusal questions', () => {
+  const estimate: RefusalEstimate = {
+    accept: { pencil: 0.571, error: 0.003, samples: 2000 },
+    refuse: { pencil: 0.569, error: 0.004, samples: 2000 },
+    refusePaths: [
+      { path: 'nextAccepts', share: 0.225, pencil: 0.848 },
+      { path: 'secondCall', share: 0.775, pencil: 0.488 },
+    ],
+    secondCalls: [
+      { call: { game: 'pairs', variant: 'high' }, share: 0.259, pencil: 0.598 },
+      {
+        call: { game: 'ship-captain-crew', variant: 'high' },
+        share: 0.253,
+        pencil: 0.333,
+      },
+      { call: { game: 'razzle' }, share: 0.191, pencil: 0.586 },
+      { call: { game: 'boss' }, share: 0.127, pencil: 0.696 },
+    ],
+    conditioned: true,
+  }
+  const info = {
+    call: { game: '10-4', variant: 'high' } as Call,
+    position: 1 as const,
+    players: 3,
+    callOdds: 0.409,
+  }
+
+  test('answer from the playouts: the Hammer has it, the 2nd refusal, the second calls, the sum', () => {
+    const qs = refusalQuestions(estimate, info, names)
+    const text = qs.map((q) => `${q.q} ${q.a}`).join(' ')
+    expect(text).toContain('41%') // nobody's dice known
+    expect(text).toContain('57%') // accepting, against a Hammer who has it
+    expect(text).toContain('85%') // the 2nd refusal accepts
+    expect(text).toContain('pairs high (26%') // the likeliest second call
+    expect(text).not.toContain('boss') // only the top three
+    expect(text).toMatch(/23% × 85% .* \+ 78% × 49% .* = 57%/)
+    expect(text).not.toMatch(/undefined|null|NaN/)
+  })
+
+  test('the parts add up to refusing', () => {
+    const sum = estimate.refusePaths.reduce((s, p) => s + p.share * p.pencil, 0)
+    expect(sum).toBeCloseTo(estimate.refuse.pencil, 2)
+  })
+
+  test('as 2nd refusal nobody else can accept, and away from 3 players there are no 3-player call odds', () => {
+    const qs = refusalQuestions(
+      {
+        ...estimate,
+        refusePaths: [{ path: 'secondCall', share: 1, pencil: 0.569 }],
+      },
+      { ...info, position: 2, players: 4 },
+      names
+    )
+    const text = qs.map((q) => `${q.q} ${q.a}`).join(' ')
+    expect(text).not.toContain('2nd refusal accepts')
+    expect(text).not.toContain('41%')
   })
 })

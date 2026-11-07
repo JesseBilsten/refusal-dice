@@ -14,6 +14,7 @@ import {
 } from '../../engine'
 import {
   ALL_CALLS,
+  RefusalEstimate,
   botAction,
   botActionFor,
   callLoss,
@@ -526,4 +527,114 @@ export function orderQuestions(
       a: 'That’s a decoy: it pays only when it’s refused, and costs you when it’s accepted. The Calling practice includes the call that does best against the bots, decoys included.',
     },
   ]
+}
+
+/**
+ * A refusal: the questions its result raises, answered from this
+ * situation's own playouts (`estimate`, from simulateRefusal). `callOdds`:
+ * your chance of the pencil if everyone played the call with nobody's dice
+ * known (the 3-player call odds), shown only at a 3-player table.
+ */
+export function refusalQuestions(
+  estimate: RefusalEstimate,
+  info: { call: Call; position: 1 | 2; players: number; callOdds?: number },
+  names: HintNames
+): { q: string; a: string }[] {
+  const { call, players, callOdds } = info
+  const name = names.call(call)
+  const next = estimate.refusePaths.find((p) => p.path === 'nextAccepts')
+  const second = estimate.refusePaths.find((p) => p.path === 'secondCall')
+  const top = estimate.secondCalls.slice(0, 3)
+  const out: { q: string; a: string }[] = [
+    {
+      q: `The Hammer called ${name}, so they probably have it. Isn’t accepting worse?`,
+      a:
+        `Yes, and that’s counted: in these rounds the Hammer holds a roll they’d call ${name} with. ` +
+        (callOdds != null && players === 3
+          ? `If nobody’s dice were known, you’d take the pencil ${pctText(callOdds)} playing ${name}; against a Hammer who has it, ${pctText(estimate.accept.pencil)}.`
+          : `Accepting, you take the pencil ${pctText(estimate.accept.pencil)}.`),
+    },
+  ]
+  if (next)
+    out.push({
+      q: 'What if the 2nd refusal accepts it?',
+      a: `They only accept ${name} when their own dice are good for it, so you’d play it against two players who like it: you take the pencil ${pctText(next.pencil)}. That happens in ${pctText(next.share)} of rounds when you refuse, and you can’t see their dice before you decide.`,
+    })
+  if (second && top.length)
+    out.push({
+      q: 'If I refuse, won’t the second call suit me better?',
+      a:
+        `Sometimes, but the Hammer picks it for their own roll, so it’s usually a game they’re strong in too. Most often here: ` +
+        top
+          .map(
+            (c) =>
+              `${names.call(c.call)} (${pctText(c.share)} of second calls; you take the pencil ${pctText(c.pencil)})`
+          )
+          .join(', ') +
+        `. Across every second call, you take the pencil ${pctText(second.pencil)}.`,
+    })
+  out.push({
+    q: 'So which is it?',
+    a:
+      (next && second
+        ? `Refusing: ${pctText(next.share)} × ${pctText(next.pencil)} (the 2nd refusal accepts) + ${pctText(second.share)} × ${pctText(second.pencil)} (the second call) = ${pctText(estimate.refuse.pencil)}. `
+        : `Refusing: ${pctText(estimate.refuse.pencil)}. `) +
+      `Accepting: ${pctText(estimate.accept.pencil)}. ` +
+      `An even share at ${players} players is ${pctText(1 / players)}.`,
+  })
+  return out
+}
+
+/*
+ * Situation codes: a short code for each situation (its practice, seed and
+ * house rule), shown on the page and read back from a link (?s=CODE), so a
+ * situation can be found again from a screenshot. Crockford base 32: no I,
+ * L, O or U, so it reads back without mix-ups.
+ */
+const CODE_DIGITS = '0123456789ABCDEFGHJKMNPQRSTVWXYZ'
+const FOCUS_LETTER: Record<Focus, string> = {
+  all: 'E',
+  call: 'C',
+  order: 'O',
+  refusal: 'R',
+  roll: 'P',
+}
+
+/** e.g. "R-1F4K9QZ" (Refusing, seed in base 32), with "-M" when the lone 3 or 4 Monterey rule is on */
+export function situationCode(
+  seed: number,
+  focus: Focus,
+  loneKeep = false
+): string {
+  let n = seed >>> 0
+  let digits = ''
+  do {
+    digits = CODE_DIGITS[n % 32] + digits
+    n = Math.floor(n / 32)
+  } while (n > 0)
+  return `${FOCUS_LETTER[focus]}-${digits}${loneKeep ? '-M' : ''}`
+}
+
+/** A situation code back to its practice, seed and house rule; null if it isn't one */
+export function parseSituationCode(
+  code: string
+): { seed: number; focus: Focus; loneKeep: boolean } | null {
+  const m = code
+    .trim()
+    .toUpperCase()
+    .match(/^([A-Z])-([0-9A-Z]{1,7})(-M)?$/)
+  if (!m) return null
+  const focus = (Object.keys(FOCUS_LETTER) as Focus[]).find(
+    (f) => FOCUS_LETTER[f] === m[1]
+  )
+  if (!focus) return null
+  let seed = 0
+  // Read I and L as 1, O as 0 (Crockford), in case they were typed from a screenshot
+  for (const ch of m[2].replace(/[IL]/g, '1').replace(/O/g, '0')) {
+    const d = CODE_DIGITS.indexOf(ch)
+    if (d < 0) return null
+    seed = seed * 32 + d
+  }
+  if (seed >= 2 ** 31) return null
+  return { seed, focus, loneKeep: Boolean(m[3]) }
 }
