@@ -4,6 +4,16 @@ Every release of refusaldice.com, newest first. Versions are
 major.minor.patch ([docs/WORKFLOW.md](docs/WORKFLOW.md)): each pull request
 bumps the version once and adds its entry here.
 
+## 1.11.0
+
+- **Trainer: call order.** A new practice for when your roll plays two
+  games well (each 10% or less to take the pencil at 3 players): call one
+  first, and the other if it's refused. Which goes first? Each order is
+  played out 3,000 times at a 2–4 player table with your planned second
+  call, and the result shows how often the first call is accepted or
+  refused and your chance in each case, with questions on why the order
+  matters.
+
 ## 1.10.1
 
 - **Fix: calling vs barking at bigger tables.** The Hammer's options in the

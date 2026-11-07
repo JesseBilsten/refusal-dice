@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { ArrowRight } from 'lucide-react'
 import { ChoiceGroup, Panel, Stat } from '../Page'
 import { Die, Hand } from '../Dice'
-import { Disclosure, OddsDecision } from '../Odds'
+import { Branches, Disclosure, OddsDecision, Questions } from '../Odds'
 import Seat from '../Table/Seat'
 import { Badge } from '../ui/badge'
 import { Button } from '../ui/button'
@@ -19,6 +19,8 @@ import {
   drawSituation,
   emptyTally,
   grade,
+  orderQuestions,
+  tableSize,
 } from './trainer-model'
 
 /**
@@ -32,6 +34,14 @@ import {
 // Rounds played out per decision, as in Play's hints: about ±1.5 points each
 const DECISION_SAMPLES = 1000
 const REFUSAL_SAMPLES = 600
+// Call order compares two orders that differ by a few points, so it plays more rounds
+const ORDER_SAMPLES = 3000
+const samplesFor = (kind) =>
+  kind === 'refusal'
+    ? REFUSAL_SAMPLES
+    : kind === 'order'
+      ? ORDER_SAMPLES
+      : DECISION_SAMPLES
 
 /** "2 points" (percentage points, rounded; at least 1) */
 const points = (p) => {
@@ -147,8 +157,9 @@ export default function Trainer({ className }) {
         choices: situation.options.map((o) => ({
           label: o.label,
           actions: o.actions,
+          then: o.then,
         })),
-        samples: DECISION_SAMPLES,
+        samples: samplesFor(situation.kind),
       },
     }
   }, [situation])
@@ -180,6 +191,7 @@ export default function Trainer({ className }) {
           other: sim.result[i].other,
           net: sim.result[i].net,
           netError: sim.result[i].netError,
+          paths: sim.result[i].orderPaths,
         },
       ])
     )
@@ -314,11 +326,8 @@ export default function Trainer({ className }) {
         {picked && !graded && (
           <Panel title="Playing it out…">
             <p className="text-sm text-muted-foreground">
-              {(situation.kind === 'refusal'
-                ? REFUSAL_SAMPLES
-                : DECISION_SAMPLES
-              ).toLocaleString()}{' '}
-              rounds with solid bots, from this exact spot.
+              {samplesFor(situation.kind).toLocaleString()} rounds with solid
+              bots, from this exact spot.
             </p>
           </Panel>
         )}
@@ -392,13 +401,61 @@ export default function Trainer({ className }) {
                       }),
                 }))}
               />
+              {situation.kind === 'order' && (
+                <>
+                  {graded.ranked.map((o) => {
+                    const opt = situation.options.find((x) => x.id === o.id)
+                    const paths = odds[o.id].paths
+                    const first = opt.actions[0].call
+                    return (
+                      paths && (
+                        <Branches
+                          key={o.id}
+                          title={`If you call ${names.call(first)} first`}
+                          outcome="take the pencil"
+                          rows={[
+                            {
+                              id: 'accepted',
+                              label: `${tableSize(state) === 2 ? 'Accepted' : 'A refusal accepts'}: everyone plays ${names.call(first)}`,
+                              share: paths.accepted.share,
+                              p: paths.accepted.pencil,
+                            },
+                            {
+                              id: 'refused',
+                              label: `${tableSize(state) === 2 ? 'Refused' : 'Both refuse'}: you call ${names.call(opt.then)}`,
+                              share: paths.refused.share,
+                              p: paths.refused.pencil,
+                            },
+                          ]}
+                        />
+                      )
+                    )
+                  })}
+                  <Disclosure title="Why the order matters">
+                    <div className="p-3 pt-0 text-sm">
+                      <Questions
+                        items={orderQuestions(
+                          situation,
+                          Object.fromEntries(
+                            situation.options.map((x) => [
+                              x.id,
+                              odds[x.id].paths,
+                            ])
+                          ),
+                          names
+                        )}
+                      />
+                    </div>
+                  </Disclosure>
+                </>
+              )}
               <Disclosure title="How these odds are worked out">
                 <div className="space-y-2 p-3 pt-0 text-sm">
                   <p>{situation.stats.why}</p>
                   <p className="text-muted-foreground">
                     {net
                       ? `${DECISION_SAMPLES.toLocaleString()} rounds played out by solid bots from this spot. As the Boss, picking ’em up never costs you a pencil, but coming up hands one to someone else, so each option is scored in net pencils: the pencils that go to someone else, minus yours, per 100 rounds (good to about ${netPencils(margin / 2)}). Picks within ${netPencils(margin)} of the best count as a toss-up.`
-                      : `${(situation.kind === 'refusal' ? REFUSAL_SAMPLES : DECISION_SAMPLES).toLocaleString()} rounds played out by solid bots from this spot, so each chance is good to about ${points(margin / 2)}. Picks within ${points(margin)} of the best count as a toss-up.`}
+                      : `${samplesFor(situation.kind).toLocaleString()} rounds played out by solid bots from this spot, so each chance is good to about ${points(margin / 2)}. Picks within ${points(margin)} of the best count as a toss-up.`}
                     {situation.solid !== graded.best.id &&
                       ` The solid bots would have picked: ${situation.options.find((o) => o.id === situation.solid)?.label}.`}
                   </p>

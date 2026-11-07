@@ -782,7 +782,7 @@ const DOCS = [
     'Strategy',
     'components/Trainer/index.jsx',
     ['Trainer'],
-    'The decision trainer: a real moment from a game against solid bots, “What do you do?”, then every option’s chance of the pencil (rounds played out from that spot by solid bots, at that table size) with your pick marked, a verdict (best, toss-up, or how many points it cost) and a running tally. Practise everything, calling, refusing or rolling. Situations and grading: `Trainer/trainer-model.ts`.',
+    'The decision trainer: a real moment from a game against solid bots, “What do you do?”, then every option’s chance of the pencil (rounds played out from that spot by solid bots, at that table size) with your pick marked, a verdict (best, toss-up, or how many points it cost) and a running tally. Practise everything, calling, call order (which of two games to call first), refusing or rolling. Situations and grading: `Trainer/trainer-model.ts`.',
     { status: P, proposed: '2026-11-04' }
   ),
   pat(
