@@ -7,6 +7,7 @@
  * - bots:      a solid heuristic bot for every decision
  * - simulate:  seeded Monte Carlo of your chance of the pencil per decision
  * - comebacks: exact second calls: what the Hammer calls when a call is refused
+ * - holdings, accept-without: what a roll holds toward a kicker game, and whether to accept it unmade
  */
 export * from './make-odds'
 export * from './kicker-odds'
@@ -19,3 +20,6 @@ export * from './seat-odds'
 export * from './hammer-odds'
 export * from './bark'
 export * from './comebacks'
+export * from './holdings'
+export * from './accept-odds'
+export * from './accept-without'
