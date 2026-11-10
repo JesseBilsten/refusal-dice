@@ -59,6 +59,7 @@ import HintCard from '../components/Play/HintCard'
 import CallPlacard from '../components/Play/CallPlacard'
 import Setup from '../components/Play/Setup'
 import Trainer from '../components/Trainer'
+import AcceptWithoutGame from '../components/GameDetail/AcceptWithout'
 import { SpeedPicker, Transport } from '../components/Play/TableControls'
 import { Badge } from '../components/ui/badge'
 import { Button } from '../components/ui/button'
@@ -1011,6 +1012,8 @@ export const EXAMPLES = {
   ),
   // The whole trainer, live: deals real situations and plays them out
   trainer: () => <Trainer />,
+  // Shown on Ship Captain Crew, where partial matches are close calls
+  'accept-without': () => <AcceptWithoutGame gameId="ship-captain-crew" />,
   'hint-card': () => (
     <Specimen>
       <HintCard

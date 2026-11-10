@@ -18,7 +18,7 @@ import { useHouseRules } from '../Settings/house-rules'
 import { formatCallLabel, GAMES_MAP } from '../../lib/games-config'
 import { cn } from '../../lib/utils'
 import { standings, viewFor } from '../../engine'
-import { callLoss } from '../../strategy'
+import { acceptOddsFor, acceptOddsOf, callLoss } from '../../strategy'
 import { YOU, handText } from '../Play/play-model'
 import {
   FOCUSES,
@@ -264,6 +264,8 @@ export default function Trainer({ className }) {
           position,
           players,
           callOdds: callLoss(dice, call, rules),
+          holding: acceptOddsOf(dice, call, position, players, rules),
+          holdings: acceptOddsFor(call, position, players, rules),
         },
         names
       ),

@@ -4,6 +4,23 @@ Every release of refusaldice.com, newest first. Versions are
 major.minor.patch ([docs/WORKFLOW.md](docs/WORKFLOW.md)): each pull request
 bumps the version once and adds its entry here.
 
+## 1.13.0
+
+- **Trainer: accepting without the game.** When you're a refusal and
+  haven't made the game, "Why accept or refuse" now says what your roll
+  holds toward it (a partial match like 1-2 in Ship Captain Crew, or
+  nothing), your exact chance of making it with 2 rolls left, and how
+  every roll holding the same does accepting and refusing from your seat.
+  It also compares the game's other partial matches (e.g. Monterey's 3-4,
+  with two ways to finish, is worth accepting; most single-out starts
+  aren't).
+- **Accepting without the game (proposed, `/design/accept-without/`).** A
+  game-page section with the same figures for every holding: from either
+  refusal seat, at 3 or 6 players, with a verdict. New generated table
+  `src/strategy/accept-odds.ts` (`npm run generate:accept-odds`: every
+  roll played 200 rounds each way against solid bots, for both Monterey
+  rule sets).
+
 ## 1.12.0
 
 - **Trainer: why accept or refuse.** A refusal's result now shows where

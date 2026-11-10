@@ -15,6 +15,8 @@ import {
 import {
   ALL_CALLS,
   RefusalEstimate,
+  acceptOddsFor,
+  acceptOddsOf,
   callLoss,
   hammerCall,
   playOutRound,
@@ -424,5 +426,48 @@ describe('refusal questions', () => {
     const text = qs.map((q) => `${q.q} ${q.a}`).join(' ')
     expect(text).not.toContain('2nd refusal accepts')
     expect(text).not.toContain('41%')
+  })
+
+  // E-PJNKK0: SCC Low called, 2nd refusal at 6 players, holding 1-5-2-4-1
+  test('a partial match: what it keeps, its exact chance, how it does in general, and the other partial matches', () => {
+    const call = { game: 'ship-captain-crew', variant: 'low' } as Call
+    const dice = [1, 5, 2, 4, 1] as const
+    const qs = refusalQuestions(
+      {
+        ...estimate,
+        refusePaths: [{ path: 'secondCall', share: 1, pencil: 0.249 }],
+      },
+      {
+        call,
+        position: 2,
+        players: 6,
+        holding: acceptOddsOf([...dice], call, 2, 6),
+        holdings: acceptOddsFor(call, 2, 6),
+      },
+      names
+    )
+    const text = qs.map((q) => `${q.q} ${q.a}`).join(' ')
+    expect(text).toContain('only 1-2')
+    expect(text).toContain('67% of the time (exact)')
+    expect(text).toContain('as the 2nd refusal at 6 players')
+    expect(text).toMatch(/keep 1-2, make it 67%: .*; keep 5-6, make it 67%/)
+    expect(text).not.toMatch(/undefined|null|NaN/)
+    expect(qs.length).toBeLessThanOrEqual(6)
+  })
+
+  test('nothing toward it, and no partial-match question once the game is made', () => {
+    const call = { game: '10-2', variant: 'high' } as Call
+    const ask = (dice: number[]) =>
+      refusalQuestions(
+        estimate,
+        { ...info, call, holding: acceptOddsOf(dice as any, call, 1, 3) },
+        names
+      )
+        .map((q) => q.q)
+        .join(' ')
+    expect(ask([1, 1, 2, 3, 3])).toContain('I hold nothing toward')
+    const made = ask([4, 6, 1, 1, 2])
+    expect(made).not.toContain('I hold nothing')
+    expect(made).not.toContain('worth accepting')
   })
 })

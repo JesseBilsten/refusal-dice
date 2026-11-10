@@ -14,6 +14,9 @@ import {
 } from '../../engine'
 import {
   ALL_CALLS,
+  AcceptOdds,
+  Holding,
+  acceptLean,
   RefusalEstimate,
   botAction,
   botActionFor,
@@ -537,7 +540,16 @@ export function orderQuestions(
  */
 export function refusalQuestions(
   estimate: RefusalEstimate,
-  info: { call: Call; position: 1 | 2; players: number; callOdds?: number },
+  info: {
+    call: Call
+    position: 1 | 2
+    players: number
+    callOdds?: number
+    /** What your roll holds toward a kicker game, and how that holding does in general (acceptOddsOf) */
+    holding?: { holding: Holding; odds: AcceptOdds | undefined } | null
+    /** Every holding toward the call from this seat (acceptOddsFor), to compare partial matches */
+    holdings?: AcceptOdds[]
+  },
   names: HintNames
 ): { q: string; a: string }[] {
   const { call, players, callOdds } = info
@@ -555,6 +567,7 @@ export function refusalQuestions(
           : `Accepting, you take the pencil ${pctText(estimate.accept.pencil)}.`),
     },
   ]
+  out.push(...withoutTheGame(estimate, info, name, names))
   if (next)
     out.push({
       q: 'What if the 2nd refusal accepts it?',
@@ -582,6 +595,65 @@ export function refusalQuestions(
       `Accepting: ${pctText(estimate.accept.pencil)}. ` +
       `An even share at ${players} players is ${pctText(1 / players)}.`,
   })
+  return out
+}
+
+const dash = (dice: number[]) => dice.join('-')
+/**
+ * A refusal without the game made: what a partial match (or nothing) is
+ * worth, from this roll's exact chance of making it and the generated
+ * averages over every roll holding the same (accept-odds.ts).
+ */
+function withoutTheGame(
+  estimate: RefusalEstimate,
+  info: Parameters<typeof refusalQuestions>[1],
+  name: string,
+  names: HintNames
+): { q: string; a: string }[] {
+  const h = info.holding?.holding
+  const o = info.holding?.odds
+  if (!h || !o || h.kind === 'made') return []
+  const seat = `as the ${ordinal(info.position)} refusal at ${o.players} players`
+  const general = `accepting costs you ${pctText(o.accept)} and refusing ${pctText(o.refuse)}, so it’s usually ${o.verdict === 'tossup' ? 'a toss-up' : `better to ${o.verdict}`} (${o.rolls} rolls, ${o.rounds.toLocaleString('en-US')} rounds each way against solid bots)`
+  const top = estimate.secondCalls[0]
+  const here =
+    `With this roll: accepting ${pctText(estimate.accept.pencil)}, refusing ${pctText(estimate.refuse.pencil)}. The rest of your roll makes the difference: refusing hands the Hammer a second call, and your other dice may or may not play it.` +
+    (top
+      ? ` Here the likeliest is ${names.call(top.call)} (${pctText(top.share)} of second calls), where you take the pencil ${pctText(top.pencil)}.`
+      : '')
+  const tens = info.call.game.startsWith('10-')
+  const out: { q: string; a: string }[] = []
+  if (h.kind === 'partial') {
+    out.push({
+      q: `I don’t have ${name}, only ${dash(h.kept)}. Is that worth accepting?`,
+      a:
+        `You’d keep ${dash(h.kept)}: with 2 rolls left you make the game ${pctText(h.chance)} of the time (exact), and then your kicker still has to hold up. ` +
+        `Over every roll that keeps ${dash(h.kept)}, ${seat}, ${general}. ${here}`,
+    })
+    const partials = (info.holdings ?? []).filter((x) => x.kind === 'partial')
+    if (partials.length > 1)
+      out.push({
+        q: `Which partial matches are worth accepting in ${name}?`,
+        a:
+          `From this seat at ${o.players} players: ` +
+          partials
+            .map(
+              (x) =>
+                `keep ${dash(x.kept)}, make it ${pctText(x.chance)}: ${acceptLean(x)}`
+            )
+            .join('; ') +
+          '. Two ways to finish (a 2 or a 5 after 3-4 in Monterey) beat one, and a roll that already plays the likely second call (5-5 makes 10-2) is cheap to refuse.',
+      })
+  } else {
+    out.push({
+      q: `I hold nothing toward ${name}. Why not accept anyway?`,
+      a:
+        (tens
+          ? `The 10s come in one roll, so there’s nothing to keep: each roll is a fresh try, and you make it ${pctText(h.chance)} of the time with 2 rolls left. `
+          : `Nothing to keep: you’d roll all five, and make it ${pctText(h.chance)} of the time with 2 rolls left. `) +
+        `Over every roll with nothing toward it, ${seat}, ${general}. ${here}`,
+    })
+  }
   return out
 }
 
